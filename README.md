@@ -6,22 +6,27 @@
 ## Contributing
 
 ### Branching
-todo
+`todo`
 
 ### Tools and Software
-todo
+`todo`
  
 ### Conventions and Style
-todo
+`todo`
 
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from master (never merge them in).
 
+At the end of a competition year, we will make a new branch off of the master branch to archive that year's code. This way, we have a backup of roughly the same code that was run at the last competition for that year.
+
 | Branch | Contents |
 | --- | --- |
-| [![DAQ-2014](http://img.shields.io/badge/DAQ-2014-yellow.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2014) | Code from the 2013-2014 year. |
-| [![DAQ-2013](http://img.shields.io/badge/DAQ-2013-yellow.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2013) | Code from the 2012-2013 year. |
-| todo | todo |
+| [![DAQ-2014](http://img.shields.io/badge/DAQ-2014-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2014) | Code from the 2013-2014 year. |
+| [![DAQ-2013](http://img.shields.io/badge/DAQ-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2013) | Code from the 2012-2013 year. |
+| [![Wheel-2013](http://img.shields.io/badge/Wheel-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/Wheel-2013) | Code for the steering wheel for the 2012-2013 year. |
+| [![Post_Processing-2013](http://img.shields.io/badge/Post_Processing-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/Post_Processing-2013) | Old version of Translate_CAN for the 2012-2013 year. |
+| [![DAQ-2012](http://img.shields.io/badge/DAQ-2012-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2012) | Arduino sketches for data aquisition and the steering wheel for the 2011-2012 year. |
+
 
 
 ## License
