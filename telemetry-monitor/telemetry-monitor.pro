@@ -7,7 +7,7 @@ QT += widgets
 QT += serialport
 TEMPLATE = app
 
-DEPENDPATH += . Telemetry_Monitor
+DEPENDPATH += . telemetry-monitor
 INCLUDEPATH += .
 
 # Input
