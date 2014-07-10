@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CC6FA9C3-7E9E-443C-B880-FD6359AFDD1C}</ProjectGuid>
+    <RootNamespace>SteeringWheelSketch</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\variants\standard;C:\Program Files (x86)\Arduino\libraries\LedControl;C:\Program Files (x86)\Arduino\libraries\LedControl\utility;C:\Program Files (x86)\Arduino\libraries\digitalWriteFast;C:\Program Files (x86)\Arduino\libraries\digitalWriteFast\utility;c:\program files (x86)\arduino\hardware\tools\avr\avr\include\;c:\program files (x86)\arduino\hardware\tools\avr\avr\include\avr\;c:\program files (x86)\arduino\hardware\tools\avr\avr\;c:\program files (x86)\arduino\hardware\tools\avr\lib\gcc\avr\4.3.2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>E:\George H Schwieters\Documents\Arduino\SteeringWheelSketch\Visual Micro\.SteeringWheelSketch.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <PreprocessorDefinitions>ARDUINO=104;__AVR_ATmega328P__;F_CPU=16000000L;__AVR__;__cplusplus;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\arduino-1.0.4\hardware\arduino\cores\arduino;C:\Program Files (x86)\arduino-1.0.4\hardware\arduino\variants\standard;C:\Program Files (x86)\arduino-1.0.4\libraries\LedControl;C:\Program Files (x86)\arduino-1.0.4\libraries\LedControl\utility;C:\Program Files (x86)\arduino-1.0.4\libraries\digitalWriteFast;C:\Program Files (x86)\arduino-1.0.4\libraries\digitalWriteFast\utility;c:\program files (x86)\arduino-1.0.4\hardware\tools\avr\avr\include\;c:\program files (x86)\arduino-1.0.4\hardware\tools\avr\avr\include\avr\;c:\program files (x86)\arduino-1.0.4\hardware\tools\avr\avr\;c:\program files (x86)\arduino-1.0.4\hardware\tools\avr\lib\gcc\avr\4.3.2\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\George H Schwieters\Documents\Arduino\SteeringWheelSketch\Visual Micro\.SteeringWheelSketch.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PreprocessorDefinitions>ARDUINO=104;__AVR_ATmega328P__;F_CPU=16000000L;__AVR__;__cplusplus;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="StartupSequence.ino">
+      <FileType>CppCode</FileType>
+    </None>
+    <None Include="SteeringWheelSketch.ino">
+      <FileType>CppCode</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Visual Micro\.SteeringWheelSketch.vsarduino.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties arduino.board.name="uno" arduino.board.desc="Arduino Uno" arduino.board.property_bag="uno.name=Arduino Uno&#xD;&#xA;uno.upload.protocol=arduino&#xD;&#xA;uno.upload.maximum_size=32256&#xD;&#xA;uno.upload.speed=115200&#xD;&#xA;uno.bootloader.low_fuses=0xff&#xD;&#xA;uno.bootloader.high_fuses=0xde&#xD;&#xA;uno.bootloader.extended_fuses=0x05&#xD;&#xA;uno.bootloader.path=optiboot&#xD;&#xA;uno.bootloader.file=optiboot_atmega328.hex&#xD;&#xA;uno.bootloader.unlock_bits=0x3F&#xD;&#xA;uno.bootloader.lock_bits=0x0F&#xD;&#xA;uno.build.mcu=atmega328p&#xD;&#xA;uno.build.f_cpu=16000000L&#xD;&#xA;uno.build.core=arduino&#xD;&#xA;uno.build.variant=standard&#xD;&#xA;" arduino.build.mcu="atmega328p" arduino.build.f_cpu="16000000L" arduino.build.core="arduino" arduino.upload.protocol="arduino" arduino.upload.speed="115200" arduino.upload.maximum_size="32256" arduino.upload.port="COM4" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>
