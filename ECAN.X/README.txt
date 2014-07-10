@@ -1,0 +1,1 @@
+This is a project that's used to hold CAN code like a library project but I can't figure out how to build it correctly when configured that way so this is just a regular project and the other projects use relative referencing to the code instead of the built in library stuff.

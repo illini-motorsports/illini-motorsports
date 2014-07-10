@@ -1,0 +1,97 @@
+// File: 18f46k80_SD_SPI.lkr
+// Generic linker (modified for SD-SPI interfacing and dynamic memory allocation) script for the PIC18F46K80 processor
+//
+// 10/22/12 - added data and FAT buffer by removing 4 gpr databanks and moving the stack location
+// 11/11/12 - added heap section
+// 11/30/12 - removed heap section and reorganized databanks
+// 02/15/13 - added room for 512 byte data buffers
+//
+//
+
+#DEFINE _CODEEND _DEBUGCODESTART - 1
+#DEFINE _CEND _CODEEND + _DEBUGCODELEN
+#DEFINE _DATAEND _DEBUGDATASTART - 1
+#DEFINE _DEND _DATAEND + _DEBUGDATALEN
+
+LIBPATH .
+
+#IFDEF _CRUNTIME
+  #IFDEF _EXTENDEDMODE
+    FILES c018i_e.o
+    FILES clib_e.lib
+    FILES p18f46k80_e.lib
+  #ELSE
+    FILES c018i.o
+    FILES clib.lib
+    FILES p18f46k80.lib
+  #FI
+#FI
+
+#IFDEF _DEBUGCODESTART
+  CODEPAGE   NAME=page       START=0x0               END=_CODEEND
+  CODEPAGE   NAME=debug      START=_DEBUGCODESTART   END=_CEND        PROTECTED
+#ELSE
+  CODEPAGE   NAME=page       START=0x0               END=0xFFFF
+#FI
+
+CODEPAGE   NAME=userid     START=0x200000          END=0x200007       PROTECTED
+CODEPAGE   NAME=cfgmem     START=0x300000          END=0x30000D       PROTECTED
+CODEPAGE   NAME=devid      START=0x3FFFFE          END=0x3FFFFF       PROTECTED
+CODEPAGE   NAME=eedata     START=0xF00000          END=0xF003FF       PROTECTED
+
+#IFDEF _EXTENDEDMODE
+  DATABANK   NAME=gpre       START=0x0               END=0x5F
+#ELSE
+  ACCESSBANK NAME=accessram  START=0x0               END=0x5F
+#FI
+
+DATABANK   NAME=gpr0       START=0x60              END=0xFF
+
+// Allocate 0x200 for the stack
+DATABANK   NAME=gpr1       START=0x100             END=0x2FF	PROTECTED
+
+// Allocate 512 bytes for SPI data buffer
+DATABANK   NAME=buffer1		START=0x300		END=0x4FF		PROTECTED
+// Allocate 512 bytes for SPI FAT buffer
+DATABANK   NAME=buffer2		START=0x500		END=0x6FF		PROTECTED
+
+// allocate 0x200 for the writing buffer A
+DATABANK   NAME=buffer3		START=0x700		END=0x8FF		PROTECTED
+// allocate 0x200 for the writing buffer B
+DATABANK   NAME=buffer4		START=0x900		END=0xAFF		PROTECTED
+
+// allocate 0x10E for FSIO.o
+DATABANK   NAME=gpr3       START=0xB00             END=0xC0E
+
+DATABANK   NAME=gpr4       START=0xC0F             END=0xCFF
+
+#IFDEF _DEBUGDATASTART
+  DATABANK   NAME=gpr9       START=0xD00             END=_DATAEND
+  DATABANK   NAME=dbgspr     START=_DEBUGDATASTART   END=_DEND           PROTECTED
+#ELSE //no debug
+  DATABANK   NAME=gpr9       START=0xD00             END=0xDFF
+#FI
+
+DATABANK   NAME=gpr11      START=0xE00             END=0xE40
+DATABANK   NAME=sfr14      START=0xE41             END=0xEFF          PROTECTED
+DATABANK   NAME=sfr15      START=0xF00             END=0xF5F          PROTECTED
+ACCESSBANK NAME=accesssfr  START=0xF60             END=0xFFF          PROTECTED
+
+// Create the data buffer section
+SECTION		NAME=dataBuffer		RAM=buffer1
+// Create the FAT buffer section
+SECTION		NAME=FATBuffer		RAM=buffer2
+
+// Create Write Buffer A section
+SECTION		NAME=large_udataA	RAM=buffer3
+// Create Write Buffer A section
+SECTION		NAME=large_udataB	RAM=buffer4
+
+#IFDEF _CRUNTIME
+  SECTION    NAME=CONFIG     ROM=cfgmem
+  #IFDEF _DEBUGDATASTART
+    STACK SIZE=0x200 RAM=gpr1
+  #ELSE
+    STACK SIZE=0x200 RAM=gpr1
+  #FI
+#FI
