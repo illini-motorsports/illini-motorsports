@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-12
+ * @date Modified: 2014-07-13
  */
 #include "data.h"
 
@@ -37,17 +37,30 @@ void AppData::readData() {
       Message msg = messages[msgId];
       if(msg.id == 0 && msg.dlc == 0 && msg.channels.size() == 0) {
         emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+        it += 12;
+      } else {
+        cout << "ID:: " << QString::number(msg.id, 16).toStdString() << endl;
+        for(int i = 0; i < msg.channels.size(); i++) {
+          Channel chn = msg.channels[i];
+          double value;
+          if(chn.isSigned) {
+            signed int data = msg.isBigEndian ? buffer[it + 1] << 8 | buffer[it] : buffer[it] << 8 | buffer[it + 1];
+            value = (double) data;
+          } else {
+            unsigned int data = msg.isBigEndian ? buffer[it + 1] << 8 | buffer[it] : buffer[it] << 8 | buffer[it + 1];
+            value = (double) data;
+          }
+          cout << "  " << (value * chn.scalar) - chn.offset << " " << chn.units.toStdString() << endl;
+          it += 2;
+        }
+
+        double upper = buffer[it + 3] << 8 | buffer[it + 2];
+        double lower = ((double) (buffer[it + 1] << 8 | buffer[it])) / 0x8000;
+        it += 4;
+
+        double timestamp = upper + lower - 1.0;
+        cout << "TIME:: " << timestamp << endl << endl;
       }
-
-      //TODO: Read and process data.
-      it += msg.dlc;
-
-      double upper = buffer[it + 3] << 8 | buffer[it + 2];
-      double lower = ((double) (buffer[it + 1] << 8 | buffer[it])) / 0x8000;
-      it += 4;
-
-      double timestamp = upper + lower - 1.0;
-      cout << msg.id << " " << timestamp << endl;
     }
 
     delete[] buffer;

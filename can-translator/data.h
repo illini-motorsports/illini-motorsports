@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-12
+ * @date Modified: 2014-07-13
  */
 #ifndef DATA_H
 #define DATA_H
@@ -28,6 +28,7 @@ class AppData : public QObject {
   Q_OBJECT
 
   public:
+
     /**
      * Opens up a data file and iterates through it, converting the raw data
      * to a format that can be imported into Darab.
