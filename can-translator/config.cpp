@@ -4,18 +4,18 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-04 #AMERICA
+ * @date Modified: 2014-07-12
  */
 #include "config.h"
 
-map<unsigned char, message> AppConfig::getMessages() {
+map<unsigned short, Message> AppConfig::getMessages() {
   QVector<QString> lines = readFile();
-  map<unsigned char, message> messages;
+  map<unsigned short, Message> messages;
 
   for(int i = 0; i < lines.size(); i++) {
-    message msg = getMessage(lines[i]);
+    Message msg = getMessage(lines[i]);
     if(msg.id == 0 && msg.dlc == 0 && !msg.isBigEndian) {
-      map<unsigned char, message> empty;
+      map<unsigned short, Message> empty;
       return empty;
     } else {
       messages[msg.id] = msg;
@@ -47,24 +47,24 @@ QVector<QString> AppConfig::readFile() {
   return lines;
 }
 
-message AppConfig::getMessage(QString line) {
+Message AppConfig::getMessage(QString line) {
   QStringList sections = line.split(" ", QString::SkipEmptyParts);
   QString msgDefString = sections[0];
   QStringList msgDef = msgDefString.split(",", QString::SkipEmptyParts);
 
-  message msg;
+  Message msg;
 
-  bool conv= true;
-  msg.id = msgDef[0].toUInt(&conv);
+  bool conv = true;
+  msg.id = msgDef[0].toUInt(&conv, 16);
   if(!conv) {
     emit error(QString("Invalid message ID"));
-    return message();
+    return Message();
   }
 
   msg.dlc = msgDef[1].toUInt(&conv);
   if(!conv) {
     emit error(QString("Invalid DLC for message with ID: %1").arg(msg.id));
-    return message();
+    return Message();
   }
 
   if(QString::compare(msgDef[2], "false") == 0) {
@@ -73,13 +73,13 @@ message AppConfig::getMessage(QString line) {
     msg.isBigEndian = true;
   } else {
     emit error(QString("Boolean parse failed for message with ID: %1").arg(msg.id));
-    return message();
+    return Message();
   }
 
   for(int i = 1; i < sections.size(); i++) {
-    channel chn = getChannel(i - 1, sections[i]);
+    Channel chn = getChannel(i - 1, sections[i]);
     if(chn.title.isEmpty() && chn.units.isEmpty()) {
-      return message();
+      return Message();
     }
     msg.channels.push_back(chn);
   }
@@ -87,22 +87,22 @@ message AppConfig::getMessage(QString line) {
   //TODO: Add support for GPS message (0203).
   if(msg.channels.size() != msg.dlc / 2) {
     emit error(QString("Invalid number of channels for message with ID: %1").arg(msg.id));
-    return message();
+    return Message();
   }
 
   return msg;
 }
 
-channel AppConfig::getChannel(int pos, QString section) {
+Channel AppConfig::getChannel(int pos, QString section) {
   QStringList chnDef = section.split(",", QString::SkipEmptyParts);
 
-  channel chn;
+  Channel chn;
   chn.pos = pos;
 
   chn.title = chnDef[0];
   if(chn.title.length() > 7) {
     emit error(QString("Channel title length too long for channel with title: %1").arg(chn.title));
-    channel blank;
+    Channel blank;
     return blank;
   }
 
@@ -113,7 +113,7 @@ channel AppConfig::getChannel(int pos, QString section) {
     chn.isSigned = true;
   } else {
     emit error(QString("Boolean parse failed for channel with title: %1").arg(chn.title));
-    channel blank;
+    Channel blank;
     return blank;
   }
 
@@ -121,21 +121,21 @@ channel AppConfig::getChannel(int pos, QString section) {
   chn.scalar = chnDef[2].toDouble(&conv);
   if(!conv) {
     emit error(QString("Invalid scalar for channel with title: %1").arg(chn.title));
-    channel blank;
+    Channel blank;
     return blank;
   }
 
   chn.offset = chnDef[3].toDouble(&conv);
   if(!conv) {
     emit error(QString("Invalid offset for channel with title: %1").arg(chn.title));
-    channel blank;
+    Channel blank;
     return blank;
   }
 
   chn.units = chnDef[4];
   if(chn.units.length() > 4) {
     emit error(QString("Units length too long for channel with title: %1").arg(chn.title));
-    channel blank;
+    Channel blank;
     return blank;
   }
 

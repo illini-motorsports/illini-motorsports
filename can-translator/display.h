@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-05
+ * @date Modified: 2014-07-12
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -15,8 +15,10 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QProgressBar>
+#include <QPushButton>
 #include <QFont>
 #include "config.h"
+#include "data.h"
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -44,11 +46,18 @@ class AppDisplay : public QWidget {
   private slots:
 
     /**
+     * Calls the cooresponding readData() method in the data class when
+     * btn_read is pressed.
+     */
+    void readData();
+
+    /**
      * Displays the error message in a critical error message box.
      */
     void handleError(QString error);
 
   private:
+    AppData* data;
 
     QVBoxLayout* layout;
 
@@ -62,6 +71,8 @@ class AppDisplay : public QWidget {
     QProgressBar* bar_convert;
     QProgressBar* bar_normalize;
     QProgressBar* bar_write;
+
+    QPushButton* btn_read;
 };
 
 #endif // APP_DISPLAY_H

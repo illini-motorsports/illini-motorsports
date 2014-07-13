@@ -14,7 +14,7 @@
 # If the config file is not properly read by the program, it will give an error and exit and you will need to double-check the formatting.
 
 #00E5,6,true     BR2,false,0,0,unit                    BR2,false,0,0,unit                BR2,false,0,0,unit
-#0203,8,true     Lat,true,0.0000001,0,deg              Long,true,0.0000001,0,deg
+0203,8,true     Lat,true,0.0000001,0,deg              Long,true,0.0000001,0,deg           Lat,true,0.0000001,0,deg             Long,true,0.0000001,0,deg
 
 0050,4,false    SPotRL,false,0.01221,0,mm             SPotRR,false,0.01221,0,mm
 0060,4,false    SPotFL,false,0.01221,0,mm             SPotFR,false,0.01221,0,mm

@@ -4,17 +4,17 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-04 #AMERICA
+ * @date Modified: 2014-07-12
  */
 #ifndef CONFIG_H
 #define CONFIG_H
 
 #include <map>
 #include <QString>
+#include <QStringList>
 #include <QVector>
 #include <QFile>
 #include <QTextStream>
-#include "display.h"
 
 using std::map;
 
@@ -23,7 +23,7 @@ using std::map;
  * information about the position of the channel in the message, the title of
  * the channel, a string representing the units, and a scalar for the channel.
  */
-struct channel {
+struct Channel {
   unsigned char pos;
   QString title;
   bool isSigned;
@@ -37,13 +37,13 @@ struct channel {
  * of the message, the data length, the byte order, an array of structs that
  * hold all of the channels contained in the message, and a timestamp value.
  */
-struct message {
+struct Message {
   unsigned short id;
   unsigned char dlc;
   bool isBigEndian;
-  QVector<channel> channels;
+  QVector<Channel> channels;
 
-  message() {
+  Message() {
     id = 0;
     dlc = 0;
     isBigEndian = false;
@@ -63,9 +63,9 @@ class AppConfig : public QObject {
      * information from the file. Builds a map from the CAN message ID to a struct
      * containing all the necessary information about the message.
      *
-     * @returns A map from message IDs to a message struct.
+     * @returns A map from message IDs to a Message struct.
      */
-    map<unsigned char, message> getMessages();
+    map<unsigned short, Message> getMessages();
 
   signals:
 
@@ -94,9 +94,9 @@ class AppConfig : public QObject {
      * or malformed.
      *
      * @params line A string representing a single line from the config file.
-     * @returns A message struct with all applicable data.
+     * @returns A Message struct with all applicable data.
      */
-    message getMessage(QString line);
+    Message getMessage(QString line);
 
     /**
      * Takes a single section from a line in the config file and returns a
@@ -105,9 +105,9 @@ class AppConfig : public QObject {
      *
      * @params pos The position of this section in the parent line.
      * @params section The section of the line.
-     * @returns A channel struct with all applicable data.
+     * @returns A Channel struct with all applicable data.
      */
-    channel getChannel(int pos, QString section);
+    Channel getChannel(int pos, QString section);
 };
 
 #endif // CONFIG_H

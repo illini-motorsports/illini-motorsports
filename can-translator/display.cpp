@@ -4,12 +4,14 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-05
+ * @date Modified: 2014-07-12
  */
 #include "display.h"
 
 AppDisplay::AppDisplay() : QWidget() {
   AppConfig config;
+  data = new AppData();
+
   this->successful = false;
 
   this->resize(WIDTH, HEIGHT);
@@ -38,13 +40,19 @@ AppDisplay::AppDisplay() : QWidget() {
   layout_headers->addWidget(lbl_subheader, 1);
 
   connect(&config, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
+  connect(data, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
 
-  map<unsigned char, message> messages = config.getMessages();
+  map<unsigned short, Message> messages = config.getMessages();
   if(messages.size() <= 0) {
     this->successful = false;
   } else {
     this->successful = true;
   }
+
+  btn_read = new QPushButton("Read Data");
+  layout_headers->addWidget(btn_read, 1);
+
+  connect(btn_read, SIGNAL(clicked()), this, SLOT(readData()));
 
   lbl_messageCount = new QLabel(QString("Number of Messages: %1").arg(messages.size()));
   lbl_messageCount->setFont(font_messageCount);
@@ -55,15 +63,15 @@ AppDisplay::AppDisplay() : QWidget() {
   lbl_messages->setFont(font_message);
   layout_headers->addWidget(lbl_messages, 7);
 
-  typedef map<unsigned char, message>::iterator it_msg;
+  typedef map<unsigned short, Message>::iterator it_msg;
   for(it_msg msgIt = messages.begin(); msgIt != messages.end(); msgIt++) {
-    message msg = msgIt->second;
-    QString line = "\nId: " + QString::number(msg.id) + ". L: " +
+    Message msg = msgIt->second;
+    QString line = "\nId: " + QString::number(msg.id, 16) + ". L: " +
       QString::number(msg.dlc) + ". BigEndian: " + QString(msg.isBigEndian ? "T " : "F ");
 
-    typedef QVector<channel>::iterator it_chn;
+    typedef QVector<Channel>::iterator it_chn;
     for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
-      channel chn = *chnIt;
+      Channel chn = *chnIt;
       line += " ||| Pos: " + QString::number(chn.pos) + " T: " + chn.title +
         " isS: " + QString(chn.isSigned ? "T" : "F") + " S: " +
         QString::number(chn.scalar) + " O: " + QString::number(chn.offset) +
@@ -74,7 +82,10 @@ AppDisplay::AppDisplay() : QWidget() {
   }
 }
 
+void AppDisplay::readData() {
+  data->readData();
+}
+
 void AppDisplay::handleError(QString error) {
   QMessageBox::critical(this, tr("Critical Error"), error);
 }
-
