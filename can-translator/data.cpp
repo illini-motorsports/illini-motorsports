@@ -29,7 +29,7 @@ void AppData::readData() {
     AppConfig config;
     map<unsigned short, Message> messages = config.getMessages();
 
-    unsigned int it = 0;
+    int it = 0;
     while(it + 14 < length) {
       unsigned short msgId = buffer[it + 1] << 8 | buffer[it];
       it += 2;
@@ -37,20 +37,22 @@ void AppData::readData() {
       Message msg = messages[msgId];
       if(msg.id == 0 && msg.dlc == 0 && msg.channels.size() == 0) {
         emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
-        it += 12;
+        it += 2;
       } else {
-        cout << "ID:: " << QString::number(msg.id, 16).toStdString() << endl;
         for(int i = 0; i < msg.channels.size(); i++) {
           Channel chn = msg.channels[i];
-          double value;
-          if(chn.isSigned) {
-            signed int data = msg.isBigEndian ? buffer[it + 1] << 8 | buffer[it] : buffer[it] << 8 | buffer[it + 1];
-            value = (double) data;
-          } else {
-            unsigned int data = msg.isBigEndian ? buffer[it + 1] << 8 | buffer[it] : buffer[it] << 8 | buffer[it + 1];
-            value = (double) data;
+
+          if(chn.title.compare("Unused") != 0 && chn.title.compare("Rsrvd") != 0) {
+            double value;
+            if(chn.isSigned) {
+              signed int data = msg.isBigEndian ? buffer[it] << 8 | buffer[it + 1] : buffer[it + 1] << 8 | buffer[it];
+              value = (double) data;
+            } else {
+              unsigned int data = msg.isBigEndian ? buffer[it] << 8 | buffer[it + 1] : buffer[it + 1] << 8 | buffer[it];
+              value = (double) data;
+            }
+            latestValues[messageIndices[msg.id]][i] = (value - chn.offset) * chn.scalar;
           }
-          cout << "  " << (value * chn.scalar) - chn.offset << " " << chn.units.toStdString() << endl;
           it += 2;
         }
 
@@ -59,10 +61,71 @@ void AppData::readData() {
         it += 4;
 
         double timestamp = upper + lower - 1.0;
-        cout << "TIME:: " << timestamp << endl << endl;
+
+        latestValues[0][0] = timestamp;
+
+        writeLine();
       }
     }
 
     delete[] buffer;
+  }
+}
+
+void AppData::writeAxis() {
+  ofstream outFile("out.txt", ios::out | ios::trunc); 
+
+  if(!outFile || !outFile.good()) {
+    emit error(QString("Problem opening output file."));
+   } else {
+    outFile << "xtime [s]";
+
+    vector<double> vec_time;
+    vec_time.push_back(0.0);
+    latestValues.push_back(vec_time);
+
+    AppConfig config;
+    map<unsigned short, Message> messages = config.getMessages();
+
+    int indexCounter = 1;
+
+    typedef map<unsigned short, Message>::iterator it_msg;
+    for(it_msg msgIt = messages.begin(); msgIt != messages.end(); msgIt++) {
+      Message msg = msgIt->second;
+
+      vector<double> vec_msg;
+
+      typedef QVector<Channel>::iterator it_chn;
+      for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
+        Channel chn = *chnIt;
+        if(chn.title.compare("Unused") != 0 && chn.title.compare("Rsrvd") != 0) {
+          outFile << "  " << chn.title.toStdString() << " [" << chn.units.toStdString() << "]";
+          vec_msg.push_back(0.0);
+        }
+      }
+
+      latestValues.push_back(vec_msg);
+      messageIndices[msg.id] = indexCounter;
+      indexCounter++;
+    }
+
+    outFile.close();
+  }
+}
+
+void AppData::writeLine() {
+  ofstream outFile("./out.txt", ios::out | ios::app);
+  if(!outFile || !outFile.good()) {
+    emit error(QString("Problem opening output file."));
+  } else {
+    outFile << endl;
+    for(unsigned int i = 0; i < latestValues.size(); i++) {
+      for(unsigned int j = 0; j < latestValues[i].size(); j++) {
+        if(i != 0) {
+          outFile << " ";
+        }
+        outFile << latestValues[i][j]; 
+      }
+    } 
   }
 }

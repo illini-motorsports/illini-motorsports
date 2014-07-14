@@ -13,13 +13,15 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <vector>
 #include "config.h"
 
-using std::cout;
 using std::endl;
 using std::ifstream;
+using std::ofstream;
 using std::ios;
 using std::map;
+using std::vector;
 
 /**
  * Class which handles the scanning of CAN messages from config.txt.
@@ -35,6 +37,16 @@ class AppData : public QObject {
      */
     void readData();
 
+    /**
+     * Prints all the channels to the output file.
+     */
+    void writeAxis();
+
+    /**
+     * Prints a line of the latest data.
+     */
+    void writeLine();
+
   signals:
 
     /**
@@ -44,6 +56,10 @@ class AppData : public QObject {
      * @params error The error message to display.
      */
     void error(QString error);
+
+  private:
+    map<unsigned short, int> messageIndices;
+    vector< vector<double> > latestValues;
 };
 
 #endif // DATA_H

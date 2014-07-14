@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-12
+ * @date Modified: 2014-07-13
  */
 #include "display.h"
 
@@ -83,6 +83,7 @@ AppDisplay::AppDisplay() : QWidget() {
 }
 
 void AppDisplay::readData() {
+  data->writeAxis();
   data->readData();
 }
 
