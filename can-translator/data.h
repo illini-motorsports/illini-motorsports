@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-13
+ * @date Modified: 2014-07-16
  */
 #ifndef DATA_H
 #define DATA_H
@@ -57,8 +57,17 @@ class AppData : public QObject {
      */
     void error(QString error);
 
+    /**
+     * Updates the progress bar with the latest progress counter.
+     *
+     * @param progress The latest progress counter to display.
+     */
+    void progress(int progress);
+
   private:
+
     map<unsigned short, int> messageIndices;
+
     vector< vector<double> > latestValues;
 };
 

@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-12
+ * @date Modified: 2014-07-16
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -53,14 +53,23 @@ class AppDisplay : public QWidget {
 
     /**
      * Displays the error message in a critical error message box.
+     *
+     * @param error The error message to display.
      */
     void handleError(QString error);
 
+    /**
+     * Updates the progress bar with the latest progress counter.
+     *
+     * @param progress The latest progress counter to display.
+     */
+    void updateProgress(int progress);
+
   private:
+    
     AppData* data;
 
     QVBoxLayout* layout;
-
     QVBoxLayout* layout_headers;
 
     QLabel* lbl_header;
@@ -69,9 +78,6 @@ class AppDisplay : public QWidget {
     QLabel* lbl_messages;
 
     QProgressBar* bar_convert;
-    QProgressBar* bar_normalize;
-    QProgressBar* bar_write;
-
     QPushButton* btn_read;
 };
 

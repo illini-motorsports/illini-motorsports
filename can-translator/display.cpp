@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-13
+ * @date Modified: 2014-07-16
  */
 #include "display.h"
 
@@ -41,6 +41,7 @@ AppDisplay::AppDisplay() : QWidget() {
 
   connect(&config, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
   connect(data, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
+  connect(data, SIGNAL(progress(int)), this, SLOT(updateProgress(int)));
 
   map<unsigned short, Message> messages = config.getMessages();
   if(messages.size() <= 0) {
@@ -50,18 +51,19 @@ AppDisplay::AppDisplay() : QWidget() {
   }
 
   btn_read = new QPushButton("Read Data");
-  layout_headers->addWidget(btn_read, 1);
-
+  layout->addWidget(btn_read, 1);
   connect(btn_read, SIGNAL(clicked()), this, SLOT(readData()));
 
+  bar_convert = new QProgressBar();
+  layout->addWidget(bar_convert, 1);
+
   lbl_messageCount = new QLabel(QString("Number of Messages: %1").arg(messages.size()));
-  lbl_messageCount->setFont(font_messageCount);
-  lbl_messageCount->setAlignment(Qt::AlignCenter);
-  layout_headers->addWidget(lbl_messageCount, 1);
+  lbl_messageCount->setFont(font_messageCount); lbl_messageCount->setAlignment(Qt::AlignCenter);
+  layout->addWidget(lbl_messageCount, 1);
 
   lbl_messages = new QLabel();
   lbl_messages->setFont(font_message);
-  layout_headers->addWidget(lbl_messages, 7);
+  layout->addWidget(lbl_messages, 4);
 
   typedef map<unsigned short, Message>::iterator it_msg;
   for(it_msg msgIt = messages.begin(); msgIt != messages.end(); msgIt++) {
@@ -89,4 +91,14 @@ void AppDisplay::readData() {
 
 void AppDisplay::handleError(QString error) {
   QMessageBox::critical(this, tr("Critical Error"), error);
+}
+
+void AppDisplay::updateProgress(int progress) {
+  if(progress < 0) {
+    progress = 0;
+  }
+  if(progress > 100) {
+    progress = 100;
+  }
+  bar_convert->setValue(progress);
 }

@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-13
+ * @date Modified: 2014-07-16
  */
 #include "data.h"
 
@@ -20,6 +20,8 @@ void AppData::readData() {
     infile.read(bufferSigned, length);
     unsigned char * buffer = (unsigned char *) bufferSigned;
 
+    emit progress(0);
+
     if(!infile || !infile.good()) {
       emit error(QString("Only %1 bytes were read").arg(infile.gcount()));
     }
@@ -30,7 +32,13 @@ void AppData::readData() {
     map<unsigned short, Message> messages = config.getMessages();
 
     int it = 0;
+    int progressCounter = 0;
     while(it + 14 < length) {
+
+      if((((double) it) / ((double) length)) * 100.0 > progressCounter) {
+        emit progress(++progressCounter);
+      }
+
       unsigned short msgId = buffer[it + 1] << 8 | buffer[it];
       it += 2;
 
