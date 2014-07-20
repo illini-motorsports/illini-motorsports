@@ -4,12 +4,12 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-16
+ * @date Modified: 2014-07-19
  */
 #include "data.h"
 
-void AppData::readData() {
-  ifstream infile("./0015.TXT", ios::in|ios::binary);
+bool AppData::readData() {
+  ifstream infile(this->filename.toLocal8Bit().data(), ios::in|ios::binary);
 
   if(infile) {
     infile.seekg(0, infile.end);
@@ -33,6 +33,7 @@ void AppData::readData() {
 
     int it = 0;
     int progressCounter = 0;
+    bool badMessage = false;
     while(it + 14 < length) {
 
       if((((double) it) / ((double) length)) * 100.0 > progressCounter) {
@@ -44,9 +45,13 @@ void AppData::readData() {
 
       Message msg = messages[msgId];
       if(msg.id == 0 && msg.dlc == 0 && msg.channels.size() == 0) {
-        emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+        if(!badMessage) {
+          emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+        }
+        badMessage = true;
         it += 2;
       } else {
+        badMessage = false;
         for(int i = 0; i < msg.channels.size(); i++) {
           Channel chn = msg.channels[i];
 
@@ -77,14 +82,21 @@ void AppData::readData() {
     }
 
     delete[] buffer;
+    buffer = NULL;
+    bufferSigned = NULL;
+    return true;
+  } else {
+    emit error(QString("Problem with input file. Try again or try another file."));
+    return false;
   }
 }
 
-void AppData::writeAxis() {
+bool AppData::writeAxis() {
   ofstream outFile("out.txt", ios::out | ios::trunc); 
 
   if(!outFile || !outFile.good()) {
     emit error(QString("Problem opening output file."));
+    return false;
    } else {
     outFile << "xtime [s]";
 
@@ -118,6 +130,7 @@ void AppData::writeAxis() {
     }
 
     outFile.close();
+    return true;
   }
 }
 

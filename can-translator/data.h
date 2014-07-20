@@ -4,16 +4,16 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-16
+ * @date Modified: 2014-07-19
  */
 #ifndef DATA_H
 #define DATA_H
 
-#include <QObject>
 #include <iostream>
 #include <fstream>
-#include <map>
+#include <QObject>
 #include <vector>
+#include <map>
 #include "config.h"
 
 using std::endl;
@@ -34,18 +34,27 @@ class AppData : public QObject {
     /**
      * Opens up a data file and iterates through it, converting the raw data
      * to a format that can be imported into Darab.
+     *
+     * @returns Whether the read was successful.
      */
-    void readData();
+    bool readData();
 
     /**
      * Prints all the channels to the output file.
+     *
+     * @returns Whether the write was successful.
      */
-    void writeAxis();
+    bool writeAxis();
 
     /**
      * Prints a line of the latest data.
      */
     void writeLine();
+
+    /**
+     * The name of the file to convert.
+     */
+    QString filename;
 
   signals:
 
@@ -66,9 +75,20 @@ class AppData : public QObject {
 
   private:
 
+    /**
+     * A map of messageId to the position of the specified message in the
+     * array of printed values.
+     */
     map<unsigned short, int> messageIndices;
 
+    /**
+     * An array that holds the latest values for each message type. When a
+     * message is read and converted, the new values are placed in the 
+     * appropriate spot in this array. Then the whole array is printed to a
+     * line to output the new message and the latest values of other messages.
+     */
     vector< vector<double> > latestValues;
+
 };
 
 #endif // DATA_H

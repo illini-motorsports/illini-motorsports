@@ -4,12 +4,11 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-16
+ * @date Modified: 2014-07-19
  */
 #include "display.h"
 
 AppDisplay::AppDisplay() : QWidget() {
-  AppConfig config;
   data = new AppData();
 
   this->successful = false;
@@ -39,10 +38,11 @@ AppDisplay::AppDisplay() : QWidget() {
   lbl_subheader->setAlignment(Qt::AlignCenter);
   layout_headers->addWidget(lbl_subheader, 1);
 
-  connect(&config, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
   connect(data, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
   connect(data, SIGNAL(progress(int)), this, SLOT(updateProgress(int)));
 
+  AppConfig config;
+  connect(&config, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
   map<unsigned short, Message> messages = config.getMessages();
   if(messages.size() <= 0) {
     this->successful = false;
@@ -85,8 +85,10 @@ AppDisplay::AppDisplay() : QWidget() {
 }
 
 void AppDisplay::readData() {
-  data->writeAxis();
-  data->readData();
+  data->filename = QFileDialog::getOpenFileName(this, tr("Open File"), ".", tr("Files (*.*)"));
+  if(data->writeAxis() && data->readData()) {
+    QMessageBox::information(this, tr("Conversion Completed!"), "Output File: ./out.txt");
+  }
 }
 
 void AppDisplay::handleError(QString error) {
@@ -101,4 +103,32 @@ void AppDisplay::updateProgress(int progress) {
     progress = 100;
   }
   bar_convert->setValue(progress);
+}
+
+AppDisplay::~AppDisplay() {
+  delete this->data;
+  this->data = NULL;
+
+  delete this->layout;
+  this->layout = NULL;
+
+  this->layout_headers = NULL;
+
+  delete this->lbl_header;
+  this->lbl_header = NULL;
+
+  delete this->lbl_subheader;
+  this->lbl_subheader = NULL;
+
+  delete this->lbl_messageCount;
+  this->lbl_messageCount = NULL;
+
+  delete this->lbl_messages;
+  this->lbl_messages = NULL;
+
+  delete this->bar_convert;
+  this->bar_convert = NULL;
+
+  delete this->btn_read;
+  this->btn_read = NULL;
 }

@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QProgressBar>
+#include <QFileDialog>
 #include <QPushButton>
 #include <QFont>
 #include "config.h"
@@ -36,6 +37,11 @@ class AppDisplay : public QWidget {
      * point for the entire application.
      */
     AppDisplay();
+
+    /**
+     * Default destructor for AppDisplay class.
+     */
+    ~AppDisplay();
 
     /**
      * If true, the configuration scanning process was successful and it is
