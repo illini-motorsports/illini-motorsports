@@ -4,22 +4,20 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-16
+ * @date Modified: 2014-07-22
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
 
-#include <QApplication>
-#include <QDesktopWidget>
-#include <QMessageBox>
+#include <QFont>
 #include <QLabel>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QVBoxLayout>
 #include <QProgressBar>
-#include <QFileDialog>
-#include <QPushButton>
-#include <QFont>
-#include "config.h"
 #include "data.h"
+#include "config.h"
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -37,11 +35,6 @@ class AppDisplay : public QWidget {
      * point for the entire application.
      */
     AppDisplay();
-
-    /**
-     * Default destructor for AppDisplay class.
-     */
-    ~AppDisplay();
 
     /**
      * If true, the configuration scanning process was successful and it is
@@ -72,19 +65,21 @@ class AppDisplay : public QWidget {
     void updateProgress(int progress);
 
   private:
-    
-    AppData* data;
 
-    QVBoxLayout* layout;
-    QVBoxLayout* layout_headers;
+    AppConfig config;
+    AppData data;
 
-    QLabel* lbl_header;
-    QLabel* lbl_subheader;
-    QLabel* lbl_messageCount;
-    QLabel* lbl_messages;
+    QVBoxLayout layout;
+    QVBoxLayout layout_headers;
 
-    QProgressBar* bar_convert;
-    QPushButton* btn_read;
+    QLabel lbl_header;
+    QLabel lbl_messages;
+    QLabel lbl_subheader;
+    QLabel lbl_messageCount;
+
+    QPushButton btn_read;
+
+    QProgressBar bar_convert;
 };
 
 #endif // APP_DISPLAY_H
