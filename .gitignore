@@ -5,6 +5,7 @@ can-translator/*moc*
 telemetry-monitor/Makefile
 telemetry-monitor/telemetry-monitor
 telemetry-monitor/*moc*
+*.sublime-workspace
 
 # Compiled Object files
 *.slo
