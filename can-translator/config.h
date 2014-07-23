@@ -4,16 +4,16 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-12
+ * @date Modified: 2014-07-22
  */
 #ifndef CONFIG_H
 #define CONFIG_H
 
 #include <map>
-#include <QString>
-#include <QStringList>
-#include <QVector>
 #include <QFile>
+#include <QString>
+#include <QVector>
+#include <QStringList>
 #include <QTextStream>
 
 using std::map;
@@ -30,6 +30,19 @@ struct Channel {
   double scalar;
   double offset;
   QString units;
+
+  Channel() {
+    pos = 0;
+    title = "";
+    isSigned = false;
+    scalar = 0.0;
+    offset = 0.0;
+    units = "";
+  }
+
+  bool valid() {
+    return !(title.isEmpty() && units.isEmpty());
+  }
 };
 
 /**
@@ -47,6 +60,10 @@ struct Message {
     id = 0;
     dlc = 0;
     isBigEndian = false;
+  }
+
+  bool valid() {
+    return !(id == 0 && dlc == 0 && !isBigEndian);
   }
 };
 
