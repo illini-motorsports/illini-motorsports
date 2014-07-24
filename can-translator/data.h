@@ -4,24 +4,23 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-19
+ * @date Modified: 2014-07-23
  */
 #ifndef DATA_H
 #define DATA_H
 
-#include <iostream>
+#include <map>
 #include <fstream>
 #include <QObject>
 #include <vector>
-#include <map>
 #include "config.h"
 
-using std::endl;
-using std::ifstream;
-using std::ofstream;
 using std::ios;
 using std::map;
+using std::endl;
 using std::vector;
+using std::ifstream;
+using std::ofstream;
 
 /**
  * Class which handles the scanning of CAN messages from config.txt.
@@ -83,12 +82,20 @@ class AppData : public QObject {
 
     /**
      * An array that holds the latest values for each message type. When a
-     * message is read and converted, the new values are placed in the 
+     * message is read and converted, the new values are placed in the
      * appropriate spot in this array. Then the whole array is printed to a
      * line to output the new message and the latest values of other messages.
      */
     vector< vector<double> > latestValues;
 
+    /**
+     * Loops through the provided buffer and converts the data within into the
+     * output format. As the data is converted, it is written to the output file.
+     *
+     * @param buffer The data buffer to convert.
+     * @param length The length of the buffer. (Thanks c++).
+     */
+    void processBuffer(unsigned char * buffer, int length);
 };
 
 #endif // DATA_H
