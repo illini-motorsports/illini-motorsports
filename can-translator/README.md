@@ -4,8 +4,9 @@
 ## Changelog
 | Release | Changes |
 | --- | --- |
-| ![0.1.0](http://img.shields.io/badge/v-0.1.0-yellow.svg?style=flat) | Configuration Scanning Complete |
-| ![0.0.1](http://img.shields.io/badge/v-0.0.1-orange.svg?style=flat) | Repository Creation |
+| ![0.2.0](http://img.shields.io/badge/v-0.2.0-yellow.svg?style=flat) | Working version of data converter. |
+| ![0.1.0](http://img.shields.io/badge/v-0.1.0-yellow.svg?style=flat) | Configuration scanning complete. |
+| ![0.0.1](http://img.shields.io/badge/v-0.0.1-orange.svg?style=flat) | Repository creation. |
 
 ## Dependencies
 This project requires several libraries to build properly on Linux. If you are using Windows, good luck.
