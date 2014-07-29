@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-23
+ * @date Modified: 2014-07-28
  */
 #ifndef DATA_H
 #define DATA_H
@@ -54,6 +54,12 @@ class AppData : public QObject {
      * The name of the file to convert.
      */
     QString filename;
+
+    /**
+     * A map of message IDs to arrays of bools that contains info about which
+     * channels the user selected to be converted.
+     */
+    map<unsigned short, vector<bool> > enabled;
 
   signals:
 

@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-23
+ * @date Modified: 2014-07-28
  */
 #include "data.h"
 
@@ -56,14 +56,17 @@ bool AppData::writeAxis() {
       Message msg = msgIt->second;
 
       vector<double> vec_msg;
+      vector<bool> msgEnabled = this->enabled[msg.id];
 
+      int i = 0;
       typedef QVector<Channel>::iterator it_chn;
       for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
         Channel chn = *chnIt;
-        if(chn.title.compare("Unused") != 0 && chn.title.compare("Rsrvd") != 0) {
+        if(msgEnabled[i]) {
           outFile << "  " << chn.title.toStdString() << " [" << chn.units.toStdString() << "]";
           vec_msg.push_back(0.0);
         }
+        i++;
       }
 
       latestValues.push_back(vec_msg);
@@ -121,10 +124,13 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
     Message msg = messages[msgId];
     if(msg.valid()) {
       badMsgFound = false;
+      vector<bool> msgEnabled = this->enabled[msg.id];
+
+      int j = 0;
       for(int i = 0; i < msg.channels.size(); i++) {
         Channel chn = msg.channels[i];
 
-        if(chn.title.compare("Unused") != 0 && chn.title.compare("Rsrvd") != 0) {
+        if(msgEnabled[i]) {
           double value;
           if(chn.isSigned) {
             signed int data = msg.isBigEndian ? buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
@@ -133,7 +139,8 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
             unsigned int data = msg.isBigEndian ? buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
             value = (double) data;
           }
-          latestValues[messageIndices[msg.id]][i] = (value - chn.offset) * chn.scalar;
+          latestValues[messageIndices[msg.id]][j] = (value - chn.offset) * chn.scalar;
+          j++;
         }
         iter += 2;
       }

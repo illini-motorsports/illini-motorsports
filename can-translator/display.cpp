@@ -68,6 +68,7 @@ AppDisplay::AppDisplay() : QWidget() {
   typedef map<unsigned short, Message>::iterator it_msg;
   for(it_msg msgIt = messages.begin(); msgIt != messages.end(); msgIt++) {
     Message msg = msgIt->second;
+
     QTableWidgetItem* item_id = new QTableWidgetItem(QString::number(msg.id, 16));
     item_id->setFlags(Qt::NoItemFlags);
     table.setItem(i, 0, item_id);
@@ -84,11 +85,16 @@ AppDisplay::AppDisplay() : QWidget() {
     typedef QVector<Channel>::iterator it_chn;
     for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
       Channel chn = *chnIt;
-      QTableWidgetItem* item = new QTableWidgetItem(chn.title + "<" + chn.units + ">" + " isS: " + (chn.isSigned ? "T" : "F") +
+      QTableWidgetItem* item = new QTableWidgetItem("     " + chn.title + "<" + chn.units + ">" + " isS: " + (chn.isSigned ? "T" : "F") +
         " S: " + QString::number(chn.scalar) + " O: " + QString::number(chn.offset));
       item->setFlags(Qt::NoItemFlags);
       item->setFont(font_channel);
       table.setItem(i, 3 + j, item);
+
+      QCheckBox* box = new QCheckBox();
+      box->setFocusPolicy(Qt::NoFocus);
+      box->setChecked(!(chn.title.compare("Unused") == 0 || chn.title.compare("Rsrvd") == 0));
+      table.setCellWidget(i, 3 + j, box);
       j++;
     }
 
@@ -114,9 +120,31 @@ AppDisplay::AppDisplay() : QWidget() {
   connect(&btn_read, SIGNAL(clicked()), this, SLOT(readData()));
 }
 
+map<unsigned short, vector<bool> > AppDisplay::getEnabled() {
+  map<unsigned short, vector<bool> > enabled;
+  map<unsigned short, Message> messages = config.getMessages();
+
+  for(int i = 0; i < table.rowCount(); i++) {
+    bool conv;
+    vector<bool> msgEnabled;
+    Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
+
+    int j = 0;
+    typedef QVector<Channel>::iterator it_chn;
+    for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
+      msgEnabled.push_back(((QCheckBox*) table.cellWidget(i, 3 + j))->isChecked());
+      j++;
+    }
+    enabled[msg.id] = msgEnabled;
+  }
+
+  return enabled;
+}
+
 void AppDisplay::readData() {
   btn_read.setEnabled(false);
   data.filename = QFileDialog::getOpenFileName(this, "Open File", ".", "Files (*.*)");
+  data.enabled = this->getEnabled();
   if(data.writeAxis() && data.readData()) {
     QMessageBox::information(this, "Conversion Completed!", "Output File: ./out.txt");
   }

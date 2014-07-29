@@ -11,6 +11,7 @@
 
 #include <QFont>
 #include <QLabel>
+#include <QCheckBox>
 #include <QKeyEvent>
 #include <QFileDialog>
 #include <QHeaderView>
@@ -65,6 +66,15 @@ class AppDisplay : public QWidget {
      * btn_read is pressed.
      */
     void readData();
+
+    /**
+     * Scans the grid of checkboxes to see which channels the user wants
+     * to convert, then returns this info.
+     *
+     * @returns A map of message IDs to arrays of bools that contains info about which
+     *     channels the user selected to be converted.
+     */
+    map<unsigned short, vector<bool> > getEnabled();
 
     /**
      * Displays the error message in a critical error message box.
