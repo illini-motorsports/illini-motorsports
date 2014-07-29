@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-28
+ * @date Modified: 2014-07-29
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -77,6 +77,16 @@ class AppDisplay : public QWidget {
     map<unsigned short, vector<bool> > getEnabled();
 
     /**
+     * Sets all channel checkboxes as checked.
+     */
+    void selectAll();
+
+    /**
+     * Sets all channel checkboxes as not checked.
+     */
+    void selectNone();
+
+    /**
      * Displays the error message in a critical error message box.
      *
      * @param error The error message to display.
@@ -92,18 +102,29 @@ class AppDisplay : public QWidget {
 
   private:
 
+    /**
+     * Sets all channel checkboxes as either checked or not checked.
+     *
+     * @param checked Whether to set the boxes as checked or not checked.
+     */
+    void selectBoxes(bool checked);
+
     AppConfig config;
     AppData data;
 
     QVBoxLayout layout;
     QVBoxLayout layout_headers;
+    QHBoxLayout layout_selects;
 
     QLabel lbl_header;
     QLabel lbl_subheader;
+    QLabel lbl_keymaps;
 
     QTableWidget table;
 
     QPushButton btn_read;
+    QPushButton btn_select_all;
+    QPushButton btn_select_none;
 
     QProgressBar bar_convert;
 };

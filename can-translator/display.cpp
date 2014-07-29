@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-28
+ * @date Modified: 2014-07-29
  */
 #include "display.h"
 
@@ -36,8 +36,21 @@ AppDisplay::AppDisplay() : QWidget() {
   lbl_subheader.setAlignment(Qt::AlignCenter);
   layout_headers.addWidget(&lbl_subheader, 1);
 
+  lbl_keymaps.setText("[c] Convert File     [a] Select All     [n] Select None     [q] Quit");
+  lbl_keymaps.setFont(font_subheader);
+  lbl_keymaps.setAlignment(Qt::AlignCenter);
+  layout_headers.addWidget(&lbl_keymaps, 1);
+
   btn_read.setText("Select File to Convert");
   layout.addWidget(&btn_read, 1);
+
+  btn_select_all.setText("Select All Channels");
+  layout_selects.addWidget(&btn_select_all, 1);
+
+  btn_select_none.setText("Select No Channels");
+  layout_selects.addWidget(&btn_select_none, 1);
+
+  layout.addLayout(&layout_selects);
 
   layout.addWidget(&bar_convert, 1);
 
@@ -94,6 +107,7 @@ AppDisplay::AppDisplay() : QWidget() {
       QCheckBox* box = new QCheckBox();
       box->setFocusPolicy(Qt::NoFocus);
       box->setChecked(!(chn.title.compare("Unused") == 0 || chn.title.compare("Rsrvd") == 0));
+      box->setStyleSheet("QCheckBox:hover { background-color: rgba(255, 255, 255, 0); }");
       table.setCellWidget(i, 3 + j, box);
       j++;
     }
@@ -117,6 +131,8 @@ AppDisplay::AppDisplay() : QWidget() {
   table.show();
   layout.addWidget(&table, 1);
 
+  connect(&btn_select_all, SIGNAL(clicked()), this, SLOT(selectAll()));
+  connect(&btn_select_none, SIGNAL(clicked()), this, SLOT(selectNone()));
   connect(&btn_read, SIGNAL(clicked()), this, SLOT(readData()));
 }
 
@@ -141,6 +157,26 @@ map<unsigned short, vector<bool> > AppDisplay::getEnabled() {
   return enabled;
 }
 
+void AppDisplay::selectAll() {
+  selectBoxes(true);
+}
+
+void AppDisplay::selectNone() {
+  selectBoxes(false);
+}
+
+void AppDisplay::selectBoxes(bool checked) {
+  map<unsigned short, Message> messages = config.getMessages();
+  bool conv;
+  for(int i = 0; i < table.rowCount(); i++) {
+    Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
+
+    for(int j = 0; j < msg.channels.size(); j++) {
+      ((QCheckBox*) table.cellWidget(i, 3 + j))->setChecked(checked);
+    }
+  }
+}
+
 void AppDisplay::readData() {
   btn_read.setEnabled(false);
   data.filename = QFileDialog::getOpenFileName(this, "Open File", ".", "Files (*.*)");
@@ -163,6 +199,16 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
   // Opens file conversion dialog.
   if(e->text() == "c") {
     btn_read.click();
+  }
+
+  // Selects all channel checkboxes.
+  if(e->text() == "a") {
+    btn_select_all.click();
+  }
+
+  // Selects no channel checkboxes.
+  if(e->text() == "n") {
+    btn_select_none.click();
   }
 
   // Quits the application.
