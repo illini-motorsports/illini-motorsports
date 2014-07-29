@@ -4,22 +4,28 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-22
+ * @date Modified: 2014-07-28
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
 
 #include <QFont>
 #include <QLabel>
+#include <QKeyEvent>
 #include <QFileDialog>
+#include <QHeaderView>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSizePolicy>
 #include <QVBoxLayout>
+#include <QApplication>
 #include <QProgressBar>
+#include <QTableWidget>
+#include <QTableWidgetItem>
 #include "data.h"
 #include "config.h"
 
-#define WIDTH 1280
+#define WIDTH 1400
 #define HEIGHT 720
 
 /**
@@ -41,6 +47,16 @@ class AppDisplay : public QWidget {
      * safe to continue to execution of the program.
      */
     bool successful;
+
+  protected:
+
+    /**
+     * Called when the user presses a key on their keyboard. Not called
+     * when a user presses a key that isn't on their keyboard.
+     *
+     * @params e The key event that occurred.
+     */
+    void keyPressEvent(QKeyEvent* e);
 
   private slots:
 
@@ -73,9 +89,9 @@ class AppDisplay : public QWidget {
     QVBoxLayout layout_headers;
 
     QLabel lbl_header;
-    QLabel lbl_messages;
     QLabel lbl_subheader;
-    QLabel lbl_messageCount;
+
+    QTableWidget table;
 
     QPushButton btn_read;
 
