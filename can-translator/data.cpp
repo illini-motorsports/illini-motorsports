@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-29
+ * @date Modified: 2014-07-30
  */
 #include "data.h"
 
@@ -41,6 +41,9 @@ bool AppData::writeAxis() {
 
   if(outFile && outFile.good()) {
     outFile << "xtime [s]";
+
+    latestValues.clear();
+    messageIndices.clear();
 
     vector<double> vec_time;
     vec_time.push_back(0.0);

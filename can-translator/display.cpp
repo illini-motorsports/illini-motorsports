@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-29
+ * @date Modified: 2014-07-30
  */
 #include "display.h"
 
@@ -179,12 +179,18 @@ void AppDisplay::selectBoxes(bool checked) {
 
 void AppDisplay::readData() {
   btn_read.setEnabled(false);
+  btn_select_all.setEnabled(false);
+  btn_select_none.setEnabled(false);
+
   data.filename = QFileDialog::getOpenFileName(this, "Open File", ".", "Files (*.*)");
   data.enabled = this->getEnabled();
   if(data.writeAxis() && data.readData()) {
     QMessageBox::information(this, "Conversion Completed!", "Output File: ./out.txt");
   }
+
   btn_read.setEnabled(true);
+  btn_select_all.setEnabled(true);
+  btn_select_none.setEnabled(true);
 }
 
 void AppDisplay::handleError(QString error) {
