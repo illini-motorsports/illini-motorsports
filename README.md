@@ -24,9 +24,6 @@ This is the software that is used to program the microcontrollers. You can flash
 #### [C18 Compiler](http://www.microchip.com/Developmenttools/ProductDetails.aspx?PartNO=SW006011)
 You will also need the C18 compiler, which is specific to the PIC18 family of microcontrollers that we use. It is very outdated but should still work. I beleive the "LITE" version will be enough for our needs, but if not you'll have to get a licenced copy. As far as I know there is only a windows version, so us linux guys get screwed.
 
-#### [CAN Bus Analyzer](http://www.microchip.com/Developmenttools/ProductDetails.aspx?PartNO=APGDT002)
-This software, in conjunction with the Microchip analyzer tool shown on the linked page, allows us to interface directly with the CAN bus on the car to send and view messages. Windows only.
-
 #### A Git Client
 
 If you are new to git, I'll point you [here](http://www.vogella.com/tutorials/Git/article.html). It's a fairly in-depth explanation of git but if you skim through it you should pick up all you need to know for using the git. Reading this is more necessary if you are going to use a command line interface and less necessary if you are going to use a GUI git client.
@@ -35,11 +32,14 @@ If you are new to git, I'll point you [here](http://www.vogella.com/tutorials/Gi
 ##### [Git CLI - Linux](http://git-scm.com/download/linux)
 If you're an awesome person and on Linux, you can use the command line interface for git. Because you're awesome, I'm assuming you already know how to install things onto your computer.
 
-
 ##### [Git CLI - Windows](http://git-scm.com/download/win)
-If you're on Windows and slightly less awesome, but more awesome than average, you can use the Windows command line interface for git. 
+If you're on Windows and slightly less awesome, but more awesome than average, you can use the Windows command line interface for git.
+
 ##### [Git GUI - Mac](https://mac.github.com/)
 If you are on Mac and not awesome, you can use Github's Mac app. It should be very easy to use, but I've never actually used it.
+
+##### [Git Plugin for MPLABX](https://code.google.com/p/nbgit/downloads/list?q=0.4)
+This will interface directly with MPLAB X. Should also be very easy to use.
 
 ##### [Git GUI - Windows](https://windows.github.com/)
 If you are on Windows and in the least awesome of all the aforementioned groups, you can use Github's Windows app. Again, it should be easy to use but I've never used it so I can't say one way or the other.
