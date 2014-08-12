@@ -46,6 +46,11 @@ If you are on Windows and in the least awesome of all the aforementioned groups,
 
 #### [Qt Creator](http://qt-project.org/downloads#qt-creator)
 Qt Creator can be used to work on development for the `c++` GUI applications we made (currently: can-translator and telemetry-monitor). It can help with debugging but I don't reccomend using its drag-and-drop mess of a feature to build the actual GUIs, this can be acccomplished much cleaner and easier by just coding it directly. Using Qt Creator isn't necessary, you can also just use [your favorite text editor](http://www.vim.org/) as they are relatively small projects.
+
+### Building
+
+#### [Static Qt Environment](http://qt-project.org/wiki/How-to-build-a-static-Qt-for-Windows-MinGW)
+Follow this guide to build a static version of the Qt applications. That will enable them to be run on anyone's windows computer without having to first install Qt on the computer.
  
 ### Conventions and Style
 [This](https://github.com/outsideris/popularconvention) is a good place to start. It doesn't have anything specific to `c++` or `c`, but it can give you a good idea of the right way to go. If you're really bored, you can read [this](http://users.ece.cmu.edu/~eno/coding/CCodingStandard.html) as well.
