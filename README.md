@@ -54,7 +54,13 @@ Follow this guide to build a static version of the Qt applications. That will en
  
 ### Conventions and Style
 [This](https://github.com/outsideris/popularconvention) is a good place to start. It doesn't have anything specific to `c++` or `c`, but it can give you a good idea of the right way to go. If you're really bored, you can read [this](http://users.ece.cmu.edu/~eno/coding/CCodingStandard.html) as well.
-`todo`
+
+#### Commit Messages
+Commit messages should be useful and descriptive so that someone else on the team knows what was done in the commit. Limit the first line to 72 characters. If you still have more information after that, end your sentence, hit enter twice, and start writing the rest of the message. Generally, commit messages should be written in the imperative. For example `Fix terrible bug.` or `Add awesome feature.`, instead of `Adding new thing` or `I fixed something.`. End your commit messages with a period. If the commit is a work-in-progress, add `WIP.` before your message. I know nobody wants to take the time to do this properly, but it will really make life easier for the whole team in the end.
+
+[Example](https://github.com/flytenow/icarus/commit/6091d42e9136d3b50e20f5582f72c204d1a88bea)
+
+#### `TODO`: Add more conventions. 
 
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from `master` (never merge them in).
