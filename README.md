@@ -3,6 +3,7 @@
 
 ![car-image](http://motorsports.illinois.edu/img/car_2014.jpg)
 
+***
 ## Contributing
 
 ### Branching
@@ -62,6 +63,7 @@ Commit messages should be useful and descriptive so that someone else on the tea
 
 #### `TODO`: Add more conventions. 
 
+***
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from `master` (never merge them in).
 
@@ -75,8 +77,7 @@ At the end of a competition year, we will make a new branch off of the `master` 
 | [![PostProcessing-2013](http://img.shields.io/badge/Post_Processing-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/Post_Processing-2013) | Old version of Translate_CAN for the 2012-2013 year. |
 | [![DAQ-2012](http://img.shields.io/badge/DAQ-2012-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2012) | Arduino sketches for data aquisition and the steering wheel for the 2011-2012 year. |
 
-
-
+***
 ## License
 ```
 The MIT License (MIT)
