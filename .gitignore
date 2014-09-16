@@ -13,6 +13,8 @@ can-translator/out.txt
 *.lo
 *.o
 *.obj
+build/
+dist/
 
 # Compiled Dynamic libraries
 *.so
@@ -29,3 +31,7 @@ can-translator/out.txt
 *.exe
 *.out
 *.app
+
+# MPLAB config
+nbproject
+
