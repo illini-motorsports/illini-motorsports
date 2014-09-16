@@ -8,10 +8,6 @@
  * Processor:       PIC18F46K80
  * Complier:        Microchip C18
  * Author:          Andrew Mass, George Schwieters
- ******************************************************************************
- * Revision History
- *
- * 9-12-2013: AMass - Cleaned the file and converted tabs to spaces.
 *******************************************************************************/
 
 #ifndef MAIN_H
@@ -37,44 +33,11 @@
  * Address Bytes     *
  *********************/
 
-#define NO_OP       0x00
-#define DIG0        0x01
-#define DIG1        0x02
-#define DIG2        0x03
-#define DIG3        0x04
-#define DIG4        0x05
-#define DIG5        0x06
-#define DIG6        0x07
-#define DIG7        0x08
-#define DECODE      0x09
-#define INTENSITY   0x0A
-#define SCAN        0x0B
-#define SHUTDOWN    0x0C
-#define DISP_MODE   0x0F
-
-// Chip Select
-#define CS          LATDbits.LATD3
-
 #define TERM_LAT	LATCbits.LATC6
-
 
 /*********************
  * Data Bytes        *
  *********************/
-
-// Config
-#define SHUTDOWN_ON         0b00000000
-#define SHUTDOWN_OFF        0b00000001
-#define NO_DECODE           0b00000000
-#define FULL_SCAN           0b00000111
-
-// Intensity
-#define INTENSITY_MIN       0b00000001
-#define INTENSITY_MAX       0b00001111
-
-// Display mode
-#define TEST                0b00000001
-#define NORMAL              0b00000000
 
 // Colors
 #define NONE                0b00000000
@@ -100,7 +63,6 @@
 // Custom color choices
 #define REV_COLOR           GREEN_BLUE
 #define REV_LIMIT_COLOR     GREEN
-
 
 /*********************
  * Method Headers    *

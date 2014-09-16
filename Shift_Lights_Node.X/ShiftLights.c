@@ -7,31 +7,23 @@
  * Dependencies:	p18F46K80.h,
  *					timers.h,
  *					ECAN.h,
- *					spi.h,
  *					delays.h
  * Processor:		PIC18F46K80
  * Complier:		Microchip C18
  * Version:			1.00
  * Author:			Andrew Mass, George Schwieters
  * Created:			2013-2014
- ******************************************************************************
- * Revision History
- *
- * 9-12-2013: AMass - Cleaned file and converted tabs to spaces.
- titties
-*******************************************************************************/
+ ******************************************************************************/
 
 /***********************************************/
-/*  Header Files                               */
+/* Header Files                               */
 /***********************************************/
 
 #include "p18F46K80.h"
 #include "timers.h"
 #include "ShiftLights.h"
 #include "ECAN.h"
-#include "spi.h"
 #include <stdlib.h>
-
 
 /***********************************************/
 /* PIC18F46K80 Configuration Bits Settings     */
@@ -45,9 +37,9 @@
 
 // CONFIG1H
 #ifdef INTERNAL
-#pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
+	#pragma config FOSC = INTIO2  // Oscillator (Internal RC oscillator)
 #else
-#pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+	#pragma config FOSC = HS1     // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -55,7 +47,7 @@
 #pragma config IESO = ON        // Internal External Oscillator Switch Over Mode (Enabled)
 
 // CONFIG2L
-#pragma config PWRTEN = OFF      // Power Up Timer (Disabled)
+#pragma config PWRTEN = OFF     // Power Up Timer (Disabled)
 #pragma config BOREN = OFF      // Brown Out Detect (Disabled in hardware, SBOREN disabled)
 #pragma config BORV = 3         // Brown-out Reset Voltage bits (1.8V)
 #pragma config BORPWR = ZPBORMV // BORMV Power level (ZPBORMV instead of BORMV is selected)
@@ -103,7 +95,6 @@
 // CONFIG7H
 #pragma config EBTRB = OFF      // Table Read Protect Boot (Disabled)
 
-
 /***********************************************/
 /* Global Variable Declarations                */
 /***********************************************/
@@ -112,11 +103,10 @@ volatile unsigned int millis;   // holds timer0 rollover count
 volatile unsigned int rpm;      // Holds engine RPM data from CAN
 
 // ECAN variables
-unsigned long id;           // holds CAN msgID
-BYTE data[8];				// holds CAN data bytes
-BYTE dataLen;				// holds number of CAN data bytes
-ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
-
+unsigned long id;               // holds CAN msgID
+BYTE data[8];				            // holds CAN data bytes
+BYTE dataLen;				            // holds number of CAN data bytes
+ECAN_RX_MSG_FLAGS flags;	      // holds information about recieved message
 
 /***********************************************/
 /* Interrupts                                  */
@@ -148,12 +138,12 @@ void high_vector(void) {
 #pragma interrupt high_isr
 void high_isr(void) {
 
-    // Check for timer0 rollover indicating a millisecond has passed
-    if (INTCONbits.TMR0IF) {
-        INTCONbits.TMR0IF = 0;
-        WriteTimer0(0x85);    // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
-        millis++;
-    }
+	// Check for timer0 rollover indicating a millisecond has passed
+	if (INTCONbits.TMR0IF) {
+		INTCONbits.TMR0IF = 0;
+		WriteTimer0(0x85);    // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
+		millis++;
+	}
 
 	// check for recieved CAN message
 	if(PIR5bits.RXB1IF) {
@@ -162,40 +152,39 @@ void high_isr(void) {
 		ECANReceiveMessage(&id, data, &dataLen, &flags);
 		if(id == RPM_ID) {
 			((BYTE*) &rpm)[0] = data[RPM_BYTE + 1];
-            ((BYTE*) &rpm)[1] = data[RPM_BYTE];
+			((BYTE*) &rpm)[1] = data[RPM_BYTE];
 		}
 	}
 
-    return;
+	return;
 }
-
 
 /***********************************************/
 /* Functions                                   */
 /***********************************************/
 
-// Sends data byte to address byte on the LED driver
-void send(int address, int data) {
-    CS = 0;
-    WriteSPI(address);
-    WriteSPI(data);
-    CS = 1;
+/*
+ * Sets specified LED to specified color
+ *
+ * @param led The index of the led to change.
+ * @param color The color value to change the LED to. Color values come
+ *   from the header file.
+ */
+void setLedToColor(int led, int color) {
+	// Don't worry about the implementation of this for now.
 }
 
 // Sets all LEDs to specified color
 void set_all(int color) {
-    send(DIG0, color);
-    send(DIG1, color);
-    send(DIG2, color);
-    send(DIG3, color);
-    send(DIG4, color);
-    send(DIG5, color);
-    send(DIG6, color);
-    send(DIG7, color);
+	int i = 0;
+	for(; i < 5; i++) {
+		setLedToColor(i, color);
+	}
 }
 
 // Sets lights to NONE or REV_COLOR based on parameter
 void set_lights(int max) {
+	/*
   if(max > 0) send(DIG0, BLUE);
   else send(DIG0, NONE);
 
@@ -219,6 +208,7 @@ void set_lights(int max) {
   
   if(max > 7) send(DIG7, BLUE);
   else send(DIG7, NONE);
+	*/
 }
 
 /******************************************************************************
@@ -325,114 +315,85 @@ void init_unused_pins(void) {
 	return;
 }
 
-
 /***********************************************/
 /* Main Loop                                   */
 /***********************************************/
 
 void main(void) {
 
-    /*************************
-     * Variable Declarations *
-     *************************/
+	/*************************
+	 * Variable Declarations *
+	 *************************/
 
-    long blink_tmr = 0;
+	long blink_tmr = 0;
 
+	/*************************
+	 * Oscillator Set-Up     *
+	 *************************/
+	#ifdef INTERNAL
+		// OSCTUNE
+		OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
+		OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
+		OSCTUNEbits.TUN5 = 0;   // Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
+		OSCTUNEbits.TUN4 = 0;   // 011111 = max
+		OSCTUNEbits.TUN3 = 0;   // ... 000001
+		OSCTUNEbits.TUN2 = 0;   // 000000 = center (running at calibrated frequency)
+		OSCTUNEbits.TUN1 = 0;   // 111111 ...
+		OSCTUNEbits.TUN0 = 0;   // 100000
 
-    /*************************
-     * Oscillator Set-Up     *
-     *************************/
+		// OSCCCON
+		OSCCONbits.IDLEN = 1;   // Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
+		OSCCONbits.IRCF2 = 1;   // Internal Oscillator Frequency Select Bits
+		OSCCONbits.IRCF1 = 1;   // When using HF, settings are:
+		OSCCONbits.IRCF0 = 1;   // 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
+		OSCCONbits.SCS1 = 0;
+		OSCCONbits.SCS0 = 0;
 
-    #ifdef INTERNAL
-            // OSCTUNE
-            OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-            OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
-            OSCTUNEbits.TUN5 = 0;   // Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
-            OSCTUNEbits.TUN4 = 0;   // 011111 = max
-            OSCTUNEbits.TUN3 = 0;   // ... 000001
-            OSCTUNEbits.TUN2 = 0;   // 000000 = center (running at calibrated frequency)
-            OSCTUNEbits.TUN1 = 0;   // 111111 ...
-            OSCTUNEbits.TUN0 = 0;   // 100000
+		// OSCCON2
+		OSCCON2bits.MFIOSEL = 0;
 
-            // OSCCCON
-            OSCCONbits.IDLEN = 1;   // Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
-            OSCCONbits.IRCF2 = 1;   // Internal Oscillator Frequency Select Bits
-            OSCCONbits.IRCF1 = 1;   // When using HF, settings are:
-            OSCCONbits.IRCF0 = 1;   // 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
-            OSCCONbits.SCS1 = 0;
-            OSCCONbits.SCS0 = 0;
+		while(!OSCCONbits.HFIOFS);  // Wait for stable clock
+	#else
+		// OSCTUNE
+		OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
+		OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
 
-            // OSCCON2
-            OSCCON2bits.MFIOSEL = 0;
+		// OSCCCON
+		OSCCONbits.SCS1 = 0;    // Select configuration chosen oscillator
+		OSCCONbits.SCS0 = 0;    // SCS = 00
 
-            while(!OSCCONbits.HFIOFS);  // Wait for stable clock
+		// OSCCON2
+		OSCCON2bits.MFIOSEL = 0;
 
-    #else
-            // OSCTUNE
-            OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-            OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
+		while(!OSCCONbits.OSTS);  // Wait for stable external clock
+	#endif
 
-            // OSCCCON
-            OSCCONbits.SCS1 = 0;    // Select configuration chosen oscillator
-            OSCCONbits.SCS0 = 0;    // SCS = 00
+	/*************************
+	 * Peripherals Setup     *
+	 *************************/
 
-            // OSCCON2
-            OSCCON2bits.MFIOSEL = 0;
+	ANCON0 = 0x00;    // Default all pins to digital
+	ANCON1 = 0x00;    // Default all pins to digital
 
-            while(!OSCCONbits.OSTS);  // Wait for stable external clock
-    #endif
-
-    /*************************
-     * Peripherals Setup     *
-     *************************/
-
-    ANCON0 = 0x00;    // Default all pins to digital
-    ANCON1 = 0x00;    // Default all pins to digital
-
-    // Turn on and configure the TIMER1 oscillator
-    OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-    WriteTimer0(0x82);			// Load timer register
-    millis = 0;					// Clear milliseconds count
-    INTCONbits.TMR0IE = 1;		// Turn on timer0 interupts
-
-    // SPI setup
-    SSPSTATbits.CKE = 1;		// SPI Clock Select, 1 = transmit on active to idle
-    SSPCON1bits.CKP = 0;		// Clock Polarity Select, 0 = low level is idle state
-    SSPCON1bits.SSPM = 0b1010;	// Clk Frequecy (Note: FOSC = 64MHz)
-    SSPCON1bits.SSPEN = 1;		// SPI Enable, 1 enables
-
-    OpenSPI(SPI_FOSC_64, MODE_10, SMPEND);
-
-    // SPI pin I/O setup
-    TRISCbits.TRISC3 = OUTPUT;    // SCK
-    TRISCbits.TRISC5 = OUTPUT;    // SDO
-    TRISDbits.TRISD3 = OUTPUT;    // CS
-    CS = 1;
+	// Turn on and configure the TIMER1 oscillator
+	OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
+	WriteTimer0(0x82);			// Load timer register
+	millis = 0;					// Clear milliseconds count
+	INTCONbits.TMR0IE = 1;		// Turn on timer0 interupts
 
 	TRISCbits.TRISC6 = OUTPUT;	// programmable termination
 	TERM_LAT = FALSE;
 
 	ECANInitialize();		// setup ECAN
 
-    // interrupts setup
+  // interrupts setup
 	INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
 	INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
 	RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
 
 	init_unused_pins();
 
-    
-    /*************************
-     * LED Driver Config     *
-     *************************/
-    
-    send(SHUTDOWN, SHUTDOWN_OFF);   //Shutdown mode off
-    send(DISP_MODE, NORMAL);		//Display mode normal
-    send(DECODE, NO_DECODE);		//Decoding disabled
-    send(SCAN, FULL_SCAN);			//Set scan to all digits
-    send(INTENSITY, INTENSITY_MAX);	//Full intensity
-
-    // Startup - Show full RED lights for a while before doing anything else
+  // Startup - Show full RED lights for a while before doing anything else
 	blink_tmr = millis;
 	while(1) {
 		if(millis - blink_tmr < BLINK_TIME)
@@ -457,35 +418,35 @@ void main(void) {
 			break;
 	}
 
-    while(1) {
-        // Sets certain lights to NONE or REV_COLOR based on rpm value        
-        if(rpm >= REV_RANGE_LIMIT) {
+	while(1) {
+		// Sets certain lights to NONE or REV_COLOR based on rpm value
+		if(rpm >= REV_RANGE_LIMIT) {
 			if(millis - blink_tmr < BLINK_TIME)
 				set_all(REV_LIMIT_COLOR);
 			else if(millis - blink_tmr < BLINK_TIME * 2)
 				set_all(NONE);
 			else
 				blink_tmr = millis;
-        } else if(rpm >= REV_RANGE_8) {
-            set_lights(8);
-        } else if(rpm >= REV_RANGE_7) {
-            set_lights(7);
-        } else if(rpm >= REV_RANGE_6) {
-            set_lights(6);
-        } else if(rpm >= REV_RANGE_5) {
-            set_lights(5);
-        } else if(rpm >= REV_RANGE_4) {
-            set_lights(4);
-        } else if(rpm >= REV_RANGE_3) {
-            set_lights(3);
-        } else if(rpm >= REV_RANGE_2) {
-            set_lights(2);
-        } else if(rpm >= REV_RANGE_1) {
-            set_lights(1);
-        } else {
-            set_all(NONE);
-        } // set LEDs based on RPM
-    } // end main loop
+		} else if(rpm >= REV_RANGE_8) {
+				set_lights(8);
+		} else if(rpm >= REV_RANGE_7) {
+				set_lights(7);
+		} else if(rpm >= REV_RANGE_6) {
+				set_lights(6);
+		} else if(rpm >= REV_RANGE_5) {
+				set_lights(5);
+		} else if(rpm >= REV_RANGE_4) {
+				set_lights(4);
+		} else if(rpm >= REV_RANGE_3) {
+				set_lights(3);
+		} else if(rpm >= REV_RANGE_2) {
+				set_lights(2);
+		} else if(rpm >= REV_RANGE_1) {
+				set_lights(1);
+		} else {
+				set_all(NONE);
+		}
+	}
     
-    return;
+	return;
 }
