@@ -12,6 +12,16 @@
 #include "ShiftLights.h"
 #include "ECAN.h"
 
+//TODO: What to do if millis isn't updating.
+//TODO: What to do if rmp isn't updating.
+//TODO: Add "animations". (Scrolling, expanding, alternating, etc.)
+//TODO: Add AMERICA sequence. Make it look 'murican.
+//TODO: Use less rev ranges. Limited by distinct number of LEDs.
+//TODO: Optimize everything.
+
+//TODO: Update config for new output pins.
+//TODO: Set correct LAT bits for each LED.
+
 /*******************************************
  * PIC18F46K80 Configuration Bits Settings *
  *******************************************/
@@ -149,8 +159,28 @@ void high_isr(void) {
  * @param color The color value to change the LED to. Color values come
  *   from the header file.
  */
-void setLedToColor(int led, int color) {
-  // Don't worry about the implementation of this for now.
+void setLedToColor(unsigned char led, unsigned char color) {
+  if(led == 0) {
+    RED0 = color & RED ? 1 : 0;
+    GREEN0 = color & GREEN ? 1 : 0;
+    BLUE0 = color & BLUE ? 1 : 0;
+  } else if(led == 1) {
+    RED1 = color & RED ? 1 : 0;
+    GREEN1 = color & GREEN ? 1 : 0;
+    BLUE1 = color & BLUE ? 1 : 0;
+  } else if(led == 2) {
+    RED2 = color & RED ? 1 : 0;
+    GREEN2 = color & GREEN ? 1 : 0;
+    BLUE2 = color & BLUE ? 1 : 0;
+  } else if(led == 3) {
+    RED3 = color & RED ? 1 : 0;
+    GREEN3 = color & GREEN ? 1 : 0;
+    BLUE3 = color & BLUE ? 1 : 0;
+  } else if(led == 4) {
+    RED4 = color & RED ? 1 : 0;
+    GREEN4 = color & GREEN ? 1 : 0;
+    BLUE4 = color & BLUE ? 1 : 0;
+  }
 }
 
 /*
@@ -159,8 +189,8 @@ void setLedToColor(int led, int color) {
  * @param color The color value to change the LED to. Color values come
  *   from the header file.
  */
-void set_all(int color) {
-  int i = 0;
+void set_all(unsigned char color) {
+  unsigned char i = 0;
   for(; i < 5; i++) {
     setLedToColor(i, color);
   }
@@ -171,7 +201,7 @@ void set_all(int color) {
  *
  * @param max The highest number LED to illuminate.
  */
-void set_lights(int max) {
+void set_lights(unsigned char max) {
   /*
   if(max > 0) send(DIG0, BLUE);
   else send(DIG0, NONE);
@@ -205,7 +235,7 @@ void set_lights(int max) {
  *
  * Configuration registers will be modified.
  */
-void init_unused_pins(void) {
+void init_unused_pins() {
 
   // Configure to outputs.
 

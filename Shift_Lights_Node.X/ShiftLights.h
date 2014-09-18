@@ -11,18 +11,18 @@
 
 #include "GenericTypeDefs.h"
 
-#define INPUT   1
-#define OUTPUT  0
+#define INPUT  1
+#define OUTPUT 0
 
 #define BLINK_TIME 150
-#define ET_ID 0x201L
-#define OT_ID 0x200L
-#define OP_ID 0x200L
-#define RPM_ID 0x200L
+#define ET_ID      0x201L
+#define OT_ID      0x200L
+#define OP_ID      0x200L
+#define RPM_ID     0x200L
 
-#define OP_BYTE 4
-#define OT_BYTE 6
-#define ET_BYTE 0
+#define OP_BYTE  4
+#define OT_BYTE  6
+#define ET_BYTE  0
 #define RPM_BYTE 0
 
 /*****************
@@ -31,19 +31,39 @@
 
 #define TERM_LAT	LATCbits.LATC6
 
+#define RED0   PORTAbits.RA0
+#define GREEN0 PORTAbits.RA0
+#define BLUE0  PORTAbits.RA0
+
+#define RED1   PORTAbits.RA0
+#define GREEN1 PORTAbits.RA0
+#define BLUE1  PORTAbits.RA0
+
+#define RED2   PORTAbits.RA0
+#define GREEN2 PORTAbits.RA0
+#define BLUE2  PORTAbits.RA0
+
+#define RED3   PORTAbits.RA0
+#define GREEN3 PORTAbits.RA0
+#define BLUE3  PORTAbits.RA0
+
+#define RED4   PORTAbits.RA0
+#define GREEN4 PORTAbits.RA0
+#define BLUE4  PORTAbits.RA0
+
 /**************
  * Data Bytes *
  **************/
 
 // Colors
-#define NONE       0b00000000
-#define RED        0b01001000
-#define GREEN      0b00100100
-#define BLUE       0b00010010
-#define RGB        0b01111110
-#define RED_GREEN  0b01101100
-#define RED_BLUE   0b01011010
-#define GREEN_BLUE 0b00110110
+#define NONE       0b000
+#define RED        0b001
+#define GREEN      0b010
+#define BLUE       0b100
+#define RED_GREEN  RED | GREEN
+#define RED_BLUE   RED | BLUE
+#define GREEN_BLUE GREEN | BLUE
+#define RGB        RED | GREEN | BLUE
 
 // Rev range
 #define REV_RANGE_1     7500
@@ -65,7 +85,9 @@
  ******************/
 
 void high_isr(void);
-void low_isr(void);
-void init_unused_pins(void);
+void setLedToColor(unsigned char led, unsigned char color);
+void set_all(unsigned char color);
+void set_lights(unsigned char max);
+void init_unused_pins();
 
 #endif
