@@ -29,27 +29,47 @@
  * Address Bytes *
  *****************/
 
-#define TERM_LAT	LATCbits.LATC6
+#define TERM_LAT	 LATCbits.LATC6
 
-#define RED0   PORTAbits.RA0
-#define GREEN0 PORTAbits.RA0
-#define BLUE0  PORTAbits.RA0
+#define RED0_LAT   LATAbits.LATA2
+#define GREEN0_LAT LATAbits.LATA1
+#define BLUE0_LAT  LATAbits.LATA0
 
-#define RED1   PORTAbits.RA0
-#define GREEN1 PORTAbits.RA0
-#define BLUE1  PORTAbits.RA0
+#define RED1_LAT   LATDbits.LATD0
+#define GREEN1_LAT LATCbits.LATC3
+#define BLUE1_LAT  LATCbits.LATC2
 
-#define RED2   PORTAbits.RA0
-#define GREEN2 PORTAbits.RA0
-#define BLUE2  PORTAbits.RA0
+#define RED2_LAT   LATDbits.LATD3
+#define GREEN2_LAT LATDbits.LATD2
+#define BLUE2_LAT  LATDbits.LATD1
 
-#define RED3   PORTAbits.RA0
-#define GREEN3 PORTAbits.RA0
-#define BLUE3  PORTAbits.RA0
+#define RED3_LAT   LATCbits.LATC7
+#define GREEN3_LAT LATCbits.LATC5
+#define BLUE3_LAT  LATCbits.LATC4
 
-#define RED4   PORTAbits.RA0
-#define GREEN4 PORTAbits.RA0
-#define BLUE4  PORTAbits.RA0
+#define RED4_LAT   LATDbits.LATD6
+#define GREEN4_LAT LATDbits.LATD5
+#define BLUE4_LAT  LATDbits.LATD4
+
+#define RED0_TRIS   TRISAbits.TRISA2
+#define GREEN0_TRIS TRISAbits.TRISA1
+#define BLUE0_TRIS  TRISAbits.TRISA0
+
+#define RED1_TRIS   TRISDbits.TRISD0
+#define GREEN1_TRIS TRISCbits.TRISC3
+#define BLUE1_TRIS  TRISCbits.TRISC2
+
+#define RED2_TRIS   TRISDbits.TRISD3
+#define GREEN2_TRIS TRISDbits.TRISD2
+#define BLUE2_TRIS  TRISDbits.TRISD1
+
+#define RED3_TRIS   TRISCbits.TRISC7
+#define GREEN3_TRIS TRISCbits.TRISC5
+#define BLUE3_TRIS  TRISCbits.TRISC4
+
+#define RED4_TRIS   TRISDbits.TRISD6
+#define GREEN4_TRIS TRISDbits.TRISD5
+#define BLUE4_TRIS  TRISDbits.TRISD4
 
 /**************
  * Data Bytes *

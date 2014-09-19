@@ -19,9 +19,6 @@
 //TODO: Use less rev ranges. Limited by distinct number of LEDs.
 //TODO: Optimize everything.
 
-//TODO: Update config for new output pins.
-//TODO: Set correct LAT bits for each LED.
-
 /*******************************************
  * PIC18F46K80 Configuration Bits Settings *
  *******************************************/
@@ -144,8 +141,6 @@ void high_isr(void) {
       ((BYTE*) & rpm)[1] = data[RPM_BYTE];
     }
   }
-
-  return;
 }
 
 /*************
@@ -161,25 +156,25 @@ void high_isr(void) {
  */
 void setLedToColor(unsigned char led, unsigned char color) {
   if(led == 0) {
-    RED0 = color & RED ? 1 : 0;
-    GREEN0 = color & GREEN ? 1 : 0;
-    BLUE0 = color & BLUE ? 1 : 0;
+    RED0_LAT = color & RED ? 1 : 0;
+    GREEN0_LAT = color & GREEN ? 1 : 0;
+    BLUE0_LAT = color & BLUE ? 1 : 0;
   } else if(led == 1) {
-    RED1 = color & RED ? 1 : 0;
-    GREEN1 = color & GREEN ? 1 : 0;
-    BLUE1 = color & BLUE ? 1 : 0;
+    RED1_LAT = color & RED ? 1 : 0;
+    GREEN1_LAT = color & GREEN ? 1 : 0;
+    BLUE1_LAT = color & BLUE ? 1 : 0;
   } else if(led == 2) {
-    RED2 = color & RED ? 1 : 0;
-    GREEN2 = color & GREEN ? 1 : 0;
-    BLUE2 = color & BLUE ? 1 : 0;
+    RED2_LAT = color & RED ? 1 : 0;
+    GREEN2_LAT = color & GREEN ? 1 : 0;
+    BLUE2_LAT = color & BLUE ? 1 : 0;
   } else if(led == 3) {
-    RED3 = color & RED ? 1 : 0;
-    GREEN3 = color & GREEN ? 1 : 0;
-    BLUE3 = color & BLUE ? 1 : 0;
+    RED3_LAT = color & RED ? 1 : 0;
+    GREEN3_LAT = color & GREEN ? 1 : 0;
+    BLUE3_LAT = color & BLUE ? 1 : 0;
   } else if(led == 4) {
-    RED4 = color & RED ? 1 : 0;
-    GREEN4 = color & GREEN ? 1 : 0;
-    BLUE4 = color & BLUE ? 1 : 0;
+    RED4_LAT = color & RED ? 1 : 0;
+    GREEN4_LAT = color & GREEN ? 1 : 0;
+    BLUE4_LAT = color & BLUE ? 1 : 0;
   }
 }
 
@@ -231,7 +226,7 @@ void set_lights(unsigned char max) {
 
 /*
  * Function to assert unused pins to eliminate sources of noise and reduce MCU
- *   power draw.
+ * power draw.
  *
  * Configuration registers will be modified.
  */
@@ -239,9 +234,9 @@ void init_unused_pins() {
 
   // Configure to outputs.
 
-  TRISAbits.TRISA0 = OUTPUT;
-  TRISAbits.TRISA1 = OUTPUT;
-  TRISAbits.TRISA2 = OUTPUT;
+  // TRISAbits.TRISA0 = OUTPUT; BLUE0
+  // TRISAbits.TRISA1 = OUTPUT; GREEN0
+  // TRISAbits.TRISA2 = OUTPUT; RED0
   TRISAbits.TRISA3 = OUTPUT;
   TRISAbits.TRISA5 = OUTPUT;
   // TRISAbits.TRISA6 = OUTPUT; OSC2
@@ -253,25 +248,25 @@ void init_unused_pins() {
   // TRISBbits.TRISB3 = OUTPUT; CANRX
   TRISBbits.TRISB4 = OUTPUT;
   TRISBbits.TRISB5 = OUTPUT;
-  TRISBbits.TRISB6 = OUTPUT;
-  TRISBbits.TRISB7 = OUTPUT;
+  // TRISBbits.TRISB6 = OUTPUT; PGC
+  // TRISBbits.TRISB7 = OUTPUT; PGD
 
   // TRISCbits.TRISC0 = OUTPUT; SOSC0
   // TRISCbits.TRISC1 = OUTPUT; SOSC1
-  TRISCbits.TRISC2 = OUTPUT;
-  // TRISCbits.TRISC3 = OUTPUT; SCK
-  // TRISCbits.TRISC4 = OUTPUT; SDI
-  // TRISCbits.TRISC5 = OUTPUT; SDO
-  TRISCbits.TRISC6 = OUTPUT;
-  TRISCbits.TRISC7 = OUTPUT;
+  // TRISCbits.TRISC2 = OUTPUT; BLUE1
+  // TRISCbits.TRISC3 = OUTPUT; GREEN1
+  // TRISCbits.TRISC4 = OUTPUT; BLUE3
+  // TRISCbits.TRISC5 = OUTPUT; GREEN3
+  // TRISCbits.TRISC6 = OUTPUT; TERM
+  // TRISCbits.TRISC7 = OUTPUT; RED3
 
-  TRISDbits.TRISD0 = OUTPUT;
-  TRISDbits.TRISD1 = OUTPUT;
-  TRISDbits.TRISD2 = OUTPUT;
-  // TRISDbits.TRISD3 = OUTPUT; RD3
-  TRISDbits.TRISD4 = OUTPUT;
-  TRISDbits.TRISD5 = OUTPUT;
-  TRISDbits.TRISD6 = OUTPUT;
+  // TRISDbits.TRISD0 = OUTPUT; RED1
+  // TRISDbits.TRISD1 = OUTPUT; BLUE2
+  // TRISDbits.TRISD2 = OUTPUT; GREEN2
+  // TRISDbits.TRISD3 = OUTPUT; RED2
+  // TRISDbits.TRISD4 = OUTPUT; BLUE4
+  // TRISDbits.TRISD5 = OUTPUT; GREEN4
+  // TRISDbits.TRISD6 = OUTPUT; RED4
   TRISDbits.TRISD7 = OUTPUT;
 
   TRISEbits.TRISE0 = OUTPUT;
@@ -281,9 +276,9 @@ void init_unused_pins() {
 
   // Set pins low.
 
-  LATAbits.LATA0 = 0;
-  LATAbits.LATA1 = 0;
-  LATAbits.LATA2 = 0;
+  // LATAbits.LATA0 = 0;
+  // LATAbits.LATA1 = 0;
+  // LATAbits.LATA2 = 0;
   LATAbits.LATA3 = 0;
   LATAbits.LATA5 = 0;
   // LATAbits.LATA6 = 0;
@@ -295,33 +290,31 @@ void init_unused_pins() {
   // LATBbits.LATB3 = 0;
   LATBbits.LATB4 = 0;
   LATBbits.LATB5 = 0;
-  LATBbits.LATB6 = 0;
-  LATBbits.LATB7 = 0;
+  // LATBbits.LATB6 = 0;
+  // LATBbits.LATB7 = 0;
 
   // LATCbits.LATC0 = 0;
   // LATCbits.LATC1 = 0;
-  LATCbits.LATC2 = 0;
+  // LATCbits.LATC2 = 0;
   // LATCbits.LATC3 = 0;
   // LATCbits.LATC4 = 0;
   // LATCbits.LATC5 = 0;
-  LATCbits.LATC6 = 0;
-  LATCbits.LATC7 = 0;
+  // LATCbits.LATC6 = 0;
+  // LATCbits.LATC7 = 0;
 
-  LATDbits.LATD0 = 0;
-  LATDbits.LATD1 = 0;
-  LATDbits.LATD2 = 0;
+  // LATDbits.LATD0 = 0;
+  // LATDbits.LATD1 = 0;
+  // LATDbits.LATD2 = 0;
   // LATDbits.LATD3 = 0;
-  LATDbits.LATD4 = 0;
-  LATDbits.LATD5 = 0;
-  LATDbits.LATD6 = 0;
+  // LATDbits.LATD4 = 0;
+  // LATDbits.LATD5 = 0;
+  // LATDbits.LATD6 = 0;
   LATDbits.LATD7 = 0;
 
   LATEbits.LATE0 = 0;
   LATEbits.LATE1 = 0;
   LATEbits.LATE2 = 0;
   // LATEbits.LATE3 = 0;
-
-  return;
 }
 
 /*************
@@ -403,6 +396,40 @@ void main(void) {
 
   init_unused_pins();
 
+  // Set LED pins as outputs.
+  RED0_TRIS = OUTPUT;
+  GREEN0_TRIS = OUTPUT;
+  BLUE0_TRIS = OUTPUT;
+  RED1_TRIS = OUTPUT;
+  GREEN1_TRIS = OUTPUT;
+  BLUE1_TRIS = OUTPUT;
+  RED2_TRIS = OUTPUT;
+  GREEN2_TRIS = OUTPUT;
+  BLUE2_TRIS = OUTPUT;
+  RED3_TRIS = OUTPUT;
+  GREEN3_TRIS = OUTPUT;
+  BLUE3_TRIS = OUTPUT;
+  RED4_TRIS = OUTPUT;
+  GREEN4_TRIS = OUTPUT;
+  BLUE4_TRIS = OUTPUT;
+
+  // Default all LEDs to off.
+  RED0_LAT = 0;
+  GREEN0_LAT = 0;
+  BLUE0_LAT = 0;
+  RED1_LAT = 0;
+  GREEN1_LAT = 0;
+  BLUE1_LAT = 0;
+  RED2_LAT = 0;
+  GREEN2_LAT = 0;
+  BLUE2_LAT = 0;
+  RED3_LAT = 0;
+  GREEN3_LAT = 0;
+  BLUE3_LAT = 0;
+  RED4_LAT = 0;
+  GREEN4_LAT = 0;
+  BLUE4_LAT = 0;
+
   // Startup - Show full RED lights for a while before doing anything else.
   blink_tmr = millis;
   while(1) {
@@ -457,6 +484,4 @@ void main(void) {
       set_all(NONE);
     }
   }
-
-  return;
 }
