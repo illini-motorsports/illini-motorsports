@@ -215,7 +215,7 @@
 #define ECAN_RXF2_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF2 Value
-#define ECAN_RXF2_VAL 0x123L
+#define ECAN_RXF2_VAL 0x500L
 //
 // RXF2 Buffer Link
 #define ECAN_RXF2_BUFFER_VAL B0

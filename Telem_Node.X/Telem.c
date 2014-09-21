@@ -126,23 +126,24 @@ ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
 /* Interrupts                                  */
 /***********************************************/
 
-/******************************************************************************
- * Interrupt Function:
- *   void high_isr(void)
- * Summary:
- *   Function to service interrupts
- * Conditions:
- *
- * Input:
- *   none
- * Return Values:
- *   none
- * Side Effects:
- *   Transmits messages on CAN
- *   Reloads the timer0 registers and increments millis
- *   Resets the interrupt flags after servicing them
- * Description:
-*******************************************************************************/
+/*********************************************************************************
+  Interrupt Function:
+    void high_isr(void)
+  Summary:
+    Function to service interrupts
+  Conditions:
+	Timer0 module must be setup along with the oscillator being used
+	ECAN must be configured
+  Input:
+    none
+  Return Values:
+    none
+  Side Effects:
+	Reloads the timer0 registers and increments millis
+	Resets the interrupt flags after servicing them
+  Description:
+
+  *********************************************************************************/
 #pragma code high_vector = 0x08
 void high_vector(void) {
     _asm goto high_isr _endasm
@@ -310,17 +311,18 @@ void write(BYTE data) {
 
 /*********************************************************************************
   Function:
-
+	void send_msg(BYTE type)
   Summary:
-
+	Function to collect data for the message before sending out to the XBee
   Conditions:
-
+	none
   Input:
-
+	type - whether we're sending out data or addresses
   Return Values:
-
+	none
   Side Effects:
-
+	msg is written to
+	message count is incremented
   Description:
 
   *********************************************************************************/
@@ -373,17 +375,17 @@ void send_msg(BYTE type) {
 
 /*********************************************************************************
   Function:
-
+	void send(BYTE num)
   Summary:
-
+	Function to send a message byte by byte to the XBee
   Conditions:
-
+	USART must be configured
   Input:
-
+	num - the number of bytes to transmit to the XBee
   Return Values:
-
+	nono
   Side Effects:
-
+	none
   Description:
 
   *********************************************************************************/
@@ -401,17 +403,17 @@ void send(BYTE num) {
 
 /*********************************************************************************
   Function:
-
+	void bufferData()
   Summary:
-
+	Function to take data from CAN messages and put into chan_data
   Conditions:
-
+	none
   Input:
-
+	none
   Return Values:
-
+	none
   Side Effects:
-
+	chan_data is written to
   Description:
 
   *********************************************************************************/

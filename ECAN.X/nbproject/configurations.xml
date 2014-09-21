@@ -12,6 +12,7 @@
       <itemPath>ECAN_wheel_config.h</itemPath>
       <itemPath>ECAN_shift_lights_config.h</itemPath>
       <itemPath>ECAN_telem_config.h</itemPath>
+      <itemPath>ECAN_hub_config_adl.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"

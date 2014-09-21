@@ -41,7 +41,7 @@
 #define OT_ID 0x200L
 #define OP_ID 0x200L
 #define RPM_ID 0x200L
-#define FAN_SW_ID 0x123L
+#define FAN_SW_ID 0x500L
 
 #define CAN_PERIOD 500
 
@@ -50,14 +50,14 @@
 #define ET_BYTE 0
 #define RPM_BYTE 0
 #define FAN_SW_BYTE 4
-#define FAN_SW_BYTE1_ID 0x00
+#define FAN_SW_BYTE0_ID 0x00
 
-#define OP_THRESHOLD_L 160	// 16.0
-#define OP_THRESHOLD_H 250	// 25.0
-#define OT_THRESHOLD 2100	// 210.0
-#define ET_THRESHOLD 1150	// 115.0
-#define RPM_THRESHOLD_H 4000
-#define RPM_THRESHOLD_L 1000
+#define OP_THRESHOLD_L 160		// 16.0
+#define OP_THRESHOLD_H 250		// 25.0
+#define OT_THRESHOLD 2100		// 210.0
+#define ET_THRESHOLD 1150		// 115.0
+#define RPM_THRESHOLD_H 4000	// 4,000
+#define RPM_THRESHOLD_L 1000	// 1,000
 
 #define ON_THRESHOLD 600
 
@@ -102,17 +102,17 @@
 // main function flags and other information
 typedef union {
     struct {
-	unsigned char bits;
+		unsigned char bits;
     };
     struct {
-	unsigned Fuel:1;
-	unsigned Ignition:1;
-	unsigned Starter:1;
-	unsigned Water:1;
-	unsigned Fan:1;
-	unsigned PCB:1;
-	unsigned ECU:1;
-	unsigned AUX:1;
+		unsigned Fuel:1;
+		unsigned Ignition:1;
+		unsigned Starter:1;
+		unsigned Water:1;
+		unsigned Fan:1;
+		unsigned PCB:1;
+		unsigned ECU:1;
+		unsigned AUX:1;
     };
 } Error_Status;
 
