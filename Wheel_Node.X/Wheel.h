@@ -82,7 +82,9 @@
 #define VOLTAGE		2
 #define OIL_P		3
 #define SPEED		4
-#define RPM			5
+#define RPM		5
+#define CANERR1         6   //***EL
+#define CANERR2         7   //***EL
 
 #define ECU_ID_0	0x200
 #define ECU_ID_1	0x201
@@ -147,6 +149,7 @@
 #define CHAR_d			0b00111101
 #define CHAR_c			0b00001101
 #define CHAR_N			0b01110110
+#define CHAR_r                  0b00000101   //***EL
 
 // display mode
 #define TEST			0x01
@@ -182,6 +185,7 @@ void write_num(int data, BYTE d_place, BYTE side);
 void blank_display(BYTE side);
 void write_gear(BYTE gear);
 void driver_write(BYTE addr, BYTE data);
+void write_CANerror(void); //***EL
 void high_isr(void);
 void bufferData(void);
 void ADLsample(BYTE *data, const BYTE ADLoffset, const BYTE ch);

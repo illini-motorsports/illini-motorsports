@@ -131,12 +131,16 @@ BYTE d_place_arr[NUM_CHAN] =	{2,		// oil temperature
                                 2,		// ground speed
                                 0};		// engine RPM
 BYTE num_arr[12] = {NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9, BLANK, CHAR_N};
-BYTE text_arr[NUM_CHAN][3] =	{{BLANK, CHAR_O, CHAR_t},	// oil temperature
+BYTE text_arr[NUM_CHAN + 2][3] ={{BLANK, CHAR_O, CHAR_t},	// oil temperature
                                 {BLANK, CHAR_E, CHAR_t},	// engine temmperature
                                 {CHAR_b, CHAR_A, CHAR_t},	// battery voltage
                                 {BLANK, CHAR_O, CHAR_P},	// oil pressure
                                 {CHAR_S, CHAR_P, CHAR_d},	// ground speed
-                                {CHAR_t, CHAR_A, CHAR_c}};	// engine RPM
+                                {CHAR_t, CHAR_A, CHAR_c},       // engine RPM
+                                {CHAR_E, CHAR_r, CHAR_r},       // CAN error ***EL
+                                {CHAR_c, CHAR_A, CHAR_N}};	// CAN error ***EL
+
+
 
 
 /***********************************************/
@@ -182,8 +186,11 @@ void high_isr(void) {
 	if(PIR5bits.RXB1IF) {
 		PIR5bits.RXB1IF = FALSE; // reset the flag
 		// get data from recieve buffer
-		ECANReceiveMessage(&id, data, &dataLen, &flags);
-		bufferData();	// put data in an array
+		//ECANReceiveMessage(&id, data, &dataLen, &flags);
+                if( !ECANReceiveMessage(&id, data, &dataLen, &flags) ) //***EL
+                    write_CANerror();
+
+                bufferData();	// put data in an array
 	}
 
 	return;
@@ -293,7 +300,8 @@ void main(void) {
 	cycleStates[RIGHT] = CYCLE_R;
 	holdText[LEFT] = holdText[RIGHT] = TRUE;
 	refreshTime[LEFT] = refreshTime[RIGHT] = holdTimer[LEFT] = holdTimer[RIGHT] =
-						blinkTimer[LEFT] = blinkTimer[RIGHT] = millis;
+						blinkTimer[LEFT] = blinkTimer[RIGHT] =
+                                                bounceTimer[LEFT] = bounceTimer[RIGHT] = millis; //***EL
 	displayStates[LEFT] = OIL_T;
 	displayStates[RIGHT] = ENGINE_T;
 
@@ -397,7 +405,11 @@ void main(void) {
 			ADLmsg[ADL2 + 1] = fan_over_sw[1];
 			ADLmsg[ADL3] = fuel_map_sw[0];
 			ADLmsg[ADL3 + 1] = fuel_map_sw[1];
-			ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+
+                        //ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+                        if(!ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1))
+                            write_CANerror();
+
 			// send out first three rotary encoders
 			ADLmsg[0] = 0x01;
 			ADLmsg[1] = 0x00;
@@ -581,6 +593,41 @@ void write_gear(BYTE gear) {
 	// write the gear position
 	driver_write(DIG6, gear);
 
+	return;
+}
+
+/******************************************************************************
+  Function:
+    void write_CANerror(void)
+  Summary:
+	Function to write a gear value to the wheel's middle seven segment display
+  Conditions:
+	* SPI module must be configured
+  Input:
+    none
+  Return Values:
+    none
+  Side Effects:
+	none
+  Description: ***EL
+
+  ****************************************************************************/
+
+void write_CANerror(void) {
+
+	// force CANERR messaged on displays
+        driver_write(DIG2, text_arr[CANERR1][0]);
+	driver_write(DIG1, text_arr[CANERR1][1]);
+	driver_write(DIG0, text_arr[CANERR1][2]);
+	driver_write(DIG3, text_arr[CANERR2][0]);
+	driver_write(DIG4, text_arr[CANERR2][1]);
+	driver_write(DIG5, text_arr[CANERR2][2]);
+        ///////////////////////
+        //code for LED indicator
+        //
+        //
+        //
+        ///////////////////////
 	return;
 }
 
