@@ -29,3 +29,10 @@ can-translator/out.txt
 *.exe
 *.out
 *.app
+*.mk
+*.bash
+*.properties
+*.d
+*.hex
+*.map
+*.cof
