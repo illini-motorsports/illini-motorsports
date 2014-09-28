@@ -738,7 +738,6 @@ void append_write_buffer(static const BYTE * temp, static BYTE applen) {
 	static BYTE offset;
 	static BYTE holder;
 
-	// can't initialize these in declaration it won't work for whatever fucking reason
 	Main.Written = FALSE;
 	offset = 0;
 
