@@ -99,7 +99,7 @@ typedef enum {true, false};
 #define true 1;
 #define false 0;
 typedef char bool;
-bool error = 0;
+bool errorVolts = 0, errorRPM = 0, errorOilTemp = 0, errorEngineTemp = 0, changedErrorState;
 
 
 // ECAN variables
@@ -236,25 +236,44 @@ void set_lights(unsigned char max) {
  Outputs: True (1) if volts are in balance, above the threshold.
           False(0) if volts are below the threshold.
  */
-bool checkVolts(){
+void checkVolts(){
     int level = 13; //get the value here.
     if(level < 13){
-        return error = 1; //Battery is low, error flag set to true
+        errorVolts = 1; //Battery is low, error flag set to true
     }
     return 0;
 }
-bool excess(int type){
+void excess(int type){
     switch(type){
         case 0:
             //excess oil temp
+            errorOilTemp = 0;
             break;
         case 1:
             //excess engine temp
+            errorEngineTemp = 0;
             break;
         default:
             //code error
             break;
 
+    }
+}
+void display(){
+    if(changedErrorState){
+        if(errorRPM && (!errorOilTemp && !errorEngineTemp && !errorVolts)){
+            //Only RPM Error
+        }else if(errorOilTemp && (!errorRPM && !errorEngineTemp && !errorVolts)){
+            //only Oil Temp error
+        }else if(errorEngineTemp && (!errorOilTemp && !errorRPM && !errorVolts)){
+            //only Engine Temp
+        }else if(errorVolts && (!errorOilTemp && !errorEngineTemp && !errorRPM)){
+            //only Battery error
+        }else{
+            //Multiple Error Singles
+        }
+    }else{
+        //Normal RPM display here
     }
 }
 
