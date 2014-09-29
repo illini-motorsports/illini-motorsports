@@ -6,10 +6,21 @@
 ***
 ## Contributing
 
+### Git Basic Workflow
+This is an example of what you should do each time you sit down to work on the code. Committing often is preferable to committing infrequently. A good rule of thumb is to commit each time you finish a "feature" or when you finish one particular task in the code you are working on.
+- `$ git pull origin master` *(Ensures you have the latest copy of the code on your computer.)*
+- Do your work. For example, change `file1.c` and `file2.h`.
+- `$ git pull origin master` *(Again, checks for any new commits from other contributors.)*
+- `$ git add file1.c file2.h` *(Tells git that you want to commit these, and only these, files.)*
+- `$ git commit -m "Enter a good commit message here. (See below)"` *(Commits your changes)*
+- `$ git push origin master` *(Pushes your new commit to master branch of the online repository)*
+
+If you are using a GUI, you won't need to use these terminal commands but the process is similiar. It is very important to be sure to only commit the files that you want changed. If a bunch of XML configuration files were automagically changed by MPLAB, for example, you should not commit those changes.
+
 ### Branching
 When starting work on a new board's code or a large overhaul of an existing one, it's best to do the work on a separate branch. This way, we can ensure that the `master` branch always has code that compiles and ideally is in a working or semi-working condition. If the change you are going to make is small or can be done in one or two commits, it is fine to do the work on the `master` branch.
 
-#### Example workflow:
+#### Example:
 ```
 $ git pull origin master
 $ git branch new-branch
@@ -28,7 +39,6 @@ You will also need the C18 compiler, which is specific to the PIC18 family of mi
 #### A Git Client
 
 If you are new to git, I'll point you [here](http://www.vogella.com/tutorials/Git/article.html). It's a fairly in-depth explanation of git but if you skim through it you should pick up all you need to know for using the git. Reading this is more necessary if you are going to use a command line interface and less necessary if you are going to use a GUI git client.
-
 
 ##### [Git CLI - Linux](http://git-scm.com/download/linux)
 If you're an awesome person and on Linux, you can use the command line interface for git. Because you're awesome, I'm assuming you already know how to install things onto your computer.
@@ -102,6 +112,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-
-
