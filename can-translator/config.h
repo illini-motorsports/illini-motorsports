@@ -15,6 +15,7 @@
 #include <QVector>
 #include <QStringList>
 #include <QTextStream>
+#include <QCoreApplication>
 
 using std::map;
 

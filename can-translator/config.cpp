@@ -28,7 +28,7 @@ map<unsigned short, Message> AppConfig::getMessages() {
 QVector<QString> AppConfig::readFile() {
   QVector<QString> lines;
 
-  QFile configFile("./config.txt");
+  QFile configFile(QCoreApplication::applicationDirPath().append("/config.txt"));
   if(configFile.open(QIODevice::ReadOnly)) {
     QTextStream inStream(&configFile);
 
