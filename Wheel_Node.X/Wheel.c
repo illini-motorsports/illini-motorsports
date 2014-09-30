@@ -140,8 +140,8 @@ BYTE text_arr[NUM_CHAN + 2][3] ={{BLANK, CHAR_O, CHAR_t},	// oil temperature
                                 {BLANK, CHAR_O, CHAR_P},	// oil pressure
                                 {CHAR_S, CHAR_P, CHAR_d},	// ground speed
                                 {CHAR_t, CHAR_A, CHAR_c},       // engine RPM
-                                {CHAR_E, CHAR_r, CHAR_r},       // CAN error ***EL
-                                {CHAR_c, CHAR_A, CHAR_N}};	// CAN error ***EL
+                                {CHAR_E, CHAR_r, CHAR_r},       // CAN error 
+                                {CHAR_c, CHAR_A, CHAR_N}};	// CAN error 
 
 
 
@@ -192,8 +192,8 @@ void high_isr(void) {
                 CANerror_flag = 0; //reset flag
 		// get data from recieve buffer
 		//ECANReceiveMessage(&id, data, &dataLen, &flags);
-                if( !ECANReceiveMessage(&id, data, &dataLen, &flags) ) //***EL
-                    write_CANerror();
+                ECANReceiveMessage(&id, data, &dataLen, &flags);
+
 
                 bufferData();	// put data in an array
 	}
@@ -306,7 +306,7 @@ void main(void) {
 	holdText[LEFT] = holdText[RIGHT] = TRUE;
 	refreshTime[LEFT] = refreshTime[RIGHT] = holdTimer[LEFT] = holdTimer[RIGHT] =
 						blinkTimer[LEFT] = blinkTimer[RIGHT] =
-                                                bounceTimer[LEFT] = bounceTimer[RIGHT] = millis; //***EL
+                                                bounceTimer[LEFT] = bounceTimer[RIGHT] = millis;
         CANint_tmr = millis;
         CANerror_flag = 0;
 
@@ -628,7 +628,7 @@ void write_gear(BYTE gear) {
     none
   Side Effects:
 	none
-  Description: ***EL
+  Description: 
 
   ****************************************************************************/
 
