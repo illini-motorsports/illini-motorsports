@@ -28,7 +28,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>C18</languageToolchain>
-        <languageToolchainVersion>3.46</languageToolchainVersion>
+        <languageToolchainVersion></languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>
@@ -142,7 +142,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>C18</languageToolchain>
-        <languageToolchainVersion>3.46</languageToolchainVersion>
+        <languageToolchainVersion></languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>
@@ -257,7 +257,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>C18</languageToolchain>
-        <languageToolchainVersion>3.46</languageToolchainVersion>
+        <languageToolchainVersion></languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>

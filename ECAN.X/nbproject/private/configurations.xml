@@ -5,7 +5,7 @@
   <confs>
     <conf name="default" type="3">
       <platformToolSN></platformToolSN>
-      <languageToolchainDir></languageToolchainDir>
+      <languageToolchainDir>C:\Program Files (x86)\Microchip\mplabc18\v3.46\bin</languageToolchainDir>
       <mdbdebugger version="1">
         <placeholder1>place holder 1</placeholder1>
         <placeholder2>place holder 2</placeholder2>
@@ -23,7 +23,7 @@
     </conf>
     <conf name="Logging" type="3">
       <platformToolSN></platformToolSN>
-      <languageToolchainDir></languageToolchainDir>
+      <languageToolchainDir>C:\Program Files (x86)\Microchip\mplabc18\v3.46\bin</languageToolchainDir>
       <mdbdebugger version="1">
         <placeholder1>place holder 1</placeholder1>
         <placeholder2>place holder 2</placeholder2>
@@ -41,7 +41,7 @@
     </conf>
     <conf name="Hub" type="3">
       <platformToolSN></platformToolSN>
-      <languageToolchainDir></languageToolchainDir>
+      <languageToolchainDir>C:\Program Files (x86)\Microchip\mplabc18\v3.46\bin</languageToolchainDir>
       <mdbdebugger version="1">
         <placeholder1>place holder 1</placeholder1>
         <placeholder2>place holder 2</placeholder2>

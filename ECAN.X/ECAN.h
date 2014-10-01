@@ -61,7 +61,12 @@
 #ifdef LOGGING
 #include "ECAN_logging_config.h"
 #elif HUB
+#ifdef MOTEC_RESEND
+#include "ECAN_hub_config_adl.h"
+#endif
+#ifndef MOTEC_RESEND
 #include "ECAN_hub_config.h"
+#endif
 #elif THERMO
 #include "ECAN_thermo_config.h"
 #elif SHIFT

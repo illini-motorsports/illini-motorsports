@@ -12,6 +12,7 @@
       <itemPath>ECAN_wheel_config.h</itemPath>
       <itemPath>ECAN_shift_lights_config.h</itemPath>
       <itemPath>ECAN_telem_config.h</itemPath>
+      <itemPath>ECAN_hub_config_adl.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -37,7 +38,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>C18</languageToolchain>
-        <languageToolchainVersion>3.46</languageToolchainVersion>
+        <languageToolchainVersion></languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>
@@ -151,7 +152,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>C18</languageToolchain>
-        <languageToolchainVersion>3.46</languageToolchainVersion>
+        <languageToolchainVersion></languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>
@@ -265,7 +266,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>C18</languageToolchain>
-        <languageToolchainVersion>3.46</languageToolchainVersion>
+        <languageToolchainVersion></languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>

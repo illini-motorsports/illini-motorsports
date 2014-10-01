@@ -1,41 +1,27 @@
-/******************************************************************************
+/*
+ * @file ShiftLights.c
  *
- *					Shift Lights Node C Main Code
- *
- ******************************************************************************
- * FileName:		ShiftLights.c
- * Dependencies:	p18F46K80.h,
- *					timers.h,
- *					ECAN.h,
- *					spi.h,
- *					delays.h
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Version:			1.00
- * Author:			Andrew Mass, George Schwieters
- * Created:			2013-2014
- ******************************************************************************
- * Revision History
- *
- * 9-12-2013: AMass - Cleaned file and converted tabs to spaces.
- titties
-*******************************************************************************/
-
-/***********************************************/
-/*  Header Files                               */
-/***********************************************/
-
+ * @processor: PIC18F46K80
+ * @compiler: Microchip C18
+ * @author: Andrew Mass
+ * @author: George Schwieters
+ */
+#include <stdlib.h>
 #include "p18F46K80.h"
 #include "timers.h"
 #include "ShiftLights.h"
 #include "ECAN.h"
-#include "spi.h"
-#include <stdlib.h>
 
+//TODO: What to do if millis isn't updating.
+//TODO: What to do if rmp isn't updating.
+//TODO: Add "animations". (Scrolling, expanding, alternating, etc.)
+//TODO: Add AMERICA sequence. Make it look 'murican.
+//TODO: Use less rev ranges. Limited by distinct number of LEDs.
+//TODO: Optimize everything.
 
-/***********************************************/
-/* PIC18F46K80 Configuration Bits Settings     */
-/***********************************************/
+/*******************************************
+ * PIC18F46K80 Configuration Bits Settings *
+ *******************************************/
 
 // CONFIG1L
 #pragma config RETEN = OFF      // VREG Sleep Enable bit (Ultra low-power regulator is Disabled (Controlled by REGSLP bit))
@@ -45,9 +31,9 @@
 
 // CONFIG1H
 #ifdef INTERNAL
-#pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
+  #pragma config FOSC = INTIO2  // Oscillator (Internal RC oscillator)
 #else
-#pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+  #pragma config FOSC = HS1     // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -55,7 +41,7 @@
 #pragma config IESO = ON        // Internal External Oscillator Switch Over Mode (Enabled)
 
 // CONFIG2L
-#pragma config PWRTEN = OFF      // Power Up Timer (Disabled)
+#pragma config PWRTEN = OFF     // Power Up Timer (Disabled)
 #pragma config BOREN = OFF      // Brown Out Detect (Disabled in hardware, SBOREN disabled)
 #pragma config BORV = 3         // Brown-out Reset Voltage bits (1.8V)
 #pragma config BORPWR = ZPBORMV // BORMV Power level (ZPBORMV instead of BORMV is selected)
@@ -103,389 +89,399 @@
 // CONFIG7H
 #pragma config EBTRB = OFF      // Table Read Protect Boot (Disabled)
 
+/********************************
+ * Global Variable Declarations *
+ ********************************/
 
-/***********************************************/
-/* Global Variable Declarations                */
-/***********************************************/
-
-volatile unsigned int millis;   // holds timer0 rollover count
-volatile unsigned int rpm;      // Holds engine RPM data from CAN
+volatile unsigned int millis; // holds timer0 rollover count
+volatile unsigned int rpm; // Holds engine RPM data from CAN
 
 // ECAN variables
-unsigned long id;           // holds CAN msgID
-BYTE data[8];				// holds CAN data bytes
-BYTE dataLen;				// holds number of CAN data bytes
-ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
+unsigned long id; // holds CAN msgID
+BYTE data[8]; // holds CAN data bytes
+BYTE dataLen; // holds number of CAN data bytes
+ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
 
+/**************
+ * Interrupts *
+ **************/
 
-/***********************************************/
-/* Interrupts                                  */
-/***********************************************/
-
-/******************************************************************************
- * Interrupt Function:
- *   void high_isr(void)
- * Summary:
- *   Function to service interrupts
- * Conditions:
+/*
+ * Function to service interrupts.
  *
- * Input:
- *   none
- * Return Values:
- *   none
- * Side Effects:
- *   Transmits messages on CAN
- *   Reloads the timer0 registers and increments millis
- *   Resets the interrupt flags after servicing them
- * Description:
-*******************************************************************************/
+ * Transmits messages on CAN.
+ * Reloads the timer0 registers and increments millis.
+ * Resets the interrupt flags after servicing them.
+ */
 #pragma code high_vector = 0x08
+
 void high_vector(void) {
-    _asm goto high_isr _endasm
+  _asm goto high_isr _endasm
 }
 #pragma code
 
 #pragma interrupt high_isr
+
 void high_isr(void) {
 
-    // Check for timer0 rollover indicating a millisecond has passed
-    if (INTCONbits.TMR0IF) {
-        INTCONbits.TMR0IF = 0;
-        WriteTimer0(0x85);    // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
-        millis++;
+  // Check for timer0 rollover indicating a millisecond has passed
+  if(INTCONbits.TMR0IF) {
+    INTCONbits.TMR0IF = 0;
+    WriteTimer0(0x85); // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
+    millis++;
+  }
+
+  // Check for recieved CAN message
+  if(PIR5bits.RXB1IF) {
+    PIR5bits.RXB1IF = FALSE; // reset the flag
+    // get data from recieve buffer
+    ECANReceiveMessage(&id, data, &dataLen, &flags);
+    if(id == RPM_ID) {
+      ((BYTE*) & rpm)[0] = data[RPM_BYTE + 1];
+      ((BYTE*) & rpm)[1] = data[RPM_BYTE];
     }
-
-	// check for recieved CAN message
-	if(PIR5bits.RXB1IF) {
-		PIR5bits.RXB1IF = FALSE; // reset the flag
-		// get data from recieve buffer
-		ECANReceiveMessage(&id, data, &dataLen, &flags);
-		if(id == RPM_ID) {
-			((BYTE*) &rpm)[0] = data[RPM_BYTE + 1];
-            ((BYTE*) &rpm)[1] = data[RPM_BYTE];
-		}
-	}
-
-    return;
+  }
 }
 
+/*************
+ * Functions *
+ *************/
 
-/***********************************************/
-/* Functions                                   */
-/***********************************************/
-
-// Sends data byte to address byte on the LED driver
-void send(int address, int data) {
-    CS = 0;
-    WriteSPI(address);
-    WriteSPI(data);
-    CS = 1;
+/*
+ * Sets specified LED to specified color.
+ *
+ * @param led The index of the led to change.
+ * @param color The color value to change the LED to. Color values come
+ *   from the header file.
+ */
+void setLedToColor(unsigned char led, unsigned char color) {
+  if(led == 0) {
+    RED0_LAT = color & RED ? 1 : 0;
+    GREEN0_LAT = color & GREEN ? 1 : 0;
+    BLUE0_LAT = color & BLUE ? 1 : 0;
+  } else if(led == 1) {
+    RED1_LAT = color & RED ? 1 : 0;
+    GREEN1_LAT = color & GREEN ? 1 : 0;
+    BLUE1_LAT = color & BLUE ? 1 : 0;
+  } else if(led == 2) {
+    RED2_LAT = color & RED ? 1 : 0;
+    GREEN2_LAT = color & GREEN ? 1 : 0;
+    BLUE2_LAT = color & BLUE ? 1 : 0;
+  } else if(led == 3) {
+    RED3_LAT = color & RED ? 1 : 0;
+    GREEN3_LAT = color & GREEN ? 1 : 0;
+    BLUE3_LAT = color & BLUE ? 1 : 0;
+  } else if(led == 4) {
+    RED4_LAT = color & RED ? 1 : 0;
+    GREEN4_LAT = color & GREEN ? 1 : 0;
+    BLUE4_LAT = color & BLUE ? 1 : 0;
+  }
 }
 
-// Sets all LEDs to specified color
-void set_all(int color) {
-    send(DIG0, color);
-    send(DIG1, color);
-    send(DIG2, color);
-    send(DIG3, color);
-    send(DIG4, color);
-    send(DIG5, color);
-    send(DIG6, color);
-    send(DIG7, color);
+/*
+ * Sets all LEDs to specified color.
+ *
+ * @param color The color value to change the LED to. Color values come
+ *   from the header file.
+ */
+void set_all(unsigned char color) {
+  unsigned char i = 0;
+  for(; i < 5; i++) {
+    setLedToColor(i, color);
+  }
 }
 
-// Sets lights to NONE or REV_COLOR based on parameter
-void set_lights(int max) {
+/*
+ * Sets lights to NONE or REV_COLOR based on parameter.
+ *
+ * @param max The highest number LED to illuminate.
+ */
+void set_lights(unsigned char max) {
+  /*
   if(max > 0) send(DIG0, BLUE);
   else send(DIG0, NONE);
 
   if(max > 1) send(DIG1, BLUE);
-  else send(DIG1, NONE); 
+  else send(DIG1, NONE);
 
   if(max > 2) send(DIG2, BLUE);
   else send(DIG2, NONE);
-  
+
   if(max > 3) send(DIG3, BLUE);
   else send(DIG3, NONE);
-  
+
   if(max > 4) send(DIG4, BLUE);
   else send(DIG4, NONE);
-  
+
   if(max > 5) send(DIG5, BLUE);
   else send(DIG5, NONE);
-  
+
   if(max > 6) send(DIG6, BLUE);
   else send(DIG6, NONE);
-  
+
   if(max > 7) send(DIG7, BLUE);
   else send(DIG7, NONE);
+   */
 }
 
-/******************************************************************************
-  Function:
-	void init_unused_pins(void)
-  Summary:
-	Function to assert unused pins to eliminate sources of noise and reduce MCU
-	power draw.
-  Conditions:
-    none
-  Input:
-    none
-  Return Values:
-    none
-  Side Effects:
-	configuration registers will be modified
-  Description:
+/*
+ * Function to assert unused pins to eliminate sources of noise and reduce MCU
+ * power draw.
+ *
+ * Configuration registers will be modified.
+ */
+void init_unused_pins() {
 
-  ****************************************************************************/
-void init_unused_pins(void) {
+  // Configure to outputs.
 
-	// first configure to outputs
-	TRISAbits.TRISA0 = OUTPUT;
-	TRISAbits.TRISA1 = OUTPUT;
-	TRISAbits.TRISA2 = OUTPUT;
-	TRISAbits.TRISA3 = OUTPUT;
-	TRISAbits.TRISA5 = OUTPUT;
-//	TRISAbits.TRISA6 = OUTPUT; OSC2
-//	TRISAbits.TRISA7 = OUTPUT; OSC1
+  // TRISAbits.TRISA0 = OUTPUT; BLUE0
+  // TRISAbits.TRISA1 = OUTPUT; GREEN0
+  // TRISAbits.TRISA2 = OUTPUT; RED0
+  TRISAbits.TRISA3 = OUTPUT;
+  TRISAbits.TRISA5 = OUTPUT;
+  // TRISAbits.TRISA6 = OUTPUT; OSC2
+  // TRISAbits.TRISA7 = OUTPUT; OSC1
 
-	TRISBbits.TRISB0 = OUTPUT;
-	TRISBbits.TRISB1 = OUTPUT;
-//	TRISBbits.TRISB2 = OUTPUT; CANTX
-//	TRISBbits.TRISB3 = OUTPUT; CANRX
-	TRISBbits.TRISB4 = OUTPUT;
-	TRISBbits.TRISB5 = OUTPUT;
-	TRISBbits.TRISB6 = OUTPUT;
-	TRISBbits.TRISB7 = OUTPUT;
+  TRISBbits.TRISB0 = OUTPUT;
+  TRISBbits.TRISB1 = OUTPUT;
+  // TRISBbits.TRISB2 = OUTPUT; CANTX
+  // TRISBbits.TRISB3 = OUTPUT; CANRX
+  TRISBbits.TRISB4 = OUTPUT;
+  TRISBbits.TRISB5 = OUTPUT;
+  // TRISBbits.TRISB6 = OUTPUT; PGC
+  // TRISBbits.TRISB7 = OUTPUT; PGD
 
-//	TRISCbits.TRISC0 = OUTPUT; SOSC0
-//	TRISCbits.TRISC1 = OUTPUT; SOSC1
-	TRISCbits.TRISC2 = OUTPUT;
-//	TRISCbits.TRISC3 = OUTPUT; SCK
-//	TRISCbits.TRISC4 = OUTPUT; SDI
-//	TRISCbits.TRISC5 = OUTPUT; SDO
-	TRISCbits.TRISC6 = OUTPUT;
-	TRISCbits.TRISC7 = OUTPUT;
+  // TRISCbits.TRISC0 = OUTPUT; SOSC0
+  // TRISCbits.TRISC1 = OUTPUT; SOSC1
+  // TRISCbits.TRISC2 = OUTPUT; BLUE1
+  // TRISCbits.TRISC3 = OUTPUT; GREEN1
+  // TRISCbits.TRISC4 = OUTPUT; BLUE3
+  // TRISCbits.TRISC5 = OUTPUT; GREEN3
+  // TRISCbits.TRISC6 = OUTPUT; TERM
+  // TRISCbits.TRISC7 = OUTPUT; RED3
 
-	TRISDbits.TRISD0 = OUTPUT;
-	TRISDbits.TRISD1 = OUTPUT;
-	TRISDbits.TRISD2 = OUTPUT;
-//	TRISDbits.TRISD3 = OUTPUT; RD3
-	TRISDbits.TRISD4 = OUTPUT;
-	TRISDbits.TRISD5 = OUTPUT;
-	TRISDbits.TRISD6 = OUTPUT;
-	TRISDbits.TRISD7 = OUTPUT;
+  // TRISDbits.TRISD0 = OUTPUT; RED1
+  // TRISDbits.TRISD1 = OUTPUT; BLUE2
+  // TRISDbits.TRISD2 = OUTPUT; GREEN2
+  // TRISDbits.TRISD3 = OUTPUT; RED2
+  // TRISDbits.TRISD4 = OUTPUT; BLUE4
+  // TRISDbits.TRISD5 = OUTPUT; GREEN4
+  // TRISDbits.TRISD6 = OUTPUT; RED4
+  TRISDbits.TRISD7 = OUTPUT;
 
-	TRISEbits.TRISE0 = OUTPUT;
-	TRISEbits.TRISE1 = OUTPUT;
-	TRISEbits.TRISE2 = OUTPUT;
-//	TRISEbits.TRISE3 = OUTPUT; MCLR
+  TRISEbits.TRISE0 = OUTPUT;
+  TRISEbits.TRISE1 = OUTPUT;
+  TRISEbits.TRISE2 = OUTPUT;
+  // TRISEbits.TRISE3 = OUTPUT; MCLR
 
-	// then set pins low
-	LATAbits.LATA0 = 0;
-	LATAbits.LATA1 = 0;
-	LATAbits.LATA2 = 0;
-	LATAbits.LATA3 = 0;
-	LATAbits.LATA5 = 0;
-//	LATAbits.LATA6 = 0;
-//	LATAbits.LATA7 = 0;
+  // Set pins low.
 
-	LATBbits.LATB0 = 0;
-	LATBbits.LATB1 = 0;
-//	LATBbits.LATB2 = 0;
-//	LATBbits.LATB3 = 0;
-	LATBbits.LATB4 = 0;
-	LATBbits.LATB5 = 0;
-	LATBbits.LATB6 = 0;
-	LATBbits.LATB7 = 0;
+  // LATAbits.LATA0 = 0;
+  // LATAbits.LATA1 = 0;
+  // LATAbits.LATA2 = 0;
+  LATAbits.LATA3 = 0;
+  LATAbits.LATA5 = 0;
+  // LATAbits.LATA6 = 0;
+  // LATAbits.LATA7 = 0;
 
-//	LATCbits.LATC0 = 0;
-//	LATCbits.LATC1 = 0;
-	LATCbits.LATC2 = 0;
-//	LATCbits.LATC3 = 0;
-//	LATCbits.LATC4 = 0;
-//	LATCbits.LATC5 = 0;
-	LATCbits.LATC6 = 0;
-	LATCbits.LATC7 = 0;
+  LATBbits.LATB0 = 0;
+  LATBbits.LATB1 = 0;
+  // LATBbits.LATB2 = 0;
+  // LATBbits.LATB3 = 0;
+  LATBbits.LATB4 = 0;
+  LATBbits.LATB5 = 0;
+  // LATBbits.LATB6 = 0;
+  // LATBbits.LATB7 = 0;
 
-	LATDbits.LATD0 = 0;
-	LATDbits.LATD1 = 0;
-	LATDbits.LATD2 = 0;
-//	LATDbits.LATD3 = 0;
-	LATDbits.LATD4 = 0;
-	LATDbits.LATD5 = 0;
-	LATDbits.LATD6 = 0;
-	LATDbits.LATD7 = 0;
+  // LATCbits.LATC0 = 0;
+  // LATCbits.LATC1 = 0;
+  // LATCbits.LATC2 = 0;
+  // LATCbits.LATC3 = 0;
+  // LATCbits.LATC4 = 0;
+  // LATCbits.LATC5 = 0;
+  // LATCbits.LATC6 = 0;
+  // LATCbits.LATC7 = 0;
 
-	LATEbits.LATE0 = 0;
-	LATEbits.LATE1 = 0;
-	LATEbits.LATE2 = 0;
-//	LATEbits.LATE3 = 0;
+  // LATDbits.LATD0 = 0;
+  // LATDbits.LATD1 = 0;
+  // LATDbits.LATD2 = 0;
+  // LATDbits.LATD3 = 0;
+  // LATDbits.LATD4 = 0;
+  // LATDbits.LATD5 = 0;
+  // LATDbits.LATD6 = 0;
+  LATDbits.LATD7 = 0;
 
-	return;
+  LATEbits.LATE0 = 0;
+  LATEbits.LATE1 = 0;
+  LATEbits.LATE2 = 0;
+  // LATEbits.LATE3 = 0;
 }
 
-
-/***********************************************/
-/* Main Loop                                   */
-/***********************************************/
+/*************
+ * Main Loop *
+ *************/
 
 void main(void) {
 
-    /*************************
-     * Variable Declarations *
-     *************************/
+  /*************************
+   * Variable Declarations *
+   *************************/
 
-    long blink_tmr = 0;
+  long blink_tmr = 0;
 
+  /*********************
+   * Oscillator Set-Up *
+   *********************/
 
-    /*************************
-     * Oscillator Set-Up     *
-     *************************/
+#ifdef INTERNAL
+  // OSCTUNE
+  OSCTUNEbits.INTSRC = 0; // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
+  OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
+  OSCTUNEbits.TUN5 = 0; // Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
+  OSCTUNEbits.TUN4 = 0; // 011111 = max
+  OSCTUNEbits.TUN3 = 0; // ... 000001
+  OSCTUNEbits.TUN2 = 0; // 000000 = center (running at calibrated frequency)
+  OSCTUNEbits.TUN1 = 0; // 111111 ...
+  OSCTUNEbits.TUN0 = 0; // 100000
 
-    #ifdef INTERNAL
-            // OSCTUNE
-            OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-            OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
-            OSCTUNEbits.TUN5 = 0;   // Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
-            OSCTUNEbits.TUN4 = 0;   // 011111 = max
-            OSCTUNEbits.TUN3 = 0;   // ... 000001
-            OSCTUNEbits.TUN2 = 0;   // 000000 = center (running at calibrated frequency)
-            OSCTUNEbits.TUN1 = 0;   // 111111 ...
-            OSCTUNEbits.TUN0 = 0;   // 100000
+  // OSCCCON
+  OSCCONbits.IDLEN = 1; // Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
+  OSCCONbits.IRCF2 = 1; // Internal Oscillator Frequency Select Bits
+  OSCCONbits.IRCF1 = 1; // When using HF, settings are:
+  OSCCONbits.IRCF0 = 1; // 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
+  OSCCONbits.SCS1 = 0;
+  OSCCONbits.SCS0 = 0;
 
-            // OSCCCON
-            OSCCONbits.IDLEN = 1;   // Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
-            OSCCONbits.IRCF2 = 1;   // Internal Oscillator Frequency Select Bits
-            OSCCONbits.IRCF1 = 1;   // When using HF, settings are:
-            OSCCONbits.IRCF0 = 1;   // 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
-            OSCCONbits.SCS1 = 0;
-            OSCCONbits.SCS0 = 0;
+  // OSCCON2
+  OSCCON2bits.MFIOSEL = 0;
 
-            // OSCCON2
-            OSCCON2bits.MFIOSEL = 0;
+  while(!OSCCONbits.HFIOFS); // Wait for stable clock
+#else
+  // OSCTUNE
+  OSCTUNEbits.INTSRC = 0; // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
+  OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
 
-            while(!OSCCONbits.HFIOFS);  // Wait for stable clock
+  // OSCCCON
+  OSCCONbits.SCS1 = 0; // Select configuration chosen oscillator
+  OSCCONbits.SCS0 = 0; // SCS = 00
 
-    #else
-            // OSCTUNE
-            OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-            OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
+  // OSCCON2
+  OSCCON2bits.MFIOSEL = 0;
 
-            // OSCCCON
-            OSCCONbits.SCS1 = 0;    // Select configuration chosen oscillator
-            OSCCONbits.SCS0 = 0;    // SCS = 00
+  while(!OSCCONbits.OSTS); // Wait for stable external clock
+#endif
 
-            // OSCCON2
-            OSCCON2bits.MFIOSEL = 0;
+  /*********************
+   * Peripherals Setup *
+   *********************/
 
-            while(!OSCCONbits.OSTS);  // Wait for stable external clock
-    #endif
+  ANCON0 = 0x00; // Default all pins to digital
+  ANCON1 = 0x00; // Default all pins to digital
 
-    /*************************
-     * Peripherals Setup     *
-     *************************/
+  // Turn on and configure the TIMER1 oscillator
+  OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
+  WriteTimer0(0x82); // Load timer register
+  millis = 0; // Clear milliseconds count
+  INTCONbits.TMR0IE = 1; // Turn on timer0 interupts
 
-    ANCON0 = 0x00;    // Default all pins to digital
-    ANCON1 = 0x00;    // Default all pins to digital
+  TRISCbits.TRISC6 = OUTPUT; // programmable termination
+  TERM_LAT = FALSE;
 
-    // Turn on and configure the TIMER1 oscillator
-    OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-    WriteTimer0(0x82);			// Load timer register
-    millis = 0;					// Clear milliseconds count
-    INTCONbits.TMR0IE = 1;		// Turn on timer0 interupts
+  ECANInitialize(); // setup ECAN
 
-    // SPI setup
-    SSPSTATbits.CKE = 1;		// SPI Clock Select, 1 = transmit on active to idle
-    SSPCON1bits.CKP = 0;		// Clock Polarity Select, 0 = low level is idle state
-    SSPCON1bits.SSPM = 0b1010;	// Clk Frequecy (Note: FOSC = 64MHz)
-    SSPCON1bits.SSPEN = 1;		// SPI Enable, 1 enables
+  // interrupts setup
+  INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
+  INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
+  RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
 
-    OpenSPI(SPI_FOSC_64, MODE_10, SMPEND);
+  init_unused_pins();
 
-    // SPI pin I/O setup
-    TRISCbits.TRISC3 = OUTPUT;    // SCK
-    TRISCbits.TRISC5 = OUTPUT;    // SDO
-    TRISDbits.TRISD3 = OUTPUT;    // CS
-    CS = 1;
+  // Set LED pins as outputs.
+  RED0_TRIS = OUTPUT;
+  GREEN0_TRIS = OUTPUT;
+  BLUE0_TRIS = OUTPUT;
+  RED1_TRIS = OUTPUT;
+  GREEN1_TRIS = OUTPUT;
+  BLUE1_TRIS = OUTPUT;
+  RED2_TRIS = OUTPUT;
+  GREEN2_TRIS = OUTPUT;
+  BLUE2_TRIS = OUTPUT;
+  RED3_TRIS = OUTPUT;
+  GREEN3_TRIS = OUTPUT;
+  BLUE3_TRIS = OUTPUT;
+  RED4_TRIS = OUTPUT;
+  GREEN4_TRIS = OUTPUT;
+  BLUE4_TRIS = OUTPUT;
 
-	TRISCbits.TRISC6 = OUTPUT;	// programmable termination
-	TERM_LAT = FALSE;
+  // Default all LEDs to off.
+  RED0_LAT = 0;
+  GREEN0_LAT = 0;
+  BLUE0_LAT = 0;
+  RED1_LAT = 0;
+  GREEN1_LAT = 0;
+  BLUE1_LAT = 0;
+  RED2_LAT = 0;
+  GREEN2_LAT = 0;
+  BLUE2_LAT = 0;
+  RED3_LAT = 0;
+  GREEN3_LAT = 0;
+  BLUE3_LAT = 0;
+  RED4_LAT = 0;
+  GREEN4_LAT = 0;
+  BLUE4_LAT = 0;
 
-	ECANInitialize();		// setup ECAN
+  // Startup - Show full RED lights for a while before doing anything else.
+  blink_tmr = millis;
+  while(1) {
+    if(millis - blink_tmr < BLINK_TIME)
+      set_all(RED);
+    else if(millis - blink_tmr < BLINK_TIME * 2)
+      set_all(RGB);
+    else if(millis - blink_tmr < BLINK_TIME * 3)
+      set_all(BLUE);
+    else if(millis - blink_tmr < BLINK_TIME * 4)
+      set_all(RED);
+    else if(millis - blink_tmr < BLINK_TIME * 5)
+      set_all(RGB);
+    else if(millis - blink_tmr < BLINK_TIME * 6)
+      set_all(BLUE);
+    else if(millis - blink_tmr < BLINK_TIME * 7)
+      set_all(RED);
+    else if(millis - blink_tmr < BLINK_TIME * 8)
+      set_all(RGB);
+    else if(millis - blink_tmr < BLINK_TIME * 9)
+      set_all(BLUE);
+    else
+      break;
+  }
 
-    // interrupts setup
-	INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
-	INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
-	RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
-
-	init_unused_pins();
-
-    
-    /*************************
-     * LED Driver Config     *
-     *************************/
-    
-    send(SHUTDOWN, SHUTDOWN_OFF);   //Shutdown mode off
-    send(DISP_MODE, NORMAL);		//Display mode normal
-    send(DECODE, NO_DECODE);		//Decoding disabled
-    send(SCAN, FULL_SCAN);			//Set scan to all digits
-    send(INTENSITY, INTENSITY_MAX);	//Full intensity
-
-    // Startup - Show full RED lights for a while before doing anything else
-	blink_tmr = millis;
-	while(1) {
-		if(millis - blink_tmr < BLINK_TIME)
-			set_all(RED);
-		else if(millis - blink_tmr < BLINK_TIME * 2)
-			set_all(RGB);
-		else if(millis - blink_tmr < BLINK_TIME * 3)
-			set_all(BLUE);
-		else if(millis - blink_tmr < BLINK_TIME * 4)
-			set_all(RED);
-		else if(millis - blink_tmr < BLINK_TIME * 5)
-			set_all(RGB);
-		else if(millis - blink_tmr < BLINK_TIME * 6)
-			set_all(BLUE);
-		else if(millis - blink_tmr < BLINK_TIME * 7)
-			set_all(RED);
-		else if(millis - blink_tmr < BLINK_TIME * 8)
-			set_all(RGB);
-		else if(millis - blink_tmr < BLINK_TIME * 9)
-			set_all(BLUE);
-		else
-			break;
-	}
-
-    while(1) {
-        // Sets certain lights to NONE or REV_COLOR based on rpm value        
-        if(rpm >= REV_RANGE_LIMIT) {
-			if(millis - blink_tmr < BLINK_TIME)
-				set_all(REV_LIMIT_COLOR);
-			else if(millis - blink_tmr < BLINK_TIME * 2)
-				set_all(NONE);
-			else
-				blink_tmr = millis;
-        } else if(rpm >= REV_RANGE_8) {
-            set_lights(8);
-        } else if(rpm >= REV_RANGE_7) {
-            set_lights(7);
-        } else if(rpm >= REV_RANGE_6) {
-            set_lights(6);
-        } else if(rpm >= REV_RANGE_5) {
-            set_lights(5);
-        } else if(rpm >= REV_RANGE_4) {
-            set_lights(4);
-        } else if(rpm >= REV_RANGE_3) {
-            set_lights(3);
-        } else if(rpm >= REV_RANGE_2) {
-            set_lights(2);
-        } else if(rpm >= REV_RANGE_1) {
-            set_lights(1);
-        } else {
-            set_all(NONE);
-        } // set LEDs based on RPM
-    } // end main loop
-    
-    return;
+  while(1) {
+    // Sets certain lights to NONE or REV_COLOR based on rpm value.
+    if(rpm >= REV_RANGE_LIMIT) {
+      if(millis - blink_tmr < BLINK_TIME)
+        set_all(REV_LIMIT_COLOR);
+      else if(millis - blink_tmr < BLINK_TIME * 2)
+        set_all(NONE);
+      else
+        blink_tmr = millis;
+    } else if(rpm >= REV_RANGE_8) {
+      set_lights(8);
+    } else if(rpm >= REV_RANGE_7) {
+      set_lights(7);
+    } else if(rpm >= REV_RANGE_6) {
+      set_lights(6);
+    } else if(rpm >= REV_RANGE_5) {
+      set_lights(5);
+    } else if(rpm >= REV_RANGE_4) {
+      set_lights(4);
+    } else if(rpm >= REV_RANGE_3) {
+      set_lights(3);
+    } else if(rpm >= REV_RANGE_2) {
+      set_lights(2);
+    } else if(rpm >= REV_RANGE_1) {
+      set_lights(1);
+    } else {
+      set_all(NONE);
+    }
+  }
 }

@@ -388,7 +388,6 @@ void main(void) {
 
 		if(millis - CAN_tmr > CAN_PER) {
 			CAN_tmr = millis;
-#if 1
 			// send out the first three sampled switches
 			ADLmsg[0] = 0x00;
 			ADLmsg[1] = 0x00;
@@ -399,21 +398,13 @@ void main(void) {
 			ADLmsg[ADL3] = fuel_map_sw[0];
 			ADLmsg[ADL3 + 1] = fuel_map_sw[1];
 			ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-#endif
-#if 0
 			// send out first three rotary encoders
-			ADLmsg[0] = 0x00;
-			ADLmsg[1] = 0x01;
-			ADLsample(ADLmsg, ADL7, LAUNCH_ROT);
-			ADLsample(ADLmsg, ADL8, TRAC_ROT);
-			ADLsample(ADLmsg, ADL9, DRS_ROT);
+			ADLmsg[0] = 0x01;
+			ADLmsg[1] = 0x00;
+			ADLsample(ADLmsg, ADL4, LAUNCH_ROT);
+			ADLsample(ADLmsg, ADL5, TRAC_ROT);
+			ADLsample(ADLmsg, ADL6, DRS_ROT);
 			ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-			// send out last rotary encoder
-			ADLmsg[0] = 0x00;
-			ADLmsg[1] = 0x02;
-			ADLsample(ADLmsg, ADL10, PADDLE_ROT);
-			ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-#endif
 		}
 
 
@@ -861,15 +852,16 @@ void ADLsample(BYTE *data, const BYTE ADLoffset, const BYTE ch) {
 
 	// put result in data array in accordance with specified byte location
     temp = (unsigned int)ReadADC();
-    data[ADLoffset - 1] = ((BYTE *)&temp)[1];
-    data[ADLoffset] = ((BYTE *)&temp)[0];
+	modifyRotary(&temp);
+    data[ADLoffset] = ((BYTE *)&temp)[1];
+    data[ADLoffset + 1] = ((BYTE *)&temp)[0];
 
 	return;
 }
 
 /******************************************************************************
   Function:
-
+	void modifyRotary(int * sample)
   Summary:
 
   Conditions:
@@ -883,28 +875,28 @@ void ADLsample(BYTE *data, const BYTE ADLoffset, const BYTE ch) {
   Description:
 
   ****************************************************************************/
-void modifyRotary(int * sample) {
+void modifyRotary(unsigned int * sample) {
 	// depending on the value of the sampled rotary postion
 	// we will assign a new position that matches the pysical position
 	if(*sample >= RANGE_LOW && *sample < RANGE_0)
-		*sample = POS_0;
-	if(*sample > RANGE_0 && *sample < RANGE_1)
-		*sample = POS_1;
-	if(*sample > RANGE_1 && *sample < RANGE_2)
-		*sample = POS_2;
-	if(*sample > RANGE_2 && *sample < RANGE_3)
-		*sample = POS_3;
-	if(*sample > RANGE_3 && *sample < RANGE_4)
-		*sample = POS_4;
-	if(*sample > RANGE_4 && *sample < RANGE_5)
-		*sample = POS_5;
-	if(*sample > RANGE_5 && *sample < RANGE_6)
 		*sample = POS_6;
-	if(*sample > RANGE_6 && *sample < RANGE_7)
+	else if(*sample >= RANGE_0 && *sample < RANGE_1)
+		*sample = POS_5;
+	else if(*sample >= RANGE_1 && *sample < RANGE_2)
+		*sample = POS_4;
+	else if(*sample >= RANGE_2 && *sample < RANGE_3)
+		*sample = POS_3;
+	else if(*sample >= RANGE_3 && *sample < RANGE_4)
 		*sample = POS_7;
-	if(*sample > RANGE_7 && *sample < RANGE_8)
-		*sample = POS_8;
-	if(*sample > RANGE_LOW && *sample <= RANGE_HIGH)
+	else if(*sample >= RANGE_4 && *sample < RANGE_5)
+		*sample = POS_2;
+	else if(*sample >= RANGE_5 && *sample < RANGE_6)
+		*sample = POS_1;
+	else if(*sample >= RANGE_6 && *sample < RANGE_7)
+		*sample = POS_0;
+	else if(*sample >= RANGE_7 && *sample < RANGE_8)
 		*sample = POS_9;
+	else if(*sample >= RANGE_8 && *sample <= RANGE_HIGH)
+		*sample = POS_8;
 	return;
 }

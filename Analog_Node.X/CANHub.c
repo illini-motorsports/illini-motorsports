@@ -108,7 +108,15 @@
 /*  Global Variable Declarations               */
 /***********************************************/
 
-static unsigned int millis;	// millisecond count
+volatile unsigned int millis;	// millisecond count
+#ifdef FRONT
+volatile BYTE RADIO_SW;
+// ECAN variables
+unsigned long id;			// holds CAN msgID
+BYTE data[8];				// holds CAN data bytes
+BYTE dataLen;				// holds number of CAN data bytes
+ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
+#endif
 
 
 /***********************************************/
@@ -153,6 +161,19 @@ void high_isr (void) {
 		millis++;
 	}
 
+#ifdef FRONT
+	// check for recieved CAN message
+	if(PIR5bits.RXB1IF) {
+		// reset the flag
+		PIR5bits.RXB1IF = FALSE;
+		ECANReceiveMessage(&id, data, &dataLen, &flags);
+		if(id == RADIO_SW_ID) {
+            if(data[0] == RADIO_SW_BYTE0_ID)
+                RADIO_SW = data[RADIO_SW_BYTE];
+		}
+	}
+#endif
+
 #if (FAST_NUM != 0)
 	// wait until millisecond count is a multiple of the sample parameter for
 	// high frequency sampled sensors
@@ -163,11 +184,11 @@ void high_isr (void) {
 		sample(data, SUS_R_BYTE, SUS_R);
 
 		// send the sampled values out on CAN
-		while(!ECANSendMessage(FAST_ID, data, FAST_NUM * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_3));
+		ECANSendMessage(FAST_ID, data, FAST_NUM * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_3);
 	}
 #endif
 
-#if (SLOW_NUM_0 != 0)
+#if (SLOW_NUM != 0)
 	// wait until millisecond count is a multiple of the sample parameter for
 	// low frequency sampled sensors
 	if(!(millis % SLOW_SAMPLE)) {
@@ -177,31 +198,9 @@ void high_isr (void) {
 		sample(data, BRAKE_R_P_BYTE, BRAKE_R_P);
 		sample(data, BRAKE_F_P_BYTE, BRAKE_F_P);
 		sample(data, STEER_BYTE, STEER);
-#elif REAR
-		sample(data, BRAKE_R_T_BYTE, BRAKE_R_T);
-		sample(data, BRAKE_L_T_BYTE, BRAKE_L_T);
 #endif
-
 		// send the sampled values out on CAN
-		while(!ECANSendMessage(SLOW_ID_0, data, SLOW_NUM_0 * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_2));
-	}
-#endif
-
-#if (SLOW_NUM_1 != 0)
-	// wait until millisecond count is a multiple of the sample parameter for
-	// low frequency sampled sensors
-	if(!(millis % SLOW_SAMPLE)) {
-
-#ifdef FRONT
-		// sample the sensors
-		sample(data, BRAKE_R_T_BYTE, BRAKE_R_T);
-		sample(data, BRAKE_L_T_BYTE, BRAKE_L_T);
-#elif REAR
-
-#endif
-
-		// send the sampled values out on CAN
-		while(!ECANSendMessage(SLOW_ID_1, data, SLOW_NUM_1 * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_2));
+		ECANSendMessage(SLOW_ID, data, SLOW_NUM * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_2);
 	}
 #endif
 
@@ -218,6 +217,16 @@ void main(void) {
 	/*************************
 	 * Variable Declarations *
 	 *************************/
+
+#ifdef MOTEC_RESEND
+	unsigned long id;			// holds CAN msgID
+	BYTE data_r[8];				// holds CAN data bytes
+	BYTE dataLen;				// holds number of CAN data bytes
+	ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
+	FLAGS Recieved;
+	BYTE msg[8];
+	unsigned int adl_tmr;
+#endif
 
 	init_unused_pins();			// assert values to unused pins
 
@@ -276,19 +285,51 @@ void main(void) {
 
 	// turn on and configure the A/D converter module
 	OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_OFF, ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
-	ANCON0 = 0b11111111;		// AN0 - 10 are analog
-	ANCON1 = 0b00000111;		// rest are digital
-	TRISAbits.TRISA0 = INPUT;   // AN0
+#ifdef FRONT
+	ANCON0 = 0b00001111;		// AN0 - AN3 are analog
+	ANCON1 = 0b00000000;		// rest are digital
+	TRISAbits.TRISA0 = INPUT;	// AN0
 	TRISAbits.TRISA1 = INPUT;   // AN1
-	TRISAbits.TRISA2 = INPUT;   // AN2
-	TRISAbits.TRISA3 = INPUT;   // AN3
-    TRISAbits.TRISA5 = INPUT;   // AN4
-	TRISEbits.TRISE0 = INPUT;   // AN5
-    TRISEbits.TRISE1 = INPUT;   // AN6
-    TRISEbits.TRISE2 = INPUT;   // AN7
-    TRISBbits.TRISB1 = INPUT;   // AN8
-    TRISBbits.TRISB4 = INPUT;   // AN9
-    TRISBbits.TRISB0 = INPUT;   // AN10
+	TRISAbits.TRISA2 = INPUT;	// AN2
+	TRISAbits.TRISA3 = INPUT;	// AN3
+    TRISAbits.TRISA5 = OUTPUT;  // AN4
+	LATAbits.LATA5 = 0;
+	TRISEbits.TRISE0 = OUTPUT;  // AN5
+	LATEbits.LATE0 = 0;
+    TRISEbits.TRISE1 = OUTPUT;  // AN6
+	LATEbits.LATE1 = 0;
+    TRISEbits.TRISE2 = OUTPUT;  // AN7
+	LATEbits.LATE2 = 0;
+    TRISBbits.TRISB1 = OUTPUT;  // AN8
+	LATBbits.LATB1 = 0;
+    TRISBbits.TRISB4 = OUTPUT;  // AN9
+	LATBbits.LATB4 = 0;
+    TRISBbits.TRISB0 = OUTPUT;  // AN10
+	LATBbits.LATB0 = 0;
+#elif REAR
+	ANCON0 = 0b00000110;		// AN1 - AN2 are analog
+	ANCON1 = 0b00000000;		// rest are digital
+	TRISAbits.TRISA0 = OUTPUT;	// AN0
+	LATAbits.LATA0 = 0;
+	TRISAbits.TRISA1 = INPUT;   // AN1
+	TRISAbits.TRISA2 = INPUT;	// AN2
+	TRISAbits.TRISA3 = OUTPUT;  // AN3
+	LATAbits.LATA3 = 0;
+    TRISAbits.TRISA5 = OUTPUT;  // AN4
+	LATAbits.LATA5 = 0;
+	TRISEbits.TRISE0 = OUTPUT;  // AN5
+	LATEbits.LATE0 = 0;
+    TRISEbits.TRISE1 = OUTPUT;  // AN6
+	LATEbits.LATE1 = 0;
+    TRISEbits.TRISE2 = OUTPUT;  // AN7
+	LATEbits.LATE2 = 0;
+    TRISBbits.TRISB1 = OUTPUT;  // AN8
+	LATBbits.LATB1 = 0;
+    TRISBbits.TRISB4 = OUTPUT;  // AN9
+	LATBbits.LATB4 = 0;
+    TRISBbits.TRISB0 = OUTPUT;  // AN10
+	LATBbits.LATB0 = 0;
+#endif
 
 	TRISCbits.TRISC6 = OUTPUT;	// programmable termination
 	TERM_LAT = TRUE;
@@ -299,6 +340,17 @@ void main(void) {
 	INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
 	INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
 	RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
+#ifdef MOTEC_RESEND
+	// initialize ADL message number
+	msg[0] = 0x02;
+	msg[1] = 0x00;
+	adl_tmr = 0;
+#endif
+#ifdef FRONT
+	RADIO_SW = FALSE;
+	RADIO_TRIS_1 = OUTPUT;
+	RADIO_TRIS_0 = OUTPUT;
+#endif
 
 
 /***************end setup; begin main loop************************************/
@@ -306,7 +358,46 @@ void main(void) {
 
 	// all A/D operations are dealt with in the ISR
 	// that's triggered by the 1 ms rollover timer
-	while (1);
+	while (1) {
+#ifdef MOTEC_RESEND
+		// poll for an acceleromter message (other messages are filtered out)
+		while(!ECANReceiveMessage(&id, data_r, &dataLen, &flags));
+
+		// check which accelerometer message was recieved
+		if(id == Y_ID && !Recieved.Y_accel) {
+			// process CAN bus data and put in ADL format
+			process_resend(data_r, msg, Y_BYTE, Y_OFFSET, ADL7, INTEL);
+			Recieved.Y_accel = TRUE;
+		}
+		else if(id == X_ID && !Recieved.X_accel) {
+			// process CAN bus data and put in ADL format
+			process_resend(data_r, msg, X_BYTE, X_OFFSET, ADL8, INTEL);
+			Recieved.X_accel = TRUE;
+		}
+
+		// resend out data
+		if(Recieved.X_accel && Recieved.Y_accel) {
+			if(millis - adl_tmr > ADL_SAMPLE) {
+				adl_tmr = millis;
+				ECANSendMessage(ADL_ID, msg, ADL_DLC, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+			}
+			Recieved.X_accel = FALSE;
+			Recieved.Y_accel = FALSE;
+		}
+#endif
+#ifdef FRONT
+		if(RADIO_SW) {
+			RADIO_TRIS_0 = OUTPUT;
+			RADIO_TRIS_1 = OUTPUT;
+			RADIO_LAT_0 = FALSE;
+			RADIO_LAT_1 = FALSE;
+		}
+		else {
+			RADIO_TRIS_0 = INPUT;
+			RADIO_TRIS_1 = INPUT;
+		}
+#endif
+	}
 
 	return;
 }

@@ -3,6 +3,7 @@
 
 ![car-image](http://motorsports.illinois.edu/img/car_2014.jpg)
 
+***
 ## Contributing
 
 ### Branching
@@ -54,8 +55,15 @@ Follow this guide to build a static version of the Qt applications. That will en
  
 ### Conventions and Style
 [This](https://github.com/outsideris/popularconvention) is a good place to start. It doesn't have anything specific to `c++` or `c`, but it can give you a good idea of the right way to go. If you're really bored, you can read [this](http://users.ece.cmu.edu/~eno/coding/CCodingStandard.html) as well.
-`todo`
 
+#### Commit Messages
+Commit messages should be useful and descriptive so that someone else on the team knows what was done in the commit. Limit the first line to 72 characters. If you still have more information after that, end your sentence, hit enter twice, and start writing the rest of the message. Generally, commit messages should be written in the imperative. For example `Fix terrible bug.` or `Add awesome feature.`, instead of `Adding new thing` or `I fixed something.`. End your commit messages with a period. If the commit is a work-in-progress, add `WIP.` before your message. I know nobody wants to take the time to do this properly, but it will really make life easier for the whole team in the end.
+
+[Example](https://github.com/flytenow/icarus/commit/6091d42e9136d3b50e20f5582f72c204d1a88bea)
+
+#### `TODO`: Add more conventions. 
+
+***
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from `master` (never merge them in).
 
@@ -69,8 +77,7 @@ At the end of a competition year, we will make a new branch off of the `master` 
 | [![PostProcessing-2013](http://img.shields.io/badge/Post_Processing-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/Post_Processing-2013) | Old version of Translate_CAN for the 2012-2013 year. |
 | [![DAQ-2012](http://img.shields.io/badge/DAQ-2012-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2012) | Arduino sketches for data aquisition and the steering wheel for the 2011-2012 year. |
 
-
-
+***
 ## License
 ```
 The MIT License (MIT)

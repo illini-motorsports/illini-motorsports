@@ -41,15 +41,15 @@
 #define ADL12 6
 
 #define POS_0 0
-#define POS_1 3640
-#define POS_2 7281
-#define POS_3 10922
-#define POS_4 14563
-#define POS_5 18203
-#define POS_6 21844
-#define POS_7 25485
-#define POS_8 29126
-#define POS_9 32767
+#define POS_1 555
+#define POS_2 1111
+#define POS_3 1666
+#define POS_4 2222
+#define POS_5 2777
+#define POS_6 3333
+#define POS_7 3888
+#define POS_8 4444
+#define POS_9 5000
 
 #define RANGE_LOW 0
 #define RANGE_0 409
@@ -63,13 +63,13 @@
 #define RANGE_8 3686
 #define RANGE_HIGH 4096
 
-#define ADLid 0x123
+#define ADLid 0x500
 
-#define HOLD_TIME	2000
-#define BLINK_TIME	200
-#define REFRESH_TIME 150
-#define BOUNCE_TIME	100
-#define CAN_PER 200
+#define HOLD_TIME		2000
+#define BLINK_TIME		200
+#define REFRESH_TIME	150
+#define BOUNCE_TIME		100
+#define CAN_PER			200
 
 #define LEFT 0
 #define RIGHT 1
@@ -162,14 +162,11 @@
 #define FAN_OVER PORTDbits.RD5
 #define RADIO PORTBbits.RB4
 #define DRS_OVER PORTBbits.RB5
-#define PADDLE_L 0
-#define PADDLE_R 0
 
 // set analog inputs
 #define LAUNCH_ROT ADC_CH5
 #define TRAC_ROT ADC_CH1
 #define DRS_ROT ADC_CH2
-#define PADDLE_ROT ADC_CH0
 
 #define TERM_LAT	LATCbits.LATC6
 
@@ -188,6 +185,6 @@ void driver_write(BYTE addr, BYTE data);
 void high_isr(void);
 void bufferData(void);
 void ADLsample(BYTE *data, const BYTE ADLoffset, const BYTE ch);
-void modifyRotary(int * sample);
+void modifyRotary(unsigned int * sample);
 
 #endif

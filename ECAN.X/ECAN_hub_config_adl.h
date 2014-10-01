@@ -1,9 +1,9 @@
 /******************************************************************************
  *
- *                  ECAN C Library Code Configuration Header
+ *              ECAN C Library Code Configuration Header
  *
  ******************************************************************************
- * FileName:        ECAN_PDM_config.h
+ * FileName:        ECAN_hub_config.h
  * Dependencies:    none
  * Processor:       PIC18F46K80
  * Complier:        Microchip C18
@@ -22,7 +22,6 @@
 //
 
 *******************************************************************************/
-
 
 #ifndef ECANCONFIG_H
 #define ECANCONFIG_H
@@ -50,9 +49,9 @@
 #define ECAN_TXB0_IF_MODE DISABLE
 #define ECAN_RXBn_IF_MODE DISABLE
 #define ECAN_FIFO_IF_MODE DISABLE
-#define ECAN_BIE_BX0 ENABLE
-#define ECAN_BIE_BX1 ENABLE
-#define ECAN_BIE_B0 ENABLE
+#define ECAN_BIE_BX0 DISABLE
+#define ECAN_BIE_BX1 DISABLE
+#define ECAN_BIE_B0 DISABLE
 #define ECAN_BIE_B1 DISABLE
 #define ECAN_BIE_B2 DISABLE
 #define ECAN_BIE_B3 DISABLE
@@ -125,7 +124,7 @@
 #define ECAN_RXB1_MODE_VAL ECAN_RECEIVE_ALL_VALID
 //
 // B0 Tx/Rx mode Mode
-#define ECAN_B0_TXRX_MODE_VAL ECAN_BUFFER_RX
+#define ECAN_B0_TXRX_MODE_VAL ECAN_BUFFER_TX
 //
 // B0 Recieve Mode
 #define ECAN_B0_MODE_VAL ECAN_RECEIVE_ALL_VALID
@@ -185,10 +184,10 @@
 #define ECAN_RXF0_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF0 Value
-#define ECAN_RXF0_VAL 0x200L
+#define ECAN_RXF0_VAL 0x0L
 //
 // RXF0 Buffer Link
-#define ECAN_RXF0_BUFFER_VAL RXB0
+#define ECAN_RXF0_BUFFER_VAL B0
 //
 // RXF0 Mask Link
 #define ECAN_RXF0_MASK_VAL ECAN_RXM0
@@ -200,10 +199,10 @@
 #define ECAN_RXF1_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF1 Value
-#define ECAN_RXF1_VAL 0x201L
+#define ECAN_RXF1_VAL 0x0L
 //
 // RXF1 Buffer Link
-#define ECAN_RXF1_BUFFER_VAL RXB1
+#define ECAN_RXF1_BUFFER_VAL B1
 //
 // RXF1 Mask Link
 #define ECAN_RXF1_MASK_VAL ECAN_RXM0
@@ -215,10 +214,10 @@
 #define ECAN_RXF2_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF2 Value
-#define ECAN_RXF2_VAL 0x500L
+#define ECAN_RXF2_VAL 0x0L
 //
 // RXF2 Buffer Link
-#define ECAN_RXF2_BUFFER_VAL B0
+#define ECAN_RXF2_BUFFER_VAL B2
 //
 // RXF2 Mask Link
 #define ECAN_RXF2_MASK_VAL ECAN_RXM0
@@ -233,13 +232,13 @@
 #define ECAN_RXF3_VAL 0x0L
 //
 // RXF3 Buffer Link
-#define ECAN_RXF3_BUFFER_VAL RXB0
+#define ECAN_RXF3_BUFFER_VAL B3
 //
 // RXF3 Mask Link
 #define ECAN_RXF3_MASK_VAL ECAN_RXM0
 //
 // RXF4 Filter Enable/Disable
-#define ECAN_RXF4_MODE_VAL ECAN_RXFn_DISABLE
+#define ECAN_RXF4_MODE_VAL ECAN_RXFn_ENABLE
 //
 // RXF4 Filter Type
 #define ECAN_RXF4_MSG_TYPE_VAL ECAN_MSG_STD
@@ -248,13 +247,13 @@
 #define ECAN_RXF4_VAL 0x0L
 //
 // RXF4 Buffer Link
-#define ECAN_RXF4_BUFFER_VAL RXB0
+#define ECAN_RXF4_BUFFER_VAL B4
 //
 // RXF4 Mask Link
 #define ECAN_RXF4_MASK_VAL ECAN_RXM0
 //
 // RXF5 Filter Enable/Disable
-#define ECAN_RXF5_MODE_VAL ECAN_RXFn_DISABLE
+#define ECAN_RXF5_MODE_VAL ECAN_RXFn_ENABLE
 //
 // RXF5 Filter Type
 #define ECAN_RXF5_MSG_TYPE_VAL ECAN_MSG_STD
@@ -263,19 +262,19 @@
 #define ECAN_RXF5_VAL 0x0L
 //
 // RXF5 Buffer Link
-#define ECAN_RXF5_BUFFER_VAL RXB0
+#define ECAN_RXF5_BUFFER_VAL B5
 //
 // RXF5 Mask Link
 #define ECAN_RXF5_MASK_VAL ECAN_RXM0
 //
 // RXF6 Filter Enable/Disable
-#define ECAN_RXF6_MODE_VAL ECAN_RXFn_DISABLE
+#define ECAN_RXF6_MODE_VAL ECAN_RXFn_ENABLE
 //
 // RXF6 Filter Type
 #define ECAN_RXF6_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF6 Value
-#define ECAN_RXF6_VAL 0x0L
+#define ECAN_RXF6_VAL 0x80L
 //
 // RXF6 Buffer Link
 #define ECAN_RXF6_BUFFER_VAL RXB0
@@ -284,22 +283,22 @@
 #define ECAN_RXF6_MASK_VAL ECAN_RXM0
 //
 // RXF7 Filter Enable/Disable
-#define ECAN_RXF7_MODE_VAL ECAN_RXFn_DISABLE
+#define ECAN_RXF7_MODE_VAL ECAN_RXFn_ENABLE
 //
 // RXF7 Filter Type
 #define ECAN_RXF7_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF7 Value
-#define ECAN_RXF7_VAL 0x0L
+#define ECAN_RXF7_VAL 0x70L
 //
 // RXF7 Buffer Link
-#define ECAN_RXF7_BUFFER_VAL RXB0
+#define ECAN_RXF7_BUFFER_VAL RXB1
 //
 // RXF7 Mask Link
 #define ECAN_RXF7_MASK_VAL ECAN_RXM0
 //
 // RXF8 Filter Enable/Disable
-#define ECAN_RXF8_MODE_VAL ECAN_RXFn_DISABLE
+#define ECAN_RXF8_MODE_VAL ECAN_RXFn_ENABLE
 //
 // RXF8 Filter Type
 #define ECAN_RXF8_MSG_TYPE_VAL ECAN_MSG_STD
@@ -422,11 +421,11 @@
 #define ECAN_RXM0_MSG_TYPE ECAN_MSG_STD
 //
 // RXM0 Value
-#define ECAN_RXM0_VAL 0xFFFL
+#define ECAN_RXM0_VAL 0xEFFL
 //
 // RXM1 Type
 #define ECAN_RXM1_MSG_TYPE ECAN_MSG_STD
 //
 // RXM1 Value
-#define ECAN_RXM1_VAL 0xFFFL
+#define ECAN_RXM1_VAL 0xEFFL
 #endif

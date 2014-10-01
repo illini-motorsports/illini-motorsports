@@ -150,17 +150,20 @@ const unsigned int current_P_ratio[NUM_LOADS] = {28 /*IGN*/, 28 /*FUEL*/,
   Summary:
     Function to service interrupts
   Conditions:
-	* Timer0 module must be setup along with the oscillator being used
-	* ECAN must be configured
+	Timer0 module must be setup along with the oscillator being used
+	ECAN must be configured
   Input:
     none
   Return Values:
     none
   Side Effects:
-	Transmits messages on CAN
 	Reloads the timer0 registers and increments millis
 	Resets the interrupt flags after servicing them
-	Sets the engine value variables and the fan switch flag
+	Sets FAN_SW flag
+	Sets water_temp
+	Sets oil_temp
+	Sets oil_press
+	Sets rpm
   Description:
 
   *********************************************************************************/
@@ -198,7 +201,7 @@ void high_isr (void) {
             ((BYTE*) &oil_press)[1] = data[OP_BYTE];
 		}
 		if(id == FAN_SW_ID) {
-            if(data[1] == FAN_SW_BYTE1_ID)
+            if(data[0] == FAN_SW_BYTE0_ID)
                 FAN_SW = data[FAN_SW_BYTE];
 		}
 		if(id == RPM_ID) {
@@ -291,8 +294,8 @@ void main(void) {
 
 	// turn on and configure the A/D converter module
 	OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_6_TAD, ADC_CH0 & ADC_INT_OFF, ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
-	ANCON0 = 0xFF;		// AN0 - 9 are analog
-	ANCON1 = 0x03;		// rest ar digital
+	ANCON0 = 0x11111111;		// AN0 - 9 are analog
+	ANCON1 = 0b00000011;		// rest are digital
 	TRISAbits.TRISA0 = INPUT;	// AN0
 	TRISAbits.TRISA1 = INPUT;	// AN1
 	TRISAbits.TRISA2 = INPUT;	// AN2
@@ -302,6 +305,7 @@ void main(void) {
 	TRISEbits.TRISE1 = INPUT;	// AN6
 	TRISEbits.TRISE2 = INPUT;	// AN7
 	TRISBbits.TRISB1 = INPUT;	// AN8
+	TRISBbits.TRISB4 = INPUT;	// AN9
 
 	// configure port I/O
 	TRISBbits.TRISB5 = INPUT;	// Stater switch
@@ -665,6 +669,7 @@ void main(void) {
 		CAN_current[AUX_val] = current[AUX_val];
 		CAN_current[ECU_val] = current[ECU_val];
 
+		// send out the current data
 		if(millis - CAN_tmr > CAN_PER) {
 			CAN_tmr = millis;
 			ECANSendMessage(PDM_ID, (BYTE *)CAN_current, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
@@ -716,17 +721,22 @@ void sample(int *data, const BYTE index, const BYTE ch) {
 
 /******************************************************************************
   Function:
-
+	preventEngineBlowup(unsigned long * oil_press_tmr,
+ 						unsigned long * oil_temp_tmr,
+ 						unsigned long * water_temp_tmr)
   Summary:
-
+	Function to check on critical engine sensors
+	to determine if we should kill the engine
   Conditions:
-
+	none
   Input:
-
+	oil_press_tmr - timer for how long oil pressure can be in an error state
+	oil_temp_tmr - timer for how long oil temperature can be in an error state
+	water_temp_tmr - timer for how long water temperature can be in an error state
   Return Values:
-
+	Boolean for whether or not we are fucked
   Side Effects:
-
+	none
   Description:
 
   ****************************************************************************/
@@ -759,6 +769,23 @@ BYTE preventEngineBlowup(unsigned long * oil_press_tmr, unsigned long * oil_temp
     return FALSE;
 }
 
+/******************************************************************************
+  Function:
+	void checkWaterTemp(BYTE * FAN_AUTO)
+  Summary:
+	Function to check if we should turn on the fan or not
+  Conditions:
+	none
+  Input:
+	FAN_AUTO flag for whether or not the PDM should turn on the fan
+  Return Values:
+	Boolean for whether or not we are fucked
+  Side Effects:
+	none
+  Description:
+
+  ****************************************************************************/
+
 void checkWaterTemp(BYTE * FAN_AUTO) {
     if(*FAN_AUTO) {
         if(water_temp < FAN_THRESHOLD_L)
@@ -768,6 +795,5 @@ void checkWaterTemp(BYTE * FAN_AUTO) {
         if(water_temp > FAN_THRESHOLD_H)
             *FAN_AUTO = TRUE;
     }
-
     return;
 }
