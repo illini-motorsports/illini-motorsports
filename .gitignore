@@ -37,3 +37,6 @@ can-translator/out.txt
 *.map
 *.cof
 Telem_Node.X/nbproject/private/configurations.xml
+ECAN.X/nbproject/private/configurations.xml
+Analog_Node.X/nbproject/private/configurations.xml
+uSD_Node.X/nbproject/private/configurations.xml
