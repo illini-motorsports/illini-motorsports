@@ -6,7 +6,12 @@
 ***
 ## Contributing
 
-### Git Basic Workflow
+### Git Basics
+Here is an [interactive Git tutorial](https://try.github.io/levels/1/challenges/1).
+
+You can also skim through [this guide](http://www.vogella.com/tutorials/Git/article.html).
+
+#### Git Basic Workflow
 This is an example of what you should do each time you sit down to work on the code. Committing often is preferable to committing infrequently. A good rule of thumb is to commit each time you finish a "feature" or when you finish one particular task in the code you are working on.
 - `$ git pull origin master` *(Ensures you have the latest copy of the code on your computer.)*
 - Do your work. For example, change `file1.c` and `file2.h`.
@@ -17,10 +22,16 @@ This is an example of what you should do each time you sit down to work on the c
 
 If you are using a GUI, you won't need to use these terminal commands but the process is similiar. It is very important to be sure to only commit the files that you want changed. If a bunch of XML configuration files were automagically changed by MPLAB, for example, you should not commit those changes.
 
-### Branching
+#### Common Problems
+[Git Flight Rules](https://github.com/k88hudson/git-flight-rules) Contains answers to many common git questions.
+
+##### Automatic Merge Commits
+If you try to commit and something like [this](https://github.com/mass/illini-motorsports/commit/e204ba79dc1cd5ac46f447cf9ac181b125d58260) automatically shows up, you haven't pulled the latest version of the repo. To fix this problem, abort the commit and run this command: `$ git pull --rebase`. This will "rewind" your changes, pull the latest version of the repo, and apply your changes on top of that.
+
+#### Branching
 When starting work on a new board's code or a large overhaul of an existing one, it's best to do the work on a separate branch. This way, we can ensure that the `master` branch always has code that compiles and ideally is in a working or semi-working condition. If the change you are going to make is small or can be done in one or two commits, it is fine to do the work on the `master` branch.
 
-#### Example:
+##### Example:
 ```
 $ git pull origin master
 $ git branch new-branch
@@ -38,7 +49,7 @@ You will also need the C18 compiler, which is specific to the PIC18 family of mi
 
 #### A Git Client
 
-If you are new to git, I'll point you [here](http://www.vogella.com/tutorials/Git/article.html). It's a fairly in-depth explanation of git but if you skim through it you should pick up all you need to know for using the git. Reading this is more necessary if you are going to use a command line interface and less necessary if you are going to use a GUI git client.
+
 
 ##### [Git CLI - Linux](http://git-scm.com/download/linux)
 If you're an awesome person and on Linux, you can use the command line interface for git. Because you're awesome, I'm assuming you already know how to install things onto your computer.
