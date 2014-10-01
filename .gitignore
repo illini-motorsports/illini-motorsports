@@ -36,11 +36,13 @@ can-translator/out.txt
 *.hex
 *.map
 *.cof
-Telem_Node.X/nbproject/private/configurations.xml
-ECAN.X/nbproject/private/configurations.xml
-Analog_Node.X/nbproject/private/configurations.xml
-uSD_Node.X/nbproject/private/configurations.xml
-PDM_Node.X/nbproject/private/configurations.xml
-Wheel_Node.X/nbproject/private/configurations.xml
-Temp_Node.X/nbproject/private/configurations.xml
-Shift_Lights_Node.X/nbproject/private/configurations.xml
+
+# private configuration files
+Telem_Node.X/nbproject/private/
+ECAN.X/nbproject/private/
+Analog_Node.X/nbproject/private/
+uSD_Node.X/nbproject/private/
+PDM_Node.X/nbproject/private/
+Wheel_Node.X/nbproject/private/
+Temp_Node.X/nbproject/private/
+Shift_Lights_Node.X/nbproject/private/
