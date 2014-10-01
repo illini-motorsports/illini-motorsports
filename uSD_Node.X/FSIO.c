@@ -6539,7 +6539,7 @@ int FSattrib (FSFILE * file, unsigned char attributes)
 //#define STOCK
 
 #ifdef ALLOW_WRITES
-size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flag)
+size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
 {
 #ifdef STOCK
     DWORD       count = 512;
@@ -6662,8 +6662,8 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flag)
             BYTE needRead = TRUE;
 
 			// reset the buffer
-			flag->Swap = TRUE;
-			flag->BufferAFull = FALSE;
+			flags->Swap = TRUE;
+			flags->BufferAFull = FALSE;
 
             if (gNeedDataWrite)
                 if (flushData())
