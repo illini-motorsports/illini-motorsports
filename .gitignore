@@ -36,3 +36,4 @@ can-translator/out.txt
 *.hex
 *.map
 *.cof
+Telem_Node.X/nbproject/private/configurations.xml
