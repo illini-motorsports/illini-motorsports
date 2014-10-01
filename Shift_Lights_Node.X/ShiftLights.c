@@ -95,6 +95,12 @@
 
 volatile unsigned int millis; // holds timer0 rollover count
 volatile unsigned int rpm; // Holds engine RPM data from CAN
+typedef enum {true, false};
+#define true 1;
+#define false 0;
+typedef char bool;
+bool errorVolts = 0, errorRPM = 0, errorOilTemp = 0, errorEngineTemp = 0, changedErrorState;
+
 
 // ECAN variables
 unsigned long id; // holds CAN msgID
@@ -222,6 +228,53 @@ void set_lights(unsigned char max) {
   if(max > 7) send(DIG7, BLUE);
   else send(DIG7, NONE);
    */
+}
+
+//typedef enum {Dtrue, false} _Bool;
+/*
+ Function checks the volts from the battery.
+ Outputs: True (1) if volts are in balance, above the threshold.
+          False(0) if volts are below the threshold.
+ */
+void checkVolts(){
+    int level = 13; //get the value here.
+    if(level < 13){
+        errorVolts = 1; //Battery is low, error flag set to true
+    }
+    return 0;
+}
+void excess(int type){
+    switch(type){
+        case 0:
+            //excess oil temp
+            errorOilTemp = 0;
+            break;
+        case 1:
+            //excess engine temp
+            errorEngineTemp = 0;
+            break;
+        default:
+            //code error
+            break;
+
+    }
+}
+void display(){
+    if(changedErrorState){
+        if(errorRPM && (!errorOilTemp && !errorEngineTemp && !errorVolts)){
+            //Only RPM Error
+        }else if(errorOilTemp && (!errorRPM && !errorEngineTemp && !errorVolts)){
+            //only Oil Temp error
+        }else if(errorEngineTemp && (!errorOilTemp && !errorRPM && !errorVolts)){
+            //only Engine Temp
+        }else if(errorVolts && (!errorOilTemp && !errorEngineTemp && !errorRPM)){
+            //only Battery error
+        }else{
+            //Multiple Error Singles
+        }
+    }else{
+        //Normal RPM display here
+    }
 }
 
 /*

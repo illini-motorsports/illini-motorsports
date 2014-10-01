@@ -5,7 +5,7 @@
  * @author George Schwieters
  * @author Andrew Mass
  * @date Created:
- * @date Modified: 2014-05-19
+ * @date Modified: 2014-09-30
  */
 #include "data.h"
 #include "display.h"
@@ -14,7 +14,13 @@ void AppData::openSerialPort(QSerialPort & serialPort, AppDisplay & display) {
   messages = init_map();
 
   QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
-  QSerialPortInfo port = ports[0];
+  QSerialPortInfo port;
+  if(ports.length() > 0) {
+    port = ports[0];
+  } else {
+    display.showMessage("Serial Port Info", "No available serial ports.");
+    return;
+  }
 
   // This is specific to the Raspberry Pi.
   if(port.portName().compare("ttyAMA0") == 0) {
@@ -25,6 +31,7 @@ void AppData::openSerialPort(QSerialPort & serialPort, AppDisplay & display) {
 
   if(!serialPort.open(QIODevice::ReadOnly)) {
     display.showMessage("Serial Port Info", serialPort.errorString());
+    return;
   }
 
   serialPort.setBaudRate(BAUD_RATE);

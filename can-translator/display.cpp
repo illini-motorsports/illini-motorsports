@@ -66,16 +66,14 @@ AppDisplay::AppDisplay() : QWidget() {
   headers << "ID" << "L" << "BE" << "Channel 0" << "Channel 1" << "Channel 2" << "Channel 3";
   table.setHorizontalHeaderLabels(headers);
 
-  table.horizontalHeader()->setResizeMode(0, QHeaderView::Fixed);
-  table.horizontalHeader()->setResizeMode(1, QHeaderView::Fixed);
-  table.horizontalHeader()->setResizeMode(2, QHeaderView::Fixed);
-  table.horizontalHeader()->setResizeMode(3, QHeaderView::Stretch);
-  table.horizontalHeader()->setResizeMode(4, QHeaderView::Stretch);
-  table.horizontalHeader()->setResizeMode(5, QHeaderView::Stretch);
-  table.horizontalHeader()->setResizeMode(6, QHeaderView::Stretch);
-  table.horizontalHeader()->setResizeMode(7, QHeaderView::Stretch);
-
-  table.verticalHeader()->setResizeMode(QHeaderView::Stretch);
+  table.horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+  table.horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+  table.horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
+  table.horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+  table.horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+  table.horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
+  table.horizontalHeader()->setSectionResizeMode(6, QHeaderView::Stretch);
+  table.verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
   int i = 0;
   typedef map<unsigned short, Message>::iterator it_msg;
@@ -122,12 +120,12 @@ AppDisplay::AppDisplay() : QWidget() {
     i++;
   }
 
-  table.resizeColumnsToContents();
   table.setFocusPolicy(Qt::NoFocus);
   table.setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
   table.setMinimumHeight(550);
   table.setMinimumWidth(1400);
   table.setFont(font_message);
+  table.resizeColumnsToContents();
   table.show();
   layout.addWidget(&table, 1);
 
