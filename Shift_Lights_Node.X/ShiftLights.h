@@ -14,7 +14,7 @@
 #define INPUT  1
 #define OUTPUT 0
 
-#define BLINK_TIME 150
+#define BLINK_TIME 400
 #define ET_ID      0x201L
 #define OT_ID      0x200L
 #define OP_ID      0x200L

@@ -162,25 +162,25 @@ void high_isr(void) {
  */
 void setLedToColor(unsigned char led, unsigned char color) {
   if(led == 0) {
-    RED0_LAT = color & RED ? 1 : 0;
-    GREEN0_LAT = color & GREEN ? 1 : 0;
-    BLUE0_LAT = color & BLUE ? 1 : 0;
+    RED0_LAT = color & RED ? 0 : 1;
+    GREEN0_LAT = color & GREEN ? 0 : 1;
+    BLUE0_LAT = color & BLUE ? 0 : 1;
   } else if(led == 1) {
-    RED1_LAT = color & RED ? 1 : 0;
-    GREEN1_LAT = color & GREEN ? 1 : 0;
-    BLUE1_LAT = color & BLUE ? 1 : 0;
+    RED1_LAT = color & RED ? 0 : 1;
+    GREEN1_LAT = color & GREEN ? 0 : 1;
+    BLUE1_LAT = color & BLUE ? 0 : 1;
   } else if(led == 2) {
-    RED2_LAT = color & RED ? 1 : 0;
-    GREEN2_LAT = color & GREEN ? 1 : 0;
-    BLUE2_LAT = color & BLUE ? 1 : 0;
+    RED2_LAT = color & RED ? 0 : 1;
+    GREEN2_LAT = color & GREEN ? 0 : 1;
+    BLUE2_LAT = color & BLUE ? 0 : 1;
   } else if(led == 3) {
-    RED3_LAT = color & RED ? 1 : 0;
-    GREEN3_LAT = color & GREEN ? 1 : 0;
-    BLUE3_LAT = color & BLUE ? 1 : 0;
+    RED3_LAT = color & RED ? 0 : 1;
+    GREEN3_LAT = color & GREEN ? 0 : 1;
+    BLUE3_LAT = color & BLUE ? 0 : 1;
   } else if(led == 4) {
-    RED4_LAT = color & RED ? 1 : 0;
-    GREEN4_LAT = color & GREEN ? 1 : 0;
-    BLUE4_LAT = color & BLUE ? 1 : 0;
+    RED4_LAT = color & RED ? 0 : 1;
+    GREEN4_LAT = color & GREEN ? 0 : 1;
+    BLUE4_LAT = color & BLUE ? 0 : 1;
   }
 }
 
@@ -190,7 +190,7 @@ void setLedToColor(unsigned char led, unsigned char color) {
  * @param color The color value to change the LED to. Color values come
  *   from the header file.
  */
-void set_all(unsigned char color) {
+void setAll(unsigned char color) {
   unsigned char i = 0;
   for(; i < 5; i++) {
     setLedToColor(i, color);
@@ -380,7 +380,7 @@ void main(void) {
    * Variable Declarations *
    *************************/
 
-  long blink_tmr = 0;
+  unsigned int blink_tmr = 0;
 
   /*********************
    * Oscillator Set-Up *
@@ -466,6 +466,29 @@ void main(void) {
   GREEN4_TRIS = OUTPUT;
   BLUE4_TRIS = OUTPUT;
 
+  blink_tmr = millis;
+  while(1) {
+    if(millis - blink_tmr < BLINK_TIME) {
+      setAll(NONE);
+    }
+    else if(millis - blink_tmr < BLINK_TIME * 2) {
+      setAll(RED);
+    }
+    else if(millis - blink_tmr < BLINK_TIME * 3) {
+      setAll(GREEN);
+    }
+    else if(millis - blink_tmr < BLINK_TIME * 4) {
+      setAll(BLUE);
+    }
+    else if(millis - blink_tmr < BLINK_TIME * 5) {
+      setAll(RGB);
+    }
+    else {
+      blink_tmr = millis;
+    }
+  }
+  
+  /*
   // Default all LEDs to off.
   RED0_LAT = 0;
   GREEN0_LAT = 0;
@@ -536,5 +559,5 @@ void main(void) {
     } else {
       set_all(NONE);
     }
-  }
+  }*/
 }
