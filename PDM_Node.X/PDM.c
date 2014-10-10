@@ -294,7 +294,7 @@ void main(void) {
 
 	// turn on and configure the A/D converter module
 	OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_6_TAD, ADC_CH0 & ADC_INT_OFF, ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
-	ANCON0 = 0x11111111;		// AN0 - 9 are analog
+	ANCON0 = 0b11111111;		// AN0 - 9 are analog
 	ANCON1 = 0b00000011;		// rest are digital
 	TRISAbits.TRISA0 = INPUT;	// AN0
 	TRISAbits.TRISA1 = INPUT;	// AN1
