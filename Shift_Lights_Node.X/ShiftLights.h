@@ -14,7 +14,7 @@
 #define INPUT  1
 #define OUTPUT 0
 
-#define BLINK_TIME 400
+#define BLINK_TIME 50
 #define ET_ID      0x201L
 #define OT_ID      0x200L
 #define OP_ID      0x200L
@@ -86,19 +86,16 @@
 #define RGB        RED | GREEN | BLUE
 
 // Rev range
-#define REV_RANGE_1     7500
-#define REV_RANGE_2     8500
-#define REV_RANGE_3     9500
-#define REV_RANGE_4     10500
-#define REV_RANGE_5     11000
-#define REV_RANGE_6     11500
-#define REV_RANGE_7     12000
-#define REV_RANGE_8     12250
+#define REV_RANGE_1     8000
+#define REV_RANGE_2     9000
+#define REV_RANGE_3     10000
+#define REV_RANGE_4     11000
+#define REV_RANGE_5     11500
 #define REV_RANGE_LIMIT 12500
 
 // Custom color choices
-#define REV_COLOR       GREEN_BLUE
-#define REV_LIMIT_COLOR GREEN
+#define REV_COLOR       BLUE
+#define REV_LIMIT_COLOR RED
 
 /******************
  * Method Headers *

@@ -203,31 +203,14 @@ void setAll(unsigned char color) {
  * @param max The highest number LED to illuminate.
  */
 void set_lights(unsigned char max) {
-  /*
-  if(max > 0) send(DIG0, BLUE);
-  else send(DIG0, NONE);
-
-  if(max > 1) send(DIG1, BLUE);
-  else send(DIG1, NONE);
-
-  if(max > 2) send(DIG2, BLUE);
-  else send(DIG2, NONE);
-
-  if(max > 3) send(DIG3, BLUE);
-  else send(DIG3, NONE);
-
-  if(max > 4) send(DIG4, BLUE);
-  else send(DIG4, NONE);
-
-  if(max > 5) send(DIG5, BLUE);
-  else send(DIG5, NONE);
-
-  if(max > 6) send(DIG6, BLUE);
-  else send(DIG6, NONE);
-
-  if(max > 7) send(DIG7, BLUE);
-  else send(DIG7, NONE);
-   */
+  unsigned char i = 0;
+  for(; i < 5; i++) {
+    if(max > i) {
+      setLedToColor(i, REV_COLOR);
+    } else {
+      setLedToColor(i, NONE);
+    }
+  }
 }
 
 //typedef enum {Dtrue, false} _Bool;
@@ -465,87 +448,61 @@ void main(void) {
   RED4_TRIS = OUTPUT;
   GREEN4_TRIS = OUTPUT;
   BLUE4_TRIS = OUTPUT;
-
-  blink_tmr = millis;
-  while(1) {
-    if(millis - blink_tmr < BLINK_TIME) {
-      setAll(NONE);
-    }
-    else if(millis - blink_tmr < BLINK_TIME * 2) {
-      setAll(RED);
-    }
-    else if(millis - blink_tmr < BLINK_TIME * 3) {
-      setAll(GREEN);
-    }
-    else if(millis - blink_tmr < BLINK_TIME * 4) {
-      setAll(BLUE);
-    }
-    else if(millis - blink_tmr < BLINK_TIME * 5) {
-      setAll(RGB);
-    }
-    else {
-      blink_tmr = millis;
-    }
-  }
   
-  /*
   // Default all LEDs to off.
-  RED0_LAT = 0;
-  GREEN0_LAT = 0;
-  BLUE0_LAT = 0;
-  RED1_LAT = 0;
-  GREEN1_LAT = 0;
-  BLUE1_LAT = 0;
-  RED2_LAT = 0;
-  GREEN2_LAT = 0;
-  BLUE2_LAT = 0;
-  RED3_LAT = 0;
-  GREEN3_LAT = 0;
-  BLUE3_LAT = 0;
-  RED4_LAT = 0;
-  GREEN4_LAT = 0;
-  BLUE4_LAT = 0;
+  RED0_LAT  = 1;
+  GREEN0_LAT  = 1;
+  BLUE0_LAT  = 1;
+  RED1_LAT  = 1;
+  GREEN1_LAT  = 1;
+  BLUE1_LAT  = 1;
+  RED2_LAT  = 1;
+  GREEN2_LAT  = 1;
+  BLUE2_LAT  = 1;
+  RED3_LAT  = 1;
+  GREEN3_LAT  = 1;
+  BLUE3_LAT  = 1;
+  RED4_LAT  = 1;
+  GREEN4_LAT  = 1;
+  BLUE4_LAT  = 1;
 
+  /*
   // Startup - Show full RED lights for a while before doing anything else.
   blink_tmr = millis;
   while(1) {
     if(millis - blink_tmr < BLINK_TIME)
-      set_all(RED);
+      setAll(RED);
     else if(millis - blink_tmr < BLINK_TIME * 2)
-      set_all(RGB);
+      setAll(RGB);
     else if(millis - blink_tmr < BLINK_TIME * 3)
-      set_all(BLUE);
+      setAll(BLUE);
     else if(millis - blink_tmr < BLINK_TIME * 4)
-      set_all(RED);
+      setAll(RED);
     else if(millis - blink_tmr < BLINK_TIME * 5)
-      set_all(RGB);
+      setAll(RGB);
     else if(millis - blink_tmr < BLINK_TIME * 6)
-      set_all(BLUE);
+      setAll(BLUE);
     else if(millis - blink_tmr < BLINK_TIME * 7)
-      set_all(RED);
+      setAll(RED);
     else if(millis - blink_tmr < BLINK_TIME * 8)
-      set_all(RGB);
+      setAll(RGB);
     else if(millis - blink_tmr < BLINK_TIME * 9)
-      set_all(BLUE);
+      setAll(BLUE);
     else
       break;
-  }
+  }*/
 
+ blink_tmr = millis;
   while(1) {
+
     // Sets certain lights to NONE or REV_COLOR based on rpm value.
     if(rpm >= REV_RANGE_LIMIT) {
       if(millis - blink_tmr < BLINK_TIME)
-        set_all(REV_LIMIT_COLOR);
+        setAll(REV_LIMIT_COLOR);
       else if(millis - blink_tmr < BLINK_TIME * 2)
-        set_all(NONE);
+        setAll(NONE);
       else
         blink_tmr = millis;
-    } else if(rpm >= REV_RANGE_8) {
-      set_lights(8);
-    } else if(rpm >= REV_RANGE_7) {
-      set_lights(7);
-    } else if(rpm >= REV_RANGE_6) {
-      set_lights(6);
     } else if(rpm >= REV_RANGE_5) {
       set_lights(5);
     } else if(rpm >= REV_RANGE_4) {
@@ -557,7 +514,7 @@ void main(void) {
     } else if(rpm >= REV_RANGE_1) {
       set_lights(1);
     } else {
-      set_all(NONE);
+      setAll(NONE);
     }
-  }*/
+  }
 }
