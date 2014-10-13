@@ -16,7 +16,6 @@
 //TODO: What to do if rmp isn't updating.
 //TODO: Add "animations". (Scrolling, expanding, alternating, etc.)
 //TODO: Add AMERICA sequence. Make it look 'murican.
-//TODO: Use less rev ranges. Limited by distinct number of LEDs.
 //TODO: Optimize everything.
 
 /*******************************************
@@ -93,14 +92,19 @@
  * Global Variable Declarations *
  ********************************/
 
-volatile unsigned int millis; // holds timer0 rollover count
-volatile unsigned int rpm; // Holds engine RPM data from CAN
+volatile unsigned int millis = 0; // Holds timer0 rollover count.
+
+volatile signed int rpm = 0;
+volatile signed int oilPressure = 0;
+volatile signed int oilTemp = 0;
+volatile signed int engineTemp = 0;
+volatile signed int batteryVoltage = 0;
+
 typedef enum {true, false};
 #define true 1;
 #define false 0;
 typedef char bool;
 bool errorVolts = 0, errorRPM = 0, errorOilTemp = 0, errorEngineTemp = 0, changedErrorState;
-
 
 // ECAN variables
 unsigned long id; // holds CAN msgID
@@ -137,14 +141,32 @@ void high_isr(void) {
     millis++;
   }
 
-  // Check for recieved CAN message
+  // Check for recieved CAN message.
   if(PIR5bits.RXB1IF) {
-    PIR5bits.RXB1IF = FALSE; // reset the flag
-    // get data from recieve buffer
+    PIR5bits.RXB1IF = FALSE; // Reset the flag.
+    
+    // Get data from recieve buffer.
     ECANReceiveMessage(&id, data, &dataLen, &flags);
+
     if(id == RPM_ID) {
       ((BYTE*) & rpm)[0] = data[RPM_BYTE + 1];
       ((BYTE*) & rpm)[1] = data[RPM_BYTE];
+    }
+    if(id == ET_ID) {
+      ((BYTE*) &engineTemp)[0] = data[ET_BYTE + 1];
+      ((BYTE*) &engineTemp)[1] = data[ET_BYTE];
+    }
+    if(id == OT_ID) {
+      ((BYTE*) &oilTemp)[0] = data[OT_BYTE + 1];
+      ((BYTE*) &oilTemp)[1] = data[OT_BYTE];
+    }
+    if(id == OP_ID) {
+      ((BYTE*) &oilPressure)[0] = data[OP_BYTE + 1];
+      ((BYTE*) &oilPressure)[1] = data[OP_BYTE];
+    }
+    if(id == BAT_ID) {
+      ((BYTE*) &batteryVoltage)[0] = data[BAT_BYTE + 1];
+      ((BYTE*) &batteryVoltage)[1] = data[BAT_BYTE];
     }
   }
 }
@@ -202,7 +224,7 @@ void setAll(unsigned char color) {
  *
  * @param max The highest number LED to illuminate.
  */
-void set_lights(unsigned char max) {
+void setLights(unsigned char max) {
   unsigned char i = 0;
   for(; i < 5; i++) {
     if(max > i) {
@@ -224,7 +246,7 @@ void checkVolts(){
     if(level < 13){
         errorVolts = 1; //Battery is low, error flag set to true
     }
-    return 0;
+    //return 0;
 }
 void excess(int type){
     switch(type){
@@ -266,7 +288,7 @@ void display(){
  *
  * Configuration registers will be modified.
  */
-void init_unused_pins() {
+void initUnusedPins() {
 
   // Configure to outputs.
 
@@ -430,7 +452,7 @@ void main(void) {
   INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
   RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
 
-  init_unused_pins();
+  initUnusedPins();
 
   // Set LED pins as outputs.
   RED0_TRIS = OUTPUT;
@@ -466,8 +488,7 @@ void main(void) {
   GREEN4_LAT  = 1;
   BLUE4_LAT  = 1;
 
-  /*
-  // Startup - Show full RED lights for a while before doing anything else.
+  /* Startup - Show full RED lights for a while before doing anything else.
   blink_tmr = millis;
   while(1) {
     if(millis - blink_tmr < BLINK_TIME)
@@ -492,27 +513,28 @@ void main(void) {
       break;
   }*/
 
- blink_tmr = millis;
+  blink_tmr = millis;
   while(1) {
 
     // Sets certain lights to NONE or REV_COLOR based on rpm value.
     if(rpm >= REV_RANGE_LIMIT) {
-      if(millis - blink_tmr < BLINK_TIME)
+      if(millis - blink_tmr < BLINK_TIME) {
         setAll(REV_LIMIT_COLOR);
-      else if(millis - blink_tmr < BLINK_TIME * 2)
+      } else if(millis - blink_tmr < BLINK_TIME * 2) {
         setAll(NONE);
-      else
+      } else {
         blink_tmr = millis;
+      }
     } else if(rpm >= REV_RANGE_5) {
-      set_lights(5);
+      setLights(5);
     } else if(rpm >= REV_RANGE_4) {
-      set_lights(4);
+      setLights(4);
     } else if(rpm >= REV_RANGE_3) {
-      set_lights(3);
+      setLights(3);
     } else if(rpm >= REV_RANGE_2) {
-      set_lights(2);
+      setLights(2);
     } else if(rpm >= REV_RANGE_1) {
-      set_lights(1);
+      setLights(1);
     } else {
       setAll(NONE);
     }

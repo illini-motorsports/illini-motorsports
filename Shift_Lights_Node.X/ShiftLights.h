@@ -9,21 +9,24 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "GenericTypeDefs.h"
-
 #define INPUT  1
 #define OUTPUT 0
 
-#define BLINK_TIME 50
-#define ET_ID      0x201L
-#define OT_ID      0x200L
-#define OP_ID      0x200L
-#define RPM_ID     0x200L
+/**************
+ * CAN Config *
+ **************/
 
+#define RPM_ID     0x200L
+#define OP_ID      0x200L
+#define OT_ID      0x200L
+#define ET_ID      0x201L
+#define BAT_ID     0x201L
+
+#define RPM_BYTE 0
 #define OP_BYTE  4
 #define OT_BYTE  6
 #define ET_BYTE  0
-#define RPM_BYTE 0
+#define BAT_BYTE 6
 
 /*****************
  * Address Bytes *
@@ -97,14 +100,16 @@
 #define REV_COLOR       BLUE
 #define REV_LIMIT_COLOR RED
 
+#define BLINK_TIME 200
+
 /******************
  * Method Headers *
  ******************/
 
 void high_isr(void);
 void setLedToColor(unsigned char led, unsigned char color);
-void set_all(unsigned char color);
-void set_lights(unsigned char max);
-void init_unused_pins();
+void setAll(unsigned char color);
+void setLights(unsigned char max);
+void initUnusedPins();
 
 #endif

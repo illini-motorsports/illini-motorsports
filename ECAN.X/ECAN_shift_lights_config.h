@@ -88,7 +88,7 @@
 // PROPSEG value - Value must be between 1-8 inclusive.
 #define ECAN_PROPSEG_VAL 8
 //
-// Use freely progrmable PHSEG2 or calculated value.
+// Use freely programable PHSEG2 or calculated value.
 #define ECAN_PHSEG2_MODE_VAL ECAN_PHSEG2_MODE_PROGRAMMABLE
 //
 // Bus Sample Mode
@@ -215,7 +215,7 @@
 #define ECAN_RXF2_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF2 Value
-#define ECAN_RXF2_VAL 0x202L
+#define ECAN_RXF2_VAL 0x0L
 //
 // RXF2 Buffer Link
 #define ECAN_RXF2_BUFFER_VAL B2
