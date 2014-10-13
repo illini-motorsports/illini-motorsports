@@ -4,6 +4,7 @@
 ![car-image](http://motorsports.illinois.edu/img/car_2014.jpg)
 
 ***
+
 ## Contributing
 
 ### Git Basics
@@ -45,11 +46,9 @@ Now you can do all work on and commit to the new branch. When the code is finish
 This is the software that is used to program the microcontrollers. You can flash the microcontrollers directly and it also has debugging so you can step through the execution of the program. There are Windows, Linux, and Mac versions.
 
 #### [C18 Compiler](http://www.microchip.com/Developmenttools/ProductDetails.aspx?PartNO=SW006011)
-You will also need the C18 compiler, which is specific to the PIC18 family of microcontrollers that we use. It is very outdated but should still work. I beleive the "LITE" version will be enough for our needs, but if not you'll have to get a licenced copy. As far as I know there is only a windows version, so us linux guys get screwed.
+You will also need the C18 compiler, which is specific to the PIC18 family of microcontrollers that we use. It is very outdated but should still work. I beleive the "LITE" version will be enough for our needs, but if not you'll have to get a licenced copy. You can download the compiler for Windows from the link above. If you are on Linux or Mac, installers for a relatively recent version of the C18 compiler can be found in the Electronics dropbox folder.
 
 #### A Git Client
-
-
 
 ##### [Git CLI - Linux](http://git-scm.com/download/linux)
 If you're an awesome person and on Linux, you can use the command line interface for git. Because you're awesome, I'm assuming you already know how to install things onto your computer.
@@ -85,6 +84,7 @@ Commit messages should be useful and descriptive so that someone else on the tea
 #### `TODO`: Add more conventions. 
 
 ***
+
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from `master` (never merge them in).
 
@@ -99,6 +99,7 @@ At the end of a competition year, we will make a new branch off of the `master` 
 | [![DAQ-2012](http://img.shields.io/badge/DAQ-2012-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2012) | Arduino sketches for data aquisition and the steering wheel for the 2011-2012 year. |
 
 ***
+
 ## License
 ```
 The MIT License (MIT)
