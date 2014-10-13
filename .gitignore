@@ -12,6 +12,8 @@ can-translator/out.txt
 # Unwanted MPLAB Files
 *.err
 */nbproject/private/
+*/debug
+*/build
 
 # Compiled Object files
 *.slo
