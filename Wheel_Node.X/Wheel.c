@@ -115,6 +115,9 @@ volatile unsigned int millis;		// holds timer0 rollover count
 unsigned int refreshTime[2], blinkTimer[2], holdTimer[2];
 BYTE blinkStates[2], holdText[2], displayStates[2];
 
+unsigned int CANint_tmr;
+int CANerror_flag;
+
 // ECAN variables
 unsigned long id;           // holds CAN msgID
 BYTE data[8];				// holds CAN data bytes
@@ -131,12 +134,16 @@ BYTE d_place_arr[NUM_CHAN] =	{2,		// oil temperature
                                 2,		// ground speed
                                 0};		// engine RPM
 BYTE num_arr[12] = {NUM_0, NUM_1, NUM_2, NUM_3, NUM_4, NUM_5, NUM_6, NUM_7, NUM_8, NUM_9, BLANK, CHAR_N};
-BYTE text_arr[NUM_CHAN][3] =	{{BLANK, CHAR_O, CHAR_t},	// oil temperature
+BYTE text_arr[NUM_CHAN + 2][3] ={{BLANK, CHAR_O, CHAR_t},	// oil temperature
                                 {BLANK, CHAR_E, CHAR_t},	// engine temmperature
                                 {CHAR_b, CHAR_A, CHAR_t},	// battery voltage
                                 {BLANK, CHAR_O, CHAR_P},	// oil pressure
                                 {CHAR_S, CHAR_P, CHAR_d},	// ground speed
-                                {CHAR_t, CHAR_A, CHAR_c}};	// engine RPM
+                                {CHAR_t, CHAR_A, CHAR_c},       // engine RPM
+                                {CHAR_E, CHAR_r, CHAR_r},       // CAN error 
+                                {CHAR_C, CHAR_A, CHAR_N}};	// CAN error
+
+
 
 
 /***********************************************/
@@ -181,9 +188,14 @@ void high_isr(void) {
 	// check for recieved CAN message
 	if(PIR5bits.RXB1IF) {
 		PIR5bits.RXB1IF = FALSE; // reset the flag
+                CANint_tmr   = millis; //"reset" interrupt timer
+                CANerror_flag = 0; //reset flag
 		// get data from recieve buffer
-		ECANReceiveMessage(&id, data, &dataLen, &flags);
-		bufferData();	// put data in an array
+		//ECANReceiveMessage(&id, data, &dataLen, &flags);
+                ECANReceiveMessage(&id, data, &dataLen, &flags);
+
+
+                bufferData();	// put data in an array
 	}
 
 	return;
@@ -199,7 +211,8 @@ void main(void) {
     BYTE ADLmsg[8];
 	BYTE cycleStates[2], intensity;
 	unsigned int bounceTimer[2];
-	unsigned int CAN_tmr;
+        unsigned int CAN_tmr;
+        unsigned long CANTRANSMISSIONRATE = 20000;
 
 
     /*********************
@@ -280,8 +293,8 @@ void main(void) {
 	driver_write(DISP_MODE, NORMAL);		// leave test mode
 	driver_write(SHUTDOWN, SHUTDOWN_OFF);	// leave shutdown mode
 	driver_write(INTENSITY, intensity);		// set brightness to highest
-    driver_write(SCAN, FULL_SCAN);          // Set scan to all digits
-    driver_write(DECODE, NO_DECODE);        // Decoding disabled
+        driver_write(SCAN, FULL_SCAN);          // Set scan to all digits
+        driver_write(DECODE, NO_DECODE);        // Decoding disabled
 
 	// set displays to display zero
 	write_gear(0);
@@ -293,7 +306,11 @@ void main(void) {
 	cycleStates[RIGHT] = CYCLE_R;
 	holdText[LEFT] = holdText[RIGHT] = TRUE;
 	refreshTime[LEFT] = refreshTime[RIGHT] = holdTimer[LEFT] = holdTimer[RIGHT] =
-						blinkTimer[LEFT] = blinkTimer[RIGHT] = millis;
+						blinkTimer[LEFT] = blinkTimer[RIGHT] =
+                                                bounceTimer[LEFT] = bounceTimer[RIGHT] = millis;
+        CANint_tmr = millis;
+        CANerror_flag = 0;
+
 	displayStates[LEFT] = OIL_T;
 	displayStates[RIGHT] = ENGINE_T;
 
@@ -301,13 +318,21 @@ void main(void) {
 
     // interrupts setup
 	INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
-	INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
+	INTCONbits.PEIE = 1;            // Peripheral Interrupt Enable (1 enables)
 	RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
 
 	TRISCbits.TRISC6 = OUTPUT;	// programmable termination
 	TERM_LAT = FALSE;
-
+//184
+        
 	while(1) {
+
+                //Check that can is sending messages
+                if(millis - CANint_tmr > CANTRANSMISSIONRATE) //CANTRANSMISSIONRATE is a placeholder for the expected CAN data update rate.
+                {
+                    write_CANerror();
+                    CANerror_flag = 1;
+                }
 
 		// check for change in button state
 		if(cycleStates[LEFT] != CYCLE_L & millis - bounceTimer[LEFT] > BOUNCE_TIME) {
@@ -320,7 +345,8 @@ void main(void) {
 					displayStates[LEFT] = 0;
 				// put the appropriate text on the displays and
 				// get the current time for timing logic
-				updateText(LEFT, displayStates);
+                                if(CANerror_flag != 1);
+        				updateText(LEFT, displayStates);
 				holdText[LEFT] = TRUE;
 				blinkTimer[LEFT] = holdTimer[LEFT] = millis;
 			}
@@ -331,15 +357,19 @@ void main(void) {
 			if(!cycleStates[RIGHT]) {
 				if(++displayStates[RIGHT] == NUM_CHAN)
 					displayStates[RIGHT] = 0;
-				updateText(RIGHT, displayStates);
+                                if(CANerror_flag != 1)
+                                    updateText(RIGHT, displayStates);
 				holdText[RIGHT] = TRUE;
                 blinkTimer[RIGHT] = holdTimer[RIGHT] = millis;
 			}
 		}
 
 		// update left and right displays with text or numerical data
-		updateDisp(LEFT);
-		updateDisp(RIGHT);
+                if(CANerror_flag != 1)
+                {
+                    updateDisp(LEFT);
+                    updateDisp(RIGHT);
+                }
 		write_gear(gear);
 
         // radio button
@@ -397,7 +427,10 @@ void main(void) {
 			ADLmsg[ADL2 + 1] = fan_over_sw[1];
 			ADLmsg[ADL3] = fuel_map_sw[0];
 			ADLmsg[ADL3 + 1] = fuel_map_sw[1];
-			ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+
+                        //ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+                        ECANSendMessage(ADLid, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+
 			// send out first three rotary encoders
 			ADLmsg[0] = 0x01;
 			ADLmsg[1] = 0x00;
@@ -581,6 +614,41 @@ void write_gear(BYTE gear) {
 	// write the gear position
 	driver_write(DIG6, gear);
 
+	return;
+}
+
+/******************************************************************************
+  Function:
+    void write_CANerror(void)
+  Summary:
+	Function to write a gear value to the wheel's middle seven segment display
+  Conditions:
+	* SPI module must be configured
+  Input:
+    none
+  Return Values:
+    none
+  Side Effects:
+	none
+  Description: 
+
+  ****************************************************************************/
+
+void write_CANerror(void) {
+
+	// force CANERR messaged on displays
+        driver_write(DIG2, text_arr[CANERR1][0]);
+	driver_write(DIG1, text_arr[CANERR1][1]);
+	driver_write(DIG0, text_arr[CANERR1][2]);
+	driver_write(DIG3, text_arr[CANERR2][0]);
+	driver_write(DIG4, text_arr[CANERR2][1]);
+	driver_write(DIG5, text_arr[CANERR2][2]);
+        ///////////////////////
+        //code for LED indicator
+        //
+        //
+        //
+        ///////////////////////
 	return;
 }
 

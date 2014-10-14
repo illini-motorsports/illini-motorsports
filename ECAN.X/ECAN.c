@@ -187,7 +187,7 @@ void ECANInitialize(void)
 			(ECAN_BIE_B3)				<< 5	| \
 			(ECAN_BIE_B2)				<< 4	| \
 			(ECAN_BIE_B1)				<< 3	| \
-			(ECAN_BIE_B0)				<< 2	| \
+			(ECAN_BIE_B0)			<< 2	| \
 			(ECAN_BIE_BX1)				<< 1	| \
 			(ECAN_BIE_BX0);
 
@@ -462,6 +462,9 @@ void ECANInitialize(void)
     // Enable/Disable filters in Modes 1 and 2 only.
 #if ( ECAN_FUNC_MODE_VAL != ECAN_MODE_0 )
     RXFCON0 = (ECAN_RXF7_MODE_VAL << 7) | \
+
+
+
               (ECAN_RXF6_MODE_VAL << 6) | \
               (ECAN_RXF5_MODE_VAL << 5) | \
               (ECAN_RXF4_MODE_VAL << 4) | \
