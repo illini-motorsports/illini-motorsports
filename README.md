@@ -81,9 +81,24 @@ Commit messages should be useful and descriptive so that someone else on the tea
 
 [Example](https://github.com/flytenow/icarus/commit/6091d42e9136d3b50e20f5582f72c204d1a88bea)
 
-#### `TODO`: Add more conventions. 
+#### Coding Conventions
+Overall use your best judgment and be consistent with your code. Usually what is taught in classes like ECE190 and ECE391 apply here as well. There's just a few things that must be consistent across the projects for future readability. That's the entire point of this. Future genrations will reference this code and it's important to be be well organized because it's very easy for information to be lost when there's a brand new team every four years.
 
-***
+All functions in the source files must be preceded by this header:
+```
+/*
+ * int function(int param0, int param1)
+ *
+ * Description: This is the description of the function. Please make this full sentences with correct punctuation.
+ *              The explanations for the "Input(s)" and "Return Value(s)" can be treated like a bulleted list.
+ *              However, please write full sentences for the side effects part if there are any.
+ * Input(s): param0 - variable for...
+ *           param1 - pointer to...
+ * Return Value(s): number of failed attemps to...
+ * Side Effects: (i.e. what variables are written to and what memory is modified)
+ */
+```
+Lastly when editing files please enable the editor to convert tabs to spaces and use a tab spacing of 4.
 
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from `master` (never merge them in).
