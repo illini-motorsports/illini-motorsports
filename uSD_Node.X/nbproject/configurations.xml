@@ -23,6 +23,7 @@
       <itemPath>FSIO.c</itemPath>
       <itemPath>SD-SPI.c</itemPath>
       <itemPath>../ECAN.X/ECAN.c</itemPath>
+      <itemPath>../FSAE.X/FSAE.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -30,6 +31,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../FSAE.X</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
@@ -199,7 +203,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="..\ECAN.X"/>
+        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="LOGGING;LOGGING_0"/>
         <property key="procedural-abstraction-passes" value="4"/>
@@ -315,7 +319,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="..\ECAN.X"/>
+        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="LOGGING;LOGGING_1"/>
         <property key="procedural-abstraction-passes" value="4"/>

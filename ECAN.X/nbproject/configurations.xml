@@ -197,7 +197,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value=""/>
+        <property key="extra-include-directories" value="..\FSAE.X"/>
         <property key="optimization-master" value="Enable all"/>
         <property key="preprocessor-macros" value="LOGGING"/>
         <property key="procedural-abstraction-passes" value="0"/>
@@ -313,7 +313,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value=""/>
+        <property key="extra-include-directories" value="..\FSAE.X"/>
         <property key="optimization-master" value="Enable all"/>
         <property key="preprocessor-macros" value="HUB"/>
         <property key="procedural-abstraction-passes" value="0"/>
