@@ -26,6 +26,9 @@
 
 #ifndef ECANCONFIG_H
 #define ECANCONFIG_H
+
+#include "CAN.h"
+
 //
 //
 // ECAN Routine Mode:
