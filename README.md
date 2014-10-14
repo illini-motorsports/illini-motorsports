@@ -82,7 +82,7 @@ Commit messages should be useful and descriptive so that someone else on the tea
 [Example](https://github.com/flytenow/icarus/commit/6091d42e9136d3b50e20f5582f72c204d1a88bea)
 
 #### Coding Conventions
-Overall use your best judgment and be consistent with your code. Usually what is taught in classes like ECE190 and ECE391 apply here as well. There's just a few things that must be consistent across the projects for future readability. That's the entire point of this. Future genrations will reference this code and it's important to be be well organized because it's very easy for information to be lost when there's a brand new team every four years.
+Overall use your best judgment and be consistent with your code. Usually what is taught in classes like ECE190 and ECE391 apply here as well. There's just a few things that must be consistent across the projects for future readability. That's the entire point of this. Future generations will reference this code and it's important to be well organized because it's very easy for information to be lost when there's a brand new team every four years.
 
 All functions in the source files must be preceded by this header:
 ```
