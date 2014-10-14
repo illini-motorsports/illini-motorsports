@@ -141,7 +141,7 @@ BYTE text_arr[NUM_CHAN + 2][3] ={{BLANK, CHAR_O, CHAR_t},	// oil temperature
                                 {CHAR_S, CHAR_P, CHAR_d},	// ground speed
                                 {CHAR_t, CHAR_A, CHAR_c},       // engine RPM
                                 {CHAR_E, CHAR_r, CHAR_r},       // CAN error 
-                                {CHAR_c, CHAR_A, CHAR_N}};	// CAN error 
+                                {CHAR_C, CHAR_A, CHAR_N}};	// CAN error
 
 
 
@@ -212,6 +212,7 @@ void main(void) {
 	BYTE cycleStates[2], intensity;
 	unsigned int bounceTimer[2];
         unsigned int CAN_tmr;
+        unsigned long CANTRANSMISSIONRATE = 20000;
 
 
     /*********************
@@ -292,8 +293,8 @@ void main(void) {
 	driver_write(DISP_MODE, NORMAL);		// leave test mode
 	driver_write(SHUTDOWN, SHUTDOWN_OFF);	// leave shutdown mode
 	driver_write(INTENSITY, intensity);		// set brightness to highest
-    driver_write(SCAN, FULL_SCAN);          // Set scan to all digits
-    driver_write(DECODE, NO_DECODE);        // Decoding disabled
+        driver_write(SCAN, FULL_SCAN);          // Set scan to all digits
+        driver_write(DECODE, NO_DECODE);        // Decoding disabled
 
 	// set displays to display zero
 	write_gear(0);
@@ -323,6 +324,7 @@ void main(void) {
 	TRISCbits.TRISC6 = OUTPUT;	// programmable termination
 	TERM_LAT = FALSE;
 //184
+        
 	while(1) {
 
                 //Check that can is sending messages

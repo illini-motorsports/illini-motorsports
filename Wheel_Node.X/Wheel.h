@@ -148,6 +148,7 @@
 #define CHAR_S			0b01011011
 #define CHAR_d			0b00111101
 #define CHAR_c			0b00001101
+#define CHAR_C			0b01001110
 #define CHAR_N			0b01110110
 #define CHAR_r                  0b00000101   //***EL
 
