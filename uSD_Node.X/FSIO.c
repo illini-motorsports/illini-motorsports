@@ -114,6 +114,7 @@
 #include "string.h"
 #include "stdlib.h"
 #include "ctype.h"
+#include "FSAE.h"
 
 #ifdef ALLOW_FSFPRINTF
 #include "stdarg.h"
@@ -6648,11 +6649,13 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
 			// now the new size
 			stream->size = filesize;
 
+			CLI(); // begin critical section
 			// swap buffers to effectively pass off the data to be written
 			temp = pointers->BufferA;
 			pointers->BufferA = dsk->buffer;
 			dsk->buffer = temp;
 			count = 0;
+			STI(); // end critical section
 		}
 #endif
 
@@ -6661,9 +6664,11 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
         {
             BYTE needRead = TRUE;
 
+			CLI(); // begin critical section
 			// reset the buffer
 			flags->Swap = TRUE;
 			flags->BufferAFull = FALSE;
+			STI(); // end critical section
 
             if (gNeedDataWrite)
                 if (flushData())
