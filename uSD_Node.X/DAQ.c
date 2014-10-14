@@ -394,6 +394,7 @@ void main (void) {
 	Main.Swap = FALSE;
 	Main.BufferAFull = TRUE;
 	Main.MsgNum = 0;			// holds index for CCP2 values
+        Main.EngTO = 0;
 
 	// setup engine on condition checking
 	rpm_l = 0;
