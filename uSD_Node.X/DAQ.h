@@ -53,6 +53,7 @@ typedef struct {
 	unsigned Written:1;
 	unsigned NumRead:3;
 	unsigned MsgNum:2;
+        unsigned EngTO:1;
 	unsigned int BufferALen;
 	unsigned int BufferBLen;
 } MAIN;

@@ -130,6 +130,7 @@ static unsigned int timestamp[MSGS_READ];	// holds CCP2 timestamps
 static unsigned int timestamp_2[MSGS_READ];	// holds CCP2 timestamps
 static unsigned int stamp[MSGS_READ];		// holds CCP2 timestamps
 static unsigned int stamp_2[MSGS_READ];		// holds CCP2 timestamps
+static unsigned int rpmLast = 0;            // holds time (in seconds) of last rpm message
 #ifdef DEBUGGING
 static unsigned int dropped;		// keep track of number of dropped messages
 #endif
@@ -257,6 +258,11 @@ void high_isr(void) {
 		TMR1H = 0x80;	// WriteTimer1(0x8000);
 		TMR1L = 0x00;	//
 		seconds++;
+
+                // check if the engine has stopped responding
+                if(rpmLast - seconds > 1){
+                    Main.EngTO = 1;
+                }
 	}
 
 	// check for incoming message to give timestamp
@@ -470,7 +476,7 @@ void main (void) {
 #ifdef DEBUGGING
 				if(count == DEBUG_LEN || PIR5bits.ERRIF) {
 #else
-				if(rpm_h * 256 + rpm_l < RPM_COMP || PIR5bits.ERRIF) {
+				if(rpm_h * 256 + rpm_l < RPM_COMP || PIR5bits.ERRIF || Main.EngTO == 1) {
 #endif
 					// close csv data file
 					if(FSfclose(pointer))
@@ -671,6 +677,9 @@ void service_FIFO(void) {
 			// update current RPM
 			rpm_l = data[RPM_BYTE + 1];
 			rpm_h = data[RPM_BYTE];
+                        
+                        // record message time in seconds
+                        rpmLast = seconds;
 		}
 
 		// look for beacon event
