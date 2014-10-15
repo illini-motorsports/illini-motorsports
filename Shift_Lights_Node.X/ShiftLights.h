@@ -1,58 +1,41 @@
 /*
- * @file: ShiftLights.h
+ * Shift Lights Header
  *
- * @processor: PIC18F46K80
- * @compiler: Microchip C18
- * @author: Andrew Mass
- * @author: George Schwieters
+ * File Name:   ShiftLights.h
+ * Processor:   PIC18F46K80
+ * Compiler:    Microchip C18
+ * Author:      Andrew Mass
+ * Author:      George Schwieters
+ * Created:     2014-2015
  */
 #ifndef MAIN_H
 #define MAIN_H
 
-#define INPUT  1
-#define OUTPUT 0
+/*
+ * Address Bytes
+ */
 
-/**************
- * CAN Config *
- **************/
+#define TERM_LAT    LATCbits.LATC6
 
-#define RPM_ID     0x200L
-#define OP_ID      0x200L
-#define OT_ID      0x200L
-#define ET_ID      0x201L
-#define BAT_ID     0x201L
+#define RED0_LAT    LATAbits.LATA2
+#define GREEN0_LAT  LATAbits.LATA1
+#define BLUE0_LAT   LATAbits.LATA0
 
-#define RPM_BYTE 0
-#define OP_BYTE  4
-#define OT_BYTE  6
-#define ET_BYTE  0
-#define BAT_BYTE 6
+#define RED1_LAT    LATDbits.LATD0
+#define GREEN1_LAT  LATCbits.LATC3
+#define BLUE1_LAT   LATCbits.LATC2
 
-/*****************
- * Address Bytes *
- *****************/
+#define RED2_LAT    LATDbits.LATD3
+#define GREEN2_LAT  LATDbits.LATD2
+#define BLUE2_LAT   LATDbits.LATD1
 
-#define TERM_LAT	 LATCbits.LATC6
+#define RED3_LAT    LATCbits.LATC7
+#define GREEN3_LAT  LATCbits.LATC5
+#define BLUE3_LAT   LATCbits.LATC4
 
-#define RED0_LAT   LATAbits.LATA2
-#define GREEN0_LAT LATAbits.LATA1
-#define BLUE0_LAT  LATAbits.LATA0
-
-#define RED1_LAT   LATDbits.LATD0
-#define GREEN1_LAT LATCbits.LATC3
-#define BLUE1_LAT  LATCbits.LATC2
-
-#define RED2_LAT   LATDbits.LATD3
-#define GREEN2_LAT LATDbits.LATD2
-#define BLUE2_LAT  LATDbits.LATD1
-
-#define RED3_LAT   LATCbits.LATC7
-#define GREEN3_LAT LATCbits.LATC5
-#define BLUE3_LAT  LATCbits.LATC4
-
-#define RED4_LAT   LATDbits.LATD6
-#define GREEN4_LAT LATDbits.LATD5
-#define BLUE4_LAT  LATDbits.LATD4
+#define RED4_LAT    LATDbits.LATD6
+#define GREEN4_LAT  LATDbits.LATD5
+#define BLUE4_LAT   LATDbits.LATD4
 
 #define RED0_TRIS   TRISAbits.TRISA2
 #define GREEN0_TRIS TRISAbits.TRISA1
@@ -74,9 +57,9 @@
 #define GREEN4_TRIS TRISDbits.TRISD5
 #define BLUE4_TRIS  TRISDbits.TRISD4
 
-/**************
- * Data Bytes *
- **************/
+/*
+ * Data Bytes
+ */
 
 // Colors
 #define NONE       0b000
@@ -102,14 +85,13 @@
 
 #define BLINK_TIME 200
 
-/******************
- * Method Headers *
- ******************/
+/*
+ * Method Headers 
+ */
 
 void high_isr(void);
-void setLedToColor(unsigned char led, unsigned char color);
-void setAll(unsigned char color);
-void setLights(unsigned char max);
-void initUnusedPins();
+void set_led_to_color(unsigned char led, unsigned char color);
+void set_all(unsigned char color);
+void set_lights(unsigned char max);
 
 #endif

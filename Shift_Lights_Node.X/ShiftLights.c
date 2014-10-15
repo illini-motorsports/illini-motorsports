@@ -1,16 +1,20 @@
 /*
- * @file ShiftLights.c
+ * Shift Lights Source
  *
- * @processor: PIC18F46K80
- * @compiler: Microchip C18
- * @author: Andrew Mass
- * @author: George Schwieters
+ * File Name:   ShiftLights.c
+ * Processor:   PIC18F46K80
+ * Compiler:    Microchip C18
+ * Author:      Andrew Mass
+ * Author:      George Schwieters
+ * Created:     2013-2014
  */
 #include <stdlib.h>
 #include "p18F46K80.h"
 #include "timers.h"
-#include "ShiftLights.h"
 #include "ECAN.h"
+#include "FSAE.h"
+#include "CAN.h"
+#include "ShiftLights.h"
 
 //TODO: What to do if millis isn't updating.
 //TODO: What to do if rmp isn't updating.
@@ -18,9 +22,9 @@
 //TODO: Add AMERICA sequence. Make it look 'murican.
 //TODO: Optimize everything.
 
-/*******************************************
- * PIC18F46K80 Configuration Bits Settings *
- *******************************************/
+/*
+ * PIC18F46K80 Configuration Bits 
+ */
 
 // CONFIG1L
 #pragma config RETEN = OFF      // VREG Sleep Enable bit (Ultra low-power regulator is Disabled (Controlled by REGSLP bit))
@@ -30,9 +34,9 @@
 
 // CONFIG1H
 #ifdef INTERNAL
-  #pragma config FOSC = INTIO2  // Oscillator (Internal RC oscillator)
+    #pragma config FOSC = INTIO2  // Oscillator (Internal RC oscillator)
 #else
-  #pragma config FOSC = HS1     // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+    #pragma config FOSC = HS1     // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -88,9 +92,9 @@
 // CONFIG7H
 #pragma config EBTRB = OFF      // Table Read Protect Boot (Disabled)
 
-/********************************
- * Global Variable Declarations *
- ********************************/
+/*
+ * Global Variable Declarations
+ */
 
 volatile unsigned int millis = 0; // Holds timer0 rollover count.
 
@@ -100,7 +104,9 @@ volatile signed int oilTemp = 0;
 volatile signed int engineTemp = 0;
 volatile signed int batteryVoltage = 0;
 
-typedef enum {true, false};
+typedef enum {
+    true, false
+};
 #define true 1;
 #define false 0;
 typedef char bool;
@@ -112,21 +118,22 @@ BYTE data[8]; // holds CAN data bytes
 BYTE dataLen; // holds number of CAN data bytes
 ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
 
-/**************
- * Interrupts *
- **************/
+/*
+ * Interrupts
+ */
 
 /*
- * Function to service interrupts.
- *
- * Transmits messages on CAN.
- * Reloads the timer0 registers and increments millis.
- * Resets the interrupt flags after servicing them.
+ * Description: Function to service interrupts.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: Transmits messages on CAN.
+ *     Reloads the timer0 registers and increments millis.
+ *     Resets the interrupt flags after servicing them.
  */
 #pragma code high_vector = 0x08
 
 void high_vector(void) {
-  _asm goto high_isr _endasm
+    _asm goto high_isr _endasm
 }
 #pragma code
 
@@ -134,122 +141,127 @@ void high_vector(void) {
 
 void high_isr(void) {
 
-  // Check for timer0 rollover indicating a millisecond has passed
-  if(INTCONbits.TMR0IF) {
-    INTCONbits.TMR0IF = 0;
-    WriteTimer0(0x85); // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
-    millis++;
-  }
+    // Check for timer0 rollover indicating a millisecond has passed
+    if(INTCONbits.TMR0IF) {
+        INTCONbits.TMR0IF = 0;
+        WriteTimer0(0x85); // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
+        millis++;
+    }
 
-  // Check for recieved CAN message.
-  if(PIR5bits.RXB1IF) {
-    PIR5bits.RXB1IF = FALSE; // Reset the flag.
-    
-    // Get data from recieve buffer.
-    ECANReceiveMessage(&id, data, &dataLen, &flags);
+    // Check for recieved CAN message.
+    if(PIR5bits.RXB1IF) {
+        PIR5bits.RXB1IF = FALSE; // Reset the flag.
 
-    if(id == RPM_ID) {
-      ((BYTE*) & rpm)[0] = data[RPM_BYTE + 1];
-      ((BYTE*) & rpm)[1] = data[RPM_BYTE];
-    }
-    if(id == ET_ID) {
-      ((BYTE*) &engineTemp)[0] = data[ET_BYTE + 1];
-      ((BYTE*) &engineTemp)[1] = data[ET_BYTE];
-    }
-    if(id == OT_ID) {
-      ((BYTE*) &oilTemp)[0] = data[OT_BYTE + 1];
-      ((BYTE*) &oilTemp)[1] = data[OT_BYTE];
-    }
-    if(id == OP_ID) {
-      ((BYTE*) &oilPressure)[0] = data[OP_BYTE + 1];
-      ((BYTE*) &oilPressure)[1] = data[OP_BYTE];
-    }
-    if(id == BAT_ID) {
-      ((BYTE*) &batteryVoltage)[0] = data[BAT_BYTE + 1];
-      ((BYTE*) &batteryVoltage)[1] = data[BAT_BYTE];
-    }
-  }
-}
+        // Get data from recieve buffer.
+        ECANReceiveMessage(&id, data, &dataLen, &flags);
 
-/*************
- * Functions *
- *************/
-
-/*
- * Sets specified LED to specified color.
- *
- * @param led The index of the led to change.
- * @param color The color value to change the LED to. Color values come
- *   from the header file.
- */
-void setLedToColor(unsigned char led, unsigned char color) {
-  if(led == 0) {
-    RED0_LAT = color & RED ? 0 : 1;
-    GREEN0_LAT = color & GREEN ? 0 : 1;
-    BLUE0_LAT = color & BLUE ? 0 : 1;
-  } else if(led == 1) {
-    RED1_LAT = color & RED ? 0 : 1;
-    GREEN1_LAT = color & GREEN ? 0 : 1;
-    BLUE1_LAT = color & BLUE ? 0 : 1;
-  } else if(led == 2) {
-    RED2_LAT = color & RED ? 0 : 1;
-    GREEN2_LAT = color & GREEN ? 0 : 1;
-    BLUE2_LAT = color & BLUE ? 0 : 1;
-  } else if(led == 3) {
-    RED3_LAT = color & RED ? 0 : 1;
-    GREEN3_LAT = color & GREEN ? 0 : 1;
-    BLUE3_LAT = color & BLUE ? 0 : 1;
-  } else if(led == 4) {
-    RED4_LAT = color & RED ? 0 : 1;
-    GREEN4_LAT = color & GREEN ? 0 : 1;
-    BLUE4_LAT = color & BLUE ? 0 : 1;
-  }
+        if(id == RPM_ID) {
+            ((BYTE*) & rpm)[0] = data[RPM_BYTE + 1];
+            ((BYTE*) & rpm)[1] = data[RPM_BYTE];
+        }
+        if(id == ENGINE_TEMP_ID) {
+            ((BYTE*) & engineTemp)[0] = data[ENGINE_TEMP_BYTE + 1];
+            ((BYTE*) & engineTemp)[1] = data[ENGINE_TEMP_BYTE];
+        }
+        if(id == OIL_TEMP_ID) {
+            ((BYTE*) & oilTemp)[0] = data[OIL_TEMP_BYTE + 1];
+            ((BYTE*) & oilTemp)[1] = data[OIL_TEMP_BYTE];
+        }
+        if(id == OIL_PRESS_ID) {
+            ((BYTE*) & oilPressure)[0] = data[OIL_PRESS_BYTE + 1];
+            ((BYTE*) & oilPressure)[1] = data[OIL_PRESS_BYTE];
+        }
+        if(id == VOLTAGE_ID) {
+            ((BYTE*) & batteryVoltage)[0] = data[VOLTAGE_BYTE + 1];
+            ((BYTE*) & batteryVoltage)[1] = data[VOLTAGE_BYTE];
+        }
+    }
 }
 
 /*
- * Sets all LEDs to specified color.
- *
- * @param color The color value to change the LED to. Color values come
- *   from the header file.
+ * Functions
  */
-void setAll(unsigned char color) {
-  unsigned char i = 0;
-  for(; i < 5; i++) {
-    setLedToColor(i, color);
-  }
+
+/*
+ * Description: Sets specified LED to specified color.
+ * Input(s): led - The index of the led to change.
+ *     color - The color value to change the LED to. Color values come from the
+ *             header file.
+ * Return Values(s): none
+ * Side Effects: Will modify various LAT bits.
+ */
+void set_led_to_color(unsigned char led, unsigned char color) {
+    if(led == 0) {
+        RED0_LAT = color & RED ? 0 : 1;
+        GREEN0_LAT = color & GREEN ? 0 : 1;
+        BLUE0_LAT = color & BLUE ? 0 : 1;
+    } else if(led == 1) {
+        RED1_LAT = color & RED ? 0 : 1;
+        GREEN1_LAT = color & GREEN ? 0 : 1;
+        BLUE1_LAT = color & BLUE ? 0 : 1;
+    } else if(led == 2) {
+        RED2_LAT = color & RED ? 0 : 1;
+        GREEN2_LAT = color & GREEN ? 0 : 1;
+        BLUE2_LAT = color & BLUE ? 0 : 1;
+    } else if(led == 3) {
+        RED3_LAT = color & RED ? 0 : 1;
+        GREEN3_LAT = color & GREEN ? 0 : 1;
+        BLUE3_LAT = color & BLUE ? 0 : 1;
+    } else if(led == 4) {
+        RED4_LAT = color & RED ? 0 : 1;
+        GREEN4_LAT = color & GREEN ? 0 : 1;
+        BLUE4_LAT = color & BLUE ? 0 : 1;
+    }
 }
 
 /*
- * Sets lights to NONE or REV_COLOR based on parameter.
- *
- * @param max The highest number LED to illuminate.
+ * Description: Sets all LEDs to specified color.
+ * Input(s): color - The color value to change the LED to. Color values come
+ *                   from the header file.
+ * Return Value(s): none
+ * Side Effects: none
  */
-void setLights(unsigned char max) {
-  unsigned char i = 0;
-  for(; i < 5; i++) {
-    if(max > i) {
-      setLedToColor(i, REV_COLOR);
-    } else {
-      setLedToColor(i, NONE);
+void set_all(unsigned char color) {
+    unsigned char i = 0;
+    for(; i < 5; i++) {
+        set_led_to_color(i, color);
     }
-  }
+}
+
+/*
+ * Description: Sets lights to NONE or REV_COLOR based on parameter.
+ * Input(s): max - The highest number LED to illuminate.
+ * Return Value(s): none
+ * Side Effects: none
+ */
+void set_lights(unsigned char max) {
+    unsigned char i = 0;
+    for(; i < 5; i++) {
+        if(max > i) {
+            set_led_to_color(i, REV_COLOR);
+        } else {
+            set_led_to_color(i, NONE);
+        }
+    }
 }
 
 //typedef enum {Dtrue, false} _Bool;
+
 /*
  Function checks the volts from the battery.
  Outputs: True (1) if volts are in balance, above the threshold.
           False(0) if volts are below the threshold.
  */
-void checkVolts(){
+void checkVolts() {
     int level = 13; //get the value here.
-    if(level < 13){
+    if(level < 13) {
         errorVolts = 1; //Battery is low, error flag set to true
     }
     //return 0;
 }
-void excess(int type){
-    switch(type){
+
+void excess(int type) {
+    switch(type) {
         case 0:
             //excess oil temp
             errorOilTemp = 0;
@@ -264,279 +276,151 @@ void excess(int type){
 
     }
 }
-void display(){
-    if(changedErrorState){
-        if(errorRPM && (!errorOilTemp && !errorEngineTemp && !errorVolts)){
+
+void display() {
+    if(changedErrorState) {
+        if(errorRPM && (!errorOilTemp && !errorEngineTemp && !errorVolts)) {
             //Only RPM Error
-        }else if(errorOilTemp && (!errorRPM && !errorEngineTemp && !errorVolts)){
+        } else if(errorOilTemp && (!errorRPM && !errorEngineTemp && !errorVolts)) {
             //only Oil Temp error
-        }else if(errorEngineTemp && (!errorOilTemp && !errorRPM && !errorVolts)){
+        } else if(errorEngineTemp && (!errorOilTemp && !errorRPM && !errorVolts)) {
             //only Engine Temp
-        }else if(errorVolts && (!errorOilTemp && !errorEngineTemp && !errorRPM)){
+        } else if(errorVolts && (!errorOilTemp && !errorEngineTemp && !errorRPM)) {
             //only Battery error
-        }else{
+        } else {
             //Multiple Error Singles
         }
-    }else{
+    } else {
         //Normal RPM display here
     }
 }
 
 /*
- * Function to assert unused pins to eliminate sources of noise and reduce MCU
- * power draw.
- *
- * Configuration registers will be modified.
+ * Main Loop
  */
-void initUnusedPins() {
-
-  // Configure to outputs.
-
-  // TRISAbits.TRISA0 = OUTPUT; BLUE0
-  // TRISAbits.TRISA1 = OUTPUT; GREEN0
-  // TRISAbits.TRISA2 = OUTPUT; RED0
-  TRISAbits.TRISA3 = OUTPUT;
-  TRISAbits.TRISA5 = OUTPUT;
-  // TRISAbits.TRISA6 = OUTPUT; OSC2
-  // TRISAbits.TRISA7 = OUTPUT; OSC1
-
-  TRISBbits.TRISB0 = OUTPUT;
-  TRISBbits.TRISB1 = OUTPUT;
-  // TRISBbits.TRISB2 = OUTPUT; CANTX
-  // TRISBbits.TRISB3 = OUTPUT; CANRX
-  TRISBbits.TRISB4 = OUTPUT;
-  TRISBbits.TRISB5 = OUTPUT;
-  // TRISBbits.TRISB6 = OUTPUT; PGC
-  // TRISBbits.TRISB7 = OUTPUT; PGD
-
-  // TRISCbits.TRISC0 = OUTPUT; SOSC0
-  // TRISCbits.TRISC1 = OUTPUT; SOSC1
-  // TRISCbits.TRISC2 = OUTPUT; BLUE1
-  // TRISCbits.TRISC3 = OUTPUT; GREEN1
-  // TRISCbits.TRISC4 = OUTPUT; BLUE3
-  // TRISCbits.TRISC5 = OUTPUT; GREEN3
-  // TRISCbits.TRISC6 = OUTPUT; TERM
-  // TRISCbits.TRISC7 = OUTPUT; RED3
-
-  // TRISDbits.TRISD0 = OUTPUT; RED1
-  // TRISDbits.TRISD1 = OUTPUT; BLUE2
-  // TRISDbits.TRISD2 = OUTPUT; GREEN2
-  // TRISDbits.TRISD3 = OUTPUT; RED2
-  // TRISDbits.TRISD4 = OUTPUT; BLUE4
-  // TRISDbits.TRISD5 = OUTPUT; GREEN4
-  // TRISDbits.TRISD6 = OUTPUT; RED4
-  TRISDbits.TRISD7 = OUTPUT;
-
-  TRISEbits.TRISE0 = OUTPUT;
-  TRISEbits.TRISE1 = OUTPUT;
-  TRISEbits.TRISE2 = OUTPUT;
-  // TRISEbits.TRISE3 = OUTPUT; MCLR
-
-  // Set pins low.
-
-  // LATAbits.LATA0 = 0;
-  // LATAbits.LATA1 = 0;
-  // LATAbits.LATA2 = 0;
-  LATAbits.LATA3 = 0;
-  LATAbits.LATA5 = 0;
-  // LATAbits.LATA6 = 0;
-  // LATAbits.LATA7 = 0;
-
-  LATBbits.LATB0 = 0;
-  LATBbits.LATB1 = 0;
-  // LATBbits.LATB2 = 0;
-  // LATBbits.LATB3 = 0;
-  LATBbits.LATB4 = 0;
-  LATBbits.LATB5 = 0;
-  // LATBbits.LATB6 = 0;
-  // LATBbits.LATB7 = 0;
-
-  // LATCbits.LATC0 = 0;
-  // LATCbits.LATC1 = 0;
-  // LATCbits.LATC2 = 0;
-  // LATCbits.LATC3 = 0;
-  // LATCbits.LATC4 = 0;
-  // LATCbits.LATC5 = 0;
-  // LATCbits.LATC6 = 0;
-  // LATCbits.LATC7 = 0;
-
-  // LATDbits.LATD0 = 0;
-  // LATDbits.LATD1 = 0;
-  // LATDbits.LATD2 = 0;
-  // LATDbits.LATD3 = 0;
-  // LATDbits.LATD4 = 0;
-  // LATDbits.LATD5 = 0;
-  // LATDbits.LATD6 = 0;
-  LATDbits.LATD7 = 0;
-
-  LATEbits.LATE0 = 0;
-  LATEbits.LATE1 = 0;
-  LATEbits.LATE2 = 0;
-  // LATEbits.LATE3 = 0;
-}
-
-/*************
- * Main Loop *
- *************/
 
 void main(void) {
 
-  /*************************
-   * Variable Declarations *
-   *************************/
+    /*
+     * Variable Declarations
+     */
 
-  unsigned int blink_tmr = 0;
+    unsigned int blink_tmr = 0;
 
-  /*********************
-   * Oscillator Set-Up *
-   *********************/
+    /*
+     * Oscillator Setup
+     */
 
-#ifdef INTERNAL
-  // OSCTUNE
-  OSCTUNEbits.INTSRC = 0; // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-  OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
-  OSCTUNEbits.TUN5 = 0; // Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
-  OSCTUNEbits.TUN4 = 0; // 011111 = max
-  OSCTUNEbits.TUN3 = 0; // ... 000001
-  OSCTUNEbits.TUN2 = 0; // 000000 = center (running at calibrated frequency)
-  OSCTUNEbits.TUN1 = 0; // 111111 ...
-  OSCTUNEbits.TUN0 = 0; // 100000
+    init_oscillator();
 
-  // OSCCCON
-  OSCCONbits.IDLEN = 1; // Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
-  OSCCONbits.IRCF2 = 1; // Internal Oscillator Frequency Select Bits
-  OSCCONbits.IRCF1 = 1; // When using HF, settings are:
-  OSCCONbits.IRCF0 = 1; // 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
-  OSCCONbits.SCS1 = 0;
-  OSCCONbits.SCS0 = 0;
+    /*
+     * Peripherals Setup
+     */
 
-  // OSCCON2
-  OSCCON2bits.MFIOSEL = 0;
+    ANCON0 = 0x00; // Default all pins to digital
+    ANCON1 = 0x00; // Default all pins to digital
 
-  while(!OSCCONbits.HFIOFS); // Wait for stable clock
-#else
-  // OSCTUNE
-  OSCTUNEbits.INTSRC = 0; // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-  OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
+    // Turn on and configure the TIMER1 oscillator
+    OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
+    WriteTimer0(0x82); // Load timer register
+    millis = 0; // Clear milliseconds count
+    INTCONbits.TMR0IE = 1; // Turn on timer0 interupts
 
-  // OSCCCON
-  OSCCONbits.SCS1 = 0; // Select configuration chosen oscillator
-  OSCCONbits.SCS0 = 0; // SCS = 00
+    TRISCbits.TRISC6 = OUTPUT; // programmable termination
+    TERM_LAT = FALSE;
 
-  // OSCCON2
-  OSCCON2bits.MFIOSEL = 0;
+    ECANInitialize(); // setup ECAN
 
-  while(!OSCCONbits.OSTS); // Wait for stable external clock
-#endif
+    // interrupts setup
+    INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
+    INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
+    RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
 
-  /*********************
-   * Peripherals Setup *
-   *********************/
+    init_unused_pins();
 
-  ANCON0 = 0x00; // Default all pins to digital
-  ANCON1 = 0x00; // Default all pins to digital
+    // Set LED pins as outputs.
+    RED0_TRIS = OUTPUT;
+    GREEN0_TRIS = OUTPUT;
+    BLUE0_TRIS = OUTPUT;
+    RED1_TRIS = OUTPUT;
+    GREEN1_TRIS = OUTPUT;
+    BLUE1_TRIS = OUTPUT;
+    RED2_TRIS = OUTPUT;
+    GREEN2_TRIS = OUTPUT;
+    BLUE2_TRIS = OUTPUT;
+    RED3_TRIS = OUTPUT;
+    GREEN3_TRIS = OUTPUT;
+    BLUE3_TRIS = OUTPUT;
+    RED4_TRIS = OUTPUT;
+    GREEN4_TRIS = OUTPUT;
+    BLUE4_TRIS = OUTPUT;
 
-  // Turn on and configure the TIMER1 oscillator
-  OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-  WriteTimer0(0x82); // Load timer register
-  millis = 0; // Clear milliseconds count
-  INTCONbits.TMR0IE = 1; // Turn on timer0 interupts
+    // Default all LEDs to off.
+    RED0_LAT = 1;
+    GREEN0_LAT = 1;
+    BLUE0_LAT = 1;
+    RED1_LAT = 1;
+    GREEN1_LAT = 1;
+    BLUE1_LAT = 1;
+    RED2_LAT = 1;
+    GREEN2_LAT = 1;
+    BLUE2_LAT = 1;
+    RED3_LAT = 1;
+    GREEN3_LAT = 1;
+    BLUE3_LAT = 1;
+    RED4_LAT = 1;
+    GREEN4_LAT = 1;
+    BLUE4_LAT = 1;
 
-  TRISCbits.TRISC6 = OUTPUT; // programmable termination
-  TERM_LAT = FALSE;
+    /* Startup - Show full RED lights for a while before doing anything else.
+    blink_tmr = millis;
+    while(1) {
+      if(millis - blink_tmr < BLINK_TIME)
+        set_all(RED);
+      else if(millis - blink_tmr < BLINK_TIME * 2)
+        set_all(RGB);
+      else if(millis - blink_tmr < BLINK_TIME * 3)
+        set_all(BLUE);
+      else if(millis - blink_tmr < BLINK_TIME * 4)
+        set_all(RED);
+      else if(millis - blink_tmr < BLINK_TIME * 5)
+        set_all(RGB);
+      else if(millis - blink_tmr < BLINK_TIME * 6)
+        set_all(BLUE);
+      else if(millis - blink_tmr < BLINK_TIME * 7)
+        set_all(RED);
+      else if(millis - blink_tmr < BLINK_TIME * 8)
+        set_all(RGB);
+      else if(millis - blink_tmr < BLINK_TIME * 9)
+        set_all(BLUE);
+      else
+        break;
+    }*/
 
-  ECANInitialize(); // setup ECAN
+    blink_tmr = millis;
+    while(1) {
 
-  // interrupts setup
-  INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
-  INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
-  RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
-
-  initUnusedPins();
-
-  // Set LED pins as outputs.
-  RED0_TRIS = OUTPUT;
-  GREEN0_TRIS = OUTPUT;
-  BLUE0_TRIS = OUTPUT;
-  RED1_TRIS = OUTPUT;
-  GREEN1_TRIS = OUTPUT;
-  BLUE1_TRIS = OUTPUT;
-  RED2_TRIS = OUTPUT;
-  GREEN2_TRIS = OUTPUT;
-  BLUE2_TRIS = OUTPUT;
-  RED3_TRIS = OUTPUT;
-  GREEN3_TRIS = OUTPUT;
-  BLUE3_TRIS = OUTPUT;
-  RED4_TRIS = OUTPUT;
-  GREEN4_TRIS = OUTPUT;
-  BLUE4_TRIS = OUTPUT;
-  
-  // Default all LEDs to off.
-  RED0_LAT  = 1;
-  GREEN0_LAT  = 1;
-  BLUE0_LAT  = 1;
-  RED1_LAT  = 1;
-  GREEN1_LAT  = 1;
-  BLUE1_LAT  = 1;
-  RED2_LAT  = 1;
-  GREEN2_LAT  = 1;
-  BLUE2_LAT  = 1;
-  RED3_LAT  = 1;
-  GREEN3_LAT  = 1;
-  BLUE3_LAT  = 1;
-  RED4_LAT  = 1;
-  GREEN4_LAT  = 1;
-  BLUE4_LAT  = 1;
-
-  /* Startup - Show full RED lights for a while before doing anything else.
-  blink_tmr = millis;
-  while(1) {
-    if(millis - blink_tmr < BLINK_TIME)
-      setAll(RED);
-    else if(millis - blink_tmr < BLINK_TIME * 2)
-      setAll(RGB);
-    else if(millis - blink_tmr < BLINK_TIME * 3)
-      setAll(BLUE);
-    else if(millis - blink_tmr < BLINK_TIME * 4)
-      setAll(RED);
-    else if(millis - blink_tmr < BLINK_TIME * 5)
-      setAll(RGB);
-    else if(millis - blink_tmr < BLINK_TIME * 6)
-      setAll(BLUE);
-    else if(millis - blink_tmr < BLINK_TIME * 7)
-      setAll(RED);
-    else if(millis - blink_tmr < BLINK_TIME * 8)
-      setAll(RGB);
-    else if(millis - blink_tmr < BLINK_TIME * 9)
-      setAll(BLUE);
-    else
-      break;
-  }*/
-
-  blink_tmr = millis;
-  while(1) {
-
-    // Sets certain lights to NONE or REV_COLOR based on rpm value.
-    if(rpm >= REV_RANGE_LIMIT) {
-      if(millis - blink_tmr < BLINK_TIME) {
-        setAll(REV_LIMIT_COLOR);
-      } else if(millis - blink_tmr < BLINK_TIME * 2) {
-        setAll(NONE);
-      } else {
-        blink_tmr = millis;
-      }
-    } else if(rpm >= REV_RANGE_5) {
-      setLights(5);
-    } else if(rpm >= REV_RANGE_4) {
-      setLights(4);
-    } else if(rpm >= REV_RANGE_3) {
-      setLights(3);
-    } else if(rpm >= REV_RANGE_2) {
-      setLights(2);
-    } else if(rpm >= REV_RANGE_1) {
-      setLights(1);
-    } else {
-      setAll(NONE);
+        // Sets certain lights to NONE or REV_COLOR based on rpm value.
+        if(rpm >= REV_RANGE_LIMIT) {
+            if(millis - blink_tmr < BLINK_TIME) {
+                set_all(REV_LIMIT_COLOR);
+            } else if(millis - blink_tmr < BLINK_TIME * 2) {
+                set_all(NONE);
+            } else {
+                blink_tmr = millis;
+            }
+        } else if(rpm >= REV_RANGE_5) {
+            set_lights(5);
+        } else if(rpm >= REV_RANGE_4) {
+            set_lights(4);
+        } else if(rpm >= REV_RANGE_3) {
+            set_lights(3);
+        } else if(rpm >= REV_RANGE_2) {
+            set_lights(2);
+        } else if(rpm >= REV_RANGE_1) {
+            set_lights(1);
+        } else {
+            set_all(NONE);
+        }
     }
-  }
 }
