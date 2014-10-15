@@ -1,41 +1,23 @@
-/******************************************************************************
+
+/*
+ *					Analog Node Main File
  *
- *					Analog Hub C Main Code
- *
- ******************************************************************************
- * FileName:		CANHub.c
- * Dependencies:	p18F46K80.h,
- *					timers.h,
- *					adc.h,
- *					ECAN.h,
- *					CANHub.h
+ * File Name:		CANHub.c
  * Processor:		PIC18F46K80
  * Complier:		Microchip C18
- * Version:			2.00
+ * Version:			1.00
  * Author:			George Schwieters
  * Created:			2012-2013
+ */
 
-*******************************************************************************
-	USER REVISON HISTORY
-//
-//
-
-*******************************************************************************/
-
-/***********************************************/
-/*  Header Files                               */
-/***********************************************/
-
-#include "p18F46K80.h"
-#include "timers.h"
-#include "adc.h"
 #include "ECAN.h"
 #include "CANHub.h"
+#include "FSAE.h"
 
 
-/***********************************************/
-/*  PIC18F46K80 Configuration Bits Settings    */
-/***********************************************/
+/*
+ *  PIC18F46K80 Configuration Bits
+ */
 
 // CONFIG1L
 #pragma config RETEN = OFF      // VREG Sleep Enable bit (Ultra low-power regulator is Disabled (Controlled by REGSLP bit))
@@ -104,60 +86,51 @@
 #pragma config EBTRB = OFF      // Table Read Protect Boot (Disabled)
 
 
-/***********************************************/
-/*  Global Variable Declarations               */
-/***********************************************/
+/*
+ * Global Variables
+ */
 
-volatile unsigned int millis;	// millisecond count
+static volatile int millis;		// millisecond count
+
 #ifdef FRONT
-volatile BYTE RADIO_SW;
+static volatile unsigned char RADIO_SW;
 // ECAN variables
 unsigned long id;			// holds CAN msgID
-BYTE data[8];				// holds CAN data bytes
-BYTE dataLen;				// holds number of CAN data bytes
+unsigned char data[8];				// holds CAN data bytes
+unsigned char dataLen;				// holds number of CAN data bytes
 ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
 #endif
 
 
-/***********************************************/
-/*  Interrupts                                 */
-/***********************************************/
+/*
+ * Interrupts
+ */
 
-/*********************************************************************************
-  Interrupt Function:
-    void high_isr(void)
-  Summary:
-    Function to service interrupts
-  Conditions:
-	* Timer0 module must be setup along with the oscillator being used
-	* ECAN must be configured
-	* A/D converter must be configured
-  Input:
-    none
-  Return Values:
-    none
-  Side Effects:
-	Transmits messages on CAN
-	Reloads the timer0 registers and increments millis
-	Resets the interrupt flags after servicing them
-  Description:
-
-  *********************************************************************************/
 #pragma code high_vector = 0x08
 void high_vector(void) {
 	_asm goto high_isr _endasm
 }
 #pragma code
 
+/*
+ *	void high_isr(void)
+ *
+ *	Description:	This interrupt will service all high priority interrupts. This
+ *					section should be as short as possible.
+ *	Input(s): none
+ *	Reaturn Value(s): none
+ *	Side Effects:	This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
+ *					global variables along with the millis, and RADIO_SW variables.
+ */
 #pragma interrupt high_isr
 void high_isr (void) {
 
-	BYTE data[8];	// holds CAN data bytes
+	unsigned char data[8];	// holds CAN data bytes
 
 	// check for timer0 rollover indicating a millisecond has passed
-	if (INTCONbits.TMR0IF) {
+	if(INTCONbits.TMR0IF) {
 		INTCONbits.TMR0IF = 0;
-		WriteTimer0(0x82);		// load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
+		TMR0L = TMR0_RELOAD;	// load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
 		millis++;
 	}
 
@@ -207,84 +180,55 @@ void high_isr (void) {
 	return;
 }
 
-
-/***********************************************/
-/*  Main Program                               */
-/***********************************************/
-
 void main(void) {
 
-	/*************************
-	 * Variable Declarations *
-	 *************************/
-
+/*
+ * Variable Declarations
+ */
 #ifdef MOTEC_RESEND
 	unsigned long id;			// holds CAN msgID
-	BYTE data_r[8];				// holds CAN data bytes
-	BYTE dataLen;				// holds number of CAN data bytes
+	unsigned char data_r[8];	// holds CAN data bytes
+	unsigned char dataLen;		// holds number of CAN data bytes
 	ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
 	FLAGS Recieved;
-	BYTE msg[8];
+	unsigned char msg[8];
 	unsigned int adl_tmr;
 #endif
 
 	init_unused_pins();			// assert values to unused pins
 
+/*
+ * Variable Initialization
+ */
 
-	/*********************
-	 * Oscillator Set-Up *
-	 *********************/
-#ifdef INTERNAL
-	// OSCTUNE
-	OSCTUNEbits.INTSRC = 0;		// Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-	OSCTUNEbits.PLLEN = 1;		// Frequency Multiplier PLL Select (1 to enable)
-	OSCTUNEbits.TUN5 = 0;		// Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
-	OSCTUNEbits.TUN4 = 0;		// 011111 = max
-	OSCTUNEbits.TUN3 = 0;		// ... 000001
-	OSCTUNEbits.TUN2 = 0;		// 000000 = center (running at calibrated frequency)
-	OSCTUNEbits.TUN1 = 0;		// 111111 ...
-	OSCTUNEbits.TUN0 = 0;		// 100000
+	TRISCbits.TRISC6 = OUTPUT;	// programmable termination
+	TERM_LAT = TRUE;
 
-	// OSCCCON
-	OSCCONbits.IDLEN = 1;		// Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
-	OSCCONbits.IRCF2 = 1;		// Internal Oscillator Frequency Select Bits
-	OSCCONbits.IRCF1 = 1;		// When using HF, settings are:
-	OSCCONbits.IRCF0 = 1;		// 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
-	OSCCONbits.SCS1 = 0;
-	OSCCONbits.SCS0 = 0;
-
-	// OSCCON2
-	OSCCON2bits.MFIOSEL = 0;
-
-	while(!OSCCONbits.HFIOFS);	// wait for stable clock
-
-#else
-	// OSCTUNE
-	OSCTUNEbits.INTSRC = 0;		// Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-	OSCTUNEbits.PLLEN = 1;		// Frequency Multiplier PLL Select (1 to enable)
-
-	// OSCCCON
-	OSCCONbits.SCS1 = 0;		// select configuration chosen oscillator
-	OSCCONbits.SCS0 = 0;		// SCS = 00
-
-	// OSCCON2
-	OSCCON2bits.MFIOSEL = 0;
-
-	while(!OSCCONbits.OSTS);		// wait for stable external clock
+#ifdef MOTEC_RESEND
+	// initialize ADL message number
+	msg[0] = 0x02;
+	msg[1] = 0x00;
+	adl_tmr = 0;
+#endif
+#ifdef FRONT
+	RADIO_SW = FALSE;
+	RADIO_TRIS_1 = OUTPUT;
+	RADIO_TRIS_0 = OUTPUT;
 #endif
 
-	/**********************
-	 * Peripherals Setup  *
-	 **********************/
+/*
+ * Peripheral Initialization
+ */
 
-	// turn on and configure the TIMER1 oscillator
-	OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-	WriteTimer0(0x82);		// load timer register
-	millis = 0;				// clear milliseconds count
-	INTCONbits.TMR0IE = 1;	// turn on timer0 interupts
+	// can use internal or external
+	init_oscillator();
+
+	// setup milliseconds interrupt
+	init_timer0();
 
 	// turn on and configure the A/D converter module
-	OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_OFF, ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
+	init_ADC();
+
 #ifdef FRONT
 	ANCON0 = 0b00001111;		// AN0 - AN3 are analog
 	ANCON1 = 0b00000000;		// rest are digital
@@ -306,6 +250,7 @@ void main(void) {
 	LATBbits.LATB4 = 0;
     TRISBbits.TRISB0 = OUTPUT;  // AN10
 	LATBbits.LATB0 = 0;
+
 #elif REAR
 	ANCON0 = 0b00000110;		// AN1 - AN2 are analog
 	ANCON1 = 0b00000000;		// rest are digital
@@ -331,30 +276,13 @@ void main(void) {
 	LATBbits.LATB0 = 0;
 #endif
 
-	TRISCbits.TRISC6 = OUTPUT;	// programmable termination
-	TERM_LAT = TRUE;
-
     ECANInitialize();		// setup ECAN
 
 	// interrupts setup
-	INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
-	INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
 	RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
-#ifdef MOTEC_RESEND
-	// initialize ADL message number
-	msg[0] = 0x02;
-	msg[1] = 0x00;
-	adl_tmr = 0;
-#endif
-#ifdef FRONT
-	RADIO_SW = FALSE;
-	RADIO_TRIS_1 = OUTPUT;
-	RADIO_TRIS_0 = OUTPUT;
-#endif
-
+	STI();
 
 /***************end setup; begin main loop************************************/
-
 
 	// all A/D operations are dealt with in the ISR
 	// that's triggered by the 1 ms rollover timer
@@ -366,12 +294,12 @@ void main(void) {
 		// check which accelerometer message was recieved
 		if(id == Y_ID && !Recieved.Y_accel) {
 			// process CAN bus data and put in ADL format
-			process_resend(data_r, msg, Y_BYTE, Y_OFFSET, ADL7, INTEL);
+			process_resend(data_r, msg, Y_BYTE, Y_OFFSET, ADL7_BYTE, INTEL);
 			Recieved.Y_accel = TRUE;
 		}
 		else if(id == X_ID && !Recieved.X_accel) {
 			// process CAN bus data and put in ADL format
-			process_resend(data_r, msg, X_BYTE, X_OFFSET, ADL8, INTEL);
+			process_resend(data_r, msg, X_BYTE, X_OFFSET, ADL8_BYTE, INTEL);
 			Recieved.X_accel = TRUE;
 		}
 
@@ -402,136 +330,22 @@ void main(void) {
 	return;
 }
 
-/***********************************************/
-/*  User Functions                             */
-/***********************************************/
+/*
+ *  Local Functions
+ */
 
-
-/******************************************************************************
-  Function:
-	void init_unused_pins(void)
-  Summary:
-	Function to assert unused pins to eliminate sources of noise and reduce MCU
-	power draw.
-  Conditions:
-    none
-  Input:
-    none
-  Return Values:
-    none
-  Side Effects:
-    Certain pins will be set low and configured as outputs
-  Description:
-
-  ****************************************************************************/
-void init_unused_pins(void) {
-
-	// first configure to outputs
-//	TRISAbits.TRISA0 = OUTPUT; AN0
-//	TRISAbits.TRISA1 = OUTPUT; AN1
-//	TRISAbits.TRISA2 = OUTPUT; AN2
-//	TRISAbits.TRISA3 = OUTPUT; AN3
-//	TRISAbits.TRISA5 = OUTPUT; AN4
-//	TRISAbits.TRISA6 = OUTPUT; OSC2
-//	TRISAbits.TRISA7 = OUTPUT; OSC1
-
-//	TRISBbits.TRISB0 = OUTPUT; AN10
-//	TRISBbits.TRISB1 = OUTPUT; AN8
-//	TRISBbits.TRISB2 = OUTPUT; CANTX
-//	TRISBbits.TRISB3 = OUTPUT; CANRX
-//	TRISBbits.TRISB4 = OUTPUT; AN9
-	TRISBbits.TRISB5 = OUTPUT;
-	TRISBbits.TRISB6 = OUTPUT;
-	TRISBbits.TRISB7 = OUTPUT;
-
-//	TRISCbits.TRISC0 = OUTPUT; SOSCO
-//	TRISCbits.TRISC1 = OUTPUT; SOSCI
-	TRISCbits.TRISC2 = OUTPUT;
-	TRISCbits.TRISC3 = OUTPUT;
-	TRISCbits.TRISC4 = OUTPUT;
-	TRISCbits.TRISC5 = OUTPUT;
-//	TRISCbits.TRISC6 = OUTPUT; RC6
-	TRISCbits.TRISC7 = OUTPUT;
-
-	TRISDbits.TRISD0 = OUTPUT;
-	TRISDbits.TRISD1 = OUTPUT;
-	TRISDbits.TRISD2 = OUTPUT;
-	TRISDbits.TRISD3 = OUTPUT;
-	TRISDbits.TRISD4 = OUTPUT;
-	TRISDbits.TRISD5 = OUTPUT;
-	TRISDbits.TRISD6 = OUTPUT;
-	TRISDbits.TRISD7 = OUTPUT;
-
-//	TRISEbits.TRISE0 = OUTPUT; AN5
-//	TRISEbits.TRISE1 = OUTPUT; AN6
-//	TRISEbits.TRISE2 = OUTPUT; AN7
-//	TRISEbits.TRISE3 = OUTPUT; MCLR
-
-	// then set pins low
-//	LATAbits.LATA0 = 0;
-//	LATAbits.LATA1 = 0;
-//	LATAbits.LATA2 = 0;
-//	LATAbits.LATA3 = 0;
-//	LATAbits.LATA5 = 0;
-//	LATAbits.LATA6 = 0;
-//	LATAbits.LATA7 = 0;
-
-//	LATBbits.LATB0 = 0;
-//	LATBbits.LATB1 = 0;
-//	LATBbits.LATB2 = 0;
-//	LATBbits.LATB3 = 0;
-//	LATBbits.LATB4 = 0;
-	LATBbits.LATB5 = 0;
-	LATBbits.LATB6 = 0;
-	LATBbits.LATB7 = 0;
-
-//	LATCbits.LATC0 = 0;
-//	LATCbits.LATC1 = 0;
-	LATCbits.LATC2 = 0;
-	LATCbits.LATC3 = 0;
-	LATCbits.LATC4 = 0;
-	LATCbits.LATC5 = 0;
-//	LATCbits.LATC6 = 0;
-	LATCbits.LATC7 = 0;
-
-	LATDbits.LATD0 = 0;
-	LATDbits.LATD1 = 0;
-	LATDbits.LATD2 = 0;
-	LATDbits.LATD3 = 0;
-	LATDbits.LATD4 = 0;
-	LATDbits.LATD5 = 0;
-	LATDbits.LATD6 = 0;
-	LATDbits.LATD7 = 0;
-
-//	LATEbits.LATE0 = 0;
-//	LATEbits.LATE1 = 0;
-//	LATEbits.LATE2 = 0;
-//	LATEbits.LATE3 = 0;
-
-	return;
-}
-
-/******************************************************************************
-  Function:
-	void sample(BYTE *data, const BYTE byte, const BYTE ch)
-  Summary:
-	Function to read the analog voltage of a pin and then put the value into the
-	data array that will be transmited over CAN
-  Conditions:
-    A/D Converter must be configured
-    Pins must be initilized
-  Input:
-	data - pointer to array of data bytes
-    ch - which pin to sample
-	byte - where to write the data in the passed array
-  Return Values:
-    none
-  Side Effects:
-    writes to data array
-  Description:
-
-  ****************************************************************************/
-void sample(BYTE *data, const BYTE byte, const BYTE ch) {
+/*
+ *	void sample(unsigned char *data, const unsigned char byte, const unsigned char ch)
+ *
+ *	Description:	This reads the analog voltage of a pin and then puts the value into the
+ *					data array that will be transmited over CAN.
+ *	Input(s):	data - pointer to array of data bytes
+ *				ch - which pin to sample
+ *				byte - where to write the data in the passed array
+ *	Return Value(s): none
+ *	Side Effects: This modifies the memory pointed to by data.
+ */
+void sample(unsigned char *data, const unsigned char byte, const unsigned char ch) {
 
 	SelChanConvADC(ch);	// configure which pin you want to read and start A/D converter
 
@@ -543,33 +357,25 @@ void sample(BYTE *data, const BYTE byte, const BYTE ch) {
 	return;
 }
 
-/******************************************************************************
-  Function:
-	void process_resend(const BYTE *data, BYTE *msg,
-						const BYTE byte, const int offset,
- 						const BYTE ADL_ch, const BYTE order)
-  Summary:
-	Function to take in incoming data and reformat to be read by Motec as an ADL
-	CAN message.
-  Conditions:
-	none
-  Input:
-	data - the data bytes from the recieved CAN message
-	msg - the data bytes to be transmitted
-	byte - the location of the recieved data within the recieved message
-	offset - the offset to apply to the incoming data before getting transmitted
-	ADL_ch - the ADL channel that we want the transmitted data to placed in
-	order - the byte order of the incoming data (either INTEL or MOTOROLA)
-  Return Values:
-    none
-  Side Effects:
-	Writes to msg array
-  Description:
+/*
+ *	void sample(unsigned char *data, const unsigned char byte, const unsigned char ch)
+ *
+ *	Description:	This takes in incoming data and reformats it to be read by Motec
+ *					as an ADL CAN message.
+ *	Input(s):	data - the data bytes from the recieved CAN message
+ *				msg - the data bytes to be transmitted
+ *				byte - the location of the recieved data within the recieved message
+ *				offset - the offset to apply to the incoming data before getting transmitted
+ *				ADL_ch - the ADL channel that we want the transmitted data to placed in
+ *				order - the byte order of the incoming data (either INTEL or MOTOROLA)
+ *	Return Value(s): none
+ *	Side Effects: This modifies the memory pointed to by msg.
+ */
+void process_resend(const unsigned char *data, unsigned char *msg,
+	const unsigned char byte, const int offset, const unsigned char ADL_ch,
+	const unsigned char order) {
 
-  ****************************************************************************/
-void process_resend(const BYTE *data, BYTE *msg, const BYTE byte, const int offset, const BYTE ADL_ch, const BYTE order) {
-
-	BYTE temp;
+	unsigned char temp;
 
 	// check which byte order we are dealing with
 	if(order == INTEL) {

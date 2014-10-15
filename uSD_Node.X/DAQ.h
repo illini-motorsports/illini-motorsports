@@ -9,11 +9,6 @@
  * Created:			2012-2013
  */
 
-//	Testing Revision History
-//
-//
-//
-
 #ifndef DAQ_H
 #define DAQ_H
 
@@ -71,8 +66,8 @@ void init_unused_pins(void);
 void service_FIFO(void);
 void append_write_buffer(static const unsigned char * temp, static unsigned char applen);
 void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
-				static unsigned int *bufflen, static const unsigned char applen,
-				static const unsigned char offset);
+	static unsigned int *bufflen, static const unsigned char applen,
+	static const unsigned char offset);
 void high_isr(void);
 void low_isr (void);
 void swap_buff(void);

@@ -10,11 +10,6 @@
  * Created:			2012-2013
  */
 
-//	Testing Revision History
-//
-//
-//
-
 #include "capture.h"
 #include "DAQ.h"
 #include "FSIO.h"
@@ -317,6 +312,7 @@ void main (void) {
  * Peripheral Initialization
  */
 
+	// can use internal or external
 	init_oscillator();
 
     ANCON0 = 0x00;			// default all pins to digital
@@ -330,11 +326,12 @@ void main (void) {
 	TERM_LAT = FALSE;
 #endif
 
+	// setup seconds interrupt
 	init_timer1();
 
 	// turn on and configure capture module
 	OpenCapture2(CAP_EVERY_FALL_EDGE & CAPTURE_INT_ON);
-	IPR3bits.CCP2IP = 1;	// high priority
+	IPR3bits.CCP2IP = 1;		// high priority
 
 	while(!MDD_MediaDetect());	// wait for card presence
 	while(!FSInit());			// setup file system library
@@ -445,7 +442,6 @@ void main (void) {
 /*
  *  Local Functions
  */
-
 
 /*
  *	void funct_error(void)

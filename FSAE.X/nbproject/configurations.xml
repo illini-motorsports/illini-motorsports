@@ -9,12 +9,11 @@
       <itemPath>Pins_logging_0.h</itemPath>
       <itemPath>Pins_logging_1.h</itemPath>
       <itemPath>Pins_PDM.h</itemPath>
-      <itemPath>Pins_hub_front.h</itemPath>
-      <itemPath>Pins_hub_rear.h</itemPath>
       <itemPath>Pins_shift_lights.h</itemPath>
       <itemPath>Pins_telem.h</itemPath>
       <itemPath>Pins_thermo.h</itemPath>
       <itemPath>Pins_wheel.h</itemPath>
+      <itemPath>Pins_analog_hub.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"

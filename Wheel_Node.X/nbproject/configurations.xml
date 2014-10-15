@@ -15,6 +15,7 @@
                    projectFiles="true">
       <itemPath>../ECAN.X/ECAN.c</itemPath>
       <itemPath>Wheel.c</itemPath>
+      <itemPath>../FSAE.X/FSAE.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -22,6 +23,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../FSAE.X</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
@@ -75,7 +79,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="../ECAN.X"/>
+        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="WHEEL"/>
         <property key="procedural-abstraction-passes" value="4"/>
@@ -124,7 +128,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.end" value="0xffff"/>
         <property key="memories.programmemory.start" value="0x0"/>
-        <property key="memories.userotp" value="false"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmertogo.imagename" value=""/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
@@ -135,7 +138,6 @@
         <property key="programoptions.preserveprogramrange.end" value="0xffff"/>
         <property key="programoptions.preserveprogramrange.start" value="0x0"/>
         <property key="programoptions.preserveuserid" value="false"/>
-        <property key="programoptions.programcalmem" value="false"/>
         <property key="programoptions.testmodeentrymethod" value="VPPFirst"/>
         <property key="programoptions.usehighvoltageonmclr" value="false"/>
         <property key="programoptions.uselvpprogramming" value="false"/>

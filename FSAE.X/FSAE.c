@@ -11,18 +11,14 @@
 
 #include "FSAE.h"
 #include "timers.h"
+#include "adc.h"
 
 #ifdef LOGGING_0
 #include "Pins_logging_0.h"
 #elif LOGGING_1
 #include "Pins_logging_1.h"
 #elif HUB
-#ifdef FRONT
-#include "Pins_hub_front.h"
-#endif
-#ifdef REAR
-#include "Pins_hub_rear.h"
-#endif
+#include "Pins_analog_hub.h"
 #elif THERMO
 #include "Pins_thermo.h"
 #elif SHIFT
@@ -62,7 +58,25 @@ void STI(void) {
 }
 
 /*
+<<<<<<< Updated upstream
  *  void init_timer0(void)
+=======
+ *	void init_ADC(void)
+ *
+ *	Description:	This function will initialize the analog to digital
+ *					converter.
+ *	Input(s): none
+ *	Return Value(s): none
+ *	Side Effects: This will modify ADCON0, ADCON1 & ADCON2.
+ */
+void init_ADC(void) {
+	OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_OFF,
+		ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
+}
+
+/*
+ *	void init_timer0(void)
+>>>>>>> Stashed changes
  *
  *  Description:  This function will initialize Timer0 to take in the system clock
  *          and interrupt once every millisecond

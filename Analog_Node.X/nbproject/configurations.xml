@@ -11,6 +11,7 @@
                    projectFiles="true">
       <itemPath>CANHub.c</itemPath>
       <itemPath>../ECAN.X/ECAN.c</itemPath>
+      <itemPath>../FSAE.X/FSAE.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -18,6 +19,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../FSAE.X</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="default" type="2">
@@ -26,7 +30,7 @@
         <targetDevice>PIC18F46K80</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>PICkit3PlatformTool</platformTool>
+        <platformTool>Simulator</platformTool>
         <languageToolchain>C18</languageToolchain>
         <languageToolchainVersion>3.47</languageToolchainVersion>
         <platform>3</platform>
@@ -71,7 +75,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="..\ECAN.X"/>
+        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="HUB"/>
         <property key="procedural-abstraction-passes" value="0"/>
@@ -102,39 +106,8 @@
         <property key="stack-analysis-mcc18" value="false"/>
         <property key="stack-analysis-mplink" value="false"/>
       </C18LanguageToolchain>
-      <PICkit3PlatformTool>
-        <property key="AutoSelectMemRanges" value="auto"/>
-        <property key="Freeze Peripherals" value="true"/>
-        <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
-        <property key="ToolFirmwareFilePath"
-                  value="Press to browse for a specific firmware version"/>
-        <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
-        <property key="hwtoolclock.frcindebug" value="false"/>
-        <property key="memories.aux" value="false"/>
-        <property key="memories.bootflash" value="false"/>
-        <property key="memories.configurationmemory" value="false"/>
-        <property key="memories.dataflash" value="true"/>
-        <property key="memories.eeprom" value="false"/>
-        <property key="memories.flashdata" value="true"/>
-        <property key="memories.id" value="false"/>
-        <property key="memories.programmemory" value="true"/>
-        <property key="memories.programmemory.end" value="0xffff"/>
-        <property key="memories.programmemory.start" value="0x0"/>
-        <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmertogo.imagename" value=""/>
-        <property key="programoptions.donoteraseauxmem" value="false"/>
-        <property key="programoptions.eraseb4program" value="true"/>
-        <property key="programoptions.pgmspeed" value="2"/>
-        <property key="programoptions.preserveeeprom" value="false"/>
-        <property key="programoptions.preserveprogramrange" value="false"/>
-        <property key="programoptions.preserveprogramrange.end" value="0xffff"/>
-        <property key="programoptions.preserveprogramrange.start" value="0x0"/>
-        <property key="programoptions.preserveuserid" value="false"/>
-        <property key="programoptions.testmodeentrymethod" value="VPPFirst"/>
-        <property key="programoptions.usehighvoltageonmclr" value="false"/>
-        <property key="programoptions.uselvpprogramming" value="false"/>
-        <property key="voltagevalue" value="1.8"/>
-      </PICkit3PlatformTool>
+      <Simulator>
+      </Simulator>
     </conf>
     <conf name="Front" type="2">
       <toolsSet>
@@ -187,7 +160,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="..\ECAN.X"/>
+        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="HUB;FRONT"/>
         <property key="procedural-abstraction-passes" value="0"/>
@@ -303,7 +276,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="..\ECAN.X"/>
+        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="HUB;REAR;MOTEC_RESEND"/>
         <property key="procedural-abstraction-passes" value="0"/>

@@ -25,6 +25,7 @@
 
 void init_timer0(void);
 void init_timer1(void);
+void init_ADC(void);
 void init_oscillator(void);
 void init_unused_pins(void);
 void CLI(void);

@@ -1,45 +1,37 @@
-/******************************************************************************
- *
- *                  Wheel Node C Main Code Header
- *
- ******************************************************************************
- * FileName:        Wheel.h
- * Dependencies:    GenericTypeDefs.h
- * Processor:       PIC18F46K80
- * Complier:        Microchip C18
 
-*******************************************************************************
-	USER REVISON HISTORY
-//
-//
-//
-//
-
-*******************************************************************************/
+/*
+ *					Wheel Node Main File Header
+ *
+ * File Name:		Wheel.h
+ * Processor:		PIC18F46K80
+ * Complier:		Microchip C18
+ * Author:			George Schwieters
+ * Created:			2013-2014
+ */
 
 #ifndef WHEEL_H
 #define	WHEEL_H
 
 #include "GenericTypeDefs.h"
+#include "adc.h"
+
+/*
+ * Code Control
+ */
 
 //#define INTERNAL
 //#define DEBUGGING
-#define INPUT   1
-#define OUTPUT  0
 
-#define ADL1 2
-#define ADL2 4
-#define ADL3 6
-#define ADL4 2
-#define ADL5 4
-#define ADL6 6
-#define ADL7 2
-#define ADL8 4
-#define ADL9 6
-#define ADL10 2
-#define ADL11 4
-#define ADL12 6
+/*
+ * Magic Numbers
+ */
 
+#define LEFT 0
+#define RIGHT 1
+#define BOTH 3
+#define NUM_CHAN 6
+
+// reading and modifyinng the rotary voltages
 #define POS_0 0
 #define POS_1 555
 #define POS_2 1111
@@ -50,7 +42,6 @@
 #define POS_7 3888
 #define POS_8 4444
 #define POS_9 5000
-
 #define RANGE_LOW 0
 #define RANGE_0 409
 #define RANGE_1 819
@@ -63,42 +54,22 @@
 #define RANGE_8 3686
 #define RANGE_HIGH 4096
 
-#define ADLid 0x500
-
+// timing
 #define HOLD_TIME		2000
 #define BLINK_TIME		200
 #define REFRESH_TIME	150
 #define BOUNCE_TIME		100
 #define CAN_PER			200
 
-#define LEFT 0
-#define RIGHT 1
-#define BOTH 3
-
-#define NUM_CHAN 6
-
+// data channel indicies
 #define OIL_T		0
 #define ENGINE_T	1
 #define VOLTAGE		2
 #define OIL_P		3
 #define SPEED		4
-#define RPM		5
+#define RPM			5
 #define CANERR1         6   //***EL
 #define CANERR2         7   //***EL
-
-#define ECU_ID_0	0x200
-#define ECU_ID_1	0x201
-#define ECU_ID_2	0x202
-#define ECU_ID_3	0x203
-#define ECU_ID_4	0x204
-
-#define GDN_SPD_BYTE	0
-#define GEAR_BYTE		4
-#define OIL_T_BYTE		6
-#define ENGINE_T_BYTE	0
-#define VOLTAGE_BYTE	6
-#define OIL_P_BYTE		4
-#define RPM_BYTE		0
 
 // addresses for display driver
 #define NO_OP		0x00
@@ -150,11 +121,15 @@
 #define CHAR_c			0b00001101
 #define CHAR_C			0b01001110
 #define CHAR_N			0b01110110
-#define CHAR_r                  0b00000101   //***EL
+#define CHAR_r			0b00000101   //***EL
 
 // display mode
 #define TEST			0x01
 #define NORMAL			0x00
+
+/*
+ * Pin Defintions
+ */
 
 // chip select
 #define CS LATDbits.LATD3
@@ -172,24 +147,20 @@
 #define TRAC_ROT ADC_CH1
 #define DRS_ROT ADC_CH2
 
-#define TERM_LAT	LATCbits.LATC6
-
-
-/***********************************************/
-/*  User Function Prototypes                   */
-/***********************************************/
+#define TERM_LAT LATCbits.LATC6
 
 void init_unused_pins(void);
-void updateText(BYTE side, BYTE *state);
-void updateDisp(BYTE side);
-void write_num(int data, BYTE d_place, BYTE side);
-void blank_display(BYTE side);
-void write_gear(BYTE gear);
-void driver_write(BYTE addr, BYTE data);
+void updateText(unsigned char side, unsigned char *state);
+void updateDisp(unsigned char side);
+void write_num(int data, unsigned char d_place, unsigned char side);
+void blank_display(unsigned char side);
+void write_gear(unsigned char gear);
+void driver_write(unsigned char addr, unsigned char data);
 void write_CANerror(void); //***EL
 void high_isr(void);
 void bufferData(void);
-void ADLsample(BYTE *data, const BYTE ADLoffset, const BYTE ch);
+void ADLsample(unsigned char *data, const unsigned char ADLoffset,
+	const unsigned char ch);
 void modifyRotary(unsigned int * sample);
 
 #endif

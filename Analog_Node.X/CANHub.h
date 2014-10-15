@@ -1,33 +1,31 @@
-/******************************************************************************
- *
- *                  Analog Hub C Main Code Header
- *
- ******************************************************************************
- * FileName:        CANHub.h
- * Dependencies:    none
- * Processor:       PIC18F46K80
- * Complier:        Microchip C18
 
-*******************************************************************************
-	USER REVISON HISTORY
-//
-//
-//
-//
-
-*******************************************************************************/
+/*
+ *					Analog Node Main File Header
+ *
+ * File Name:		CANHub.h
+ * Processor:		PIC18F46K80
+ * Complier:		Microchip C18
+ * Author:			George Schwieters
+ * Created:			2012-2013
+ */
 
 #ifndef CANHUB_H
 #define CANHUB_H
 
+#include "adc.h"
 
-/***********************************************/
-/*  User Structures & Defines                  */
-/***********************************************/
+/*
+ * Code Control
+ */
 
 //#define INTERNAL
 //#define DEBUGGING
 #define MCHP_C18
+
+/*
+ * Magic Numbers
+ */
+
 #define INPUT 1
 #define OUTPUT 0
 #define INTEL 2		// least significant byte comes first
@@ -38,9 +36,15 @@
 #define FAST_SAMPLE 2
 #define SLOW_SAMPLE 128
 
+/*
+ * Pin Defintions
+ */
+
 #define TERM_LAT LATCbits.LATC6
 
-// Hub location specific code configuration
+/*
+ * Front Hub Specific Definitions
+ */
 #ifdef FRONT
 
 // define msg IDs
@@ -74,6 +78,9 @@
 #define RADIO_SW_BYTE0_ID 0x00
 #define RADIO_SW_BYTE 2
 
+/*
+ * Rear Hub Specific Definitions
+ */
 #elif REAR
 
 // define msg IDs
@@ -99,19 +106,10 @@
 #define Y_OFFSET 0x8000
 #define X_BYTE 4
 #define Y_BYTE 4
-#define ADL_ID 0x500
 #define ADL_DLC 8
 #define ADL_SAMPLE 200
 #define Y_ID 0x070
 #define X_ID 0x080
-#define ADL1 2
-#define ADL2 4
-#define ADL3 6
-#define ADL4 2
-#define ADL5 4
-#define ADL6 6
-#define ADL7 2
-#define ADL8 4
 
 typedef struct {
 	unsigned X_accel:1;
@@ -120,14 +118,11 @@ typedef struct {
 
 #endif
 
-
-/***********************************************/
-/*  User Function Prototypes                   */
-/***********************************************/
-
 void init_unused_pins(void);
 void high_isr(void);
-void sample(BYTE *data, const BYTE byte, const BYTE ch);
-void process_resend(const BYTE *data, BYTE *msg, const BYTE byte, const int offset, const BYTE ADL_ch, const BYTE order);
+void sample(unsigned char *data, const unsigned char byte, const unsigned char ch);
+void process_resend(const unsigned char *data, unsigned char *msg,
+	const unsigned char byte, const int offset, const unsigned char ADL_ch,
+	const unsigned char order);
 
 #endif

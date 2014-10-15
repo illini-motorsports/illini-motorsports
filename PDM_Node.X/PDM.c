@@ -1,42 +1,23 @@
-/******************************************************************************
+
+/*
+ *					PDM Node Main File
  *
- *					PDM Hode C Main Code
- *
- ******************************************************************************
- * FileName:		PDM.c
- * Dependencies:	p18F46K80.h,
- *					timers.h,
- *					adc.h,
- *					ECAN.h and
- *					PDM.h
+ * File Name:		PDM.c
  * Processor:		PIC18F46K80
  * Complier:		Microchip C18
  * Version:			1.00
  * Author:			George Schwieters
  * Created:			2013-2014
+ */
 
-*******************************************************************************
-	USER REVISON HISTORY
-//
-// 10/21/13 - modifed the Timer0 intial value for better time keeping
-//
-
-*******************************************************************************/
-
-/***********************************************/
-/*  Header Files                               */
-/***********************************************/
-
-#include "p18F46K80.h"
-#include "timers.h"
-#include "adc.h"
 #include "ECAN.h"
 #include "PDM.h"
+#include "FSAE.h"
 
 
-/***********************************************/
-/*  PIC18F46K80 Configuration Bits Settings    */
-/***********************************************/
+/*
+ * PIC18F46K80 Configuration Bits
+ */
 
 // CONFIG1L
 #pragma config RETEN = OFF      // VREG Sleep Enable bit (Ultra low-power regulator is Disabled (Controlled by REGSLP bit))
@@ -105,22 +86,22 @@
 #pragma config EBTRB = OFF      // Table Read Protect Boot (Disabled)
 
 
-/***********************************************/
-/*  Global Variable Declarations               */
-/***********************************************/
+/*
+ * Global Variables
+ */
 
-volatile unsigned long millis;		// holds timer0 rollover count
-unsigned long P_tmr[NUM_LOADS - NON_INDUCTIVE];
-unsigned long err_tmr[NUM_LOADS];
-unsigned long CAN_tmr;
-unsigned long PRIME_tmr;
-volatile unsigned int FAN_SW;		// holds state of fan switch on steering wheel
-volatile int water_temp, oil_temp, oil_press, rpm;
+// timing variables
+static volatile int millis;				// holds timer0 rollover count
+static int P_tmr[NUM_LOADS - NON_INDUCTIVE];
+static int err_tmr[NUM_LOADS];
+static int PRIME_tmr;
+static volatile unsigned int FAN_SW;	// holds state of fan switch on steering wheel
+static volatile int water_temp, oil_temp, oil_press, rpm;
 
 // ECAN variables
 unsigned long id;			// holds CAN msgID
-BYTE data[8];				// holds CAN data bytes
-BYTE dataLen;				// holds number of CAN data bytes
+unsigned char data[8];				// holds CAN data bytes
+unsigned char dataLen;				// holds number of CAN data bytes
 ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
 
 // check header for correct order of constants; it coincides with the array
@@ -140,46 +121,35 @@ const unsigned int current_P_ratio[NUM_LOADS] = {28 /*IGN*/, 28 /*FUEL*/,
 									0 /*ECU*/};
 
 
-/***********************************************/
-/*  Interrupts                                 */
-/***********************************************/
+/*
+ * Interrupts
+ */
 
-/*********************************************************************************
-  Interrupt Function:
-    void high_isr(void)
-  Summary:
-    Function to service interrupts
-  Conditions:
-	Timer0 module must be setup along with the oscillator being used
-	ECAN must be configured
-  Input:
-    none
-  Return Values:
-    none
-  Side Effects:
-	Reloads the timer0 registers and increments millis
-	Resets the interrupt flags after servicing them
-	Sets FAN_SW flag
-	Sets water_temp
-	Sets oil_temp
-	Sets oil_press
-	Sets rpm
-  Description:
-
-  *********************************************************************************/
 #pragma code high_vector = 0x08
 void high_vector(void) {
 	_asm goto high_isr _endasm
 }
 #pragma code
 
+/*
+ *	void high_isr(void)
+ *
+ *	Description:	This interrupt will service all high priority interrupts. This
+ *					section should be as short as possible.
+ *	Input(s): none
+ *	Reaturn Value(s): none
+ *	Side Effects:	This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
+ *					global variables along with the millis, oil_temp, water_temp,
+ *					oil_press, rpm, and FAN_SW variables.
+ */
+
 #pragma interrupt high_isr
 void high_isr (void) {
 
 	// check for timer0 rollover indicating a millisecond has passed
-	if (INTCONbits.TMR0IF) {
-		INTCONbits.TMR0IF = FALSE;
-		WriteTimer0(0x85);		// load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
+	if(INTCONbits.TMR0IF) {
+		INTCONbits.TMR0IF = 0;
+		TMR0L = TMR0_RELOAD;	// load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
 		millis++;
 	}
 
@@ -188,112 +158,88 @@ void high_isr (void) {
 		// reset the flag
 		PIR5bits.RXB1IF = FALSE;
 		ECANReceiveMessage(&id, data, &dataLen, &flags);
-		if(id == ET_ID) {
-			((BYTE*) &water_temp)[0] = data[ET_BYTE + 1];
-            ((BYTE*) &water_temp)[1] = data[ET_BYTE];
+		if(id == ENGINE_TEMP_ID) {
+			((unsigned char*) &water_temp)[0] = data[ENGINE_TEMP_BYTE + 1];
+            ((unsigned char*) &water_temp)[1] = data[ENGINE_TEMP_BYTE];
 		}
-		if(id == OT_ID) {
-			((BYTE*) &oil_temp)[0] = data[OT_BYTE + 1];
-            ((BYTE*) &oil_temp)[1] = data[OT_BYTE];
+		if(id == OIL_TEMP_ID) {
+			((unsigned char*) &oil_temp)[0] = data[OIL_TEMP_BYTE + 1];
+            ((unsigned char*) &oil_temp)[1] = data[OIL_TEMP_BYTE];
 		}
-		if(id == OP_ID) {
-			((BYTE*) &oil_press)[0] = data[OP_BYTE + 1];
-            ((BYTE*) &oil_press)[1] = data[OP_BYTE];
+		if(id == OIL_PRESS_ID) {
+			((unsigned char*) &oil_press)[0] = data[OIL_PRESS_BYTE + 1];
+            ((unsigned char*) &oil_press)[1] = data[OIL_PRESS_BYTE];
 		}
 		if(id == FAN_SW_ID) {
-            if(data[0] == FAN_SW_BYTE0_ID)
+            if(data[0] == FAN_SW_ADL_ID)
                 FAN_SW = data[FAN_SW_BYTE];
 		}
 		if(id == RPM_ID) {
-			((BYTE*) &rpm)[0] = data[RPM_BYTE + 1];
-            ((BYTE*) &rpm)[1] = data[RPM_BYTE];
+			((unsigned char*) &rpm)[0] = data[RPM_BYTE + 1];
+            ((unsigned char*) &rpm)[1] = data[RPM_BYTE];
 		}
 	}
 
 	return;
 }
 
-
-/***********************************************/
-/*  Main Program                               */
-/***********************************************/
-
 void main(void) {
 
-	/*************************
-	 * Variable Declarations *
-	 *************************/
+/*
+ * Variable Declarations
+ */
+
 #ifdef PARANOID_MODE
-    unsigned long oil_press_tmr = 0;
-    unsigned long oil_temp_tmr = 0;
-    unsigned long water_temp_tmr = 0;
+    int oil_press_tmr = 0;
+    int oil_temp_tmr = 0;
+    int water_temp_tmr = 0;
 #endif
+	int CAN_tmr = 0;
 	Error_Status STATUS;
-    BYTE AUTO_FAN;
-	BYTE PRIME;
-	BYTE ON;
-	BYTE i;
-	BYTE err_count[NUM_LOADS];
+    unsigned char AUTO_FAN;
+	unsigned char PRIME = TRUE;
+	unsigned char ON = FALSE;
+	unsigned char i;
+	unsigned char err_count[NUM_LOADS];
 	unsigned int current[NUM_LOADS + 2];
 	unsigned int current_P[NUM_LOADS + 2];
 	unsigned int CAN_current[NUM_LOADS + 2];
 
-	//init_unused_pins();		/* there are no unused pins! */
+	//init_unused_pins();		// there are no unused pins!!!
 
-	/*********************
-	 * Oscillator Set-Up *
-	 *********************/
-#ifdef INTERNAL
-	// OSCTUNE
-	OSCTUNEbits.INTSRC = 0;		// Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-	OSCTUNEbits.PLLEN = 1;		// Frequency Multiplier PLL Select (1 to enable)
-	OSCTUNEbits.TUN5 = 0;		// Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
-	OSCTUNEbits.TUN4 = 0;		// 011111 = max
-	OSCTUNEbits.TUN3 = 0;		// ... 000001
-	OSCTUNEbits.TUN2 = 0;		// 000000 = center (running at calibrated frequency)
-	OSCTUNEbits.TUN1 = 0;		// 111111 ...
-	OSCTUNEbits.TUN0 = 0;		// 100000
+/*
+ * Variable Initialization
+ */
 
-	// OSCCCON
-	OSCCONbits.IDLEN = 1;		// Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
-	OSCCONbits.IRCF2 = 1;		// Internal Oscillator Frequency Select Bits
-	OSCCONbits.IRCF1 = 1;		// When using HF, settings are:
-	OSCCONbits.IRCF0 = 1;		// 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
-	OSCCONbits.SCS1 = 0;
-	OSCCONbits.SCS0 = 0;
+	// clear error count for all laods
+	for(i = 0; i < NUM_LOADS; i++) {
+		err_count[i] = 0;
+		err_tmr[i] = 0;
+		if(i < NUM_LOADS - NON_INDUCTIVE) P_tmr[i] = 0;
+	}
 
-	// OSCCON2
-	OSCCON2bits.MFIOSEL = 0;
+    // clear variables
+	PRIME_tmr = 0;
+	STATUS.bits = 0;
+    rpm = 0;
+    water_temp = 0;
+    oil_temp = 0;
+    oil_press = 0;
+    FAN_SW = FALSE;
 
-	while(!OSCCONbits.HFIOFS);	// wait for stable clock
+/*
+ * Peripheral Initialization
+ */
 
-#else
-	// OSCTUNE
-	OSCTUNEbits.INTSRC = 0;		// Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-	OSCTUNEbits.PLLEN = 1;		// Frequency Multiplier PLL Select (1 to enable)
+	// can use internal or external
+	init_oscillator();
 
-	// OSCCCON
-	OSCCONbits.SCS1 = 0;		// select configuration chosen oscillator
-	OSCCONbits.SCS0 = 0;		// SCS = 00
-
-	// OSCCON2
-	OSCCON2bits.MFIOSEL = 0;
-
-	while(!OSCCONbits.OSTS);		// wait for stable external clock
-#endif
-
-	/**********************
-	 * Peripherals Setup  *
-	 **********************/
-
-	// turn on and configure the TIMER1 oscillator
-	OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-	WriteTimer0(0x82);		// load timer register
-	millis = 0;				// clear milliseconds count
-	INTCONbits.TMR0IE = 1;	// turn on timer0 interupts
+	// setup millisecond interrupt
+	init_timer0();
 
 	// turn on and configure the A/D converter module
-	OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_6_TAD, ADC_CH0 & ADC_INT_OFF, ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
+	init_ADC();
+
 	ANCON0 = 0b11111111;		// AN0 - 9 are analog
 	ANCON1 = 0b00000011;		// rest are digital
 	TRISAbits.TRISA0 = INPUT;	// AN0
@@ -347,31 +293,10 @@ void main(void) {
     ECANInitialize();		// setup ECAN
 
 	// interrupts setup
-	INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
-	INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
 	RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
-
-	// clear error count for all laods
-	for(i = 0; i < NUM_LOADS; i++) {
-		err_count[i] = 0;
-		err_tmr[i] = 0;
-		if(i < NUM_LOADS - NON_INDUCTIVE) P_tmr[i] = 0;
-	}
-
-    // clear variables
-	CAN_tmr = 0;
-	PRIME_tmr = 0;
-	STATUS.bits = 0;
-    rpm = 0;
-    water_temp = 0;
-    oil_temp = 0;
-    oil_press = 0;
-    FAN_SW = FALSE;
-	PRIME = TRUE;
-	ON = FALSE;
+	STI();
 
 /***************end setup; begin main loop************************************/
-
 
 	while(1) {
 
@@ -388,20 +313,18 @@ void main(void) {
 
         // check if we should automatically turn on the fan or not
         checkWaterTemp(&AUTO_FAN);
-		if(rpm > ON_THRESHOLD) {
+
+		// check if car is on
+		if(rpm > ON_THRESHOLD)
 			ON = TRUE;
-		}
-		else {
+		else
 			ON = FALSE;
-		}
 
 		// determine how long the fuel pump should be left on
-		if(!ON_SW) {
+		if(!ON_SW)
 			PRIME = TRUE;
-		}
-		else if(millis - PRIME_tmr > PRIME_WAIT && FUEL_PORT) {
+		else if(millis - PRIME_tmr > PRIME_WAIT && FUEL_PORT)
 			PRIME = FALSE;
-		}
 
 		// turn on loads
 		// check if already on and if so do nothing
@@ -470,19 +393,24 @@ void main(void) {
 			if(millis - P_tmr[i] > P_tmr_const[i]) {
 				switch(i) {
 					case FUEL_val:
-						if(FUEL_P_PORT) FUEL_P_LAT = PWR_OFF;
+						if(FUEL_P_PORT)
+							FUEL_P_LAT = PWR_OFF;
 						break;
 					case IGN_val:
-						if(IGN_P_PORT) IGN_P_LAT = PWR_OFF;
+						if(IGN_P_PORT)
+							IGN_P_LAT = PWR_OFF;
 						break;
 					case WATER_val:
-						if(WATER_P_PORT) WATER_P_LAT = PWR_OFF;
+						if(WATER_P_PORT)
+							WATER_P_LAT = PWR_OFF;
 						break;
 					case START_val:
-						if(START_P_PORT) START_P_LAT = PWR_OFF;
+						if(START_P_PORT)
+							START_P_LAT = PWR_OFF;
 						break;
 					case FAN_val:
-						if(FAN_P_PORT) FAN_P_LAT = PWR_OFF;
+						if(FAN_P_PORT)
+							FAN_P_LAT = PWR_OFF;
 						break;
 				}
 			}
@@ -557,20 +485,17 @@ void main(void) {
 #endif
 
 		// sample the current of the loads
-		for(i = 0; i < NUM_LOADS + 2; i++) {
+		for(i = 0; i < NUM_LOADS + 2; i++)
 			sample((int *) current, i, ch_num[i]);
-		}
 
 		// put total current value of starter in one location
 		current[START_val] = current[START_val] + current[START_val_2] + current[START_val_3];
 
 		// scale input voltage to get current value
-		for(i = 0; i < NUM_LOADS; i++) {
+		for(i = 0; i < NUM_LOADS; i++)
 			current[i] = (unsigned long) current[i] * (unsigned long) current_ratio[i] * 5;
-		}
-		for(i = 0; i < NUM_LOADS; i++) {
+		for(i = 0; i < NUM_LOADS; i++)
 			current_P[i] = (unsigned long) current[i] * (unsigned long) current_P_ratio[i] * 5;
-		}
 
 #ifdef OVERCURRENT_HANDLING
 		// determine if there is an overcurrent condition
@@ -683,31 +608,22 @@ void main(void) {
 }
 
 
-/***********************************************/
-/*  User Functions                             */
-/***********************************************/
+/*
+ *  Local Functions
+ */
 
-
-/******************************************************************************
-  Function:
-	void sample(int *data, const BYTE index, const BYTE ch)
-  Summary:
-	Function to read the analog voltage of a pin and then put the value into the
-	data array that will be transmited over CAN
-  Conditions:
-    A/D Converter must be configured
-  Input:
-	*data - pointer to array of data bytes
-    ch - which pin to sample
-	index - where to write the data in the passed array
-  Return Values:
-    none
-  Side Effects:
-    writes to data array
-  Description:
-
-  ****************************************************************************/
-void sample(int *data, const BYTE index, const BYTE ch) {
+/*
+ *	void sample(int *data, const unsigned char index, const unsigned char ch)
+ *
+ *	Description:	Function to read the analog voltage of a pin and then put the value into the
+ *					data array that will be transmited over CAN.
+ *	Input(s): 	*data - pointer to array of data bytes
+ *				ch - which pin to sample
+ *				index - where to write the data in the passed array
+ *	Return Value(s): none
+ *	Side Effects: This will modify what data points to.
+ */
+void sample(int *data, const unsigned char index, const unsigned char ch) {
 
 	SelChanConvADC(ch);	// configure which pin you want to read and start A/D converter
 
@@ -719,35 +635,23 @@ void sample(int *data, const BYTE index, const BYTE ch) {
 	return;
 }
 
-/******************************************************************************
-  Function:
-	preventEngineBlowup(unsigned long * oil_press_tmr,
- 						unsigned long * oil_temp_tmr,
- 						unsigned long * water_temp_tmr)
-  Summary:
-	Function to check on critical engine sensors
-	to determine if we should kill the engine
-  Conditions:
-	none
-  Input:
-	oil_press_tmr - timer for how long oil pressure can be in an error state
-	oil_temp_tmr - timer for how long oil temperature can be in an error state
-	water_temp_tmr - timer for how long water temperature can be in an error state
-  Return Values:
-	Boolean for whether or not we are fucked
-  Side Effects:
-	none
-  Description:
-
-  ****************************************************************************/
-
-BYTE preventEngineBlowup(unsigned long * oil_press_tmr, unsigned long * oil_temp_tmr, unsigned long * water_temp_tmr) {
+/*
+ *	void preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* water_temp_tmr)
+ *
+ *	Description:	This function checks on critical engine sensors
+ *					to determine if we should kill the engine.
+ *	Input(s): 	oil_press_tmr - timer for how long oil pressure can be in an error state
+ *				oil_temp_tmr - timer for how long oil temperature can be in an error state
+ *				water_temp_tmr - timer for how long water temperature can be in an error state
+ *	Return Value(s): Boolean for whether or not we are fucked
+ *	Side Effects: none
+ */
+unsigned char preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* water_temp_tmr) {
 
     // check oil temperature to see if we're too hot
     if(oil_temp > OT_THRESHOLD) {
 		return TRUE;
     }
-
     // check oil pressure for too low of pressure
 	if(rpm > RPM_THRESHOLD_H) {
 		if(oil_press < OP_THRESHOLD_H) {
@@ -759,7 +663,6 @@ BYTE preventEngineBlowup(unsigned long * oil_press_tmr, unsigned long * oil_temp
 			return TRUE;
 		}
 	}
-
     // check engine temperature to see if we're too hot
     if(water_temp > ET_THRESHOLD) {
 		return TRUE;
@@ -769,24 +672,15 @@ BYTE preventEngineBlowup(unsigned long * oil_press_tmr, unsigned long * oil_temp
     return FALSE;
 }
 
-/******************************************************************************
-  Function:
-	void checkWaterTemp(BYTE * FAN_AUTO)
-  Summary:
-	Function to check if we should turn on the fan or not
-  Conditions:
-	none
-  Input:
-	FAN_AUTO flag for whether or not the PDM should turn on the fan
-  Return Values:
-	Boolean for whether or not we are fucked
-  Side Effects:
-	none
-  Description:
-
-  ****************************************************************************/
-
-void checkWaterTemp(BYTE * FAN_AUTO) {
+/*
+ *	void checkWaterTemp(unsigned char * FAN_AUTO)
+ *
+ *	Description:	This function checks if we should turn on the fan or not.
+ *	Input(s): 	FAN_AUTO - pointer to a flag that controls turning on the fan automatically
+ *	Return Value(s): none
+ *	Side Effects: This modifies the flag pointed to by FAN_AUTO.
+ */
+void checkWaterTemp(unsigned char * FAN_AUTO) {
     if(*FAN_AUTO) {
         if(water_temp < FAN_THRESHOLD_L)
             *FAN_AUTO = FALSE;

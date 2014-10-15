@@ -63,8 +63,7 @@
 #elif HUB
 #ifdef MOTEC_RESEND
 #include "ECAN_hub_config_adl.h"
-#endif
-#ifndef MOTEC_RESEND
+#else
 #include "ECAN_hub_config.h"
 #endif
 #elif THERMO

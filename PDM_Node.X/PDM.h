@@ -1,57 +1,45 @@
-/******************************************************************************
- *
- *                  PDM Node C Main Code Header
- *
- ******************************************************************************
- * FileName:        PDM.h
- * Dependencies:    none
- * Processor:       PIC18F46K80
- * Complier:        Microchip C18
 
-*******************************************************************************
-	USER REVISON HISTORY
-//
-//
-//
-//
-
-*******************************************************************************/
+/*
+ *					PDM Node Main File Header
+ *
+ * File Name:		PDM.h
+ * Processor:		PIC18F46K80
+ * Complier:		Microchip C18
+ * Author:			George Schwieters
+ * Created:			2013-2014
+ */
 
 #ifndef PDM_H
 #define PDM_H
 
-
-/***********************************************/
-/*  User Structures & Defines                  */
-/***********************************************/
+/*
+ * Code Control
+ */
 
 //#define INTERNAL
 //#define DEBUGGING
 //#define PARANOID_MODE
 //#define OVERCURRENT_HANDLING
-
 #define MCHP_C18
-#define INPUT 1
-#define OUTPUT 0
+
+/*
+ * Magic Numbers
+ */
+
 #define PWR_OFF 0
 #define PWR_ON 1
+#define NUM_LOADS 8
+#define NON_INDUCTIVE 3
 
-#define PDM_ID 0x300L
-#define ET_ID 0x201L
-#define OT_ID 0x200L
-#define OP_ID 0x200L
-#define RPM_ID 0x200L
-#define FAN_SW_ID 0x500L
-
+// timing (ms)
+#define PRIME_WAIT 500
 #define CAN_PERIOD 500
+#define ERROR_WAIT 500
+#define ERROR_LIMIT 4
+#define ERROR_RESET 120000
+#define CAN_PER 500
 
-#define OP_BYTE 4
-#define OT_BYTE 6
-#define ET_BYTE 0
-#define RPM_BYTE 0
-#define FAN_SW_BYTE 4
-#define FAN_SW_BYTE0_ID 0x00
-
+// error conditions
 #define OP_THRESHOLD_L 160		// 16.0
 #define OP_THRESHOLD_H 250		// 25.0
 #define OT_THRESHOLD 2100		// 210.0
@@ -59,12 +47,13 @@
 #define RPM_THRESHOLD_H 4000	// 4,000
 #define RPM_THRESHOLD_L 1000	// 1,000
 
+// for RPM
 #define ON_THRESHOLD 600
+
+#define MIN_MA_OVERCURRENT 50
 
 #define FAN_THRESHOLD_H 900	// 90.0
 #define FAN_THRESHOLD_L 840	// 84.0
-
-#define PRIME_WAIT 500
 
 #define IGN_val 0
 #define FUEL_val 1
@@ -88,33 +77,9 @@
 #define START_ch_2 ADC_CH6
 #define START_ch ADC_CH5
 
-// times in ms
-#define ERROR_WAIT 500
-#define ERROR_LIMIT 4
-#define ERROR_RESET 120000
-#define CAN_PER 500
-
-#define NUM_LOADS 8
-#define NON_INDUCTIVE 3
-
-#define MIN_MA_OVERCURRENT 50
-
-// main function flags and other information
-typedef union {
-    struct {
-		unsigned char bits;
-    };
-    struct {
-		unsigned Fuel:1;
-		unsigned Ignition:1;
-		unsigned Starter:1;
-		unsigned Water:1;
-		unsigned Fan:1;
-		unsigned PCB:1;
-		unsigned ECU:1;
-		unsigned AUX:1;
-    };
-} Error_Status;
+/*
+ * Pin Defintions
+ */
 
 #define	IGN_LAT		LATDbits.LATD0
 #define	IGN_P_LAT	LATDbits.LATD1
@@ -150,14 +115,30 @@ typedef union {
 #define START_SW	PORTBbits.RB5
 #define ON_SW		PORTBbits.RB0
 
+/*
+ * Typedefs
+ */
 
-/***********************************************/
-/*  User Function Prototypes                   */
-/***********************************************/
+typedef union {
+    struct {
+		unsigned char bits;
+    };
+    struct {
+		unsigned Fuel:1;
+		unsigned Ignition:1;
+		unsigned Starter:1;
+		unsigned Water:1;
+		unsigned Fan:1;
+		unsigned PCB:1;
+		unsigned ECU:1;
+		unsigned AUX:1;
+    };
+} Error_Status;
 
 void high_isr(void);
-void sample(int *data, const BYTE index, const BYTE ch);
-BYTE preventEngineBlowup(unsigned long * oil_press_tmr, unsigned long * oil_temp_tmr, unsigned long * water_temp_tmr);
-void checkWaterTemp(BYTE * turn_on);
+void sample(int *data, const unsigned char index, const unsigned char ch);
+unsigned char preventEngineBlowup(int * oil_press_tmr,
+	int * oil_temp_tmr, int * water_temp_tmr);
+void checkWaterTemp(unsigned char * turn_on);
 
 #endif
