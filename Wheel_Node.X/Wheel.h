@@ -160,7 +160,7 @@ void write_CANerror(void); //***EL
 void high_isr(void);
 void bufferData(void);
 void ADLsample(unsigned char *data, const unsigned char ADLoffset,
-	const unsigned char ch);
+        const unsigned char ch);
 void modifyRotary(unsigned int * sample);
 
 #endif

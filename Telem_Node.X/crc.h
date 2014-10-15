@@ -14,8 +14,8 @@
 
 #define INITIAL_REMAINDER 0xFFFFFFFF
 
-typedef unsigned long  crc;
+typedef unsigned long crc;
 
-crc   crcFast(unsigned char const message[], int nBytes);
+crc crcFast(unsigned char const message[], int nBytes);
 
 #endif /* _crc_h */

@@ -122,25 +122,27 @@
  */
 
 typedef union {
+
     struct {
-		unsigned char bits;
+        unsigned char bits;
     };
+
     struct {
-		unsigned Fuel:1;
-		unsigned Ignition:1;
-		unsigned Starter:1;
-		unsigned Water:1;
-		unsigned Fan:1;
-		unsigned PCB:1;
-		unsigned ECU:1;
-		unsigned AUX:1;
+        unsigned Fuel : 1;
+        unsigned Ignition : 1;
+        unsigned Starter : 1;
+        unsigned Water : 1;
+        unsigned Fan : 1;
+        unsigned PCB : 1;
+        unsigned ECU : 1;
+        unsigned AUX : 1;
     };
 } Error_Status;
 
 void high_isr(void);
 void sample(int *data, const unsigned char index, const unsigned char ch);
 unsigned char preventEngineBlowup(int * oil_press_tmr,
-	int * oil_temp_tmr, int * water_temp_tmr);
+        int * oil_temp_tmr, int * water_temp_tmr);
 void checkWaterTemp(unsigned char * turn_on);
 
 #endif

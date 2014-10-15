@@ -14,21 +14,21 @@
 #include "adc.h"
 
 #ifdef LOGGING_0
-#include "Pins_logging_0.h"
+    #include "Pins_logging_0.h"
 #elif LOGGING_1
-#include "Pins_logging_1.h"
+    #include "Pins_logging_1.h"
 #elif HUB
-#include "Pins_analog_hub.h"
+    #include "Pins_analog_hub.h"
 #elif THERMO
-#include "Pins_thermo.h"
+    #include "Pins_thermo.h"
 #elif SHIFT
-#include "Pins_shift_lights.h"
+    #include "Pins_shift_lights.h"
 #elif WHEEL
-#include "Pins_wheel.h"
+    #include "Pins_wheel.h"
 #elif PDM
-#include "Pins_PDM.h"
+    #include "Pins_PDM.h"
 #elif TELEM
-#include "Pins_telem.h"
+    #include "Pins_telem.h"
 #endif
 
 /*
@@ -40,8 +40,8 @@
  *  Side Effects: This will modify INTCON.
  */
 void CLI(void) {
-    INTCONbits.GIE = 0;     // Global Interrupt Enable (1 enables)
-    INTCONbits.PEIE = 0;    // Peripheral Interrupt Enable (1 enables)
+    INTCONbits.GIE = 0; // Global Interrupt Enable (1 enables)
+    INTCONbits.PEIE = 0; // Peripheral Interrupt Enable (1 enables)
 }
 
 /*
@@ -53,8 +53,8 @@ void CLI(void) {
  *  Side Effects: This will modify INTCON.
  */
 void STI(void) {
-    INTCONbits.GIE = 1;     // Global Interrupt Enable (1 enables)
-    INTCONbits.PEIE = 1;    // Peripheral Interrupt Enable (1 enables)
+    INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
+    INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
 }
 
 /*
@@ -67,8 +67,8 @@ void STI(void) {
  *	Side Effects: This will modify ADCON0, ADCON1 & ADCON2.
  */
 void init_ADC(void) {
-	OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_OFF,
-		ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
+    OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_OFF,
+            ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
 }
 
 /*
@@ -83,7 +83,7 @@ void init_ADC(void) {
 void init_timer0(void) {
     // Turn on and configure the TIMER1 oscillator
     OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-    WriteTimer0(TMR0_RELOAD);   // Load timer register
+    WriteTimer0(TMR0_RELOAD); // Load timer register
     INTCON2bits.TMR0IP = 1; // high priority
 }
 
@@ -100,7 +100,7 @@ void init_timer1(void) {
     // turn on and configure the TIMER1 oscillator
     OpenTimer1(T1_16BIT_RW & T1_SOURCE_PINOSC & T1_PS_1_1 & T1_OSC1EN_ON & T1_SYNC_EXT_ON, 0x00);
     WriteTimer1(TMR1_RELOAD); // load timer registers
-    IPR1bits.TMR1IP = 1;    // high priority
+    IPR1bits.TMR1IP = 1; // high priority
 }
 
 /*
@@ -115,41 +115,41 @@ void init_oscillator(void) {
 
 #ifdef INTERNAL
     // OSCTUNE
-    OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-    OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
-    OSCTUNEbits.TUN5 = 0;   // Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
-    OSCTUNEbits.TUN4 = 0;   // 011111 = max
-    OSCTUNEbits.TUN3 = 0;   // ... 000001
-    OSCTUNEbits.TUN2 = 0;   // 000000 = center (running at calibrated frequency)
-    OSCTUNEbits.TUN1 = 0;   // 111111 ...
-    OSCTUNEbits.TUN0 = 0;   // 100000
+    OSCTUNEbits.INTSRC = 0; // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
+    OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
+    OSCTUNEbits.TUN5 = 0; // Fast RC Oscillator Frequency Tuning (seems to be 2's comp encoding)
+    OSCTUNEbits.TUN4 = 0; // 011111 = max
+    OSCTUNEbits.TUN3 = 0; // ... 000001
+    OSCTUNEbits.TUN2 = 0; // 000000 = center (running at calibrated frequency)
+    OSCTUNEbits.TUN1 = 0; // 111111 ...
+    OSCTUNEbits.TUN0 = 0; // 100000
 
     // OSCCCON
-    OSCCONbits.IDLEN = 1;   // Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
-    OSCCONbits.IRCF2 = 1;   // Internal Oscillator Frequency Select Bits
-    OSCCONbits.IRCF1 = 1;   // When using HF, settings are:
-    OSCCONbits.IRCF0 = 1;   // 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
+    OSCCONbits.IDLEN = 1; // Idle Enable Bit (1 to enter idle mode after SLEEP instruction else sleep mode is entered)
+    OSCCONbits.IRCF2 = 1; // Internal Oscillator Frequency Select Bits
+    OSCCONbits.IRCF1 = 1; // When using HF, settings are:
+    OSCCONbits.IRCF0 = 1; // 111 - 16 MHz, 110 - 8MHz (default), 101 - 4MHz, 100 - 2 MHz, 011 - 1 MHz
     OSCCONbits.SCS1 = 0;
     OSCCONbits.SCS0 = 0;
 
     // OSCCON2
     OSCCON2bits.MFIOSEL = 0;
 
-    while(!OSCCONbits.HFIOFS);  // wait for stable clock
+    while(!OSCCONbits.HFIOFS); // wait for stable clock
 }
 #else
-// OSCTUNE
-OSCTUNEbits.INTSRC = 0;   // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
-OSCTUNEbits.PLLEN = 1;    // Frequency Multiplier PLL Select (1 to enable)
+    // OSCTUNE
+    OSCTUNEbits.INTSRC = 0; // Internal Oscillator Low-Frequency Source Select (1 for 31.25 kHz from 16MHz/512 or 0 for internal 31kHz)
+    OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
 
-// OSCCCON
-OSCCONbits.SCS1 = 0;    // select configuration chosen oscillator
-OSCCONbits.SCS0 = 0;    // SCS = 00
+    // OSCCCON
+    OSCCONbits.SCS1 = 0; // select configuration chosen oscillator
+    OSCCONbits.SCS0 = 0; // SCS = 00
 
-// OSCCON2
-OSCCON2bits.MFIOSEL = 0;
+    // OSCCON2
+    OSCCON2bits.MFIOSEL = 0;
 
-while(!OSCCONbits.OSTS);  // wait for stable external clock
+    while(!OSCCONbits.OSTS); // wait for stable external clock
 #endif
 }
 

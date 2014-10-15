@@ -45,20 +45,21 @@
  */
 
 // main function flags and other information
+
 typedef struct {
-	unsigned BufferAFull:1;
-	unsigned Swap:1;
-	unsigned Written:1;
-	unsigned NumRead:3;
-	unsigned MsgNum:2;
-	unsigned EngTO:1;
-	unsigned int BufferALen;
-	unsigned int BufferBLen;
+    unsigned BufferAFull : 1;
+    unsigned Swap : 1;
+    unsigned Written : 1;
+    unsigned NumRead : 3;
+    unsigned MsgNum : 2;
+    unsigned EngTO : 1;
+    unsigned int BufferALen;
+    unsigned int BufferBLen;
 } MAIN;
 
 typedef struct {
-	BYTE * BufferA;
-	BYTE * BufferB;
+    BYTE * BufferA;
+    BYTE * BufferB;
 } BUFF_HOLDER;
 
 void funct_error(void);
@@ -66,10 +67,10 @@ void init_unused_pins(void);
 void service_FIFO(void);
 void append_write_buffer(static const unsigned char * temp, static unsigned char applen);
 void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
-	static unsigned int *bufflen, static const unsigned char applen,
-	static const unsigned char offset);
+        static unsigned int *bufflen, static const unsigned char applen,
+        static const unsigned char offset);
 void high_isr(void);
-void low_isr (void);
+void low_isr(void);
 void swap_buff(void);
 void swap_len(void);
 

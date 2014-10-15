@@ -112,8 +112,8 @@
 #define X_ID 0x080
 
 typedef struct {
-	unsigned X_accel:1;
-	unsigned Y_accel:1;
+    unsigned X_accel : 1;
+    unsigned Y_accel : 1;
 } FLAGS;
 
 #endif
@@ -122,7 +122,7 @@ void init_unused_pins(void);
 void high_isr(void);
 void sample(unsigned char *data, const unsigned char byte, const unsigned char ch);
 void process_resend(const unsigned char *data, unsigned char *msg,
-	const unsigned char byte, const int offset, const unsigned char ADL_ch,
-	const unsigned char order);
+        const unsigned char byte, const int offset, const unsigned char ADL_ch,
+        const unsigned char order);
 
 #endif

@@ -8,9 +8,9 @@
  * Processor:       PIC18F46K80
  * Complier:        Microchip C18
 
-*******************************************************************************
-	USER REVISON HISTORY
-	DO NOT use Microchip Maestro Software to regenerate this file!
+ *******************************************************************************
+    USER REVISON HISTORY
+    DO NOT use Microchip Maestro Software to regenerate this file!
 
 // 02/12/13 - set all bit timing to get 1Mbps data rate and ~80% sample point w/
 //          PLL as clock source (64MHz)
@@ -21,7 +21,7 @@
 // 11/28/13 - added defines for individual buffer interrupts
 //
 
-*******************************************************************************/
+ *******************************************************************************/
 
 
 #ifndef ECANCONFIG_H
