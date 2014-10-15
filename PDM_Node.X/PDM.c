@@ -99,26 +99,34 @@ static volatile unsigned int FAN_SW;	// holds state of fan switch on steering wh
 static volatile int water_temp, oil_temp, oil_press, rpm;
 
 // ECAN variables
-unsigned long id;			// holds CAN msgID
-unsigned char data[8];				// holds CAN data bytes
-unsigned char dataLen;				// holds number of CAN data bytes
-ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
+static unsigned long id;			// holds CAN msgID
+static unsigned char data[8];				// holds CAN data bytes
+static unsigned char dataLen;				// holds number of CAN data bytes
+static ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
 
 // check header for correct order of constants; it coincides with the array
 // index order that is established with defines
-const unsigned int P_tmr_const[5] = {500 /*IGN*/, 500 /*FUEL*/, 500 /*Water*/, 500 /*Starter*/, 500 /*Fan*/};
-const unsigned char ch_num[NUM_LOADS + 2] = {IGN_ch, FUEL_ch, WATER_ch, START_ch ,
-											FAN_ch, PCB_ch, AUX_ch,	ECU_ch, START_ch_2,
-											START_ch_3};
+static const unsigned int P_tmr_const[5] = {
+	500 /*IGN*/, 500 /*FUEL*/, 500 /*Water*/,
+	500 /*Starter*/, 500 /*Fan*/
+};
+static const unsigned char ch_num[NUM_LOADS + 2] = {
+	IGN_ch, FUEL_ch, WATER_ch, START_ch , FAN_ch, PCB_ch,
+	AUX_ch, ECU_ch, START_ch_2, START_ch_3
+};
 // current multiplier / resistor value (the switch turns off at 4.5 V on the feedback pin)
-const unsigned int current_ratio[NUM_LOADS] = {14 /*IGN*/, 14 /*FUEL*/,
-									14 /*Water*/, 23 /*Starter0*/,
-									14 /*Fan*/, 14 /*PCB*/, 8 /*AUX*/,
-									14 /*ECU*/};
-const unsigned int current_P_ratio[NUM_LOADS] = {28 /*IGN*/, 28 /*FUEL*/,
-									28 /*Water*/, 47 /*Starter0*/,
-									28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/,
-									0 /*ECU*/};
+static const unsigned int current_ratio[NUM_LOADS] = {
+	14 /*IGN*/, 14 /*FUEL*/,
+	14 /*Water*/, 23 /*Starter0*/,
+	14 /*Fan*/, 14 /*PCB*/, 8 /*AUX*/,
+	14 /*ECU*/
+};
+static const unsigned int current_P_ratio[NUM_LOADS] = {
+	28 /*IGN*/, 28 /*FUEL*/,
+	28 /*Water*/, 47 /*Starter0*/,
+	28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/,
+	0 /*ECU*/
+};
 
 
 /*

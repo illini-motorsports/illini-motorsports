@@ -5,7 +5,7 @@
  * File Name:		CANHub.c
  * Processor:		PIC18F46K80
  * Complier:		Microchip C18
- * Version:			1.00
+ * Version:			2.00
  * Author:			George Schwieters
  * Created:			2012-2013
  */
@@ -95,10 +95,10 @@ static volatile int millis;		// millisecond count
 #ifdef FRONT
 static volatile unsigned char RADIO_SW;
 // ECAN variables
-unsigned long id;			// holds CAN msgID
-unsigned char data[8];				// holds CAN data bytes
-unsigned char dataLen;				// holds number of CAN data bytes
-ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
+static unsigned long id;			// holds CAN msgID
+static unsigned char data[8];		// holds CAN data bytes
+static unsigned char dataLen;		// holds number of CAN data bytes
+static ECAN_RX_MSG_FLAGS flags;	// holds information about recieved message
 #endif
 
 

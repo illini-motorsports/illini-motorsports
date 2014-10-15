@@ -106,7 +106,7 @@ static volatile int chan[NUM_CHAN];
 static volatile int gear;
 static int CANerror_flag;
 
-static unsigned char d_place_arr[NUM_CHAN] = {
+static const unsigned char d_place_arr[NUM_CHAN] = {
 	2,		// oil temperature
 	2,		// engine temperature
 	2,		// battery voltage
@@ -114,12 +114,12 @@ static unsigned char d_place_arr[NUM_CHAN] = {
 	2,		// ground speed
 	0		// engine RPM
 };
-static unsigned char num_arr[12] = {
+static const unsigned char num_arr[12] = {
 	NUM_0, NUM_1, NUM_2, NUM_3, NUM_4,
 	NUM_5, NUM_6, NUM_7, NUM_8, NUM_9,
 	BLANK, CHAR_N
 };
-static unsigned char text_arr[NUM_CHAN + 2][3] = {
+static const unsigned char text_arr[NUM_CHAN + 2][3] = {
 	{BLANK, CHAR_O, CHAR_t},	// oil temperature
 	{BLANK, CHAR_E, CHAR_t},	// engine temmperature
 	{CHAR_b, CHAR_A, CHAR_t},	// battery voltage

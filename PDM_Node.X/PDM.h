@@ -12,6 +12,8 @@
 #ifndef PDM_H
 #define PDM_H
 
+#include "adc.h"
+
 /*
  * Code Control
  */

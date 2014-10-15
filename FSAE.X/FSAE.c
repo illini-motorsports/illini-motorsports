@@ -58,9 +58,6 @@ void STI(void) {
 }
 
 /*
-<<<<<<< Updated upstream
- *  void init_timer0(void)
-=======
  *	void init_ADC(void)
  *
  *	Description:	This function will initialize the analog to digital
@@ -76,7 +73,6 @@ void init_ADC(void) {
 
 /*
  *	void init_timer0(void)
->>>>>>> Stashed changes
  *
  *  Description:  This function will initialize Timer0 to take in the system clock
  *          and interrupt once every millisecond

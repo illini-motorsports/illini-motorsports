@@ -10,26 +10,10 @@
 #ifndef CAN_H
 #define CAN_H
 
-<<<<<<< Updated upstream
-#define BEACON_ID       0xE5L
-#define RPM_ID          0x200L
-#define ENGINE_TEMP_ID  0x201L
-#define VOLTAGE_ID      0x201L
-#define OIL_TEMP_ID     0x200L
-#define OIL_PRESS_ID    0x200L
-#define ADL_ID          0x500L
-
-#define RPM_BYTE          0
-#define OIL_PRESS_BYTE    4
-#define OIL_TEMP_BYTE     6
-#define ENGINE_TEMP_BYTE  0
-#define GEAR_BYTE         4
-#define VOLTAGE_BYTE      6
-#define GDN_SPD_BYTE      0
-=======
 #define BEACON_ID		0xE5L
 #define MOTEC_ID		0x200L
 #define RPM_ID			0x200L
+#define VOLTAGE_ID      0x201L
 #define ENGINE_TEMP_ID	0x201L
 #define OIL_TEMP_ID		0x200L
 #define OIL_PRESS_ID	0x200L
@@ -46,7 +30,6 @@
 #define VOLTAGE_BYTE		6
 #define GDN_SPD_BYTE		0
 #define FAN_SW_BYTE			4
->>>>>>> Stashed changes
 
 #define ADL1_BYTE 2
 #define ADL2_BYTE 4
