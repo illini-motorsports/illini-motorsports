@@ -86,7 +86,7 @@
 #define BLINK_TIME 200
 
 /*
- * Method Headers 
+ * Method Headers
  */
 
 void high_isr(void);

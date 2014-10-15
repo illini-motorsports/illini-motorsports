@@ -1,16 +1,14 @@
-
 /*
- *					Pin Header
+ * Pin Header
  *
- * File Name:		Pins_logging_1.h
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Author:			George Schwieters
- * Created:			2014-2015
+ * File Name:   Pins_logging_1.h
+ * Processor:   PIC18F46K80
+ * Complier:    Microchip C18
+ * Author:      George Schwieters
+ * Created:     2014-2015
  */
-
 #ifndef PINS_H
-#define	PINS_H
+#define PINS_H
 
 #define GP_A0
 #define GP_A1

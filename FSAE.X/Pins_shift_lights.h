@@ -5,10 +5,10 @@
  * Processor:   PIC18F46K80
  * Complier:    Microchip C18
  * Author:      George Schwieters
- * Created:	    2014-2015
+ * Created:     2014-2015
  */
 #ifndef PINS_H
-#define	PINS_H
+#define PINS_H
 
 #define GP_A0 // BLUE 0
 #define GP_A1 // GREEN 0

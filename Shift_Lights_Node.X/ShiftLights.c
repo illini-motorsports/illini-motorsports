@@ -23,7 +23,7 @@
 //TODO: Optimize everything.
 
 /*
- * PIC18F46K80 Configuration Bits 
+ * PIC18F46K80 Configuration Bits
  */
 
 // CONFIG1L
