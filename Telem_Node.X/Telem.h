@@ -41,6 +41,7 @@
 
 #define DATA        0x01
 #define ADDR        0x02
+#define ERROR       0x03
 
 #define DATA_PER    1000
 #define ADDR_PER    10000

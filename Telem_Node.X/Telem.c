@@ -107,7 +107,8 @@
 /* Global Variable Declarations                */
 /***********************************************/
 
-volatile unsigned int millis; // holds timer0 rollover count
+volatile int millis; // holds timer0 rollover count
+volatile int lastMsgTime; //time of the last message sent by the CAN
 
 unsigned long msg_counter;
 unsigned long crc32;
@@ -161,9 +162,14 @@ void high_isr(void) {
         WriteTimer0(0x85); // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
+    //if more than 500 ms have passed then send error message
+    if(millis - lastMsgTime > 500) {
+        send_msg(ERROR);
+    }
 
     // check for recieved CAN message
     if(PIR5bits.RXB1IF) {
+        lastMsgTime = millis; //set time of CAN message to current time
         PIR5bits.RXB1IF = FALSE; // reset the flag
         // get data from recieve buffer
         ECANReceiveMessage(&id, data, &dataLen, &flags);
@@ -342,6 +348,8 @@ void send_msg(BYTE type) {
         msg[3] = NUM_MSG * 2;
     else if(type == ADDR)
         msg[3] = NUM_MSG;
+    else if(type == ERROR)
+        msg[3] = ERROR;
     // send message bytes
     if(type == DATA) {
         // add data now
@@ -353,6 +361,9 @@ void send_msg(BYTE type) {
         for(i = 0; i < msg[3]; i++) {
             msg[i + 4] = chan_addr[i];
         }
+    } else if(type == ERROR) {
+        for(i = 0; i < msg[3]; i++)
+            msg[i + 4] = 0xff;
     }
     // add message counter bytes
     msg[4 + msg[3] + 0] = ((BYTE*) & msg_counter)[3];
