@@ -229,10 +229,10 @@ crc crcTable[256] =    {0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA,
 
 crc AppData::crcFast(QByteArray message, int nBytes) {
     crc remainder = INITIAL_REMAINDER;
-	int byte;
+    int byte;
 
    for(byte = 0; byte < nBytes; byte++) {
-		remainder = (remainder >> 8) ^ crcTable[(remainder ^ message[byte]) & 0xFF];
+        remainder = (remainder >> 8) ^ crcTable[(remainder ^ message[byte]) & 0xFF];
    }
    return ~remainder;
 

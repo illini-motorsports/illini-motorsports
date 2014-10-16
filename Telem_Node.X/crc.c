@@ -1,7 +1,7 @@
 /**********************************************************************
  *
  * Filename:    crc.c
- * 
+ *
  * Description: Fast implementations of the CRC-32 standard.
  *
  * Notes:       This is code taken from some random website online
@@ -78,22 +78,22 @@ crc  crcTable[256] = {0, 0x77073096, 0xEE0E612C, 0x990951BA,
 /*********************************************************************
  *
  * Function:    crcFast()
- * 
+ *
  * Description: Compute the CRC of a given message.
  *
- * Notes:		crcInit() must be called first.
+ * Notes:       crcInit() must be called first.
  *
- * Returns:		The CRC of the message.
+ * Returns:     The CRC of the message.
  *
  *********************************************************************/
 crc
 crcFast(unsigned char const message[], int nBytes)
 {
-    crc	          remainder = INITIAL_REMAINDER;
-	int           byte;
+    crc           remainder = INITIAL_REMAINDER;
+    int           byte;
 
    for(byte = 0; byte < nBytes; byte++) {
-		remainder = (remainder >> 8) ^ crcTable[(remainder ^ message[byte]) & 0xFF];
+        remainder = (remainder >> 8) ^ crcTable[(remainder ^ message[byte]) & 0xFF];
    }
    return ~remainder;
 

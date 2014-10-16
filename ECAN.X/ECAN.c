@@ -37,13 +37,13 @@
  ******************************************************************************
 
 *******************************************************************************
-	USER REVISON HISTORY
-	note: modified to work with just PIC18F46K80
+    USER REVISON HISTORY
+    note: modified to work with just PIC18F46K80
 
 // 02/14/13 - corrected CIOCON configuration
 // 02/15/13 - corrected number of buffers define issue with mode 0
-//			- changed all PIR3 defines to PIR5
-//			- changed COMSTAT_FIFOEMPTY to COMSTAT_NOT_FIFOEMPTY
+//          - changed all PIR3 defines to PIR5
+//          - changed COMSTAT_FIFOEMPTY to COMSTAT_NOT_FIFOEMPTY
 // 11/28/13 - added BIE5 configuration to ECANInitialize()
 //
 
@@ -178,56 +178,56 @@ void ECANInitialize(void)
 {
     // Put module into Configuration mode.
     ECANSetOperationMode(ECAN_OP_MODE_CONFIG);
-	ECANCON = ECAN_FUNC_MODE_VAL;
-	ECANCONbits.FIFOWM = ECAN_FIFO_MODE;
+    ECANCON = ECAN_FUNC_MODE_VAL;
+    ECANCONbits.FIFOWM = ECAN_FIFO_MODE;
 
-	// buffer interrupt enable
-	BIE0 =	(ECAN_BIE_B5)				<< 7	| \
-			(ECAN_BIE_B4)				<< 6	| \
-			(ECAN_BIE_B3)				<< 5	| \
-			(ECAN_BIE_B2)				<< 4	| \
-			(ECAN_BIE_B1)				<< 3	| \
-			(ECAN_BIE_B0)			<< 2	| \
-			(ECAN_BIE_BX1)				<< 1	| \
-			(ECAN_BIE_BX0);
+    // buffer interrupt enable
+    BIE0 =  (ECAN_BIE_B5)               << 7    | \
+            (ECAN_BIE_B4)               << 6    | \
+            (ECAN_BIE_B3)               << 5    | \
+            (ECAN_BIE_B2)               << 4    | \
+            (ECAN_BIE_B1)               << 3    | \
+            (ECAN_BIE_B0)           << 2    | \
+            (ECAN_BIE_BX1)              << 1    | \
+            (ECAN_BIE_BX0);
 
     // Set Bit rate values as per defines.
-    BRGCON1 = (ECAN_SJW_VAL-1)			<< 6	| \
-			  (ECAN_BRP_VAL-1);
-    BRGCON2 = ECAN_PHSEG2_MODE_VAL		<< 7	| \
-              ECAN_BUS_SAMPLE_MODE_VAL	<< 6	| \
-              (ECAN_PHSEG1_VAL-1)		<< 3	| \
+    BRGCON1 = (ECAN_SJW_VAL-1)          << 6    | \
+              (ECAN_BRP_VAL-1);
+    BRGCON2 = ECAN_PHSEG2_MODE_VAL      << 7    | \
+              ECAN_BUS_SAMPLE_MODE_VAL  << 6    | \
+              (ECAN_PHSEG1_VAL-1)       << 3    | \
               (ECAN_PROPSEG_VAL-1);
-    BRGCON3 = ECAN_WAKEUP_MODE_VAL		<< 7	| \
-              ECAN_FILTER_MODE_VAL		<< 6	| \
+    BRGCON3 = ECAN_WAKEUP_MODE_VAL      << 7    | \
+              ECAN_FILTER_MODE_VAL      << 6    | \
               (ECAN_PHSEG2_VAL-1);
 
     // Set CANTX2, TXDRIVE, CAN Capture modes and Clock source
-    CIOCON = ECAN_TX2_SOURCE_VAL		<< 7	| \
-             ECAN_TX2_MODE_VAL			<< 6	| \
-             ECAN_TXDRIVE_MODE_VAL		<< 5	| \
-             ECAN_CAPTURE_MODE_VAL		<< 4	| \
-			 ECAN_CLOCK_SOURCE_MODE;
+    CIOCON = ECAN_TX2_SOURCE_VAL        << 7    | \
+             ECAN_TX2_MODE_VAL          << 6    | \
+             ECAN_TXDRIVE_MODE_VAL      << 5    | \
+             ECAN_CAPTURE_MODE_VAL      << 4    | \
+             ECAN_CLOCK_SOURCE_MODE;
 
-	// Set CAN Interrupt Configuration Register
-	PIE5 = ECAN_RECIEVED_ERROR_IF_MODE	<< 7	| \
-		   ECAN_WAKEUP_IF_MODE			<< 6	| \
-		   ECAN_BUS_ERROR_IF_MODE		<< 5	| \
-		   ECAN_TXBn_IF_MODE			<< 4	| \
-		   ECAN_TXB1_IF_MODE			<< 3	| \
-		   ECAN_TXB0_IF_MODE			<< 2	| \
-		   ECAN_RXBn_IF_MODE			<< 1	| \
-		   ECAN_FIFO_IF_MODE;
+    // Set CAN Interrupt Configuration Register
+    PIE5 = ECAN_RECIEVED_ERROR_IF_MODE  << 7    | \
+           ECAN_WAKEUP_IF_MODE          << 6    | \
+           ECAN_BUS_ERROR_IF_MODE       << 5    | \
+           ECAN_TXBn_IF_MODE            << 4    | \
+           ECAN_TXB1_IF_MODE            << 3    | \
+           ECAN_TXB0_IF_MODE            << 2    | \
+           ECAN_RXBn_IF_MODE            << 1    | \
+           ECAN_FIFO_IF_MODE;
 
-	// Set CAN Interrupt Priority Configuration Register
-	IPR5 = ECAN_RECIEVED_ERROR_PRIORITY	<< 7	| \
-		   ECAN_WAKEUP_PRIORITY			<< 6	| \
-		   ECAN_BUS_ERROR_PRIORITY		<< 5	| \
-		   ECAN_TXBn_PRIORITY			<< 4	| \
-		   ECAN_TXB1_PRIORITY			<< 3	| \
-		   ECAN_TXB0_PRIORITY			<< 2	| \
-		   ECAN_RXBn_PRIORITY			<< 1	| \
-		   ECAN_FIFO_PRIORITY;
+    // Set CAN Interrupt Priority Configuration Register
+    IPR5 = ECAN_RECIEVED_ERROR_PRIORITY << 7    | \
+           ECAN_WAKEUP_PRIORITY         << 6    | \
+           ECAN_BUS_ERROR_PRIORITY      << 5    | \
+           ECAN_TXBn_PRIORITY           << 4    | \
+           ECAN_TXB1_PRIORITY           << 3    | \
+           ECAN_TXB0_PRIORITY           << 2    | \
+           ECAN_RXBn_PRIORITY           << 1    | \
+           ECAN_FIFO_PRIORITY;
 
     // Set RXB0 and RXB1 buffer modes.
 #if ( ECAN_FUNC_MODE_VAL == ECAN_MODE_0 )

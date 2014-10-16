@@ -6,7 +6,7 @@
  * FileName:        FSconfig.h
  * Processor:       PIC18
  * Dependencies:    HardwareProfile.h and
- *					FSDefs.h
+ *                  FSDefs.h
  * Compiler:        C18
  * Company:         Microchip Technology, Inc.
  * Version:         1.3.0
@@ -32,16 +32,16 @@
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
 *******************************************************************************
-	USER REVISON HISTORY
-	note: modified to work with just PIC18F46K80
+    USER REVISON HISTORY
+    note: modified to work with just PIC18F46K80
 //
 // 10/22/12 - removed other extra physical layers, confirmed location of data and FAT buffer,
-//			- and removed the format function along with dynamic file allocation
+//          - and removed the format function along with dynamic file allocation
 //
 // 10/24/12 - added MEDIA_SOFT_DETECT define
 //
 // 11/14/12 - set maximum number of files open for static allocation
-//			- and turned off dynamic allocation along with directories
+//          - and turned off dynamic allocation along with directories
 //
 
 *******************************************************************************/
@@ -54,13 +54,13 @@
 //              This macro defines the maximum number of open files at any given time.  The amount of RAM used by FSFILE objects will
 //              be equal to the size of an FSFILE object multipled by this macro value.  This value should be kept as small as possible
 //              as dictated by the application.  This will reduce memory usage.
-#define FS_MAX_FILES_OPEN 	1
+#define FS_MAX_FILES_OPEN   1
 
 
 // Summary: A macro defining the size of a sector
 // Description: The MEDIA_SECTOR_SIZE macro will define the size of a sector on the FAT file system.  This value must equal 512 bytes,
 //              1024 bytes, 2048 bytes, or 4096 bytes.  The value of a sector will usually be 512 bytes.
-#define MEDIA_SECTOR_SIZE 		512
+#define MEDIA_SECTOR_SIZE       512
 
 
 
@@ -94,14 +94,14 @@
 // Description: The USEREALTIMECLOCK macro will configure the code to automatically
 //              generate timestamp information for files from the RTCC module. The user
 //              must enable and configure the RTCC module before creating or modifying
-//              files.                                                                 
+//              files.
 //#define USEREALTIMECLOCK
 
 // Summary: A macro to enable manual timestamp generation
 // Description: The USERDEFINEDCLOCK macro will allow the user to manually set
 //              timestamp information using the SetClockVars function. The user will
 //              need to set the time variables immediately before creating or closing a
-//              file or directory.                                                    
+//              file or directory.
 #define USERDEFINEDCLOCK
 
 // Summary: A macro to enable don't-care timestamp generation
@@ -109,14 +109,14 @@
 // Description: The INCREMENTTIMESTAMP macro will set the create time of a file to a
 //              static value and increment it when a file is updated. This timestamp
 //              generation method should only be used in applications where file times
-//              are not necessary.                                                    
+//              are not necessary.
 //#define INCREMENTTIMESTAMP
 
 
 #ifdef __18CXX
-	#ifdef USEREALTIMECLOCK
-		#error Not all PIC18 devices have a Real-time clock and calander module
-	#endif
+    #ifdef USEREALTIMECLOCK
+        #error Not all PIC18 devices have a Real-time clock and calander module
+    #endif
 #endif
 
 #ifndef USEREALTIMECLOCK
@@ -138,11 +138,11 @@
     // Summary: A macro indicating that FSFILE objects will be allocated dynamically
     // Description: The FS_DYNAMIC_MEM macro will cause FSFILE objects to be allocated from a dynamic heap.  If it is undefined,
     //              the file objects will be allocated using a static array.
-	#define FS_DYNAMIC_MEM
-	// Description: Function pointer to a dynamic memory allocation function
-	#define FS_malloc	SRAMalloc
-	// Description: Function pointer to a dynamic memory free function
-	#define FS_free		SRAMfree
+    #define FS_DYNAMIC_MEM
+    // Description: Function pointer to a dynamic memory allocation function
+    #define FS_malloc   SRAMalloc
+    // Description: Function pointer to a dynamic memory free function
+    #define FS_free     SRAMfree
 #endif
 
 // Define the locations for the dataBuffer and FATbuffer

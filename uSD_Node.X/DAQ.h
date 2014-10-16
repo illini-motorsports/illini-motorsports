@@ -1,12 +1,12 @@
 
 /*
- *					MDD File I/O Main Code Header
+ *                  MDD File I/O Main Code Header
  *
- * File Name:		DAQ.h
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Author:			George Schwieters
- * Created:			2012-2013
+ * File Name:       DAQ.h
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Author:          George Schwieters
+ * Created:         2012-2013
  */
 
 #ifndef DAQ_H
@@ -32,13 +32,13 @@
 #define MSG_ID_LEN 2
 #define TIMESTAMP_LEN 4
 #define ID_PLUS_TIME 6
-#define RPM_COMP 600	// check for an RPM above this value to know whether the engine is on or not
+#define RPM_COMP 600    // check for an RPM above this value to know whether the engine is on or not
 
 /*
  * Pin Defintions
  */
 
-#define TERM_LAT	LATCbits.LATC6
+#define TERM_LAT    LATCbits.LATC6
 
 /*
  * Typedefs

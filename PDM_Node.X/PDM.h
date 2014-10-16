@@ -1,12 +1,12 @@
 
 /*
- *					PDM Node Main File Header
+ *                  PDM Node Main File Header
  *
- * File Name:		PDM.h
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Author:			George Schwieters
- * Created:			2013-2014
+ * File Name:       PDM.h
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Author:          George Schwieters
+ * Created:         2013-2014
  */
 
 #ifndef PDM_H
@@ -42,20 +42,20 @@
 #define CAN_PER 500
 
 // error conditions
-#define OP_THRESHOLD_L 160		// 16.0
-#define OP_THRESHOLD_H 250		// 25.0
-#define OT_THRESHOLD 2100		// 210.0
-#define ET_THRESHOLD 1150		// 115.0
-#define RPM_THRESHOLD_H 4000	// 4,000
-#define RPM_THRESHOLD_L 1000	// 1,000
+#define OP_THRESHOLD_L 160      // 16.0
+#define OP_THRESHOLD_H 250      // 25.0
+#define OT_THRESHOLD 2100       // 210.0
+#define ET_THRESHOLD 1150       // 115.0
+#define RPM_THRESHOLD_H 4000    // 4,000
+#define RPM_THRESHOLD_L 1000    // 1,000
 
 // for RPM
 #define ON_THRESHOLD 600
 
 #define MIN_MA_OVERCURRENT 50
 
-#define FAN_THRESHOLD_H 900	// 90.0
-#define FAN_THRESHOLD_L 840	// 84.0
+#define FAN_THRESHOLD_H 900 // 90.0
+#define FAN_THRESHOLD_L 840 // 84.0
 
 #define IGN_val 0
 #define FUEL_val 1
@@ -83,39 +83,39 @@
  * Pin Defintions
  */
 
-#define	IGN_LAT		LATDbits.LATD0
-#define	IGN_P_LAT	LATDbits.LATD1
-#define	FUEL_LAT	LATDbits.LATD2
-#define	FUEL_P_LAT	LATDbits.LATD3
-#define	FAN_LAT		LATDbits.LATD4
-#define	FAN_P_LAT	LATDbits.LATD5
-#define	START_LAT	LATDbits.LATD6
-#define START_P_LAT	LATDbits.LATD7
+#define IGN_LAT     LATDbits.LATD0
+#define IGN_P_LAT   LATDbits.LATD1
+#define FUEL_LAT    LATDbits.LATD2
+#define FUEL_P_LAT  LATDbits.LATD3
+#define FAN_LAT     LATDbits.LATD4
+#define FAN_P_LAT   LATDbits.LATD5
+#define START_LAT   LATDbits.LATD6
+#define START_P_LAT LATDbits.LATD7
 
-#define AUX_LAT		LATCbits.LATC2
-#define ECU_LAT		LATCbits.LATC3
-#define PCB_LAT		LATCbits.LATC4
-#define WATER_LAT	LATCbits.LATC6
-#define WATER_P_LAT	LATCbits.LATC7
-#define TERM_LAT	LATCbits.LATC5
+#define AUX_LAT     LATCbits.LATC2
+#define ECU_LAT     LATCbits.LATC3
+#define PCB_LAT     LATCbits.LATC4
+#define WATER_LAT   LATCbits.LATC6
+#define WATER_P_LAT LATCbits.LATC7
+#define TERM_LAT    LATCbits.LATC5
 
-#define	IGN_PORT	PORTDbits.RD0
-#define	IGN_P_PORT	PORTDbits.RD1
-#define	FUEL_PORT	PORTDbits.RD2
-#define	FUEL_P_PORT	PORTDbits.RD3
-#define	FAN_PORT	PORTDbits.RD4
-#define	FAN_P_PORT	PORTDbits.RD5
-#define	START_PORT	PORTDbits.RD6
-#define START_P_PORT	PORTDbits.RD7
+#define IGN_PORT    PORTDbits.RD0
+#define IGN_P_PORT  PORTDbits.RD1
+#define FUEL_PORT   PORTDbits.RD2
+#define FUEL_P_PORT PORTDbits.RD3
+#define FAN_PORT    PORTDbits.RD4
+#define FAN_P_PORT  PORTDbits.RD5
+#define START_PORT  PORTDbits.RD6
+#define START_P_PORT    PORTDbits.RD7
 
-#define AUX_PORT	PORTCbits.RC2
-#define ECU_PORT	PORTCbits.RC3
-#define PCB_PORT	PORTCbits.RC4
-#define WATER_PORT	PORTCbits.RC6
-#define WATER_P_PORT	PORTCbits.RC7
+#define AUX_PORT    PORTCbits.RC2
+#define ECU_PORT    PORTCbits.RC3
+#define PCB_PORT    PORTCbits.RC4
+#define WATER_PORT  PORTCbits.RC6
+#define WATER_P_PORT    PORTCbits.RC7
 
-#define START_SW	PORTBbits.RB5
-#define ON_SW		PORTBbits.RB0
+#define START_SW    PORTBbits.RB5
+#define ON_SW       PORTBbits.RB0
 
 /*
  * Typedefs

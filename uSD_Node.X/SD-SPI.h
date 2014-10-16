@@ -31,8 +31,8 @@
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
 *******************************************************************************
-	USER REVISON HISTORY
-	note: modified to work with just PIC18F46K80
+    USER REVISON HISTORY
+    note: modified to work with just PIC18F46K80
 //
 // 11/14/12 - removed prototype for media detect function
 //
@@ -89,7 +89,7 @@
 // Description: This macro defines the command code to reset the SD card
 #define     cmdGO_IDLE_STATE        0
 // Description: This macro defines the command code to initialize the SD card
-#define     cmdSEND_OP_COND         1        
+#define     cmdSEND_OP_COND         1
 // Description: This macro defined the command code to check for sector addressing
 #define     cmdSEND_IF_COND         8
 // Description: This macro defines the command code to get the Card Specific Data
@@ -110,7 +110,7 @@
 //Note: This is an "application specific" command.  This tells the media how many blocks to pre-erase for the subsequent WRITE_MULTI_BLOCK
 #define     cmdSET_WR_BLK_ERASE_COUNT   23
 // Description: This macro defines the command code to write one block to the card
-#define     cmdWRITE_SINGLE_BLOCK   24    
+#define     cmdWRITE_SINGLE_BLOCK   24
 // Description: This macro defines the command code to write multiple blocks to the card
 #define     cmdWRITE_MULTI_BLOCK    25
 // Description: This macro defines the command code to set the address of the start of an erase operation
@@ -136,8 +136,8 @@ typedef enum
     R1,     // R1 type response
     R1b,    // R1b type response
     R2,     // R2 type response
-    R3,     // R3 type response 
-    R7      // R7 type response 
+    R3,     // R3 type response
+    R7      // R7 type response
 }RESP;
 
 // Summary: SD card command data structure
@@ -158,12 +158,12 @@ typedef union
     // This structure allows array-style access of command bytes
     struct
     {
-		BYTE field[6];      // BYTE array
+        BYTE field[6];      // BYTE array
     };
     // This structure allows byte-wise access of packet command bytes
     struct
     {
-        BYTE crc;               // The CRC byte        
+        BYTE crc;               // The CRC byte
         BYTE addr0;             // Address byte 0
         BYTE addr1;             // Address byte 1
         BYTE addr2;             // Address byte 2
@@ -197,7 +197,7 @@ typedef union
         unsigned CRC_ERR:1;             // CRC error flag
         unsigned ERASE_SEQ_ERR:1;       // Erase sequence error flag
         unsigned ADDRESS_ERR:1;         // Address error flag
-        unsigned PARAM_ERR:1;           // Parameter flag   
+        unsigned PARAM_ERR:1;           // Parameter flag
         unsigned B7:1;                  // Unused bit 7
     };
 } RESPONSE_1;
@@ -253,8 +253,8 @@ typedef union
                 BYTE _byte1;
                 BYTE _byte2;
                 BYTE _byte3;
-            };    
-        }argument;    
+            };
+        }argument;
     } bytewise;
     // This structure allows bitwise access of the response
     struct
@@ -267,7 +267,7 @@ typedef union
             unsigned CRC_ERR:1;             // CRC error flag
             unsigned ERASE_SEQ_ERR:1;       // Erase sequence error flag
             unsigned ADDRESS_ERR:1;         // Address error flag
-            unsigned PARAM_ERR:1;           // Parameter flag   
+            unsigned PARAM_ERR:1;           // Parameter flag
             unsigned B7:1;                  // Unused bit 7
         }bits;
         DWORD _returnVal;
@@ -279,7 +279,7 @@ typedef union
 //              being issued a command.
 typedef union
 {
-    RESPONSE_1  r1;  
+    RESPONSE_1  r1;
     RESPONSE_2  r2;
     RESPONSE_7  r7;
 }MMC_RESPONSE;
@@ -399,7 +399,7 @@ typedef union
 #define MILLISECDELAY   (WORD)      ((GetInstructionClock()/DELAY_PRESCALER/(WORD)1000) - DELAY_OVERHEAD)
 
 
-// Desription: Media Response Delay Timeouts 
+// Desription: Media Response Delay Timeouts
 #define NCR_TIMEOUT     (WORD)20        //Byte times before command response is expected (must be at least 8)
 #define NAC_TIMEOUT     (DWORD)0x40000  //SPI byte times we should wait when performing read operations (should be at least 100ms for SD cards)
 #define WRITE_TIMEOUT   (DWORD)0xA0000  //SPI byte times to wait before timing out when the media is performing a write operation (should be at least 250ms for SD cards).
@@ -437,7 +437,7 @@ typedef enum
 #define SD_MODE_HC      1
 
 
-//Definition for a structure used when calling either MDD_SDSPI_AsyncReadTasks() 
+//Definition for a structure used when calling either MDD_SDSPI_AsyncReadTasks()
 //function, or the MDD_SDSPI_AsyncWriteTasks() function.
 typedef struct
 {
@@ -446,7 +446,7 @@ typedef struct
     BYTE* pBuffer;          //Pointer to where the read/written bytes should be copied to/from.  May be updated between calls to the handler function.
     DWORD dwAddress;        //Starting block address to read or to write to on the media.  Should only get initialized, do not modify after that.
     BYTE bStateVariable;    //State machine variable.  Should get initialized to ASYNC_READ_QUEUED or ASYNC_WRITE_QUEUED to start an operation.  After that, do not modify until the read or write is complete.
-}ASYNC_IO;   
+}ASYNC_IO;
 
 
 //Response codes for the MDD_SDSPI_AsyncReadTasks() function.

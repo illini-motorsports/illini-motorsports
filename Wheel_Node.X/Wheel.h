@@ -1,16 +1,16 @@
 
 /*
- *					Wheel Node Main File Header
+ *                  Wheel Node Main File Header
  *
- * File Name:		Wheel.h
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Author:			George Schwieters
- * Created:			2013-2014
+ * File Name:       Wheel.h
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Author:          George Schwieters
+ * Created:         2013-2014
  */
 
 #ifndef WHEEL_H
-#define	WHEEL_H
+#define WHEEL_H
 
 #include "GenericTypeDefs.h"
 #include "adc.h"
@@ -55,77 +55,77 @@
 #define RANGE_HIGH 4096
 
 // timing
-#define HOLD_TIME		2000
-#define BLINK_TIME		200
-#define REFRESH_TIME	150
-#define BOUNCE_TIME		100
-#define CAN_PER			200
+#define HOLD_TIME       2000
+#define BLINK_TIME      200
+#define REFRESH_TIME    150
+#define BOUNCE_TIME     100
+#define CAN_PER         200
 
 // data channel indicies
-#define OIL_T		0
-#define ENGINE_T	1
-#define VOLTAGE		2
-#define OIL_P		3
-#define SPEED		4
-#define RPM			5
+#define OIL_T       0
+#define ENGINE_T    1
+#define VOLTAGE     2
+#define OIL_P       3
+#define SPEED       4
+#define RPM         5
 #define CANERR1         6   //***EL
 #define CANERR2         7   //***EL
 
 // addresses for display driver
-#define NO_OP		0x00
-#define DIG0		0x01
-#define DIG1		0x02
-#define DIG2		0x03
-#define DIG3		0x04
-#define DIG4		0x05
-#define DIG5		0x06
-#define DIG6		0x07
-#define DIG7		0x08
-#define DECODE		0x09
-#define INTENSITY	0x0A
-#define SCAN		0x0B
-#define SHUTDOWN	0x0C
-#define DISP_MODE	0x0F
+#define NO_OP       0x00
+#define DIG0        0x01
+#define DIG1        0x02
+#define DIG2        0x03
+#define DIG3        0x04
+#define DIG4        0x05
+#define DIG5        0x06
+#define DIG6        0x07
+#define DIG7        0x08
+#define DECODE      0x09
+#define INTENSITY   0x0A
+#define SCAN        0x0B
+#define SHUTDOWN    0x0C
+#define DISP_MODE   0x0F
 
 // data bytes
 
 // config
-#define SHUTDOWN_ON		0b00000001
+#define SHUTDOWN_ON     0b00000001
 #define SHUTDOWN_OFF    0b00000001
-#define NO_DECODE		0x00
-#define FULL_SCAN		0b00000111
+#define NO_DECODE       0x00
+#define FULL_SCAN       0b00000111
 
 // numbers
-#define NUM_DP			0b10000000
-#define NUM_0			0b01111110
-#define NUM_1			0b00110000
-#define NUM_2			0b01101101
-#define NUM_3			0b01111001
-#define NUM_4			0b00110011
-#define NUM_5			0b01011011
-#define NUM_6			0b01011111
-#define NUM_7			0b01110000
-#define NUM_8			0b01111111
-#define NUM_9			0b01110011
-#define BLANK			0b00000000
+#define NUM_DP          0b10000000
+#define NUM_0           0b01111110
+#define NUM_1           0b00110000
+#define NUM_2           0b01101101
+#define NUM_3           0b01111001
+#define NUM_4           0b00110011
+#define NUM_5           0b01011011
+#define NUM_6           0b01011111
+#define NUM_7           0b01110000
+#define NUM_8           0b01111111
+#define NUM_9           0b01110011
+#define BLANK           0b00000000
 
 // characters
-#define CHAR_A			0b01110111
-#define CHAR_b			0b00011111
-#define CHAR_t			0b00001111
-#define CHAR_O			0b01111110
-#define CHAR_E			0b01001111
-#define CHAR_P			0b01100111
-#define CHAR_S			0b01011011
-#define CHAR_d			0b00111101
-#define CHAR_c			0b00001101
-#define CHAR_C			0b01001110
-#define CHAR_N			0b01110110
-#define CHAR_r			0b00000101   //***EL
+#define CHAR_A          0b01110111
+#define CHAR_b          0b00011111
+#define CHAR_t          0b00001111
+#define CHAR_O          0b01111110
+#define CHAR_E          0b01001111
+#define CHAR_P          0b01100111
+#define CHAR_S          0b01011011
+#define CHAR_d          0b00111101
+#define CHAR_c          0b00001101
+#define CHAR_C          0b01001110
+#define CHAR_N          0b01110110
+#define CHAR_r          0b00000101   //***EL
 
 // display mode
-#define TEST			0x01
-#define NORMAL			0x00
+#define TEST            0x01
+#define NORMAL          0x00
 
 /*
  * Pin Defintions

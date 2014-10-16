@@ -1,13 +1,13 @@
 
 /*
- *					Wheel Node Main File
+ *                  Wheel Node Main File
  *
- * File Name:		Wheel.c
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Version:			1.00
- * Author:			George Schwieters
- * Created:			2013-2014
+ * File Name:       Wheel.c
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Version:         1.00
+ * Author:          George Schwieters
+ * Created:         2013-2014
  */
 
 #include "Wheel.h"
@@ -135,12 +135,12 @@ static const unsigned char text_arr[NUM_CHAN + 2][3] = {
  */
 
 /*
- *	void high(void)
+ *  void high(void)
  *
- *	Description: This interrupt will service all low priority interrupts.
- *	Input(s): none
- *	Reaturn Value(s): none
- *	Side Effects: This will modify INTCON0 & PIR5. Also it modify the ECAN variables.
+ *  Description: This interrupt will service all low priority interrupts.
+ *  Input(s): none
+ *  Reaturn Value(s): none
+ *  Side Effects: This will modify INTCON0 & PIR5. Also it modify the ECAN variables.
  */
 #pragma code high_vector = 0x08
 
@@ -371,14 +371,14 @@ void main(void) {
  */
 
 /*
- *	void driver_write(void)
+ *  void driver_write(void)
  *
- *	Description:	This function sends out data to a specified address to the
- *					MAXIM LED driver.
- *	Input(s):	addr - LED driver address to transmit
- *				data - LED driver data value to transmit
- *	Return Value(s): none
- *	Side Effects: none
+ *  Description:    This function sends out data to a specified address to the
+ *                  MAXIM LED driver.
+ *  Input(s):   addr - LED driver address to transmit
+ *              data - LED driver data value to transmit
+ *  Return Value(s): none
+ *  Side Effects: none
  */
 void driver_write(unsigned char addr, unsigned char data) {
 
@@ -394,13 +394,13 @@ void driver_write(unsigned char addr, unsigned char data) {
 }
 
 /*
- *	void write_gear(void)
+ *  void write_gear(void)
  *
- *	Description:	This function writes a gear value to the wheel's middle
- *					seven segment display.
- *	Input(s): gear - numerical value of gear to display
- *	Return Value(s): none
- *	Side Effects: none
+ *  Description:    This function writes a gear value to the wheel's middle
+ *                  seven segment display.
+ *  Input(s): gear - numerical value of gear to display
+ *  Return Value(s): none
+ *  Side Effects: none
  */
 void write_gear(unsigned char gear) {
 
@@ -417,12 +417,12 @@ void write_gear(unsigned char gear) {
 }
 
 /*
- *	void write_CANerror(void)
+ *  void write_CANerror(void)
  *
- *	Description:
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects: none
+ *  Description:
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects: none
  */
 void write_CANerror(void) {
 
@@ -443,12 +443,12 @@ void write_CANerror(void) {
 }
 
 /*
- *	void blank_display(unsigned char side)
+ *  void blank_display(unsigned char side)
  *
- *	Description: This will clear the displays.
- *	Input(s): side - specifies which three seven segment displays to clear
- *	Return Value(s): none
- *	Side Effects: none
+ *  Description: This will clear the displays.
+ *  Input(s): side - specifies which three seven segment displays to clear
+ *  Return Value(s): none
+ *  Side Effects: none
  */
 void blank_display(unsigned char side) {
 
@@ -475,14 +475,14 @@ void blank_display(unsigned char side) {
 }
 
 /*
- *	void write_num(int data, unsigned char d_place, unsigned char side)
+ *  void write_num(int data, unsigned char d_place, unsigned char side)
  *
- *	Description: This will write a number to a set of displays.
- *	Input(s):	d_place - where to place the decimal place
- *				side - which side to write string of numbers
- *				data - numerical value to write to the displays
- *	Return Value(s): none
- *	Side Effects: none
+ *  Description: This will write a number to a set of displays.
+ *  Input(s):   d_place - where to place the decimal place
+ *              side - which side to write string of numbers
+ *              data - numerical value to write to the displays
+ *  Return Value(s): none
+ *  Side Effects: none
  */
 void write_num(int data, unsigned char d_place, unsigned char side) {
 
@@ -524,13 +524,13 @@ void write_num(int data, unsigned char d_place, unsigned char side) {
 }
 
 /*
- *	void updateText(unsigned char side, unsigned char *state)
+ *  void updateText(unsigned char side, unsigned char *state)
  *
- *	Description: This will send text to a set of displays.
- *	Input(s):	side - which side to put the text
- *				state - which type of data we are displaying
- *	Return Value(s): none
- *	Side Effects: none
+ *  Description: This will send text to a set of displays.
+ *  Input(s):   side - which side to put the text
+ *              state - which type of data we are displaying
+ *  Return Value(s): none
+ *  Side Effects: none
  */
 void updateText(unsigned char side, unsigned char *state) {
 
@@ -550,13 +550,13 @@ void updateText(unsigned char side, unsigned char *state) {
 }
 
 /*
- *	void updateDisp(unsigned char side)
+ *  void updateDisp(unsigned char side)
  *
- *	Description:	This will determine what should be displayed on the displays
- *					based on timers.
- *	Input(s): side - which side to update
- *	Return Value(s): none
- *	Side Effects: none
+ *  Description:    This will determine what should be displayed on the displays
+ *                  based on timers.
+ *  Input(s): side - which side to update
+ *  Return Value(s): none
+ *  Side Effects: none
  */
 void updateDisp(unsigned char side) {
 
@@ -591,13 +591,13 @@ void updateDisp(unsigned char side) {
 }
 
 /*
- *	void updateDisp(unsigned char side)
+ *  void updateDisp(unsigned char side)
  *
- *	Description:	This will determine what should be displayed on the displays
- *					based on timers.
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects: The chan and gear variables will be modified.
+ *  Description:    This will determine what should be displayed on the displays
+ *                  based on timers.
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects: The chan and gear variables will be modified.
  */
 void bufferData(void) {
 
@@ -626,12 +626,12 @@ void bufferData(void) {
 }
 
 /*
- *	ADLsample(unsigned char *data, const unsigned char ADLoffset, const unsigned char ch)
+ *  ADLsample(unsigned char *data, const unsigned char ADLoffset, const unsigned char ch)
  *
- *	Description: This will sample an analog pin and place the value in an array.
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects: The memory pointed to by data will be modified.
+ *  Description: This will sample an analog pin and place the value in an array.
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects: The memory pointed to by data will be modified.
  */
 void ADLsample(unsigned char *data, const unsigned char ADLoffset, const unsigned char ch) {
 
@@ -650,13 +650,13 @@ void ADLsample(unsigned char *data, const unsigned char ADLoffset, const unsigne
 }
 
 /*
- *	void modifyRotary(unsigned int * sample)
+ *  void modifyRotary(unsigned int * sample)
  *
- *	Description:	This is a function to modify the currently sampled voltage to
- *					a more suitable value for Motec to read.
- *	Input(s): sample - pointer to raw data from sampling of a rotary's output
- *	Return Value(s): none
- *	Side Effects: This will modify the memory that is pointed to by sample.
+ *  Description:    This is a function to modify the currently sampled voltage to
+ *                  a more suitable value for Motec to read.
+ *  Input(s): sample - pointer to raw data from sampling of a rotary's output
+ *  Return Value(s): none
+ *  Side Effects: This will modify the memory that is pointed to by sample.
  */
 void modifyRotary(unsigned int * sample) {
     // depending on the value of the sampled rotary postion

@@ -1,13 +1,13 @@
 
 /*
- *					MDD File I/O Main Code
+ *                  MDD File I/O Main Code
  *
- * File Name:		DAQ.c
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Version:			2.00
- * Author:			George Schwieters
- * Created:			2012-2013
+ * File Name:       DAQ.c
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Version:         2.00
+ * Author:          George Schwieters
+ * Created:         2012-2013
  */
 
 #include "capture.h"
@@ -93,7 +93,7 @@
  */
 
 // USer data buffers A and B
-#pragma udata large_udataA = 0x700		// this specifies the location of the buffers in memory
+#pragma udata large_udataA = 0x700      // this specifies the location of the buffers in memory
 volatile unsigned char WriteBufferA[BUFF_SIZE]; // create buffer using defined buffer size
 #pragma udata large_udataB = 0x900
 volatile unsigned char WriteBufferB[BUFF_SIZE];
@@ -141,18 +141,18 @@ void interrupt_at_low_vector(void) {
 #pragma code
 
 /*
- *	void low_isr(void)
+ *  void low_isr(void)
  *
- *	Description:	This interrupt will service all low priority interrupts. This includes
- *					servicing the ECAN FIFO buffer and handling ECAN errors. This is not
- *					a traditional interrupt due do the nature of the project. The interrupt is
- *					by no means short but it must be this way in order to be able to buffer
- *					data at all times even when the uSD card is being written to in the main
- *					loop.
- *	Input(s): none
- *	Reaturn Value(s): none
- *	Side Effects:	This will modify PIR5, B0CON, B1CON, B2CON, B3CON, B4CON, B5CON,
- *					COMSTAT, RXB0CON & RXB1CON. This will also modify the flags in Main
+ *  Description:    This interrupt will service all low priority interrupts. This includes
+ *                  servicing the ECAN FIFO buffer and handling ECAN errors. This is not
+ *                  a traditional interrupt due do the nature of the project. The interrupt is
+ *                  by no means short but it must be this way in order to be able to buffer
+ *                  data at all times even when the uSD card is being written to in the main
+ *                  loop.
+ *  Input(s): none
+ *  Reaturn Value(s): none
+ *  Side Effects:   This will modify PIR5, B0CON, B1CON, B2CON, B3CON, B4CON, B5CON,
+ *                  COMSTAT, RXB0CON & RXB1CON. This will also modify the flags in Main
  */
 #pragma interruptlow low_isr
 
@@ -213,14 +213,14 @@ void low_isr(void) {
 }
 
 /*
- *	void high_isr(void)
+ *  void high_isr(void)
  *
- *	Description:	This interrupt will service all high priority interrupts which includes
- *					timer 1 rollover and the capture 2 module.
- *	Input(s): none
- *	Reaturn Value(s): none
- *	Side Effects:	This will modify TMR1H, TMR1L, PIR1 & PIR3. Also seconds,
- *					stamp, stamp_2, time_stanp, time_stamp_2 & Main variables will be written to.
+ *  Description:    This interrupt will service all high priority interrupts which includes
+ *                  timer 1 rollover and the capture 2 module.
+ *  Input(s): none
+ *  Reaturn Value(s): none
+ *  Side Effects:   This will modify TMR1H, TMR1L, PIR1 & PIR3. Also seconds,
+ *                  stamp, stamp_2, time_stanp, time_stamp_2 & Main variables will be written to.
  */
 #pragma interrupt high_isr
 
@@ -447,13 +447,13 @@ void main(void) {
  */
 
 /*
- *	void funct_error(void)
+ *  void funct_error(void)
  *
- *	Description:	This function will be called when a serious error is encountered
- *					When this occurs the program will stay here until reset.
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects: This halts main program execution.
+ *  Description:    This function will be called when a serious error is encountered
+ *                  When this occurs the program will stay here until reset.
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects: This halts main program execution.
  */
 void funct_error(void) {
     CLI(); // stop interrupts
@@ -462,15 +462,15 @@ void funct_error(void) {
 }
 
 /*
- *	void service_FIFO(void)
+ *  void service_FIFO(void)
  *
- *	Description:	This function will read messages from the ECAN buffers
- *					and package the information with a timestamp. It also reads
- *					RPM data for logging initiation.
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects:	This will modify rpm_l & rpm_h. Also it clears out the ECAN recieve
- *					buffers.
+ *  Description:    This function will read messages from the ECAN buffers
+ *                  and package the information with a timestamp. It also reads
+ *                  RPM data for logging initiation.
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects:   This will modify rpm_l & rpm_h. Also it clears out the ECAN recieve
+ *                  buffers.
  */
 void service_FIFO(void) {
 
@@ -533,17 +533,17 @@ void service_FIFO(void) {
 }
 
 /*
- *	void append_write_buffer(static const unsigned char * temp,
- *								static unsigned char applen)
+ *  void append_write_buffer(static const unsigned char * temp,
+ *                              static unsigned char applen)
  *
- *	Description:	This function will decide how to append data to the user buffers.
- *					It will try to put the entire message in BufferA if possible.
- *					Otherwise it will either put a partial message in BufferA
- *					and BufferB or the entire message in BufferB.
- *	Input(s):	temp - data array that holds one whole CAN message with its timestamp
- *				applen - the length of the data array
- *	Return Value(s): none
- *	Side Effects: This will modify Main.
+ *  Description:    This function will decide how to append data to the user buffers.
+ *                  It will try to put the entire message in BufferA if possible.
+ *                  Otherwise it will either put a partial message in BufferA
+ *                  and BufferB or the entire message in BufferB.
+ *  Input(s):   temp - data array that holds one whole CAN message with its timestamp
+ *              applen - the length of the data array
+ *  Return Value(s): none
+ *  Side Effects: This will modify Main.
  */
 void append_write_buffer(static const unsigned char * temp, static unsigned char applen) {
 
@@ -596,18 +596,18 @@ void append_write_buffer(static const unsigned char * temp, static unsigned char
 }
 
 /*
- *	void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
- *				static unsigned int *bufflen, static const unsigned char applen,
- *				static const unsigned char offset)
+ *  void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
+ *              static unsigned int *bufflen, static const unsigned char applen,
+ *              static const unsigned char offset)
  *
- *	Description: This function will append data to the user buffers byte by byte.
- *	Input(s):	WriteBuffer - pointer to the buffer we will write to
- *				writeData - pointer to the data array we will write
- *				bufflen - pointer to the variable holding the buffer length of the buffer we are writing to
- *				applen - the length of the data to be written
- *				offset - the index offset for the data to write
- *	Return Value(s): none
- *	Side Effects: This will modify BufferA & BufferB.
+ *  Description: This function will append data to the user buffers byte by byte.
+ *  Input(s):   WriteBuffer - pointer to the buffer we will write to
+ *              writeData - pointer to the data array we will write
+ *              bufflen - pointer to the variable holding the buffer length of the buffer we are writing to
+ *              applen - the length of the data to be written
+ *              offset - the index offset for the data to write
+ *  Return Value(s): none
+ *  Side Effects: This will modify BufferA & BufferB.
  */
 void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
         static unsigned int *bufflen, static const unsigned char applen,
@@ -627,12 +627,12 @@ void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *wri
 }
 
 /*
- *	void swap_len(void)
+ *  void swap_len(void)
  *
- *	Description: Swaps the buffer length members of Main.
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects: This will modify Main.
+ *  Description: Swaps the buffer length members of Main.
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects: This will modify Main.
  */
 void swap_len(void) {
 
@@ -647,12 +647,12 @@ void swap_len(void) {
 }
 
 /*
- *	void swap_buff(void)
+ *  void swap_buff(void)
  *
- *	Description: Swaps the buffer pointer members of Buff.
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects: This will modify Buff.
+ *  Description: Swaps the buffer pointer members of Buff.
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects: This will modify Buff.
  */
 void swap_buff(void) {
 

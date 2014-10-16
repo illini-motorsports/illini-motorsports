@@ -31,8 +31,8 @@
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
 *******************************************************************************
-	USER REVISON HISTORY
-	note: modified to work with just PIC18F46K80
+    USER REVISON HISTORY
+    note: modified to work with just PIC18F46K80
 //
 // 11/23/12 - cleaned up pre-processor stuff for better readability
 //
@@ -161,7 +161,7 @@ typedef enum _CETYPE
 
 // Summary: A macro to indicate an empty FAT entry
 // Description: The CLUSTER_EMPTY value is used to indicate that a FAT entry and it's corresponding cluster are available.
-#define CLUSTER_EMPTY               0x0000 
+#define CLUSTER_EMPTY               0x0000
 
 // Summary: A macro to indicate the last cluster value for FAT12
 // Description: The LAST_CLUSTER_FAT12 macro is used when reading the FAT to indicate that the next FAT12 entry for a file contains
@@ -265,7 +265,7 @@ typedef enum _CETYPE
 // Summary: A structure containing information about the device.
 // Description: The DISK structure contains information about the device being accessed.
 typedef struct
-{ 
+{
     BYTE    *   buffer;         // Address of the global data buffer used to read and write file information
     DWORD       firsts;         // Logical block address of the first sector of the FAT partition on the device
     DWORD       fat;            // Logical block address of the FAT
@@ -309,7 +309,7 @@ typedef struct {
     BYTE  BootSec_BootSig;          // Boot signature - equal to 0x29
     BYTE  BootSec_VolID[4];         // Volume ID
     BYTE  BootSec_VolLabel[11];     // Volume Label
-    BYTE  BootSec_FSType[8];        // File system type in ASCII. Not used for determination   
+    BYTE  BootSec_FSType[8];        // File system type in ASCII. Not used for determination
     } _BPB_FAT12;
 
 // Summary: A structure containing the bios parameter block for a FAT16 file system (in the boot sector)
@@ -334,7 +334,7 @@ typedef struct {
     BYTE  BootSec_BootSig;          // Boot signature - equal to 0x29
     BYTE  BootSec_VolID[4];         // Volume ID
     BYTE  BootSec_VolLabel[11];     // Volume Label
-    BYTE  BootSec_FSType[8];        // File system type in ASCII. Not used for determination     
+    BYTE  BootSec_FSType[8];        // File system type in ASCII. Not used for determination
     } _BPB_FAT16;
 
 // Summary: A structure containing the bios parameter block for a FAT32 file system (in the boot sector)
@@ -366,7 +366,7 @@ typedef struct {
     BYTE  BootSec_BootSig;          // Boot signature - 0x29
     BYTE  BootSec_VolID[4];         // Volume ID
     BYTE  BootSec_VolLab[11];       // Volume Label
-    BYTE  BootSec_FilSysType[8];    // File system type in ASCII.  Not used for determination  
+    BYTE  BootSec_FilSysType[8];    // File system type in ASCII.  Not used for determination
     } _BPB_FAT32;
 
 
@@ -482,19 +482,19 @@ typedef _BootSec * BootSec;
 #define FAT_GOOD_SIGN_1     0xAA
 
 
-typedef struct 
+typedef struct
 {
     BYTE    errorCode;
-    union 
+    union
     {
         BYTE    value;
-        struct 
+        struct
         {
             BYTE    sectorSize  : 1;
             BYTE    maxLUN      : 1;
         }   bits;
     } validityFlags;
-    
+
     WORD    sectorSize;
     BYTE    maxLUN;
 } MEDIA_INFORMATION;
@@ -504,7 +504,7 @@ typedef enum
     MEDIA_NO_ERROR,                     // No errors
     MEDIA_DEVICE_NOT_PRESENT,           // The requested device is not present
     MEDIA_CANNOT_INITIALIZE             // Cannot initialize media
-} MEDIA_ERRORS;                
+} MEDIA_ERRORS;
 
 
 #endif

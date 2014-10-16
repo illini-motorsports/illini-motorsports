@@ -46,7 +46,7 @@
           Fixed bug that prevented the Windows Explorer to show the Date Creation field for directories
 
   x.x.x   Fixed issue on some USB drives where the information written
-            to the drive is cached in a RAM for 500ms before it is 
+            to the drive is cached in a RAM for 500ms before it is
             written to the flash unless the sector is accessed again.
           Add some error recovery for FAT32 systems when there is
             corruption in the boot sector.
@@ -54,10 +54,10 @@
   1.3.0   Modified to support Long File Name(LFN) format
   1.3.4   1) Initialized some of the local variables to default values
              to remove non-critical compiler warnings for code sanitation.
-          2) The sector size of the media device is obtained from the MBR of media.So, 
+          2) The sector size of the media device is obtained from the MBR of media.So,
              instead of using the hard coded macro "DIRENTRIES_PER_SECTOR", the variables
-             "dirEntriesPerSector" & "disk->sectorSize" are used in the code. Refer 
-             "Cache_File_Entry","EraseCluster" & "writeDotEntries" fucntions to see 
+             "dirEntriesPerSector" & "disk->sectorSize" are used in the code. Refer
+             "Cache_File_Entry","EraseCluster" & "writeDotEntries" fucntions to see
              the change.
   1.3.6   1) The function "FILEget_next_cluster" is made public.
           2) Modified "FILEfind" function such that when using 8.3 format
@@ -69,7 +69,7 @@
           5) Updated comments in most of the function header blocks.
   1.4.0   1) While creating files in LFN format with file name length as 13,26,39,52...etc(multiples of 13),
              MDD library was creating incorrect directory entries. To fix this issue,
-             functions "FILEfind", "CreateFileEntry", "Alias_LFN_Object", "FormatFileName", 
+             functions "FILEfind", "CreateFileEntry", "Alias_LFN_Object", "FormatFileName",
              "FormatDirName", "FSgetcwd", "GetPreviousEntry" & "rmdirhelper" were modified.
              Now "utf16LFNlength" variable part of "FSFILE" structure, indicates LFN length
              excluding the NULL word at the last.
@@ -91,19 +91,19 @@
 *******************************************************************************
 
 *******************************************************************************
-	USER REVISON HISTORY
-	note: modified to work with just PIC18F46K80
+    USER REVISON HISTORY
+    note: modified to work with just PIC18F46K80
 //
 // 02/14/13 - removed MDD_InitIO calls
 // 02/21/13 - added a buffer full flag parameter to pass to the FSfwrite function
 // 03/03/13 - redid buffer full flag clearing. Now a swap flag is set to indicate that
-//			the secondary buffer B pointer can be swapped with the main buffer A pointer.
-//			also added DAQ.h
+//          the secondary buffer B pointer can be swapped with the main buffer A pointer.
+//          also added DAQ.h
 // 03/06/13 - redid data buffer handling so that it is not a byte by byte transfer
-//			and instead a pointer swap. return to normal code is possible via a
-//			a define above the function.
-// 03/08/13 - got rid of some unnecesary parameters being passed to FSfwrite so 
-//			now it is hardcoded to deal with only 512 Bytes writes
+//          and instead a pointer swap. return to normal code is possible via a
+//          a define above the function.
+// 03/08/13 - got rid of some unnecesary parameters being passed to FSfwrite so
+//          now it is hardcoded to deal with only 512 Bytes writes
 //
 
 *******************************************************************************/
@@ -154,20 +154,20 @@
 #ifndef FS_DYNAMIC_MEM
     FSFILE  gFileArray[FS_MAX_FILES_OPEN];      // Array that contains file information (static allocation)
     BYTE    gFileSlotOpen[FS_MAX_FILES_OPEN];   // Array that indicates which elements of gFileArray are available for use
-	#ifdef SUPPORT_LFN
-		// Array that stores long file name (static allocation)
-		unsigned short int lfnData[FS_MAX_FILES_OPEN][257];
-	#endif
+    #ifdef SUPPORT_LFN
+        // Array that stores long file name (static allocation)
+        unsigned short int lfnData[FS_MAX_FILES_OPEN][257];
+    #endif
 #endif
 
 #ifdef SUPPORT_LFN
-	#ifdef ALLOW_FILESEARCH
-		// Array that stores long file name for File Search operation (static allocation)
-		unsigned short int recordSearchName[257];
-		unsigned short int recordFoundName[257];
-		unsigned short int recordSearchLength;
-	#endif
-	unsigned short int fileFoundString[261];
+    #ifdef ALLOW_FILESEARCH
+        // Array that stores long file name for File Search operation (static allocation)
+        unsigned short int recordSearchName[257];
+        unsigned short int recordFoundName[257];
+        unsigned short int recordSearchLength;
+    #endif
+    unsigned short int fileFoundString[261];
 #endif
 
 #if defined(USEREALTIMECLOCK) || defined(USERDEFINEDCLOCK)
@@ -221,9 +221,9 @@ DISK gDiskData;         // Global structure containing device information.
 char *asciiFilename;
 unsigned short int fileNameLength;
 #ifdef SUPPORT_LFN
-	unsigned short int *utf16Filename;
-	BOOL	utfModeFileName = FALSE;
-	BOOL	twoByteMode = FALSE;
+    unsigned short int *utf16Filename;
+    BOOL    utfModeFileName = FALSE;
+    BOOL    twoByteMode = FALSE;
 #endif
 /************************************************************************/
 /*                        Structures and defines                        */
@@ -262,10 +262,10 @@ typedef struct
    BYTE LFN_SequenceNo;   // Sequence number,
    BYTE LFN_Part1[10];    // File name part 1
    BYTE LFN_Attribute;    // File attribute
-   BYTE LFN_Type;		// LFN Type
+   BYTE LFN_Type;       // LFN Type
    BYTE LFN_Checksum;     // Checksum
    unsigned short int LFN_Part2[6];    // File name part 2
-   unsigned short int LFN_Reserved2;	// Reserved for future use
+   unsigned short int LFN_Reserved2;    // Reserved for future use
    unsigned short int LFN_Part3[2];     // File name part 3
 }LFN_ENTRY;
 
@@ -277,9 +277,9 @@ typedef enum
     NAME_8P3_ASCII_CAPS_TYPE,
     NAME_8P3_ASCII_MIXED_TYPE,
     NAME_8P3_UTF16_TYPE, // SUBTYPES OF 8P3 UTF16 TYPE
-	    NAME_8P3_UTF16_ASCII_CAPS_TYPE,
-	    NAME_8P3_UTF16_ASCII_MIXED_TYPE,
-	    NAME_8P3_UTF16_NONASCII_TYPE,
+        NAME_8P3_UTF16_ASCII_CAPS_TYPE,
+        NAME_8P3_UTF16_ASCII_MIXED_TYPE,
+        NAME_8P3_UTF16_NONASCII_TYPE,
     NAME_LFN_TYPE,
     NAME_ERROR
 } FILE_DIR_NAME_TYPE;
@@ -422,7 +422,7 @@ DWORD GetFullClusterNumber(DIRENTRY entry);
   Description:
     This function initializes the file system stack & the interfacing device.
     Initializes the static or dynamic memory slots for holding file
-    structures. Initializes the device with the DISKmount function. Loads 
+    structures. Initializes the device with the DISKmount function. Loads
     MBR and boot sector information. Initializes the current working
     directory to the root directory for the device if directory support
     is enabled.
@@ -443,8 +443,8 @@ int FSInit(void)
 #endif
 
     gBufferZeroed = FALSE;
-    gNeedFATWrite = FALSE;             
-    gLastFATSectorRead = 0xFFFFFFFF;       
+    gNeedFATWrite = FALSE;
+    gLastFATSectorRead = 0xFFFFFFFF;
     gLastDataSectorRead = 0xFFFFFFFF;
 
     if(DISKmount(&gDiskData) == CE_GOOD)
@@ -466,11 +466,11 @@ int FSInit(void)
         // "FatRootDirClusterValue" indicates the root
         cwdptr->dirclus = FatRootDirClusterValue;
         cwdptr->dirccls = FatRootDirClusterValue;
-	#if defined(SUPPORT_LFN)
-		// Initialize default values for LFN support
+    #if defined(SUPPORT_LFN)
+        // Initialize default values for LFN support
         cwdptr->AsciiEncodingType = TRUE;
         cwdptr->utf16LFNlength = 0x0000;
-	#endif
+    #endif
 #endif
 
         FSerrno = 0;
@@ -525,40 +525,40 @@ CETYPE FILEfind( FILEOBJ foDest, FILEOBJ foCompareTo, BYTE cmd, BYTE mode)
     CETYPE   statusB = CE_FILE_NOT_FOUND;
     BYTE   character,test,state,index;
 
-	#if defined(SUPPORT_LFN)
+    #if defined(SUPPORT_LFN)
 
- 	LFN_ENTRY lfnObject;	// Long File Name Object
-	unsigned char *dst = (unsigned char *)&fileFoundString[0];
-	unsigned short int *templfnPtr = (unsigned short int *)foCompareTo -> utf16LFNptr;
-	UINT16_VAL tempShift;
-	short int   fileCompareLfnIndex,fileFoundLfnIndex = 0,fileFoundMaxLfnIndex = 0,lfnCountIndex,fileFoundLength = 0;
-	BOOL  lfnFirstCheck = FALSE,foundSFN,foundLFN,fileFoundDotPosition = FALSE,fileCompareDotPosition;
-	BYTE  lfnCompareMaxSequenceNum = 0,lfnFoundMaxSequenceNum,reminder = 0;
-	char  tempDst[13];
-	fileNameLength = foCompareTo->utf16LFNlength;
+    LFN_ENTRY lfnObject;    // Long File Name Object
+    unsigned char *dst = (unsigned char *)&fileFoundString[0];
+    unsigned short int *templfnPtr = (unsigned short int *)foCompareTo -> utf16LFNptr;
+    UINT16_VAL tempShift;
+    short int   fileCompareLfnIndex,fileFoundLfnIndex = 0,fileFoundMaxLfnIndex = 0,lfnCountIndex,fileFoundLength = 0;
+    BOOL  lfnFirstCheck = FALSE,foundSFN,foundLFN,fileFoundDotPosition = FALSE,fileCompareDotPosition;
+    BYTE  lfnCompareMaxSequenceNum = 0,lfnFoundMaxSequenceNum,reminder = 0;
+    char  tempDst[13];
+    fileNameLength = foCompareTo->utf16LFNlength;
 
-	// If 'fileNameLength' is non zero then it means that file name is of LFN format.
-	// If 'fileNameLength' is zero then it means that file name is of 8.3 format
-	if(fileNameLength)
-	{
-		// Find out the number of root entries for the given LFN
-		reminder = fileNameLength % MAX_UTF16_CHARS_IN_LFN_ENTRY;
+    // If 'fileNameLength' is non zero then it means that file name is of LFN format.
+    // If 'fileNameLength' is zero then it means that file name is of 8.3 format
+    if(fileNameLength)
+    {
+        // Find out the number of root entries for the given LFN
+        reminder = fileNameLength % MAX_UTF16_CHARS_IN_LFN_ENTRY;
 
-		index = fileNameLength/MAX_UTF16_CHARS_IN_LFN_ENTRY;
+        index = fileNameLength/MAX_UTF16_CHARS_IN_LFN_ENTRY;
 
-		if(reminder || (fileNameLength < MAX_UTF16_CHARS_IN_LFN_ENTRY))
-		{
-			index++;
-		}
+        if(reminder || (fileNameLength < MAX_UTF16_CHARS_IN_LFN_ENTRY))
+        {
+            index++;
+        }
 
-		// The maximum sequence number of the LFN
-		lfnCompareMaxSequenceNum = index;
-	}
-	#endif
+        // The maximum sequence number of the LFN
+        lfnCompareMaxSequenceNum = index;
+    }
+    #endif
 
     // reset the cluster
     foDest->dirccls = foDest->dirclus;
-	// Attribute to be compared as per application layer request
+    // Attribute to be compared as per application layer request
     compareAttrib = 0xFFFF ^ foCompareTo->attributes;
 
     if (fHandle == 0)
@@ -570,7 +570,7 @@ CETYPE FILEfind( FILEOBJ foDest, FILEOBJ foCompareTo, BYTE cmd, BYTE mode)
     }
     else
     {
-		// Maximum 16 entries possible
+        // Maximum 16 entries possible
         if ((fHandle & MASK_MAX_FILE_ENTRY_LIMIT_BITS) != 0)
         {
             if (Cache_File_Entry (foDest, &fHandle, TRUE) == NULL)
@@ -587,14 +587,14 @@ CETYPE FILEfind( FILEOBJ foDest, FILEOBJ foCompareTo, BYTE cmd, BYTE mode)
         {
             if(statusB != CE_GOOD) //First time entry always here
             {
-				#if defined(SUPPORT_LFN)
-					foundSFN = FALSE;
-					foundLFN = FALSE;
+                #if defined(SUPPORT_LFN)
+                    foundSFN = FALSE;
+                    foundLFN = FALSE;
 
-                	state = Fill_LFN_Object(foDest,&lfnObject,&fHandle);
-				#else
-                	state = Fill_File_Object(foDest, &fHandle);
-				#endif
+                    state = Fill_LFN_Object(foDest,&lfnObject,&fHandle);
+                #else
+                    state = Fill_File_Object(foDest, &fHandle);
+                #endif
 
                 if(state == NO_MORE) // Reached the end of available files. Comparision over and file not found so quit.
                 {
@@ -608,709 +608,709 @@ CETYPE FILEfind( FILEOBJ foDest, FILEOBJ foCompareTo, BYTE cmd, BYTE mode)
 
             if(state == FOUND) // Validate the correct matching of filled file data with the required(to be found) one.
             {
-				#if defined(SUPPORT_LFN)
+                #if defined(SUPPORT_LFN)
 
-				if(lfnObject.LFN_Attribute != ATTR_LONG_NAME)
-				{
-					lfnFirstCheck = FALSE;
+                if(lfnObject.LFN_Attribute != ATTR_LONG_NAME)
+                {
+                    lfnFirstCheck = FALSE;
 
-					*dst = lfnObject.LFN_SequenceNo;
-					for(index = 0;index < 10;index++)
-						dst[index + 1] = lfnObject.LFN_Part1[index];
-					foundSFN = TRUE;
-				}
-				else
-				{
-					if(lfnObject.LFN_SequenceNo & 0x40)
-					{
-						lfnFoundMaxSequenceNum = lfnObject.LFN_SequenceNo & 0x1F;
-						
-						if((mode == 0x00) && ((fileNameLength && (lfnFoundMaxSequenceNum != lfnCompareMaxSequenceNum)) || 
-						   (!fileNameLength && (lfnFoundMaxSequenceNum != 0x01))))
-						{
-//							fHandle = fHandle + lfnFoundMaxSequenceNum + 1;
-							fHandle++;
-							continue;
-						}
+                    *dst = lfnObject.LFN_SequenceNo;
+                    for(index = 0;index < 10;index++)
+                        dst[index + 1] = lfnObject.LFN_Part1[index];
+                    foundSFN = TRUE;
+                }
+                else
+                {
+                    if(lfnObject.LFN_SequenceNo & 0x40)
+                    {
+                        lfnFoundMaxSequenceNum = lfnObject.LFN_SequenceNo & 0x1F;
 
-						fileFoundLfnIndex = (lfnObject.LFN_SequenceNo & 0xBF) * MAX_UTF16_CHARS_IN_LFN_ENTRY - 1;
-						fileCompareLfnIndex = fileFoundLfnIndex;
+                        if((mode == 0x00) && ((fileNameLength && (lfnFoundMaxSequenceNum != lfnCompareMaxSequenceNum)) ||
+                           (!fileNameLength && (lfnFoundMaxSequenceNum != 0x01))))
+                        {
+//                          fHandle = fHandle + lfnFoundMaxSequenceNum + 1;
+                            fHandle++;
+                            continue;
+                        }
 
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[1];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[0];
+                        fileFoundLfnIndex = (lfnObject.LFN_SequenceNo & 0xBF) * MAX_UTF16_CHARS_IN_LFN_ENTRY - 1;
+                        fileCompareLfnIndex = fileFoundLfnIndex;
 
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[5];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[4];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[3];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[2];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[1];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[0];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[1];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[0];
 
-						tempShift.byte.LB = lfnObject.LFN_Part1[8];
-						tempShift.byte.HB = lfnObject.LFN_Part1[9];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[6];
-						tempShift.byte.HB = lfnObject.LFN_Part1[7];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[4];
-						tempShift.byte.HB = lfnObject.LFN_Part1[5];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[2];
-						tempShift.byte.HB = lfnObject.LFN_Part1[3];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[0];
-						tempShift.byte.HB = lfnObject.LFN_Part1[1];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[5];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[4];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[3];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[2];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[1];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[0];
 
-						
-						fileFoundLength = fileCompareLfnIndex + 1;
-						for(index = 1;index <= MAX_UTF16_CHARS_IN_LFN_ENTRY;index++)
-						{
-							if(fileFoundString[fileFoundLfnIndex + index] == 0x0000)
-								fileFoundLength = fileFoundLfnIndex + index;
-						}
+                        tempShift.byte.LB = lfnObject.LFN_Part1[8];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[9];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[6];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[7];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[4];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[5];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[2];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[3];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[0];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[1];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
 
-						if(mode == 0x00)
-						{
-							if((fileNameLength != fileFoundLength) && fileNameLength)
-							{
-//								fHandle = fHandle + lfnFoundMaxSequenceNum + 1;
-								fHandle++;
-								continue;
-							}
-						}
 
-						fileFoundMaxLfnIndex = fileFoundLength - 1;
-						lfnFirstCheck = TRUE;
-					}
-					else if(lfnFirstCheck == TRUE)
-					{
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[1];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[0];
+                        fileFoundLength = fileCompareLfnIndex + 1;
+                        for(index = 1;index <= MAX_UTF16_CHARS_IN_LFN_ENTRY;index++)
+                        {
+                            if(fileFoundString[fileFoundLfnIndex + index] == 0x0000)
+                                fileFoundLength = fileFoundLfnIndex + index;
+                        }
 
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[5];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[4];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[3];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[2];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[1];
-						fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[0];
+                        if(mode == 0x00)
+                        {
+                            if((fileNameLength != fileFoundLength) && fileNameLength)
+                            {
+//                              fHandle = fHandle + lfnFoundMaxSequenceNum + 1;
+                                fHandle++;
+                                continue;
+                            }
+                        }
 
-						tempShift.byte.LB = lfnObject.LFN_Part1[8];
-						tempShift.byte.HB = lfnObject.LFN_Part1[9];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[6];
-						tempShift.byte.HB = lfnObject.LFN_Part1[7];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[4];
-						tempShift.byte.HB = lfnObject.LFN_Part1[5];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[2];
-						tempShift.byte.HB = lfnObject.LFN_Part1[3];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-						tempShift.byte.LB = lfnObject.LFN_Part1[0];
-						tempShift.byte.HB = lfnObject.LFN_Part1[1];
-						fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
-					}
-					else
-         			{
-         				fHandle++;
-						continue;
-					}
+                        fileFoundMaxLfnIndex = fileFoundLength - 1;
+                        lfnFirstCheck = TRUE;
+                    }
+                    else if(lfnFirstCheck == TRUE)
+                    {
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[1];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part3[0];
 
-         			if(fileFoundLfnIndex > 0)
-         			{
-         				fHandle++;
-						continue;
-					}
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[5];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[4];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[3];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[2];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[1];
+                        fileFoundString[fileFoundLfnIndex--] = lfnObject.LFN_Part2[0];
 
-					foundLFN = TRUE;
-				}
+                        tempShift.byte.LB = lfnObject.LFN_Part1[8];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[9];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[6];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[7];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[4];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[5];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[2];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[3];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                        tempShift.byte.LB = lfnObject.LFN_Part1[0];
+                        tempShift.byte.HB = lfnObject.LFN_Part1[1];
+                        fileFoundString[fileFoundLfnIndex--] = tempShift.Val;
+                    }
+                    else
+                    {
+                        fHandle++;
+                        continue;
+                    }
 
-				lfnFirstCheck = FALSE;
-				statusB = CE_GOOD;
-          	    switch (mode)
-          	    {
-          	        case 0:
+                    if(fileFoundLfnIndex > 0)
+                    {
+                        fHandle++;
+                        continue;
+                    }
 
-							// Copy the contents of any SFN found to temporary string
-							// for future comparision tests
-							for(index = 0;index < FILE_NAME_SIZE_8P3;index++)
-								tempDst[index] = dst[index];
+                    foundLFN = TRUE;
+                }
 
-							// Try to deduce the original name from the found SFN
-							if(dst[8] != ' ')
-							{
-								for(index = 0;index < 8;index++)
-								{
-									if(dst[index] == ' ')
-										break;
-								}
-								tempDst[index++] = '.';
-								tempDst[index++] = dst[8];
-								
-								if(dst[9] != ' ')
-									tempDst[index++] = dst[9];
-								else
-									tempDst[index++] = 0x00;
-							
-								if(dst[10] != ' ')
-									tempDst[index++] = dst[10];
-								else
-									tempDst[index++] = 0x00;
-							}
-          	    		    else
-							{
-          	    		    	for(index = 0;index < 8;index++)
-								{
-									if(tempDst[index] == ' ')
-										break;
-								}
-							}
+                lfnFirstCheck = FALSE;
+                statusB = CE_GOOD;
+                switch (mode)
+                {
+                    case 0:
 
-							// Terminate the string using the NULL value
-							tempDst[index] = 0x00;
-          
-          	            	if(fileNameLength)
-          	            	{
-          	        			if(foundLFN)
-          	        			{
-          	        				// see if we are a volume id or hidden, ignore
-          	        				// search for one. if status = TRUE we found one
-          	        				for(fileCompareLfnIndex = 0;fileCompareLfnIndex < fileNameLength;fileCompareLfnIndex++)
-          	        				{
-				  						if(foCompareTo -> AsciiEncodingType)
-				  						{
-          	        					       // get the source character
-          	        					       character = (BYTE)templfnPtr[fileCompareLfnIndex];
-          	        					       // get the destination character
-          	        					       test = (BYTE)fileFoundString[fileCompareLfnIndex];
-          	        					       if((fileFoundString[fileCompareLfnIndex] > 0xFF) || (tolower(character) != tolower(test)))
-          	        					       {
-          	        								statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	        								break;
-          	        					       }
-				  						}
-				  						else
-				  						{
-				  							if(templfnPtr[fileCompareLfnIndex] != fileFoundString[fileCompareLfnIndex])
-				  							{
-          	    	  							statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-				  								break;
-				  							}
-				  						}
-          	        				}// for loop
-								}
-								else if(foundSFN && foCompareTo -> AsciiEncodingType)
-								{
-          	        				if(strlen(tempDst) != fileNameLength)
-          	        					statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	        				else
-          	        				{
-          	        					for(fileCompareLfnIndex = 0;fileCompareLfnIndex < fileNameLength;fileCompareLfnIndex++)
-          	        					{
-          	        						// get the source character
-          	        						character = (BYTE)templfnPtr[fileCompareLfnIndex];
-          	        						// get the destination character
-          	        						test = tempDst[fileCompareLfnIndex];
-          	        						if(tolower(character) != tolower(test))
-          	        						{
-          	        							statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	        							break;
-          	        						}
-          	        					}// for loop
-									}
-								}
-								else
-								{
-          	        				statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-								}
-							}
-							else
-          	            	{
-          	    				if(foundLFN)
-          	    				{
-          	        				if(strlen(tempDst) != fileFoundLength)
-          	        					statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	        				else
-          	        				{
-          	        					for(fileCompareLfnIndex = 0;fileCompareLfnIndex < fileFoundLength;fileCompareLfnIndex++)
-          	        					{
-          	        						// get the source character
-          	        						character = (BYTE)fileFoundString[fileCompareLfnIndex];
-          	        						// get the destination character
-          	        						test = tempDst[fileCompareLfnIndex];
-          	        						if((fileFoundString[fileCompareLfnIndex] > 0xFF) || (tolower(character) != tolower(test)))
-          	        						{
-          	        							statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	        							break;
-          	        						}
-          	        					}// for loop
-									}
-          	    				}
-          	    				else
-          	    				{
-          	     					// search for one. if status = TRUE we found one
-          	     					for(index = 0; index < DIR_NAMECOMP; index++)
-          	     					{
-          	     					    // get the source character
-          	     					    character = dst[index];
-          	     					    // get the destination character
-          	     					    test = foCompareTo->name[index];
-          	     					    if(tolower(character) != tolower(test))
-          	     					    {
-          	     					        statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	     					        break;
-          	     					    }
-          	     					}// for loop
-								}
-							}
-          	        		break;
+                            // Copy the contents of any SFN found to temporary string
+                            // for future comparision tests
+                            for(index = 0;index < FILE_NAME_SIZE_8P3;index++)
+                                tempDst[index] = dst[index];
 
-          	        case 1:
-							if(fileNameLength)
-          	            	{
-								fileFoundDotPosition = FALSE;
-								if(foundLFN)
-								{
-									lfnCountIndex = fileFoundMaxLfnIndex;
-									while(lfnCountIndex > 0)
-									{
-										if(fileFoundString[lfnCountIndex] == '.')
-										{
-											fileFoundDotPosition = TRUE;
-											lfnCountIndex--;
-											break;
-										}
-										lfnCountIndex--;
-									}
+                            // Try to deduce the original name from the found SFN
+                            if(dst[8] != ' ')
+                            {
+                                for(index = 0;index < 8;index++)
+                                {
+                                    if(dst[index] == ' ')
+                                        break;
+                                }
+                                tempDst[index++] = '.';
+                                tempDst[index++] = dst[8];
 
-									if(fileFoundDotPosition == FALSE)
-										lfnCountIndex = fileFoundMaxLfnIndex;
-								}
-								else
-								{
-									if(dst[DIR_NAMESIZE] != ' ')
-										fileFoundDotPosition = TRUE;
-									lfnCountIndex = DIR_NAMESIZE - 1;
-								}
+                                if(dst[9] != ' ')
+                                    tempDst[index++] = dst[9];
+                                else
+                                    tempDst[index++] = 0x00;
 
-								fileFoundLfnIndex = fileNameLength - 1;
-								fileCompareDotPosition = FALSE;
-								while(fileFoundLfnIndex > 0)
-								{
-									if(templfnPtr[fileFoundLfnIndex] == '.')
-									{
-										fileCompareDotPosition = TRUE;
-										fileFoundLfnIndex--;
-										break;
-									}
-									fileFoundLfnIndex--;
-								}
-								if(fileCompareDotPosition == FALSE)
-									fileFoundLfnIndex = fileNameLength - 1;
+                                if(dst[10] != ' ')
+                                    tempDst[index++] = dst[10];
+                                else
+                                    tempDst[index++] = 0x00;
+                            }
+                            else
+                            {
+                                for(index = 0;index < 8;index++)
+                                {
+                                    if(tempDst[index] == ' ')
+                                        break;
+                                }
+                            }
 
-          	         			// Check for attribute match
-          	         			for(fileCompareLfnIndex = 0;;)
-          	         			{
-          	         				if (templfnPtr[fileCompareLfnIndex] == '*')
-          	         					break;
-          	         			   
-									if(fileCompareLfnIndex > lfnCountIndex)
-          	         			    {
-          	         			    	statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	         			    	break;
-          	         			    }
-          	         			   
-          	         			   if (templfnPtr[fileCompareLfnIndex] != '?')
-          	         			   {
-				  						if(foCompareTo -> AsciiEncodingType)
-				  						{
-          	         			    		// get the source character
-          	         			    		character = (BYTE)templfnPtr[fileCompareLfnIndex];
-          	         			    		// get the destination character
-          	         			    		if(foundLFN)
-          	         			    			test = (BYTE)fileFoundString[fileCompareLfnIndex];
-											else
-          	         			    			test = dst[fileCompareLfnIndex];
+                            // Terminate the string using the NULL value
+                            tempDst[index] = 0x00;
 
-											if((foundLFN && (fileFoundString[fileCompareLfnIndex] > 0xFF)) ||
-          	         			    			(tolower(character) != tolower(test)))
-          	         			    		{
-          	         			    			statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	         			    			break;
-          	         			    		}
-				  						}
-				  						else
-				  						{
-				  							if((templfnPtr[fileCompareLfnIndex] != fileFoundString[fileCompareLfnIndex]) || foundSFN)
-				  							{
-          	    	   							statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-				  								break;
-				  							}
-				  						}
-          	         				}
+                            if(fileNameLength)
+                            {
+                                if(foundLFN)
+                                {
+                                    // see if we are a volume id or hidden, ignore
+                                    // search for one. if status = TRUE we found one
+                                    for(fileCompareLfnIndex = 0;fileCompareLfnIndex < fileNameLength;fileCompareLfnIndex++)
+                                    {
+                                        if(foCompareTo -> AsciiEncodingType)
+                                        {
+                                               // get the source character
+                                               character = (BYTE)templfnPtr[fileCompareLfnIndex];
+                                               // get the destination character
+                                               test = (BYTE)fileFoundString[fileCompareLfnIndex];
+                                               if((fileFoundString[fileCompareLfnIndex] > 0xFF) || (tolower(character) != tolower(test)))
+                                               {
+                                                    statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                    break;
+                                               }
+                                        }
+                                        else
+                                        {
+                                            if(templfnPtr[fileCompareLfnIndex] != fileFoundString[fileCompareLfnIndex])
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                break;
+                                            }
+                                        }
+                                    }// for loop
+                                }
+                                else if(foundSFN && foCompareTo -> AsciiEncodingType)
+                                {
+                                    if(strlen(tempDst) != fileNameLength)
+                                        statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                    else
+                                    {
+                                        for(fileCompareLfnIndex = 0;fileCompareLfnIndex < fileNameLength;fileCompareLfnIndex++)
+                                        {
+                                            // get the source character
+                                            character = (BYTE)templfnPtr[fileCompareLfnIndex];
+                                            // get the destination character
+                                            test = tempDst[fileCompareLfnIndex];
+                                            if(tolower(character) != tolower(test))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                break;
+                                            }
+                                        }// for loop
+                                    }
+                                }
+                                else
+                                {
+                                    statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                }
+                            }
+                            else
+                            {
+                                if(foundLFN)
+                                {
+                                    if(strlen(tempDst) != fileFoundLength)
+                                        statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                    else
+                                    {
+                                        for(fileCompareLfnIndex = 0;fileCompareLfnIndex < fileFoundLength;fileCompareLfnIndex++)
+                                        {
+                                            // get the source character
+                                            character = (BYTE)fileFoundString[fileCompareLfnIndex];
+                                            // get the destination character
+                                            test = tempDst[fileCompareLfnIndex];
+                                            if((fileFoundString[fileCompareLfnIndex] > 0xFF) || (tolower(character) != tolower(test)))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                break;
+                                            }
+                                        }// for loop
+                                    }
+                                }
+                                else
+                                {
+                                    // search for one. if status = TRUE we found one
+                                    for(index = 0; index < DIR_NAMECOMP; index++)
+                                    {
+                                        // get the source character
+                                        character = dst[index];
+                                        // get the destination character
+                                        test = foCompareTo->name[index];
+                                        if(tolower(character) != tolower(test))
+                                        {
+                                            statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                            break;
+                                        }
+                                    }// for loop
+                                }
+                            }
+                            break;
 
-               		    	 		fileCompareLfnIndex++;
-               		    	 		if(fileCompareLfnIndex > fileFoundLfnIndex)
-               		    	        {
-               		    	            if(fileCompareLfnIndex <= lfnCountIndex)
-               		    	            {
-          	    	   						statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-										}
-               		    	            break;
-									}
-          	         			}// for loop
+                    case 1:
+                            if(fileNameLength)
+                            {
+                                fileFoundDotPosition = FALSE;
+                                if(foundLFN)
+                                {
+                                    lfnCountIndex = fileFoundMaxLfnIndex;
+                                    while(lfnCountIndex > 0)
+                                    {
+                                        if(fileFoundString[lfnCountIndex] == '.')
+                                        {
+                                            fileFoundDotPosition = TRUE;
+                                            lfnCountIndex--;
+                                            break;
+                                        }
+                                        lfnCountIndex--;
+                                    }
 
-								if(fileCompareDotPosition == FALSE)
-								{
-									if(fileFoundDotPosition == TRUE)
-          	         			    {
-          	         			    	statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	         			    }
-									break;
-								}
-								else
-								{
-									if(fileFoundDotPosition == FALSE)
-          	         			    {
-          	         			    	statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	         			    	break;
-          	         			    }
+                                    if(fileFoundDotPosition == FALSE)
+                                        lfnCountIndex = fileFoundMaxLfnIndex;
+                                }
+                                else
+                                {
+                                    if(dst[DIR_NAMESIZE] != ' ')
+                                        fileFoundDotPosition = TRUE;
+                                    lfnCountIndex = DIR_NAMESIZE - 1;
+                                }
 
-									if(foundLFN)
-										lfnCountIndex = lfnCountIndex + 2;
-									else
-										lfnCountIndex = DIR_NAMESIZE;
-								}
+                                fileFoundLfnIndex = fileNameLength - 1;
+                                fileCompareDotPosition = FALSE;
+                                while(fileFoundLfnIndex > 0)
+                                {
+                                    if(templfnPtr[fileFoundLfnIndex] == '.')
+                                    {
+                                        fileCompareDotPosition = TRUE;
+                                        fileFoundLfnIndex--;
+                                        break;
+                                    }
+                                    fileFoundLfnIndex--;
+                                }
+                                if(fileCompareDotPosition == FALSE)
+                                    fileFoundLfnIndex = fileNameLength - 1;
 
-          	         			// Check for attribute match
-          	         			for(fileCompareLfnIndex = fileFoundLfnIndex + 2;;)
-          	         			{
-          	         				if (templfnPtr[fileCompareLfnIndex] == '*')
-          	         					break;
-          	         			   
-									if((foundLFN && (lfnCountIndex > fileFoundMaxLfnIndex)) || (foundSFN && (lfnCountIndex == 11)))
-									{
-          	         			    	statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	         			    	break;
-									}
-          	         			   
-          	         			   if (templfnPtr[fileCompareLfnIndex] != '?')
-          	         			   {
-				  						if(foCompareTo -> AsciiEncodingType)
-				  						{
-          	         			    	    // get the source character
-          	         			    	    character = (BYTE)templfnPtr[fileCompareLfnIndex];
-          	         			    	    // get the destination character
-          	         			    		if(foundLFN)
-          	         			    			test = (BYTE)fileFoundString[lfnCountIndex];
-											else
-          	         			    			test = dst[lfnCountIndex];
-											if((foundLFN && (fileFoundString[lfnCountIndex] > 0xFF)) ||
-          	         			    			(tolower(character) != tolower(test)))
-          	         			    		{
-          	         			    			statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-          	         			    			break;
-          	         			    		}
-				  						}
-				  						else
-				  						{
-				  							if((templfnPtr[fileCompareLfnIndex] != fileFoundString[lfnCountIndex]) || foundSFN)
-				  							{
-          	    	   							statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-				  								break;
-				  							}
-				  						}
-          	         				}
-               		    	 		lfnCountIndex++;
-               		    	 		fileCompareLfnIndex++;
-               		    	 		if(fileCompareLfnIndex == fileNameLength)
-               		    	        {
-               		    	            if((foundLFN && (lfnCountIndex <= fileFoundMaxLfnIndex)) || (foundSFN && (lfnCountIndex < 11) && (dst[lfnCountIndex] != ' ')))
-               		    	            {
-          	    	   						statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-										}
-               		    	            break;
-									}
-          	         			}// for loop
-							}
-							else
-							{
-          	    				/* We got something */
-               		    		if(foundLFN)
-               		    		{
-									fileCompareLfnIndex = fileFoundMaxLfnIndex;
-									fileFoundDotPosition = FALSE;
-									while(fileCompareLfnIndex > 0)
-									{
-										if(fileFoundString[fileCompareLfnIndex] == '.')
-										{
-											fileFoundDotPosition = TRUE;
-											fileCompareLfnIndex--;
-											break;
-										}
-										fileCompareLfnIndex--;
-									}
+                                // Check for attribute match
+                                for(fileCompareLfnIndex = 0;;)
+                                {
+                                    if (templfnPtr[fileCompareLfnIndex] == '*')
+                                        break;
 
-									if(fileFoundDotPosition == FALSE)
-										fileCompareLfnIndex = fileFoundMaxLfnIndex;
-								}
-								else
-									fileCompareLfnIndex = DIR_NAMESIZE - 1;	// Short File name last char position
+                                    if(fileCompareLfnIndex > lfnCountIndex)
+                                    {
+                                        statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                        break;
+                                    }
 
-               		    	    if (foCompareTo->name[0] != '*')   //If "*" is passed for comparion as 1st char then don't proceed. Go back, file alreay found.
-               		    	    {
-               		    	        for (index = 0;;)
-               		    	        {
-               		    	            if(foundLFN)
-               		    	            {
-               		    	            	if((fileFoundString[index] > 0xFF) || (index > fileCompareLfnIndex))
-               		    	            	{
-               		    	                	statusB = CE_FILE_NOT_FOUND; // it's not a match
-               		    	                	break;
-											}
-										}
+                                   if (templfnPtr[fileCompareLfnIndex] != '?')
+                                   {
+                                        if(foCompareTo -> AsciiEncodingType)
+                                        {
+                                            // get the source character
+                                            character = (BYTE)templfnPtr[fileCompareLfnIndex];
+                                            // get the destination character
+                                            if(foundLFN)
+                                                test = (BYTE)fileFoundString[fileCompareLfnIndex];
+                                            else
+                                                test = dst[fileCompareLfnIndex];
 
-               		    	            // Get the source character
-          	         					if(foundLFN)
-          	         						character = (BYTE)fileFoundString[index];
-										else
-          	         						character = dst[index];
+                                            if((foundLFN && (fileFoundString[fileCompareLfnIndex] > 0xFF)) ||
+                                                (tolower(character) != tolower(test)))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if((templfnPtr[fileCompareLfnIndex] != fileFoundString[fileCompareLfnIndex]) || foundSFN)
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                break;
+                                            }
+                                        }
+                                    }
 
-               		    	            // Get the destination character
-               		    	            test = foCompareTo->name[index];
-               		    	            if (test == '*')
-               		    	                break;
-               		    	            if (test != '?')
-               		    	            {
-               		    	                if(tolower(character) != tolower(test))
-               		    	                {
-               		    	                    statusB = CE_FILE_NOT_FOUND; // it's not a match
-               		    	                    break;
-               		    	                }
-               		    	            }
-               		    	 
-               		    	 			index++;
-               		    	 			if(index == DIR_NAMESIZE)
-               		    	        	{
-               		    	        	    if(foundLFN && (index <= fileCompareLfnIndex))
-               		    	        	    {
-               		    	                	statusB = CE_FILE_NOT_FOUND; // it's not a match
-											}
-               		    	                break;
-										}
-               		    	        }
-               		    	    }
+                                    fileCompareLfnIndex++;
+                                    if(fileCompareLfnIndex > fileFoundLfnIndex)
+                                    {
+                                        if(fileCompareLfnIndex <= lfnCountIndex)
+                                        {
+                                            statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                        }
+                                        break;
+                                    }
+                                }// for loop
 
-               		    	    // Before calling this "FILEfind" fn, "formatfilename" must be called. Hence, extn always starts from position "8".
-               		    	    if ((foCompareTo->name[8] != '*') && (statusB == CE_GOOD))
-               		    	    {
-               		    	        if(foundLFN)
-               		    	        {
-										if(foCompareTo->name[8] == ' ')
-										{
-											if(fileFoundDotPosition == TRUE)
-               		    	        	    {
-               		    	                	statusB = CE_FILE_NOT_FOUND; // it's not a match
-											}
-											break;
-										}
-										else
-										{
-											if(fileFoundDotPosition == FALSE)
-											{
-               		    	                	statusB = CE_FILE_NOT_FOUND; // it's not a match
-												break;
-											}
-										}
-										fileCompareLfnIndex = fileCompareLfnIndex + 2;
-									}
-									else
-										fileCompareLfnIndex = DIR_NAMESIZE;
+                                if(fileCompareDotPosition == FALSE)
+                                {
+                                    if(fileFoundDotPosition == TRUE)
+                                    {
+                                        statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                    }
+                                    break;
+                                }
+                                else
+                                {
+                                    if(fileFoundDotPosition == FALSE)
+                                    {
+                                        statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                        break;
+                                    }
 
-               		    	        for (index = 8;;)
-               		    	        {
-               		    	            if(foundLFN)
-               		    	            {
-               		    	            	if((fileFoundString[fileCompareLfnIndex] > 0xFF) || (fileCompareLfnIndex > fileFoundMaxLfnIndex))
-               		    	            	{
-               		    	                	statusB = CE_FILE_NOT_FOUND; // it's not a match
-               		    	                	break;
-											}
-										}
-               		    	            // Get the destination character
-               		    	            test = foCompareTo->name[index];
-               		    	            // Get the source character
-          	         					if(foundLFN)
-          	         						character = (BYTE)fileFoundString[fileCompareLfnIndex++];
-										else
-          	         						character = dst[fileCompareLfnIndex++];
+                                    if(foundLFN)
+                                        lfnCountIndex = lfnCountIndex + 2;
+                                    else
+                                        lfnCountIndex = DIR_NAMESIZE;
+                                }
 
-               		    	            if (test == '*')
-               		    	                break;
-               		    	            if (test != '?')
-               		    	            {
-               		    	                if(tolower(character) != tolower(test))
-               		    	                {
-               		    	                    statusB = CE_FILE_NOT_FOUND; // it's not a match
-               		    	                    break;
-               		    	                }
-               		    	            }
+                                // Check for attribute match
+                                for(fileCompareLfnIndex = fileFoundLfnIndex + 2;;)
+                                {
+                                    if (templfnPtr[fileCompareLfnIndex] == '*')
+                                        break;
 
-										index++;
-										if(index == DIR_NAMECOMP)
-										{
-											if(foundLFN && (fileCompareLfnIndex <= fileFoundMaxLfnIndex))
-												statusB = CE_FILE_NOT_FOUND; // it's not a match
-											break;
-										}
-               		    	        }
-               		    	    }
-							}
-          	            	break;
-				  }
+                                    if((foundLFN && (lfnCountIndex > fileFoundMaxLfnIndex)) || (foundSFN && (lfnCountIndex == 11)))
+                                    {
+                                        statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                        break;
+                                    }
 
-				// If the comparision of each character in LFN is completed
-				if(statusB == CE_GOOD)
-				{
-					if(foundLFN)
-						fHandle++;
+                                   if (templfnPtr[fileCompareLfnIndex] != '?')
+                                   {
+                                        if(foCompareTo -> AsciiEncodingType)
+                                        {
+                                            // get the source character
+                                            character = (BYTE)templfnPtr[fileCompareLfnIndex];
+                                            // get the destination character
+                                            if(foundLFN)
+                                                test = (BYTE)fileFoundString[lfnCountIndex];
+                                            else
+                                                test = dst[lfnCountIndex];
+                                            if((foundLFN && (fileFoundString[lfnCountIndex] > 0xFF)) ||
+                                                (tolower(character) != tolower(test)))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                break;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if((templfnPtr[fileCompareLfnIndex] != fileFoundString[lfnCountIndex]) || foundSFN)
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    lfnCountIndex++;
+                                    fileCompareLfnIndex++;
+                                    if(fileCompareLfnIndex == fileNameLength)
+                                    {
+                                        if((foundLFN && (lfnCountIndex <= fileFoundMaxLfnIndex)) || (foundSFN && (lfnCountIndex < 11) && (dst[lfnCountIndex] != ' ')))
+                                        {
+                                            statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                        }
+                                        break;
+                                    }
+                                }// for loop
+                            }
+                            else
+                            {
+                                /* We got something */
+                                if(foundLFN)
+                                {
+                                    fileCompareLfnIndex = fileFoundMaxLfnIndex;
+                                    fileFoundDotPosition = FALSE;
+                                    while(fileCompareLfnIndex > 0)
+                                    {
+                                        if(fileFoundString[fileCompareLfnIndex] == '.')
+                                        {
+                                            fileFoundDotPosition = TRUE;
+                                            fileCompareLfnIndex--;
+                                            break;
+                                        }
+                                        fileCompareLfnIndex--;
+                                    }
 
-                	state = Fill_File_Object(foDest, &fHandle);
+                                    if(fileFoundDotPosition == FALSE)
+                                        fileCompareLfnIndex = fileFoundMaxLfnIndex;
+                                }
+                                else
+                                    fileCompareLfnIndex = DIR_NAMESIZE - 1; // Short File name last char position
 
-					if(foundLFN)
-						fHandle--;
+                                if (foCompareTo->name[0] != '*')   //If "*" is passed for comparion as 1st char then don't proceed. Go back, file alreay found.
+                                {
+                                    for (index = 0;;)
+                                    {
+                                        if(foundLFN)
+                                        {
+                                            if((fileFoundString[index] > 0xFF) || (index > fileCompareLfnIndex))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                                break;
+                                            }
+                                        }
 
-               		/* We got something get the attributes */
-               		attrib = foDest->attributes;
+                                        // Get the source character
+                                        if(foundLFN)
+                                            character = (BYTE)fileFoundString[index];
+                                        else
+                                            character = dst[index];
 
-               		attrib &= ATTR_MASK;
+                                        // Get the destination character
+                                        test = foCompareTo->name[index];
+                                        if (test == '*')
+                                            break;
+                                        if (test != '?')
+                                        {
+                                            if(tolower(character) != tolower(test))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                                break;
+                                            }
+                                        }
 
-               		switch (mode)
-               		{
-               		    case 0:
-               		        // see if we are a volume id or hidden, ignore
-               		        if(attrib == ATTR_VOLUME)
-               		            statusB = CE_FILE_NOT_FOUND;
-               		        break;
+                                        index++;
+                                        if(index == DIR_NAMESIZE)
+                                        {
+                                            if(foundLFN && (index <= fileCompareLfnIndex))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
 
-               		    case 1:
-               		        // Check for attribute match
-               		        if ((attrib & compareAttrib) != 0)
-               		            statusB = CE_FILE_NOT_FOUND; // Indicate the already filled file data is correct and go back
-               		        if(foundLFN)
-               		        	foDest->utf16LFNlength = fileFoundLength;
-               		        else
-								foDest->utf16LFNlength = 0;
-               		        break;
-               		}
-				}
-				#else
-				{
-               		 /* We got something */
-               		 // get the attributes
-               		 attrib = foDest->attributes;
+                                // Before calling this "FILEfind" fn, "formatfilename" must be called. Hence, extn always starts from position "8".
+                                if ((foCompareTo->name[8] != '*') && (statusB == CE_GOOD))
+                                {
+                                    if(foundLFN)
+                                    {
+                                        if(foCompareTo->name[8] == ' ')
+                                        {
+                                            if(fileFoundDotPosition == TRUE)
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                            }
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            if(fileFoundDotPosition == FALSE)
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                                break;
+                                            }
+                                        }
+                                        fileCompareLfnIndex = fileCompareLfnIndex + 2;
+                                    }
+                                    else
+                                        fileCompareLfnIndex = DIR_NAMESIZE;
 
-               		 attrib &= ATTR_MASK;
-               		 switch (mode)
-               		 {
-               		     case 0:
-               		         // see if we are a volume id or hidden, ignore
-               		         if(attrib != ATTR_VOLUME)
-               		         {
-               		             statusB = CE_GOOD;
-               		             character = (BYTE)'m'; // random value
+                                    for (index = 8;;)
+                                    {
+                                        if(foundLFN)
+                                        {
+                                            if((fileFoundString[fileCompareLfnIndex] > 0xFF) || (fileCompareLfnIndex > fileFoundMaxLfnIndex))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                                break;
+                                            }
+                                        }
+                                        // Get the destination character
+                                        test = foCompareTo->name[index];
+                                        // Get the source character
+                                        if(foundLFN)
+                                            character = (BYTE)fileFoundString[fileCompareLfnIndex++];
+                                        else
+                                            character = dst[fileCompareLfnIndex++];
 
-               		             // search for one. if status = TRUE we found one
-               		             for(index = 0; index < DIR_NAMECOMP; index++)
-               		             {
-               		                 // get the source character
-               		                 character = foDest->name[index];
-               		                 // get the destination character
-               		                 test = foCompareTo->name[index];
-               		                 if(tolower(character) != tolower(test))
-               		                 {
-               		                     statusB = CE_FILE_NOT_FOUND; // Nope its not a match
-               		                     break;
-               		                 }
-               		             }// for loop
-               		         } // not dir nor vol
-               		         break;
+                                        if (test == '*')
+                                            break;
+                                        if (test != '?')
+                                        {
+                                            if(tolower(character) != tolower(test))
+                                            {
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                                break;
+                                            }
+                                        }
 
-               		     case 1:
-               		         // Check for attribute match
-               		         if (((attrib & compareAttrib) == 0) && (attrib != ATTR_LONG_NAME))
-               		         {
-               		             statusB = CE_GOOD;                 // Indicate the already filled file data is correct and go back
-               		             character = (BYTE)'m';             // random value
-               		             if (foCompareTo->name[0] != '*')   //If "*" is passed for comparion as 1st char then don't proceed. Go back, file alreay found.
-               		             {
-               		                 for (index = 0; index < DIR_NAMESIZE; index++)
-               		                 {
-               		                     // Get the source character
-               		                     character = foDest->name[index];
-               		                     // Get the destination character
-               		                     test = foCompareTo->name[index];
-               		                     if (test == '*')
-               		                         break;
-               		                     if (test != '?')
-               		                     {
-               		                         if(tolower(character) != tolower(test))
-               		                         {
-               		                             statusB = CE_FILE_NOT_FOUND; // it's not a match
-               		                             break;
-               		                         }
-               		                     }
-               		                 }
-               		             }
+                                        index++;
+                                        if(index == DIR_NAMECOMP)
+                                        {
+                                            if(foundLFN && (fileCompareLfnIndex <= fileFoundMaxLfnIndex))
+                                                statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                  }
 
-               		             // Before calling this "FILEfind" fn, "formatfilename" must be called. Hence, extn always starts from position "8".
-               		             if ((foCompareTo->name[8] != '*') && (statusB == CE_GOOD))
-               		             {
-               		                 for (index = 8; index < DIR_NAMECOMP; index++)
-               		                 {
-               		                     // Get the source character
-               		                     character = foDest->name[index];
-               		                     // Get the destination character
-               		                     test = foCompareTo->name[index];
-               		                     if (test == '*')
-               		                         break;
-               		                     if (test != '?')
-               		                     {
-               		                         if(tolower(character) != tolower(test))
-               		                         {
-               		                             statusB = CE_FILE_NOT_FOUND; // it's not a match
-               		                             break;
-               		                         }
-               		                     }
-               		                 }
-               		             }
+                // If the comparision of each character in LFN is completed
+                if(statusB == CE_GOOD)
+                {
+                    if(foundLFN)
+                        fHandle++;
 
-               		         } // Attribute match
+                    state = Fill_File_Object(foDest, &fHandle);
 
-               		         break;
-               		 }
-            	}
-  				#endif
+                    if(foundLFN)
+                        fHandle--;
+
+                    /* We got something get the attributes */
+                    attrib = foDest->attributes;
+
+                    attrib &= ATTR_MASK;
+
+                    switch (mode)
+                    {
+                        case 0:
+                            // see if we are a volume id or hidden, ignore
+                            if(attrib == ATTR_VOLUME)
+                                statusB = CE_FILE_NOT_FOUND;
+                            break;
+
+                        case 1:
+                            // Check for attribute match
+                            if ((attrib & compareAttrib) != 0)
+                                statusB = CE_FILE_NOT_FOUND; // Indicate the already filled file data is correct and go back
+                            if(foundLFN)
+                                foDest->utf16LFNlength = fileFoundLength;
+                            else
+                                foDest->utf16LFNlength = 0;
+                            break;
+                    }
+                }
+                #else
+                {
+                     /* We got something */
+                     // get the attributes
+                     attrib = foDest->attributes;
+
+                     attrib &= ATTR_MASK;
+                     switch (mode)
+                     {
+                         case 0:
+                             // see if we are a volume id or hidden, ignore
+                             if(attrib != ATTR_VOLUME)
+                             {
+                                 statusB = CE_GOOD;
+                                 character = (BYTE)'m'; // random value
+
+                                 // search for one. if status = TRUE we found one
+                                 for(index = 0; index < DIR_NAMECOMP; index++)
+                                 {
+                                     // get the source character
+                                     character = foDest->name[index];
+                                     // get the destination character
+                                     test = foCompareTo->name[index];
+                                     if(tolower(character) != tolower(test))
+                                     {
+                                         statusB = CE_FILE_NOT_FOUND; // Nope its not a match
+                                         break;
+                                     }
+                                 }// for loop
+                             } // not dir nor vol
+                             break;
+
+                         case 1:
+                             // Check for attribute match
+                             if (((attrib & compareAttrib) == 0) && (attrib != ATTR_LONG_NAME))
+                             {
+                                 statusB = CE_GOOD;                 // Indicate the already filled file data is correct and go back
+                                 character = (BYTE)'m';             // random value
+                                 if (foCompareTo->name[0] != '*')   //If "*" is passed for comparion as 1st char then don't proceed. Go back, file alreay found.
+                                 {
+                                     for (index = 0; index < DIR_NAMESIZE; index++)
+                                     {
+                                         // Get the source character
+                                         character = foDest->name[index];
+                                         // Get the destination character
+                                         test = foCompareTo->name[index];
+                                         if (test == '*')
+                                             break;
+                                         if (test != '?')
+                                         {
+                                             if(tolower(character) != tolower(test))
+                                             {
+                                                 statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                                 break;
+                                             }
+                                         }
+                                     }
+                                 }
+
+                                 // Before calling this "FILEfind" fn, "formatfilename" must be called. Hence, extn always starts from position "8".
+                                 if ((foCompareTo->name[8] != '*') && (statusB == CE_GOOD))
+                                 {
+                                     for (index = 8; index < DIR_NAMECOMP; index++)
+                                     {
+                                         // Get the source character
+                                         character = foDest->name[index];
+                                         // Get the destination character
+                                         test = foCompareTo->name[index];
+                                         if (test == '*')
+                                             break;
+                                         if (test != '?')
+                                         {
+                                             if(tolower(character) != tolower(test))
+                                             {
+                                                 statusB = CE_FILE_NOT_FOUND; // it's not a match
+                                                 break;
+                                             }
+                                         }
+                                     }
+                                 }
+
+                             } // Attribute match
+
+                             break;
+                     }
+                }
+                #endif
             } // not found
             else
             {
-				#if defined(SUPPORT_LFN)
-					lfnFirstCheck = FALSE;
-				#endif
+                #if defined(SUPPORT_LFN)
+                    lfnFirstCheck = FALSE;
+                #endif
                 /*** looking for an empty/re-usable entry ***/
                 if ( cmd == LOOK_FOR_EMPTY_ENTRY)
                     statusB = CE_GOOD;
             } // found or not
 
-			#if defined(SUPPORT_LFN)
+            #if defined(SUPPORT_LFN)
 //            if(foundLFN)
-//				fHandle = fHandle + 2;
-//			 	fHandle++;
-//			else
-			#endif
-            	// increment it no matter what happened
-            	fHandle++;
+//              fHandle = fHandle + 2;
+//              fHandle++;
+//          else
+            #endif
+                // increment it no matter what happened
+                fHandle++;
 
         }// while
     }
@@ -1582,7 +1582,7 @@ BYTE DISKmount( DISK *dsk)
         // check it and make sure we can support it.
         if (mediaInformation->validityFlags.bits.sectorSize)
         {
-			dsk->sectorSize = mediaInformation->sectorSize;
+            dsk->sectorSize = mediaInformation->sectorSize;
             if (mediaInformation->sectorSize > MEDIA_SECTOR_SIZE)
             {
                 error = CE_UNSUPPORTED_SECTOR_SIZE;
@@ -1713,7 +1713,7 @@ BYTE LoadMBR(DISK *dsk)
             PTE_MBR* partitionEntry = &Partition->Partition0;
 
             for(i=0; i<4; i++)
-            {                
+            {
                 /*    Valid Master Boot Record Loaded   */
 
                 // Get the 32 bit offset to the first partition
@@ -1816,7 +1816,7 @@ BYTE LoadBootSector(DISK *dsk)
             {
                 error = CE_NOT_FORMATTED;
             }
-            else   
+            else
             {
 
                 do      //loop just to allow a break to jump out of this section of code
@@ -1836,7 +1836,7 @@ BYTE LoadBootSector(DISK *dsk)
                     dsk->root = dsk->fat + (DWORD)(dsk->fatcopy * (DWORD)dsk->fatsize);
                     // Determine the max size of the root (will be 0 for FAT32)
                     dsk->maxroot    = BSec->FAT.FAT_16.BootSec_RootDirEnts;
-    
+
                     // Determine the total number of sectors in the partition
                     if(BSec->FAT.FAT_16.BootSec_TotSec16 != 0)
                     {
@@ -1846,7 +1846,7 @@ BYTE LoadBootSector(DISK *dsk)
                     {
                         TotSec = BSec->FAT.FAT_16.BootSec_TotSec32;
                     }
-    
+
                     // Calculate the number of bytes in each sector
                     BytesPerSec = BSec->FAT.FAT_16.BootSec_BPS;
                     if( (BytesPerSec == 0) || ((BytesPerSec & 1) == 1) )
@@ -1854,16 +1854,16 @@ BYTE LoadBootSector(DISK *dsk)
                         error = CE_UNSUPPORTED_SECTOR_SIZE;
                         break;  //break out of the do while loop
                     }
-    
+
                     // Calculate the number of sectors in the root (will be 0 for FAT32)
                     RootDirSectors = ((BSec->FAT.FAT_16.BootSec_RootDirEnts * 32) + (BSec->FAT.FAT_16.BootSec_BPS - 1)) / BSec->FAT.FAT_16.BootSec_BPS;
                     // Calculate the number of data sectors on the card
                     DataSec = TotSec - (dsk->root + RootDirSectors);
                     // Calculate the maximum number of clusters on the card
                     dsk->maxcls = DataSec / dsk->SecPerClus;
-    
+
                     #else // PIC24/30/33
-    
+
                     // Read the count of reserved sectors
                     ReservedSectorCount = ReadWord( dsk->buffer, BSI_RESRVSEC );
                     // Load the count of sectors per cluster
@@ -1880,12 +1880,12 @@ BYTE LoadBootSector(DISK *dsk)
                     dsk->root = dsk->fat + (DWORD)(dsk->fatcopy * (DWORD)dsk->fatsize);
                     // Determine the max size of the root (will be 0 for FAT32)
                     dsk->maxroot = ReadWord( dsk->buffer, BSI_ROOTDIRENTS );
-    
+
                     // Determine the total number of sectors in the partition
                     TotSec = ReadWord( dsk->buffer, BSI_TOTSEC16 );
                     if( TotSec == 0 )
                         TotSec = ReadDWord( dsk->buffer, BSI_TOTSEC32 );
-    
+
                     // Calculate the number of bytes in each sector
                     BytesPerSec = ReadWord( dsk->buffer, BSI_BPS );
                     if( (BytesPerSec == 0) || ((BytesPerSec & 1) == 1) )
@@ -1893,16 +1893,16 @@ BYTE LoadBootSector(DISK *dsk)
                         error = CE_UNSUPPORTED_SECTOR_SIZE;
                         break;
                     }
-    
+
                     // Calculate the number of sectors in the root (will be 0 for FAT32)
                     RootDirSectors = ((dsk->maxroot * NUMBER_OF_BYTES_IN_DIR_ENTRY) + (BytesPerSec - 1)) / BytesPerSec;
                     // Calculate the number of data sectors on the card
                     DataSec = TotSec - (ReservedSectorCount + (dsk->fatcopy * dsk->fatsize )  + RootDirSectors);
                     // Calculate the maximum number of clusters on the card
                     dsk->maxcls = DataSec / dsk->SecPerClus;
-    
+
                     #endif
-    
+
                     // Determine the file system type based on the number of clusters used
                     if(dsk->maxcls < 4085)
                     {
@@ -1923,7 +1923,7 @@ BYTE LoadBootSector(DISK *dsk)
                             #endif
                         }
                     }
-        
+
                     #ifdef SUPPORT_FAT32
                         if (dsk->type == FAT32)
                         {
@@ -1940,7 +1940,7 @@ BYTE LoadBootSector(DISK *dsk)
                         FatRootDirClusterValue = 0;
                         dsk->data = dsk->root + ( dsk->maxroot >> 4);
                     }
-    
+
                 #ifdef __18CXX
                     if(BSec->FAT.FAT_16.BootSec_BPS > MEDIA_SECTOR_SIZE)
                 #else
@@ -1978,13 +1978,13 @@ BYTE LoadBootSector(DISK *dsk)
                 {
                     error = CE_NOT_FORMATTED;
                 }
-    
+
                 //If there were formatting errors then in FAT32 we can try to use
                 //  the backup boot sector
                 if((error != CE_GOOD) && (TriedSpecifiedBackupBootSec == FALSE))
                 {
                     TriedSpecifiedBackupBootSec = TRUE;
-    
+
                     if ( MDD_SectorRead( dsk->firsts + BSec->FAT.FAT_32.BootSec_BkBootSec, dsk->buffer) != TRUE)
                     {
                         FSerrno = CE_BAD_SECTOR_READ;
@@ -1996,11 +1996,11 @@ BYTE LoadBootSector(DISK *dsk)
                         continue;
                     }
                 }
-    
+
                 if((error != CE_GOOD) && (TriedBackupBootSecAtAddress6 == FALSE))
                 {
                     TriedBackupBootSecAtAddress6 = TRUE;
-    
+
                     //Here we are using the magic number 6 because the FAT32 specification
                     //  recommends that "No value other than 6 is recommended."  We've
                     //  already tried using the value specified in the BPB_BkBootSec
@@ -2227,16 +2227,16 @@ int FSCreateMBR (unsigned long firstSector, unsigned long numSectors)
 
     Based on the number of sectors, the format function automatically
     compute the smallest possible value for the cluster size in order to
-    accommodate the physical size of the media. In this case, if a media 
+    accommodate the physical size of the media. In this case, if a media
     with a big capacity is formatted, the format function may take a very
-    long time to write all the FAT tables. 
+    long time to write all the FAT tables.
 
-    Therefore, the FORMAT_SECTORS_PER_CLUSTER macro may be used to 
-    specify the exact cluster size (in multiples of sector size). This 
+    Therefore, the FORMAT_SECTORS_PER_CLUSTER macro may be used to
+    specify the exact cluster size (in multiples of sector size). This
     macro can be defined in FSconfig.h
 
   Remarks:
-    Only devices with a sector size of 512 bytes are supported by the 
+    Only devices with a sector size of 512 bytes are supported by the
     format function
   *******************************************************************/
 
@@ -2259,9 +2259,9 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
     FSerrno = CE_GOOD;
 
     gBufferZeroed = FALSE;
-    gNeedFATWrite = FALSE;             
-    gLastFATSectorRead = 0xFFFFFFFF;       
-    gLastDataSectorRead = 0xFFFFFFFF;  
+    gNeedFATWrite = FALSE;
+    gLastFATSectorRead = 0xFFFFFFFF;
+    gLastDataSectorRead = 0xFFFFFFFF;
 
     disk->buffer = gDataBuffer;
 
@@ -2299,7 +2299,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
             (BSec->FAT.FAT_16.BootSec_BootSig == 0x29))
 #endif
         {
-            /* Mark that we do not have a MBR; 
+            /* Mark that we do not have a MBR;
                 this is not actualy used - is here only to remove a compilation warning */
             masterBootRecord = (PT_MBR) NULL;
             switch (mode)
@@ -2377,10 +2377,10 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
                 fatsize = (secCount - 0x21  + (2*disk->SecPerClus));
                 test =   (341 * disk->SecPerClus) + 2;
                 fatsize = (fatsize + (test-1)) / test;
-    
+
                 disk->fatcopy = 0x02;
                 disk->maxroot = 0x200;
-    
+
                 disk->fatsize = fatsize;
 
             }
@@ -2420,10 +2420,10 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
                 fatsize = (secCount - 0x21  + (2*disk->SecPerClus));
                 test =    (256  * disk->SecPerClus) + 2;
                 fatsize = (fatsize + (test-1)) / test;
-    
+
                 disk->fatcopy = 0x02;
                 disk->maxroot = 0x200;
-    
+
                 disk->fatsize = fatsize;
             }
             else
@@ -2447,7 +2447,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
                         FSerrno = CE_BAD_PARTITION;
                         return EOF;
                     }
-                #else               
+                #else
                     /*  FAT32: 65526 < Number of clusters < 4177918 */
                     DataClusters = secCount;
                     // Figure out how many sectors per cluster we need
@@ -2472,10 +2472,10 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
                 fatsize = (secCount - 0x20);
                 test =    (128  * disk->SecPerClus) + 1;
                 fatsize = (fatsize + (test-1)) / test;
-    
+
                 disk->fatcopy = 0x02;
                 disk->maxroot = 0x200;
-    
+
                 disk->fatsize = fatsize;
             }
 
@@ -2492,7 +2492,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
             gDataBuffer[9] =  'A';
             gDataBuffer[10] = 'T';
 
-            gDataBuffer[11] = 0x00;             //Sector size 
+            gDataBuffer[11] = 0x00;             //Sector size
             gDataBuffer[12] = 0x02;
 
             gDataBuffer[13] = disk->SecPerClus;   //Sectors per cluster
@@ -2518,16 +2518,16 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
 
                 gDataBuffer[24] = 0x3F;           //Sectors per track
                 gDataBuffer[25] = 0x00;
-    
+
                 gDataBuffer[26] = 0xFF;         //Number of heads
                 gDataBuffer[27] = 0x00;
-    
+
                 // Hidden sectors = sectors between the MBR and the boot sector
                 gDataBuffer[28] = (BYTE)(disk->firsts & 0xFF);
                 gDataBuffer[29] = (BYTE)((disk->firsts / 0x100) & 0xFF);
                 gDataBuffer[30] = (BYTE)((disk->firsts / 0x10000) & 0xFF);
                 gDataBuffer[31] = (BYTE)((disk->firsts / 0x1000000) & 0xFF);
-    
+
                 // Total Sectors = same as sectors in the partition from MBR
                 gDataBuffer[32] = (BYTE)(secCount & 0xFF);
                 gDataBuffer[33] = (BYTE)((secCount / 0x100) & 0xFF);
@@ -2595,16 +2595,16 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
 
                 gDataBuffer[24] = 0x3F;         //Sectors per track
                 gDataBuffer[25] = 0x00;
-    
+
                 gDataBuffer[26] = 0xFF;         //Number of heads
                 gDataBuffer[27] = 0x00;
-    
+
                 // Hidden sectors = sectors between the MBR and the boot sector
                 gDataBuffer[28] = (BYTE)(disk->firsts & 0xFF);
                 gDataBuffer[29] = (BYTE)((disk->firsts / 0x100) & 0xFF);
                 gDataBuffer[30] = (BYTE)((disk->firsts / 0x10000) & 0xFF);
                 gDataBuffer[31] = (BYTE)((disk->firsts / 0x1000000) & 0xFF);
-    
+
                 // Total Sectors = same as sectors in the partition from MBR
                 gDataBuffer[32] = (BYTE)(secCount & 0xFF);
                 gDataBuffer[33] = (BYTE)((secCount / 0x100) & 0xFF);
@@ -2613,13 +2613,13 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
 
                 gDataBuffer[36] = fatsize & 0xFF;         //Sectors per FAT
                 gDataBuffer[37] = (fatsize >>  8) & 0xFF;
-                gDataBuffer[38] = (fatsize >> 16) & 0xFF;         
+                gDataBuffer[38] = (fatsize >> 16) & 0xFF;
                 gDataBuffer[39] = (fatsize >> 24) & 0xFF;
 
                 gDataBuffer[40] = 0x00;         //Active FAT
                 gDataBuffer[41] = 0x00;
 
-                gDataBuffer[42] = 0x00;         //File System version  
+                gDataBuffer[42] = 0x00;         //File System version
                 gDataBuffer[43] = 0x00;
 
                 gDataBuffer[44] = 0x02;         //First cluster of the root directory
@@ -2635,15 +2635,15 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
 
                 gDataBuffer[52] = 0x00;         //Reserved for future expansion
                 gDataBuffer[53] = 0x00;
-                gDataBuffer[54] = 0x00;                   
+                gDataBuffer[54] = 0x00;
                 gDataBuffer[55] = 0x00;
-                gDataBuffer[56] = 0x00;                   
+                gDataBuffer[56] = 0x00;
                 gDataBuffer[57] = 0x00;
-                gDataBuffer[58] = 0x00;                   
+                gDataBuffer[58] = 0x00;
                 gDataBuffer[59] = 0x00;
-                gDataBuffer[60] = 0x00;                   
+                gDataBuffer[60] = 0x00;
                 gDataBuffer[61] = 0x00;
-                gDataBuffer[62] = 0x00;                   
+                gDataBuffer[62] = 0x00;
                 gDataBuffer[63] = 0x00;
 
                 gDataBuffer[64] = 0x00;         // Physical drive number
@@ -2735,7 +2735,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
         gDataBuffer[6] = 0x00;
         gDataBuffer[7] = 0x0C;
 
-        gDataBuffer[8]  = 0xFF;         //Root Directory EOF  
+        gDataBuffer[8]  = 0xFF;         //Root Directory EOF
         gDataBuffer[9]  = 0xFF;
         gDataBuffer[10] = 0xFF;
         gDataBuffer[11] = 0xFF;
@@ -2745,9 +2745,9 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
             if (MDD_SectorWrite (disk->fat + (j * disk->fatsize), gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
-    
+
         memset (gDataBuffer, 0x00, 12);
-    
+
         for (Index = disk->fat + 1; Index < (disk->fat + disk->fatsize); Index++)
         {
             for (j = disk->fatcopy - 1; j != 0xFFFF; j--)
@@ -2756,14 +2756,14 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
                     return EOF;
             }
         }
-    
+
         // Erase the root directory
         for (Index = 1; Index < disk->SecPerClus; Index++)
         {
             if (MDD_SectorWrite (disk->root + Index, gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
-    
+
         if (volumeID != NULL)
         {
             // Create a drive name entry in the root dir
@@ -2781,7 +2781,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
             gDataBuffer[17] = 0x11;
             gDataBuffer[19] = 0x11;
             gDataBuffer[23] = 0x11;
-    
+
             if (MDD_SectorWrite (disk->root, gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
@@ -2790,7 +2790,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
             if (MDD_SectorWrite (disk->root, gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
-    
+
         return 0;
     }
     else
@@ -2800,15 +2800,15 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
         gDataBuffer[2] = 0xFF;
         if (disk->type == FAT16)
             gDataBuffer[3] = 0xFF;
-    
+
         for (j = disk->fatcopy - 1; j != 0xFFFF; j--)
         {
             if (MDD_SectorWrite (disk->fat + (j * disk->fatsize), gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
-    
+
         memset (gDataBuffer, 0x00, 4);
-    
+
         for (Index = disk->fat + 1; Index < (disk->fat + disk->fatsize); Index++)
         {
             for (j = disk->fatcopy - 1; j != 0xFFFF; j--)
@@ -2817,19 +2817,19 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
                     return EOF;
             }
         }
-    
-		// Initialize the sector size
+
+        // Initialize the sector size
         disk->sectorSize = MEDIA_SECTOR_SIZE;
 
         // Erase the root directory
         RootDirSectors = ((disk->maxroot * 32) + (disk->sectorSize - 1)) / disk->sectorSize;
-    
+
         for (Index = 1; Index < RootDirSectors; Index++)
         {
             if (MDD_SectorWrite (disk->root + Index, gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
-    
+
         if (volumeID != NULL)
         {
             // Create a drive name entry in the root dir
@@ -2847,7 +2847,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
             gDataBuffer[17] = 0x11;
             gDataBuffer[19] = 0x11;
             gDataBuffer[23] = 0x11;
-    
+
             if (MDD_SectorWrite (disk->root, gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
@@ -2856,7 +2856,7 @@ int FSformat (char mode, long int serialNumber, char * volumeID)
             if (MDD_SectorWrite (disk->root, gDataBuffer, FALSE) == FALSE)
                 return EOF;
         }
-    
+
         return 0;
     }
 }
@@ -3068,7 +3068,7 @@ DIRENTRY Cache_File_Entry( FILEOBJ fo, WORD * curEntry, BYTE ForceRead)
     DWORD ccls;
     BYTE offset2;
     BYTE numofclus;
-	BYTE dirEntriesPerSector;
+    BYTE dirEntriesPerSector;
 
     dsk = fo->dsk;
 
@@ -3076,7 +3076,7 @@ DIRENTRY Cache_File_Entry( FILEOBJ fo, WORD * curEntry, BYTE ForceRead)
     cluster = fo->dirclus;
     ccls = fo->dirccls;
 
-	dirEntriesPerSector = dsk->sectorSize/32;
+    dirEntriesPerSector = dsk->sectorSize/32;
 
      // figure out the offset from the base sector
     offset2  = (*curEntry / dirEntriesPerSector);
@@ -3221,167 +3221,167 @@ CETYPE CreateFileEntry(FILEOBJ fo, WORD *fHandle, BYTE mode, BOOL createFirstClu
 {
     CETYPE  error = CE_GOOD;
 
-	#if defined(SUPPORT_LFN)
-	LFN_ENTRY *lfno;
-	unsigned short int   *templfnPtr = (unsigned short int *)fo -> utf16LFNptr,*dest;
-	unsigned short int	tempString[MAX_UTF16_CHARS_IN_LFN_ENTRY];
-	UINT16_VAL tempShift;
+    #if defined(SUPPORT_LFN)
+    LFN_ENTRY *lfno;
+    unsigned short int   *templfnPtr = (unsigned short int *)fo -> utf16LFNptr,*dest;
+    unsigned short int  tempString[MAX_UTF16_CHARS_IN_LFN_ENTRY];
+    UINT16_VAL tempShift;
     BOOL    firstTime = TRUE;
-	BYTE	checksum,sequenceNumber,reminder,tempCalc1,numberOfFileEntries;
+    BYTE    checksum,sequenceNumber,reminder,tempCalc1,numberOfFileEntries;
     char    index;
-	char    *src;
-	#endif
+    char    *src;
+    #endif
 
-	FSerrno = CE_GOOD;
+    FSerrno = CE_GOOD;
 
    *fHandle = 0;
 
     // figure out where to put this file in the directory stucture
     if(FindEmptyEntries(fo, fHandle) == FOUND)
     {
-		#if defined(SUPPORT_LFN)
-		// If LFN entry
-		if(fo->utf16LFNlength)
-		{
-			// Alias the LFN to short file name
-			if(!Alias_LFN_Object(fo))
-			{
-				// If Aliasing of LFN is unsucessful
-				error = FSerrno = CE_FILENAME_EXISTS;
-				return(error);
-			}
+        #if defined(SUPPORT_LFN)
+        // If LFN entry
+        if(fo->utf16LFNlength)
+        {
+            // Alias the LFN to short file name
+            if(!Alias_LFN_Object(fo))
+            {
+                // If Aliasing of LFN is unsucessful
+                error = FSerrno = CE_FILENAME_EXISTS;
+                return(error);
+            }
 
-			src = fo -> name;
+            src = fo -> name;
 
-    	    // Find the checksum for Short file name of LFN
-    	    checksum = 0;
-    	 	for (index = 11; index != 0; index--)
-    	    {
-				checksum = ((checksum & 1) ? 0x80 : 0) + (checksum >> 1) + *src++;
-			}
+            // Find the checksum for Short file name of LFN
+            checksum = 0;
+            for (index = 11; index != 0; index--)
+            {
+                checksum = ((checksum & 1) ? 0x80 : 0) + (checksum >> 1) + *src++;
+            }
 
-			// File Name + NULL character is file name length in LFN
-			fileNameLength = fo->utf16LFNlength;
+            // File Name + NULL character is file name length in LFN
+            fileNameLength = fo->utf16LFNlength;
 
-			// Determine the number of entries for LFN
-			reminder = tempCalc1 = fileNameLength % MAX_UTF16_CHARS_IN_LFN_ENTRY;
+            // Determine the number of entries for LFN
+            reminder = tempCalc1 = fileNameLength % MAX_UTF16_CHARS_IN_LFN_ENTRY;
 
-			numberOfFileEntries = fileNameLength/MAX_UTF16_CHARS_IN_LFN_ENTRY;
+            numberOfFileEntries = fileNameLength/MAX_UTF16_CHARS_IN_LFN_ENTRY;
 
-			if(tempCalc1 || (fileNameLength < MAX_UTF16_CHARS_IN_LFN_ENTRY))
-			{
-				numberOfFileEntries++;
-			}
+            if(tempCalc1 || (fileNameLength < MAX_UTF16_CHARS_IN_LFN_ENTRY))
+            {
+                numberOfFileEntries++;
+            }
 
-			// Max sequence number for LFN root entry
-			sequenceNumber = numberOfFileEntries | 0x40;
+            // Max sequence number for LFN root entry
+            sequenceNumber = numberOfFileEntries | 0x40;
 
-			// Store the max sequence number entries in tempString
-			if(tempCalc1)
-			{
-				index = 0;
-				while(tempCalc1)
-				{
-					tempString[(BYTE)index++] = templfnPtr[fileNameLength - tempCalc1];
-					tempCalc1--;
-				}				 
+            // Store the max sequence number entries in tempString
+            if(tempCalc1)
+            {
+                index = 0;
+                while(tempCalc1)
+                {
+                    tempString[(BYTE)index++] = templfnPtr[fileNameLength - tempCalc1];
+                    tempCalc1--;
+                }
 
-				tempString[(BYTE)index++] = 0x0000;
-				
-				// Store the remaining bytes of max sequence number entries with 0xFF
-				for(;index < MAX_UTF16_CHARS_IN_LFN_ENTRY;index++)
-				{
-					tempString[(BYTE)index] = 0xFFFF;
-				}				 
-			}
-			else
-			{
-				// Store the remaining bytes of max sequence number entries with 0xFF
-				for(index = MAX_UTF16_CHARS_IN_LFN_ENTRY;index > 0;index--)
-				{
-					tempString[MAX_UTF16_CHARS_IN_LFN_ENTRY - (BYTE)index] = templfnPtr[fileNameLength - (BYTE)index];
-				}
-			}
+                tempString[(BYTE)index++] = 0x0000;
 
-			dest = &tempString[12];
+                // Store the remaining bytes of max sequence number entries with 0xFF
+                for(;index < MAX_UTF16_CHARS_IN_LFN_ENTRY;index++)
+                {
+                    tempString[(BYTE)index] = 0xFFFF;
+                }
+            }
+            else
+            {
+                // Store the remaining bytes of max sequence number entries with 0xFF
+                for(index = MAX_UTF16_CHARS_IN_LFN_ENTRY;index > 0;index--)
+                {
+                    tempString[MAX_UTF16_CHARS_IN_LFN_ENTRY - (BYTE)index] = templfnPtr[fileNameLength - (BYTE)index];
+                }
+            }
 
-			while(numberOfFileEntries)
-			{
-				fo->dirccls = fo->dirclus;
-			    lfno = (LFN_ENTRY *)Cache_File_Entry( fo, fHandle, TRUE);
+            dest = &tempString[12];
 
-			    if (lfno == NULL)
-				{
-			        return CE_BADCACHEREAD;
-				}
+            while(numberOfFileEntries)
+            {
+                fo->dirccls = fo->dirclus;
+                lfno = (LFN_ENTRY *)Cache_File_Entry( fo, fHandle, TRUE);
 
-				// Write the 32 byte LFN Object as per FAT specification
-				lfno->LFN_SequenceNo = sequenceNumber--;   // Sequence number,
+                if (lfno == NULL)
+                {
+                    return CE_BADCACHEREAD;
+                }
 
-				lfno->LFN_Part3[1] = *dest--;
-				lfno->LFN_Part3[0] = *dest--;
+                // Write the 32 byte LFN Object as per FAT specification
+                lfno->LFN_SequenceNo = sequenceNumber--;   // Sequence number,
 
-				lfno->LFN_Part2[5] = *dest--;
-				lfno->LFN_Part2[4] = *dest--;
-				lfno->LFN_Part2[3] = *dest--;
-				lfno->LFN_Part2[2] = *dest--;
-				lfno->LFN_Part2[1] = *dest--;
-				lfno->LFN_Part2[0] = *dest--;
+                lfno->LFN_Part3[1] = *dest--;
+                lfno->LFN_Part3[0] = *dest--;
 
-				tempShift.Val = *dest--;
-				lfno->LFN_Part1[9] = tempShift.byte.HB;
-				lfno->LFN_Part1[8] = tempShift.byte.LB;
-				tempShift.Val = *dest--;
-				lfno->LFN_Part1[7] = tempShift.byte.HB;
-				lfno->LFN_Part1[6] = tempShift.byte.LB;
-				tempShift.Val = *dest--;
-				lfno->LFN_Part1[5] = tempShift.byte.HB;
-				lfno->LFN_Part1[4] = tempShift.byte.LB;
-				tempShift.Val = *dest--;
-				lfno->LFN_Part1[3] = tempShift.byte.HB;
-				lfno->LFN_Part1[2] = tempShift.byte.LB;
-				tempShift.Val = *dest--;
-				lfno->LFN_Part1[1] = tempShift.byte.HB;
-				lfno->LFN_Part1[0] = tempShift.byte.LB;
+                lfno->LFN_Part2[5] = *dest--;
+                lfno->LFN_Part2[4] = *dest--;
+                lfno->LFN_Part2[3] = *dest--;
+                lfno->LFN_Part2[2] = *dest--;
+                lfno->LFN_Part2[1] = *dest--;
+                lfno->LFN_Part2[0] = *dest--;
 
-				lfno->LFN_Attribute = ATTR_LONG_NAME;
-				lfno->LFN_Type = 0;
-				lfno->LFN_Checksum = checksum;
-				lfno->LFN_Reserved2 = 0;
+                tempShift.Val = *dest--;
+                lfno->LFN_Part1[9] = tempShift.byte.HB;
+                lfno->LFN_Part1[8] = tempShift.byte.LB;
+                tempShift.Val = *dest--;
+                lfno->LFN_Part1[7] = tempShift.byte.HB;
+                lfno->LFN_Part1[6] = tempShift.byte.LB;
+                tempShift.Val = *dest--;
+                lfno->LFN_Part1[5] = tempShift.byte.HB;
+                lfno->LFN_Part1[4] = tempShift.byte.LB;
+                tempShift.Val = *dest--;
+                lfno->LFN_Part1[3] = tempShift.byte.HB;
+                lfno->LFN_Part1[2] = tempShift.byte.LB;
+                tempShift.Val = *dest--;
+                lfno->LFN_Part1[1] = tempShift.byte.HB;
+                lfno->LFN_Part1[0] = tempShift.byte.LB;
 
-			    // just write the last entry in
-			    if (Write_File_Entry(fo,fHandle) != TRUE)
-			        error = CE_WRITE_ERROR;
+                lfno->LFN_Attribute = ATTR_LONG_NAME;
+                lfno->LFN_Type = 0;
+                lfno->LFN_Checksum = checksum;
+                lfno->LFN_Reserved2 = 0;
 
-        	    // 0x40 should be ORed with only max sequence number & in
-				// all other cases it should not be present
-        	    sequenceNumber &= (~0x40);
-        	    *fHandle = *fHandle + 1;
-				numberOfFileEntries--;
+                // just write the last entry in
+                if (Write_File_Entry(fo,fHandle) != TRUE)
+                    error = CE_WRITE_ERROR;
 
-				// Load the destination address only once and during first time,
-				if(firstTime)
-				{
-					if(reminder)
-						dest = (unsigned short int *)(fo -> utf16LFNptr + fileNameLength - reminder - 1);
-					else
-						dest = (unsigned short int *)(fo -> utf16LFNptr + fileNameLength - MAX_UTF16_CHARS_IN_LFN_ENTRY - 1);
-					firstTime = FALSE;
-				}
-			}
-		}
-		#endif
+                // 0x40 should be ORed with only max sequence number & in
+                // all other cases it should not be present
+                sequenceNumber &= (~0x40);
+                *fHandle = *fHandle + 1;
+                numberOfFileEntries--;
+
+                // Load the destination address only once and during first time,
+                if(firstTime)
+                {
+                    if(reminder)
+                        dest = (unsigned short int *)(fo -> utf16LFNptr + fileNameLength - reminder - 1);
+                    else
+                        dest = (unsigned short int *)(fo -> utf16LFNptr + fileNameLength - MAX_UTF16_CHARS_IN_LFN_ENTRY - 1);
+                    firstTime = FALSE;
+                }
+            }
+        }
+        #endif
 
         // found the entry, now populate it
         if((error = PopulateEntries(fo, fHandle, mode)) == CE_GOOD)
         {
-			if(createFirstCluster)
-            	// if everything is ok, create a first cluster
-            	error = CreateFirstCluster(fo);
-			else
-			{
+            if(createFirstCluster)
+                // if everything is ok, create a first cluster
+                error = CreateFirstCluster(fo);
+            else
+            {
 
-			}
+            }
         }
     }
     else
@@ -3495,28 +3495,28 @@ BYTE FindEmptyEntries(FILEOBJ fo, WORD *fHandle)
     fo->dirccls = fo->dirclus;
     if((dir = Cache_File_Entry( fo, fHandle, TRUE)) != NULL)
     {
-		#if defined(SUPPORT_LFN)
-		// If LFN entry
-		if(fo->utf16LFNlength)
-		{
-			// File Name + NULL character is file name length in LFN
-			fileNameLength = fo->utf16LFNlength;
+        #if defined(SUPPORT_LFN)
+        // If LFN entry
+        if(fo->utf16LFNlength)
+        {
+            // File Name + NULL character is file name length in LFN
+            fileNameLength = fo->utf16LFNlength;
 
-			// Determine the number of entries for LFN
-			a = fileNameLength % MAX_UTF16_CHARS_IN_LFN_ENTRY;
+            // Determine the number of entries for LFN
+            a = fileNameLength % MAX_UTF16_CHARS_IN_LFN_ENTRY;
 
-			numberOfFileEntries = fileNameLength/MAX_UTF16_CHARS_IN_LFN_ENTRY;
+            numberOfFileEntries = fileNameLength/MAX_UTF16_CHARS_IN_LFN_ENTRY;
 
-			if(a || (fileNameLength < MAX_UTF16_CHARS_IN_LFN_ENTRY))
-			{
-				numberOfFileEntries++;
-			}
+            if(a || (fileNameLength < MAX_UTF16_CHARS_IN_LFN_ENTRY))
+            {
+                numberOfFileEntries++;
+            }
 
             // Increment by 1 so that you have space to store for assosciated short file name
             numberOfFileEntries = numberOfFileEntries + 1;
-		}
-		else
-		#endif
+        }
+        else
+        #endif
             numberOfFileEntries = 1;
 
         // while its still not found
@@ -3582,9 +3582,9 @@ BYTE FindEmptyEntries(FILEOBJ fo, WORD *fHandle)
     }
 
     // copy the base handle over
-	*fHandle = bHandle;
+    *fHandle = bHandle;
 
-	return(status);
+    return(status);
 }
 #endif
 
@@ -3704,208 +3704,208 @@ BYTE PopulateEntries(FILEOBJ fo, WORD *fHandle, BYTE mode)
 #if defined(SUPPORT_LFN)
 BOOL Alias_LFN_Object(FILEOBJ fo)
 {
-	FSFILE		filePtr1;
-	FSFILE		filePtr2;
-	unsigned long int index4;
-	short int   lfnIndex,index1,index2;
+    FSFILE      filePtr1;
+    FSFILE      filePtr2;
+    unsigned long int index4;
+    short int   lfnIndex,index1,index2;
     BYTE  tempVariable,index;
-	char  tempString[8];
-	char  *lfnAliasPtr;
-	unsigned short int  *templfnPtr;
-	BOOL result = FALSE;
+    char  tempString[8];
+    char  *lfnAliasPtr;
+    unsigned short int  *templfnPtr;
+    BOOL result = FALSE;
 
     // copy file object over
     FileObjectCopy(&filePtr1, fo);
 
-	lfnAliasPtr = (char *)&filePtr1.name[0];
+    lfnAliasPtr = (char *)&filePtr1.name[0];
 
-	templfnPtr = (unsigned short int *)filePtr1.utf16LFNptr;
+    templfnPtr = (unsigned short int *)filePtr1.utf16LFNptr;
 
-	fileNameLength = fo->utf16LFNlength;
+    fileNameLength = fo->utf16LFNlength;
 
-	// Initially fill the alias name with space characters
-	for(index1 = 0;index1 < FILE_NAME_SIZE_8P3;index1++)
-	{
-		lfnAliasPtr[index1] = ' ';
-	}
+    // Initially fill the alias name with space characters
+    for(index1 = 0;index1 < FILE_NAME_SIZE_8P3;index1++)
+    {
+        lfnAliasPtr[index1] = ' ';
+    }
 
-	// find the location where '.' is present
-	for(lfnIndex = fileNameLength - 1;lfnIndex > 0;lfnIndex--)
-	{
-		if (templfnPtr[lfnIndex] == '.')
-		{
-		    break;
-		}
-	}
+    // find the location where '.' is present
+    for(lfnIndex = fileNameLength - 1;lfnIndex > 0;lfnIndex--)
+    {
+        if (templfnPtr[lfnIndex] == '.')
+        {
+            break;
+        }
+    }
 
-	index1 = lfnIndex + 1;
+    index1 = lfnIndex + 1;
 
-	tempVariable = 0;
-	if(lfnIndex)
-	{
-		index2 = 8;
-		// Complete the extension part as per the FAT specifications
-		for(;((index1 < fileNameLength) && (tempVariable < 3));index1++)
-		{
-			// Convert lower-case to upper-case
-			index = (BYTE)templfnPtr[index1];
-			if ((index >= 0x61) && (index <= 0x7A))
-			{
-			    lfnAliasPtr[index2++] = index - 0x20;
-			}
-			else if(index == ' ')
-			{
-				continue;
-			}
-			else if ((index == 0x2B) || (index == 0x2C) || (index == 0x3B) || 
-					(index == 0x3D) || (index == 0x5B) || (index == 0x5D) || 
-					(templfnPtr[index1] > 0xFF))
-			{
-			    lfnAliasPtr[index2++] = '_';
-			}
-			else
-			{
-			    lfnAliasPtr[index2++] = index;
-			}
-			
-			tempVariable++;
-		}
+    tempVariable = 0;
+    if(lfnIndex)
+    {
+        index2 = 8;
+        // Complete the extension part as per the FAT specifications
+        for(;((index1 < fileNameLength) && (tempVariable < 3));index1++)
+        {
+            // Convert lower-case to upper-case
+            index = (BYTE)templfnPtr[index1];
+            if ((index >= 0x61) && (index <= 0x7A))
+            {
+                lfnAliasPtr[index2++] = index - 0x20;
+            }
+            else if(index == ' ')
+            {
+                continue;
+            }
+            else if ((index == 0x2B) || (index == 0x2C) || (index == 0x3B) ||
+                    (index == 0x3D) || (index == 0x5B) || (index == 0x5D) ||
+                    (templfnPtr[index1] > 0xFF))
+            {
+                lfnAliasPtr[index2++] = '_';
+            }
+            else
+            {
+                lfnAliasPtr[index2++] = index;
+            }
 
-		index2 = lfnIndex;
-		tempVariable = 0;
-	}
-	else
-	{
-		index2 = fileNameLength;
-	}
+            tempVariable++;
+        }
 
-	// Fill the base part as per the FAT specifications
-	for(index1 = 0;((index1 < index2) && (tempVariable < 6));index1++)
-	{
-		// Convert lower-case to upper-case
-		index = (BYTE)templfnPtr[index1];
-		if ((index >= 0x61) && (index <= 0x7A))
-		{
-		    lfnAliasPtr[tempVariable] = index - 0x20;
-		}
-		else if(index == ' ')
-		{
-			continue;
-		}
-		else if ((index == 0x2B) || (index == 0x2C) || (index == 0x3B) || 
-				(index == 0x3D) || (index == 0x5B) || (index == 0x5D) || 
-				(templfnPtr[index1] > 0xFF))
-		{
-		    lfnAliasPtr[tempVariable] = '_';
-		}
-		else
-		{
-		    lfnAliasPtr[tempVariable] = index;
-		}
-		tempVariable++;
-	}
+        index2 = lfnIndex;
+        tempVariable = 0;
+    }
+    else
+    {
+        index2 = fileNameLength;
+    }
 
-	// Aliasing of the predicted name should append ~1
-	lfnAliasPtr[tempVariable] = '~';
-	lfnAliasPtr[tempVariable + 1] = '1';
+    // Fill the base part as per the FAT specifications
+    for(index1 = 0;((index1 < index2) && (tempVariable < 6));index1++)
+    {
+        // Convert lower-case to upper-case
+        index = (BYTE)templfnPtr[index1];
+        if ((index >= 0x61) && (index <= 0x7A))
+        {
+            lfnAliasPtr[tempVariable] = index - 0x20;
+        }
+        else if(index == ' ')
+        {
+            continue;
+        }
+        else if ((index == 0x2B) || (index == 0x2C) || (index == 0x3B) ||
+                (index == 0x3D) || (index == 0x5B) || (index == 0x5D) ||
+                (templfnPtr[index1] > 0xFF))
+        {
+            lfnAliasPtr[tempVariable] = '_';
+        }
+        else
+        {
+            lfnAliasPtr[tempVariable] = index;
+        }
+        tempVariable++;
+    }
+
+    // Aliasing of the predicted name should append ~1
+    lfnAliasPtr[tempVariable] = '~';
+    lfnAliasPtr[tempVariable + 1] = '1';
 
     filePtr1.attributes = ATTR_ARCHIVE;
 
-	filePtr1.utf16LFNlength = 0;
+    filePtr1.utf16LFNlength = 0;
 
-	// Try for 9999999 combinations before telling error to the user
-	for(index4 = 1;index4 < (unsigned long int)10000000;index4++)
-	{
-	    filePtr1.cluster = 0;
-	    filePtr1.ccls    = 0;
-	    filePtr1.entry = 0;
+    // Try for 9999999 combinations before telling error to the user
+    for(index4 = 1;index4 < (unsigned long int)10000000;index4++)
+    {
+        filePtr1.cluster = 0;
+        filePtr1.ccls    = 0;
+        filePtr1.entry = 0;
 
-		    // start at the current directory
-		#ifdef ALLOW_DIRS
-		    filePtr1.dirclus    = cwdptr->dirclus;
-		    filePtr1.dirccls    = cwdptr->dirccls;
-		#else
-		    filePtr1.dirclus = FatRootDirClusterValue;
-		    filePtr1.dirccls = FatRootDirClusterValue;
-		#endif
+            // start at the current directory
+        #ifdef ALLOW_DIRS
+            filePtr1.dirclus    = cwdptr->dirclus;
+            filePtr1.dirccls    = cwdptr->dirccls;
+        #else
+            filePtr1.dirclus = FatRootDirClusterValue;
+            filePtr1.dirccls = FatRootDirClusterValue;
+        #endif
 
-	    // copy file object over
-	    FileObjectCopy(&filePtr2, &filePtr1);
+        // copy file object over
+        FileObjectCopy(&filePtr2, &filePtr1);
 
-	    // See if the file is found
-	    if(FILEfind (&filePtr2, &filePtr1, LOOK_FOR_MATCHING_ENTRY, 0) == CE_GOOD)
-		{
-			tempString[7] = index4 % (BYTE)10 + '0';
-			tempString[6] = (index4 % (BYTE)100)/10 + '0';
-			tempString[5] = (index4 % 1000)/100 + '0';
-			tempString[4] = (index4 % 10000)/1000 + '0';
-			tempString[3] = (index4 % 100000)/10000 + '0';
-			tempString[2] = (index4 % 1000000)/100000 + '0';
-			if((tempString[1] = ((index4 % 10000000)/1000000 + '0')) != '0')
-			{
-					tempString[index = 0] = '~';
-			}
-			else
-			{
-				for(index = 6;index > 0;index--)
-				{
-					if((tempString[index] == '0') && (tempString[index - 1] == '0'))
-					{
-						tempString[index] = '~';
-						if(!filePtr1.AsciiEncodingType)
-						{
-							if(index % 2)
-							{
-								for(index2 = index - 1;index2 < 7;index2++)
-								{
-									tempString[index2] = tempString[index2 + 1];
-								}
-								tempString[7] = ' ';
-								index--;
-							}
-						}
-						break;
-					}
-				}
-			}
+        // See if the file is found
+        if(FILEfind (&filePtr2, &filePtr1, LOOK_FOR_MATCHING_ENTRY, 0) == CE_GOOD)
+        {
+            tempString[7] = index4 % (BYTE)10 + '0';
+            tempString[6] = (index4 % (BYTE)100)/10 + '0';
+            tempString[5] = (index4 % 1000)/100 + '0';
+            tempString[4] = (index4 % 10000)/1000 + '0';
+            tempString[3] = (index4 % 100000)/10000 + '0';
+            tempString[2] = (index4 % 1000000)/100000 + '0';
+            if((tempString[1] = ((index4 % 10000000)/1000000 + '0')) != '0')
+            {
+                    tempString[index = 0] = '~';
+            }
+            else
+            {
+                for(index = 6;index > 0;index--)
+                {
+                    if((tempString[index] == '0') && (tempString[index - 1] == '0'))
+                    {
+                        tempString[index] = '~';
+                        if(!filePtr1.AsciiEncodingType)
+                        {
+                            if(index % 2)
+                            {
+                                for(index2 = index - 1;index2 < 7;index2++)
+                                {
+                                    tempString[index2] = tempString[index2 + 1];
+                                }
+                                tempString[7] = ' ';
+                                index--;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
 
-			if(index >= tempVariable)
-			{
-				index1 = tempVariable;
-			}
-			else
-			{
-				index1 = index;
-			}
+            if(index >= tempVariable)
+            {
+                index1 = tempVariable;
+            }
+            else
+            {
+                index1 = index;
+            }
 
-			while(index < 8)
-			{
-				filePtr1.name[index1++] = tempString[index++];
-			}
+            while(index < 8)
+            {
+                filePtr1.name[index1++] = tempString[index++];
+            }
 
-			// Store the remaining bytes with leading spaces
-			while(index1 < 8)
-			{
-				filePtr1.name[index1++] = ' ';
-			}
+            // Store the remaining bytes with leading spaces
+            while(index1 < 8)
+            {
+                filePtr1.name[index1++] = ' ';
+            }
 
-		}
-		else
-		{
-			// short file name is found.Store it & quit
-			lfnAliasPtr = &fo->name[0];
+        }
+        else
+        {
+            // short file name is found.Store it & quit
+            lfnAliasPtr = &fo->name[0];
 
-			for(index = 0;index < FILE_NAME_SIZE_8P3;index++)
-			{
-				lfnAliasPtr[index] = filePtr1.name[index];
-			}
+            for(index = 0;index < FILE_NAME_SIZE_8P3;index++)
+            {
+                lfnAliasPtr[index] = filePtr1.name[index];
+            }
 
-			result = TRUE;
-			break;
-		}
-	}
+            result = TRUE;
+            break;
+        }
+    }
 
-	return(result);
+    return(result);
 
 } // Alias_LFN_Object
 #endif
@@ -3937,20 +3937,20 @@ void CacheTime (void)
 
 #if defined (__PIC32MX__)   // Added support for PIC32. -Bud (3/4/2008)
 
-	unsigned int	t0, t1;
-	unsigned int	d0, d1;
+    unsigned int    t0, t1;
+    unsigned int    d0, d1;
 
-	do  // Get the time
-	{
-		t0=RTCTIME;
-		t1=RTCTIME;
-	}while(t0!=t1);
+    do  // Get the time
+    {
+        t0=RTCTIME;
+        t1=RTCTIME;
+    }while(t0!=t1);
 
-	do  // Get the date
-	{
-		d0=RTCDATE;
-		d1=RTCDATE;
-	}while(d0!=d1);
+    do  // Get the date
+    {
+        d0=RTCDATE;
+        d1=RTCDATE;
+    }while(d0!=d1);
 
     // Put them in place.
     year        = (WORD)(d0 >> 24);
@@ -4288,22 +4288,22 @@ DWORD FATfindEmptyCluster(FILEOBJ fo)
     properties - a pointer to a FS_DISK_PROPERTIES object where the results should
       be stored.
   Return Values:
-    This function returns void.  The properties_status of the previous call of this 
-      function is located in the properties.status field.  This field has the 
+    This function returns void.  The properties_status of the previous call of this
+      function is located in the properties.status field.  This field has the
       following possible values:
 
     FS_GET_PROPERTIES_NO_ERRORS - operation completed without error.  Results
       are in the properties object passed into the function.
     FS_GET_PROPERTIES_DISK_NOT_MOUNTED - there is no mounted disk.  Results in
       properties object is not valid
-    FS_GET_PROPERTIES_CLUSTER_FAILURE - there was a failure trying to read a 
+    FS_GET_PROPERTIES_CLUSTER_FAILURE - there was a failure trying to read a
       cluster from the drive.  The results in the properties object is a partial
       result up until the point of the failure.
     FS_GET_PROPERTIES_STILL_WORKING - the search for free sectors is still in
-      process.  Continue calling this function with the same properties pointer 
+      process.  Continue calling this function with the same properties pointer
       until either the function completes or until the partial results meets the
       application needs.  The properties object contains the partial results of
-      the search and can be used by the application.  
+      the search and can be used by the application.
   Side Effects:
     Can cause errors if called when files are open.  Close all files before
     calling this function.
@@ -4313,10 +4313,10 @@ DWORD FATfindEmptyCluster(FILEOBJ fo)
 
     Calling this function after a result is returned other than
     FS_GET_PROPERTIES_STILL_WORKING can result in undefined behavior and results.
-  Description:  
-    This function returns the information about the mounted drive.  The results 
-    member of the properties object passed into the function is populated with 
-    the information about the drive.    
+  Description:
+    This function returns the information about the mounted drive.  The results
+    member of the properties object passed into the function is populated with
+    the information about the drive.
 
     Before starting a new request, the new_request member of the properties
     input parameter should be set to TRUE.  This will initiate a new search
@@ -4326,13 +4326,13 @@ DWORD FATfindEmptyCluster(FILEOBJ fo)
     All of the results except the free_clusters will be correct after the first
     call.  The free_clusters will contain the number of free clusters found up
     until that point, thus the free_clusters result will continue to grow until
-    the entire drive is searched.  If an application only needs to know that a 
-    certain number of bytes is available and doesn't need to know the total free 
+    the entire drive is searched.  If an application only needs to know that a
+    certain number of bytes is available and doesn't need to know the total free
     size, then this function can be called until the required free size is
     verified.  To continue a search, pass a pointer to the same FS_DISK_PROPERTIES
     object that was passed in to create the search.
 
-    A new search request sould be made once this function has returned a value 
+    A new search request sould be made once this function has returned a value
     other than FS_GET_PROPERTIES_STILL_WORKING.  Continuing a completed search
     can result in undefined behavior or results.
 
@@ -4348,7 +4348,7 @@ DWORD FATfindEmptyCluster(FILEOBJ fo)
     } while (disk_properties.properties_status == FS_GET_PROPERTIES_STILL_WORKING);
     </code>
 
-    results.disk_format - contains the format of the drive.  Valid results are 
+    results.disk_format - contains the format of the drive.  Valid results are
       FAT12(1), FAT16(2), or FAT32(3).
 
     results.sector_size - the sector size of the mounted drive.  Valid values are
@@ -4356,12 +4356,12 @@ DWORD FATfindEmptyCluster(FILEOBJ fo)
 
     results.sectors_per_cluster - the number sectors per cluster.
 
-    results.total_clusters - the number of total clusters on the drive.  This 
-      can be used to calculate the total disk size (total_clusters * 
+    results.total_clusters - the number of total clusters on the drive.  This
+      can be used to calculate the total disk size (total_clusters *
       sectors_per_cluster * sector_size = total size of drive in bytes)
 
     results.free_clusters - the number of free (unallocated) clusters on the drive.
-      This can be used to calculate the total free disk size (free_clusters * 
+      This can be used to calculate the total free disk size (free_clusters *
       sectors_per_cluster * sector_size = total size of drive in bytes)
 
   Remarks:
@@ -4391,7 +4391,7 @@ void FSGetDiskProperties(FS_DISK_PROPERTIES* properties)
         }
 
         properties->properties_status = FS_GET_PROPERTIES_STILL_WORKING;
-   
+
         properties->results.disk_format = properties->disk->type;
         properties->results.sector_size = properties->disk->sectorSize;
         properties->results.sectors_per_cluster = properties->disk->SecPerClus;
@@ -4415,7 +4415,7 @@ void FSGetDiskProperties(FS_DISK_PROPERTIES* properties)
                 properties->private.ClusterFailValue = CLUSTER_FAIL_FAT16;
                 break;
         }
-    
+
         properties->private.c = 2;
 
         properties->private.curcls = properties->private.c;
@@ -4533,7 +4533,7 @@ int FSfclose(FSFILE   *fo)
         gLastFATSectorRead = 0;
 
         // Read the FAT entry from the physical media.  This is required because
-        //   some physical media cache the entries in RAM and only write them 
+        //   some physical media cache the entries in RAM and only write them
         //   after a time expires for until the sector is accessed again.
         ReadFAT (fo->dsk, fo->ccls);
 
@@ -4567,7 +4567,7 @@ int FSfclose(FSFILE   *fo)
         if(Write_File_Entry(fo,&fHandle))
         {
             // Read the folder entry from the physical media.  This is required because
-            //   some physical media cache the entries in RAM and only write them 
+            //   some physical media cache the entries in RAM and only write them
             //   after a time expires for until the sector is accessed again.
             dir = LoadDirAttrib(fo, &fHandle);
             error = 0;
@@ -4584,10 +4584,10 @@ int FSfclose(FSFILE   *fo)
 #endif
 
 #ifdef FS_DYNAMIC_MEM
-    #ifdef	SUPPORT_LFN
-		FS_free((unsigned char *)fo->utf16LFNptr);
-	#endif
-	FS_free((unsigned char *)fo);
+    #ifdef  SUPPORT_LFN
+        FS_free((unsigned char *)fo->utf16LFNptr);
+    #endif
+    FS_free((unsigned char *)fo);
 #else
 
     for( fIndex = 0; fIndex < FS_MAX_FILES_OPEN; fIndex++ )
@@ -4764,13 +4764,13 @@ BYTE Fill_File_Object(FILEOBJ fo, WORD *fHandle)
 
         // Check for empty or deleted directory
         if ( a == DIR_DEL)
-		{
+        {
             status = NOT_FOUND;
-		}
-		else if ( a == DIR_EMPTY)
-		{
-			status = NO_MORE;
-		}
+        }
+        else if ( a == DIR_EMPTY)
+        {
+            status = NO_MORE;
+        }
         else
         {
             // Get the attributes
@@ -4896,25 +4896,25 @@ BYTE Fill_LFN_Object(FILEOBJ fo, LFN_ENTRY *lfno, WORD *fHandle)
 
         // Check for empty or deleted directory
         if ( tempVariable == DIR_DEL)
-		{
+        {
             status = NOT_FOUND;
-		}
-		else if ( tempVariable == DIR_EMPTY)
-		{
-			status = NO_MORE;
-		}
+        }
+        else if ( tempVariable == DIR_EMPTY)
+        {
+            status = NO_MORE;
+        }
         else
         {
             status = FOUND;
 
-			dst = (BYTE *)lfno;
-			src = (BYTE *)dir;
+            dst = (BYTE *)lfno;
+            src = (BYTE *)dir;
 
-			// Copy the entry in the lfno object
-			for(tempVariable = 0;tempVariable < 32;tempVariable++)
-			{
-				*dst++ = *src++;
-			}
+            // Copy the entry in the lfno object
+            for(tempVariable = 0;tempVariable < 32;tempVariable++)
+            {
+                *dst++ = *src++;
+            }
         }// deleted directory
     }// Ensure we are still good
     return(status);
@@ -5026,101 +5026,101 @@ CETYPE FILEerase( FILEOBJ fo, WORD *fHandle, BYTE EraseClusters)
     DWORD       clus = 0;
     DISK *      disk;
 
-    BYTE	numberOfFileEntries;
-	BOOL	forFirstTime = TRUE;
-	#if defined(SUPPORT_LFN)
-		BYTE	tempCalc1;
-	#endif
+    BYTE    numberOfFileEntries;
+    BOOL    forFirstTime = TRUE;
+    #if defined(SUPPORT_LFN)
+        BYTE    tempCalc1;
+    #endif
 
     disk = fo->dsk;
 
-	#if defined(SUPPORT_LFN)
+    #if defined(SUPPORT_LFN)
 
-	fileNameLength = fo->utf16LFNlength;
+    fileNameLength = fo->utf16LFNlength;
 
-	// Find the number of entries of LFN in the root directory
-	if(fileNameLength)
-	{
-		tempCalc1 = fileNameLength % 13;
+    // Find the number of entries of LFN in the root directory
+    if(fileNameLength)
+    {
+        tempCalc1 = fileNameLength % 13;
 
-		numberOfFileEntries = fileNameLength/13;
+        numberOfFileEntries = fileNameLength/13;
 
-		if(tempCalc1 || (fileNameLength < 13))
-		{
-			numberOfFileEntries = numberOfFileEntries + 2;
-		}
-		else
-		{
-			numberOfFileEntries++;
-		}
-	}
-	else
-	#endif
-	{
-		numberOfFileEntries = 1;
-	}
+        if(tempCalc1 || (fileNameLength < 13))
+        {
+            numberOfFileEntries = numberOfFileEntries + 2;
+        }
+        else
+        {
+            numberOfFileEntries++;
+        }
+    }
+    else
+    #endif
+    {
+        numberOfFileEntries = 1;
+    }
 
-	FSerrno = CE_ERASE_FAIL;
+    FSerrno = CE_ERASE_FAIL;
 
-	// delete all the entries of LFN in root directory
-	while(numberOfFileEntries--)
-	{
-	    // reset the cluster
-	    fo->dirccls = fo->dirclus;
+    // delete all the entries of LFN in root directory
+    while(numberOfFileEntries--)
+    {
+        // reset the cluster
+        fo->dirccls = fo->dirclus;
 
-	    // load the sector
-	    dir = Cache_File_Entry(fo, fHandle, TRUE);
+        // load the sector
+        dir = Cache_File_Entry(fo, fHandle, TRUE);
 
-	    if (dir == NULL)
-	    {
-	        return CE_BADCACHEREAD;
-	    }
+        if (dir == NULL)
+        {
+            return CE_BADCACHEREAD;
+        }
 
-	    // Fill up the File Object with the information pointed to by fHandle
-	    a = dir->DIR_Name[0];
+        // Fill up the File Object with the information pointed to by fHandle
+        a = dir->DIR_Name[0];
 
-	    // see if there is something in the dir
-	    if((dir == (DIRENTRY)NULL) || (a == DIR_EMPTY) || (a == DIR_DEL))
-	    {
-	        status = CE_FILE_NOT_FOUND;
-			break;
-	    }
-		else
-		{
+        // see if there is something in the dir
+        if((dir == (DIRENTRY)NULL) || (a == DIR_EMPTY) || (a == DIR_DEL))
+        {
+            status = CE_FILE_NOT_FOUND;
+            break;
+        }
+        else
+        {
             /* 8.3 File Name - entry*/
             dir->DIR_Name[0] = DIR_DEL; // mark as deleted
 
-			if(!(Write_File_Entry( fo, fHandle)))
-     		{
-     		    status = CE_ERASE_FAIL;
-				break;
-     		}
-		}
+            if(!(Write_File_Entry( fo, fHandle)))
+            {
+                status = CE_ERASE_FAIL;
+                break;
+            }
+        }
 
-		if(forFirstTime)
-		{
-			// Get the starting cluster
-			clus = GetFullClusterNumber(dir); // Get Complete Cluster number.
-			forFirstTime = FALSE;
-		}
+        if(forFirstTime)
+        {
+            // Get the starting cluster
+            clus = GetFullClusterNumber(dir); // Get Complete Cluster number.
+            forFirstTime = FALSE;
+        }
 
-		*fHandle = *fHandle - 1;
-	}
+        *fHandle = *fHandle - 1;
+    }
 
-	if(status == CE_GOOD)
-	{
-		if (clus != FatRootDirClusterValue) //
-		{
-			// If 'EraseClusters' is set to TRUE, erase the cluster chain corresponding to file
-		    if(EraseClusters)
-		    {
-		        /* Now remove the cluster allocation from the FAT */
-		        status = ((FAT_erase_cluster_chain(clus, disk)) ? CE_GOOD : CE_ERASE_FAIL);
-		    }
-		}
+    if(status == CE_GOOD)
+    {
+        if (clus != FatRootDirClusterValue) //
+        {
+            // If 'EraseClusters' is set to TRUE, erase the cluster chain corresponding to file
+            if(EraseClusters)
+            {
+                /* Now remove the cluster allocation from the FAT */
+                status = ((FAT_erase_cluster_chain(clus, disk)) ? CE_GOOD : CE_ERASE_FAIL);
+            }
+        }
 
-		FSerrno = status;
-	}
+        FSerrno = status;
+    }
 
     return (status);
 }
@@ -5147,7 +5147,7 @@ CETYPE FILEerase( FILEOBJ fo, WORD *fHandle, BYTE EraseClusters)
     specified new filename is not already in use. If it isn't, the new filename
     will be written to the file entry of the file pointed to by 'fo.'
   Remarks:
-    None                                                        
+    None
   ***************************************************************/
 
 #ifdef ALLOW_WRITES
@@ -5155,7 +5155,7 @@ CETYPE FILEerase( FILEOBJ fo, WORD *fHandle, BYTE EraseClusters)
 int FSrename (const char * fileName, FSFILE * fo)
 {
     WORD fHandle;
-	FSFILE	tempFo1,tempFo2;
+    FSFILE  tempFo1,tempFo2;
     DIRENTRY dir;
     #ifdef SUPPORT_LFN
     DWORD  TempMsbCluster;
@@ -5181,63 +5181,63 @@ int FSrename (const char * fileName, FSFILE * fo)
         return -1;
     }
 
-	tempFo1.entry  = 0;
+    tempFo1.entry  = 0;
 
-	// start at the current directory
-	tempFo1.dirclus  = cwdptr->dirclus;
-	tempFo1.dirccls  = cwdptr->dirccls;
+    // start at the current directory
+    tempFo1.dirclus  = cwdptr->dirclus;
+    tempFo1.dirccls  = cwdptr->dirccls;
 
     // copy file object over
     FileObjectCopy(&tempFo2, &tempFo1);
 
     // See if the file is found
     if(FILEfind (&tempFo2, &tempFo1, LOOK_FOR_MATCHING_ENTRY, 0) == CE_FILE_NOT_FOUND)
-	{
-		fHandle = fo->entry;
+    {
+        fHandle = fo->entry;
 
-		#ifdef SUPPORT_LFN
+        #ifdef SUPPORT_LFN
 
-		if(CE_GOOD != FILEerase(fo, &fHandle, FALSE))
-		{
-			FSerrno = CE_ERASE_FAIL;
-			return -1;
-		}
+        if(CE_GOOD != FILEerase(fo, &fHandle, FALSE))
+        {
+            FSerrno = CE_ERASE_FAIL;
+            return -1;
+        }
 
-	   	// Create the new entry as per the user requested name
-	   	FSerrno = CreateFileEntry (&tempFo1, &fHandle, tempFo1.attributes, FALSE);
+        // Create the new entry as per the user requested name
+        FSerrno = CreateFileEntry (&tempFo1, &fHandle, tempFo1.attributes, FALSE);
 
-	   	// load the file entry so the new cluster can be linked to it
-	   	dir = LoadDirAttrib(&tempFo1, &fHandle);
+        // load the file entry so the new cluster can be linked to it
+        dir = LoadDirAttrib(&tempFo1, &fHandle);
 
-	   	// Now update the new cluster
-	   	dir->DIR_FstClusLO = (fo->cluster & 0x0000FFFF);
+        // Now update the new cluster
+        dir->DIR_FstClusLO = (fo->cluster & 0x0000FFFF);
 
-	   	#ifdef SUPPORT_FAT32 // If FAT32 supported.
-	   	// Get the higher part of cluster and store it in directory entry.
-	   	TempMsbCluster = (fo->cluster & 0x0FFF0000);    // Since only 28 bits usedin FAT32. Mask the higher MSB nibble.
-	   	TempMsbCluster = TempMsbCluster >> 16;      // Get the date into Lsb place.
-	   	dir->DIR_FstClusHI = TempMsbCluster;
-	   	#else // If FAT32 support not enabled
-	   	TempMsbCluster = 0;                         // Just to avoid compiler warnigng.
-	   	dir->DIR_FstClusHI = 0;
-	   	#endif
-	   
-		// Update the file size
+        #ifdef SUPPORT_FAT32 // If FAT32 supported.
+        // Get the higher part of cluster and store it in directory entry.
+        TempMsbCluster = (fo->cluster & 0x0FFF0000);    // Since only 28 bits usedin FAT32. Mask the higher MSB nibble.
+        TempMsbCluster = TempMsbCluster >> 16;      // Get the date into Lsb place.
+        dir->DIR_FstClusHI = TempMsbCluster;
+        #else // If FAT32 support not enabled
+        TempMsbCluster = 0;                         // Just to avoid compiler warnigng.
+        dir->DIR_FstClusHI = 0;
+        #endif
+
+        // Update the file size
         dir->DIR_FileSize = fo->size;
 
-	   	// now write it
-	   	if(Write_File_Entry(&tempFo1, &fHandle) != TRUE)
-		{
-	    	FSerrno = CE_WRITE_ERROR;
-	    	return -1;
-		}
-	   	
-   		tempFo1.size = fo->size;
+        // now write it
+        if(Write_File_Entry(&tempFo1, &fHandle) != TRUE)
+        {
+            FSerrno = CE_WRITE_ERROR;
+            return -1;
+        }
 
-		// copy file object over
-		FileObjectCopy(fo, &tempFo1);
-		
-		#else
+        tempFo1.size = fo->size;
+
+        // copy file object over
+        FileObjectCopy(fo, &tempFo1);
+
+        #else
 
         // Get the file entry
         dir = LoadDirAttrib(fo, &fHandle);
@@ -5255,13 +5255,13 @@ int FSrename (const char * fileName, FSFILE * fo)
             return -1;
         }
 
-		#endif
-	}
-	else
-	{
+        #endif
+    }
+    else
+    {
         FSerrno = CE_FILENAME_EXISTS;
         return -1;
-	}
+    }
 
     return 0;
 }
@@ -5294,11 +5294,11 @@ int FSrename (const char * fileName, FSFILE * fo)
 #ifdef SUPPORT_LFN
 int wFSrename (const unsigned short int * fileName, FSFILE * fo)
 {
-	int result;
-	utfModeFileName = TRUE;
-	result = FSrename ((const char *)fileName,fo);
-	utfModeFileName = FALSE;
-	return result;
+    int result;
+    utfModeFileName = TRUE;
+    result = FSrename ((const char *)fileName,fo);
+    utfModeFileName = FALSE;
+    return result;
 }
 #endif
 
@@ -5349,11 +5349,11 @@ int wFSrename (const unsigned short int * fileName, FSFILE * fo)
 #ifdef SUPPORT_LFN
 FSFILE * wFSfopen( const unsigned short int * fileName, const char *mode )
 {
-	FSFILE *result;
-	utfModeFileName = TRUE;
-	result = FSfopen((const char *)fileName,mode);
-	utfModeFileName = FALSE;
-	return result;
+    FSFILE *result;
+    utfModeFileName = TRUE;
+    result = FSfopen((const char *)fileName,mode);
+    utfModeFileName = FALSE;
+    return result;
 }
 #endif
 
@@ -5413,11 +5413,11 @@ FSFILE * FSfopen( const char * fileName, const char *mode )
     //Read the mode character
     ModeC = mode[0];
 
-    if(MDD_WriteProtectState() && (ModeC != 'r') && (ModeC != 'R')) 
-    { 
-        FSerrno = CE_WRITE_PROTECTED; 
-        return NULL; 
-    } 
+    if(MDD_WriteProtectState() && (ModeC != 'r') && (ModeC != 'R'))
+    {
+        FSerrno = CE_WRITE_PROTECTED;
+        return NULL;
+    }
 
 #ifdef FS_DYNAMIC_MEM
     filePtr = (FILEOBJ) FS_malloc(sizeof(FSFILE));
@@ -5432,7 +5432,7 @@ FSFILE * FSfopen( const char * fileName, const char *mode )
         {
             gFileSlotOpen[fIndex] = FALSE;
             filePtr = &gFileArray[fIndex];
-			break;
+            break;
         }
     }
 
@@ -5443,27 +5443,27 @@ FSFILE * FSfopen( const char * fileName, const char *mode )
     }
 #endif
 
-	#if defined(SUPPORT_LFN)
-		#if defined(FS_DYNAMIC_MEM)
-			filePtr -> utf16LFNptr = (unsigned short int *)FS_malloc(514);
-		#else
-			filePtr->utf16LFNptr = &lfnData[fIndex][0];
-		#endif
+    #if defined(SUPPORT_LFN)
+        #if defined(FS_DYNAMIC_MEM)
+            filePtr -> utf16LFNptr = (unsigned short int *)FS_malloc(514);
+        #else
+            filePtr->utf16LFNptr = &lfnData[fIndex][0];
+        #endif
     #endif
 
     //Format the source string.
     if( !FormatFileName(fileName, filePtr, 0) )
     {
-		#ifdef FS_DYNAMIC_MEM
-			#if defined(SUPPORT_LFN)
-				FS_free((unsigned char *)filePtr->utf16LFNptr);
-			#endif
-        	FS_free( (unsigned char *)filePtr );
-		#else
-        	gFileSlotOpen[fIndex] = TRUE;   //put this slot back to the pool
-		#endif
-        
-		FSerrno = CE_INVALID_FILENAME;
+        #ifdef FS_DYNAMIC_MEM
+            #if defined(SUPPORT_LFN)
+                FS_free((unsigned char *)filePtr->utf16LFNptr);
+            #endif
+            FS_free( (unsigned char *)filePtr );
+        #else
+            gFileSlotOpen[fIndex] = TRUE;   //put this slot back to the pool
+        #endif
+
+        FSerrno = CE_INVALID_FILENAME;
         return NULL;   //bad filename
     }
 
@@ -5638,10 +5638,10 @@ FSFILE * FSfopen( const char * fileName, const char *mode )
         }
         else
 #endif
-		{
+        {
             final = CE_FILE_NOT_FOUND;
-        	FSerrno = CE_FILE_NOT_FOUND;
-    	}
+            FSerrno = CE_FILE_NOT_FOUND;
+        }
     }
 
     if (MDD_WriteProtectState())
@@ -5652,10 +5652,10 @@ FSFILE * FSfopen( const char * fileName, const char *mode )
 #ifdef FS_DYNAMIC_MEM
     if( final != CE_GOOD )
     {
-        #ifdef	SUPPORT_LFN
-			FS_free((unsigned char *)filePtr->utf16LFNptr);
-		#endif
-		FS_free( (unsigned char *)filePtr );
+        #ifdef  SUPPORT_LFN
+            FS_free((unsigned char *)filePtr->utf16LFNptr);
+        #endif
+        FS_free( (unsigned char *)filePtr );
         filePtr = NULL;
     }
 #else
@@ -5713,7 +5713,7 @@ long FSftell (FSFILE * fo)
   Input:
     fileName -  Name of the file to erase
   Return Values:
-    0 -   File removed 
+    0 -   File removed
     EOF - File was not removed
   Side Effects:
     The FSerrno variable will be changed.
@@ -5724,20 +5724,20 @@ long FSftell (FSFILE * fo)
     The user can also provide ascii alias name of the ascii long file name as the
     input to this function to get it erased from the memory.
   Remarks:
-    None                                       
+    None
   **********************************************************************/
 
 int FSremove (const char * fileName)
 {
     FILEOBJ fo = &tempCWDobj;
 
-	#ifdef SUPPORT_LFN
-		FSFILE cwdTemp;
-		char tempArray[514];
-		LFN_ENTRY *lfno;
-		WORD prevHandle;
-		unsigned short int i = 0;
-	#endif
+    #ifdef SUPPORT_LFN
+        FSFILE cwdTemp;
+        char tempArray[514];
+        LFN_ENTRY *lfno;
+        WORD prevHandle;
+        unsigned short int i = 0;
+    #endif
     FSerrno = CE_GOOD;
 
     if (MDD_WriteProtectState())
@@ -5747,9 +5747,9 @@ int FSremove (const char * fileName)
     }
 
     //Format the source string
-	#if defined(SUPPORT_LFN)
-		fo->utf16LFNptr = (unsigned short int *)&tempArray[0];
-	#endif
+    #if defined(SUPPORT_LFN)
+        fo->utf16LFNptr = (unsigned short int *)&tempArray[0];
+    #endif
 
     if( !FormatFileName(fileName, fo, 0) )
     {
@@ -5788,42 +5788,42 @@ int FSremove (const char * fileName)
         return -1;
     }
 
-	// Find the long file name assosciated with the short file name if present
-	#ifdef SUPPORT_LFN
-	if(!fo->utf16LFNlength)
-	{
-		FileObjectCopy (&cwdTemp, fo);
-		prevHandle = fo->entry - 1;
+    // Find the long file name assosciated with the short file name if present
+    #ifdef SUPPORT_LFN
+    if(!fo->utf16LFNlength)
+    {
+        FileObjectCopy (&cwdTemp, fo);
+        prevHandle = fo->entry - 1;
 
-		lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
-
-
-	   	while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
-
-	   			&& (lfno->LFN_SequenceNo != DIR_EMPTY))
-
-	   	{
+        lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
 
 
-			i = i + MAX_UTF16_CHARS_IN_LFN_ENTRY;
+        while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
 
-	   		prevHandle = prevHandle - 1;
+                && (lfno->LFN_SequenceNo != DIR_EMPTY))
 
-	   		lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
-
-	   	}
+        {
 
 
+            i = i + MAX_UTF16_CHARS_IN_LFN_ENTRY;
 
-	   	FileObjectCopy (fo, &cwdTemp);
+            prevHandle = prevHandle - 1;
 
-		// Find the length of LFN file
-		fo->utf16LFNlength = i;
+            lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
 
-	}
-	#endif
+        }
 
-	// Erase the file
+
+
+        FileObjectCopy (fo, &cwdTemp);
+
+        // Find the length of LFN file
+        fo->utf16LFNlength = i;
+
+    }
+    #endif
+
+    // Erase the file
     if( FILEerase(fo, &fo->entry, TRUE) == CE_GOOD )
         return 0;
     else
@@ -5858,11 +5858,11 @@ int FSremove (const char * fileName)
 #ifdef SUPPORT_LFN
 int wFSremove (const unsigned short int * fileName)
 {
-	int result;
-	utfModeFileName = TRUE;
-	result = FSremove ((const char *)fileName);
-	utfModeFileName = FALSE;
-	return result;
+    int result;
+    utfModeFileName = TRUE;
+    result = FSremove ((const char *)fileName);
+    utfModeFileName = FALSE;
+    return result;
 }
 #endif
 
@@ -6544,18 +6544,18 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
 {
 #ifdef STOCK
     DWORD       count = 512;
-	BYTE   *	src = (BYTE *) pointers->BufferA;
+    BYTE   *    src = (BYTE *) pointers->BufferA;
 #else
-	BYTE		count = 1;
+    BYTE        count = 1;
 #endif
     DISK   *    dsk;                 // pointer to disk structure
     CETYPE      error = CE_GOOD;
     WORD        pos;
-    DWORD       l;					// absolute lba of sector to load
+    DWORD       l;                  // absolute lba of sector to load
     DWORD       seek, filesize;
 #ifndef STOCK
     WORD        writeCount = 0;
-	BYTE *temp;
+    BYTE *temp;
 #endif
 
 
@@ -6634,29 +6634,29 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
 #endif
 
 #ifndef STOCK
-		if(error == CE_GOOD) {
-			seek += 512;
-			pos = 512;
-			count--;
-			filesize += 512;
-			gNeedDataWrite = TRUE;
-			stream->flags.FileWriteEOF = TRUE;
+        if(error == CE_GOOD) {
+            seek += 512;
+            pos = 512;
+            count--;
+            filesize += 512;
+            gNeedDataWrite = TRUE;
+            stream->flags.FileWriteEOF = TRUE;
 
-			// save off the positon
-			stream->pos = pos;
-			// save off the seek
-			stream->seek = seek;
-			// now the new size
-			stream->size = filesize;
+            // save off the positon
+            stream->pos = pos;
+            // save off the seek
+            stream->seek = seek;
+            // now the new size
+            stream->size = filesize;
 
-			CLI(); // begin critical section
-			// swap buffers to effectively pass off the data to be written
-			temp = pointers->BufferA;
-			pointers->BufferA = dsk->buffer;
-			dsk->buffer = temp;
-			count = 0;
-			STI(); // end critical section
-		}
+            CLI(); // begin critical section
+            // swap buffers to effectively pass off the data to be written
+            temp = pointers->BufferA;
+            pointers->BufferA = dsk->buffer;
+            dsk->buffer = temp;
+            count = 0;
+            STI(); // end critical section
+        }
 #endif
 
         // load a new sector if necessary, multiples of sector
@@ -6664,11 +6664,11 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
         {
             BYTE needRead = TRUE;
 
-			CLI(); // begin critical section
-			// reset the buffer
-			flags->Swap = TRUE;
-			flags->BufferAFull = FALSE;
-			STI(); // end critical section
+            CLI(); // begin critical section
+            // reset the buffer
+            flags->Swap = TRUE;
+            flags->BufferAFull = FALSE;
+            STI(); // end critical section
 
             if (gNeedDataWrite)
                 if (flushData())
@@ -6731,7 +6731,7 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
         } //  load new sector
 
 
-		if(error == CE_GOOD)
+        if(error == CE_GOOD)
         {
 
 #ifdef STOCK
@@ -7009,273 +7009,273 @@ size_t FSfread (void *ptr, size_t size, size_t n, FSFILE *stream)
   ***************************************************************************/
 BYTE FormatFileName( const char* fileName, FILEOBJ fptr, BYTE mode)
 {
-	char *fN2;
-	FILE_DIR_NAME_TYPE fileNameType;
+    char *fN2;
+    FILE_DIR_NAME_TYPE fileNameType;
     int temp,count1,count2,count3,count4;
     BOOL supportLFN = FALSE;
-	char *localFileName = NULL;
+    char *localFileName = NULL;
 
-	// go with static allocation
-	#if defined(SUPPORT_LFN)
-		unsigned short int tempString[256];
-		BOOL	AscciIndication = TRUE;
-		count1 = 256;
-	#else
-		unsigned short int	tempString[13];
-		count1 = 12;
-	#endif
+    // go with static allocation
+    #if defined(SUPPORT_LFN)
+        unsigned short int tempString[256];
+        BOOL    AscciIndication = TRUE;
+        count1 = 256;
+    #else
+        unsigned short int  tempString[13];
+        count1 = 12;
+    #endif
 
-	// Check whether the length of the file name is valid
-	// for LFN support as well as Non LFN support
-	#ifdef SUPPORT_LFN
-	if(utfModeFileName)
-	{
-		utf16Filename = (unsigned short int *)fileName;
-		fileNameLength = 0;
-		while(utf16Filename[fileNameLength])
-		{
-			fileNameLength++;
-		}
+    // Check whether the length of the file name is valid
+    // for LFN support as well as Non LFN support
+    #ifdef SUPPORT_LFN
+    if(utfModeFileName)
+    {
+        utf16Filename = (unsigned short int *)fileName;
+        fileNameLength = 0;
+        while(utf16Filename[fileNameLength])
+        {
+            fileNameLength++;
+        }
 
-		if((fileNameLength > count1) || (*utf16Filename == '.') ||
-			(*utf16Filename == 0))
-		{
-			return FALSE;
-		}
-		
-		for (count1 = 0;count1 < fileNameLength; count1++)
-		{
-			tempString[count1] = utf16Filename[count1];
-		}
-		
-		utf16Filename = tempString;
-	}
-	else
-	#endif
-	{
-		fileNameLength = strlen(fileName);
+        if((fileNameLength > count1) || (*utf16Filename == '.') ||
+            (*utf16Filename == 0))
+        {
+            return FALSE;
+        }
 
-		if((fileNameLength > count1) || (*fileName == '.') || (*fileName == 0))
-		{
-			return FALSE;
-		}
-		
-		asciiFilename = (char *)tempString;
-		for (count1 = 0;count1 < fileNameLength; count1++)
-		{
-			asciiFilename[count1] = fileName[count1];
-		}
-	}
+        for (count1 = 0;count1 < fileNameLength; count1++)
+        {
+            tempString[count1] = utf16Filename[count1];
+        }
+
+        utf16Filename = tempString;
+    }
+    else
+    #endif
+    {
+        fileNameLength = strlen(fileName);
+
+        if((fileNameLength > count1) || (*fileName == '.') || (*fileName == 0))
+        {
+            return FALSE;
+        }
+
+        asciiFilename = (char *)tempString;
+        for (count1 = 0;count1 < fileNameLength; count1++)
+        {
+            asciiFilename[count1] = fileName[count1];
+        }
+    }
 
     // Make sure the characters are valid
-   	fileNameType = ValidateChars(mode);
+    fileNameType = ValidateChars(mode);
 
     // If the file name doesn't follow 8P3 or LFN format, then return FALSE
     if(NAME_ERROR == fileNameType)
-	{
-		return FALSE;
-	}
+    {
+        return FALSE;
+    }
 
-	temp = fileNameLength;
+    temp = fileNameLength;
 
-	#if defined(SUPPORT_LFN)
-		fptr->AsciiEncodingType = TRUE;
-		fptr->utf16LFNlength = 0;
-	#endif
+    #if defined(SUPPORT_LFN)
+        fptr->AsciiEncodingType = TRUE;
+        fptr->utf16LFNlength = 0;
+    #endif
 
-	// If LFN is supported and the file name is UTF16 type or Ascii mixed type,
-	// go for LFN support rather than trying to adjust in 8P3 format
-	if(NAME_8P3_ASCII_MIXED_TYPE == fileNameType)
-	{
-		#if defined(SUPPORT_LFN)
-			supportLFN = TRUE;
-		#endif
-	}
+    // If LFN is supported and the file name is UTF16 type or Ascii mixed type,
+    // go for LFN support rather than trying to adjust in 8P3 format
+    if(NAME_8P3_ASCII_MIXED_TYPE == fileNameType)
+    {
+        #if defined(SUPPORT_LFN)
+            supportLFN = TRUE;
+        #endif
+    }
 
-	#if defined(SUPPORT_LFN)
-	if(NAME_8P3_UTF16_TYPE == fileNameType)
-	{
-		for (count3 = 0; count3 < temp; count3++)
-		{
-			if(utf16Filename[count3] > 0xFF)
-			{
-				fileNameType = NAME_8P3_UTF16_NONASCII_TYPE;
-				supportLFN = TRUE;
-				break;
-			}
-		}
+    #if defined(SUPPORT_LFN)
+    if(NAME_8P3_UTF16_TYPE == fileNameType)
+    {
+        for (count3 = 0; count3 < temp; count3++)
+        {
+            if(utf16Filename[count3] > 0xFF)
+            {
+                fileNameType = NAME_8P3_UTF16_NONASCII_TYPE;
+                supportLFN = TRUE;
+                break;
+            }
+        }
 
-		if(count3 == temp)
-		{
-			fileNameType = NAME_8P3_UTF16_ASCII_CAPS_TYPE;
+        if(count3 == temp)
+        {
+            fileNameType = NAME_8P3_UTF16_ASCII_CAPS_TYPE;
 
-			for (count3 = 0; count3 < temp; count3++)
-			{
-				if((utf16Filename[count3] >= 0x61) && (utf16Filename[count3] <= 0x7A))
-				{
-					fileNameType = NAME_8P3_UTF16_ASCII_MIXED_TYPE;
-					supportLFN = TRUE;
-					break;
-				}
-			}
-		}
-	}
-	#endif
+            for (count3 = 0; count3 < temp; count3++)
+            {
+                if((utf16Filename[count3] >= 0x61) && (utf16Filename[count3] <= 0x7A))
+                {
+                    fileNameType = NAME_8P3_UTF16_ASCII_MIXED_TYPE;
+                    supportLFN = TRUE;
+                    break;
+                }
+            }
+        }
+    }
+    #endif
 
-	// If the file name follows 8P3 type
-	if((NAME_LFN_TYPE != fileNameType) && (FALSE == supportLFN))
-	{
-		for (count3 = 0; count3 < temp; count3++)
-		{
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
-			{
-				if(((utf16Filename[count3] == '.') && ((temp - count3) > 4)) ||
-					(count3 > 8))
-				{
-					// UTF File name extension greater then 3 characters or
-				    // UTF File name greater then 8 charcters
-					supportLFN = TRUE;
-					break;
-				}
-				else if(utf16Filename[count3] == '.')
-				{
-					break;
-				}
-			}
-			else
-			#endif
-			{
-				if(((asciiFilename[count3] == '.') && ((temp - count3) > 4)) ||
-					(count3 > 8))
-				{
-					// File extension greater then 3 characters or
-					// File name greater then 8 charcters
-					#if !defined(SUPPORT_LFN)
-						return FALSE;
-					#endif
-					supportLFN = TRUE;
-					break;
-				}
-				else if(asciiFilename[count3] == '.')
-				{
-					break;
-				}
-			}
-		}
-		
-		// If LFN not supported try to adjust in 8P3 format
-		if(FALSE == supportLFN)
-		{
-		    // point fN2 to short file name
-		    fN2 = fptr -> name;
-		    
-		    // Load destination filename to be space intially.
-		    for (count1 = 0; count1 < FILE_NAME_SIZE_8P3; count1++)
-		    {
-		        *(fN2 + count1) = ' ';
-		    }
+    // If the file name follows 8P3 type
+    if((NAME_LFN_TYPE != fileNameType) && (FALSE == supportLFN))
+    {
+        for (count3 = 0; count3 < temp; count3++)
+        {
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
+            {
+                if(((utf16Filename[count3] == '.') && ((temp - count3) > 4)) ||
+                    (count3 > 8))
+                {
+                    // UTF File name extension greater then 3 characters or
+                    // UTF File name greater then 8 charcters
+                    supportLFN = TRUE;
+                    break;
+                }
+                else if(utf16Filename[count3] == '.')
+                {
+                    break;
+                }
+            }
+            else
+            #endif
+            {
+                if(((asciiFilename[count3] == '.') && ((temp - count3) > 4)) ||
+                    (count3 > 8))
+                {
+                    // File extension greater then 3 characters or
+                    // File name greater then 8 charcters
+                    #if !defined(SUPPORT_LFN)
+                        return FALSE;
+                    #endif
+                    supportLFN = TRUE;
+                    break;
+                }
+                else if(asciiFilename[count3] == '.')
+                {
+                    break;
+                }
+            }
+        }
 
-			// multiply the length by 2 as each UTF word has 2 byte
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
-			{
-				count4 = count3 * 2;
-				temp = temp * 2;
-				localFileName = (char *)utf16Filename;
-			}
-			else
-			#endif
-			{
-				count4 = count3;
-				localFileName = asciiFilename;
-			}
+        // If LFN not supported try to adjust in 8P3 format
+        if(FALSE == supportLFN)
+        {
+            // point fN2 to short file name
+            fN2 = fptr -> name;
 
-		    //copy only file name ( not the extension part )
-		    for (count1 = 0,count2 = 0; (count2 < 8) && (count1 < count4);count1++ )
-		    {
-				if(localFileName[count1])
-				{
-					fN2[count2] = localFileName[count1]; // Destination filename initially filled with SPACE. Now copy only available chars.
+            // Load destination filename to be space intially.
+            for (count1 = 0; count1 < FILE_NAME_SIZE_8P3; count1++)
+            {
+                *(fN2 + count1) = ' ';
+            }
 
-	    			// Convert lower-case to upper-case
-	    			if ((fN2[count2] >= 0x61) && (fN2[count2] <= 0x7A))
-	    			{
-	    			    fN2[count2] -= 0x20;
-					}
-					count2++;
-				}
-		    }
+            // multiply the length by 2 as each UTF word has 2 byte
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
+            {
+                count4 = count3 * 2;
+                temp = temp * 2;
+                localFileName = (char *)utf16Filename;
+            }
+            else
+            #endif
+            {
+                count4 = count3;
+                localFileName = asciiFilename;
+            }
 
-			if(count4 < temp)
-			{
-				// Discard the '.' part
-				count4++;
+            //copy only file name ( not the extension part )
+            for (count1 = 0,count2 = 0; (count2 < 8) && (count1 < count4);count1++ )
+            {
+                if(localFileName[count1])
+                {
+                    fN2[count2] = localFileName[count1]; // Destination filename initially filled with SPACE. Now copy only available chars.
 
-    		    // Copy the extn to 8th position onwards. Ex: "FILE    .Tx "
-    		    for (count3 = 8; (count3 < 11) && (count4 < temp);count4++ )
-    		    {
-					if(localFileName[count4])
-					{
-    		        	fN2[count3] = localFileName[count4];
+                    // Convert lower-case to upper-case
+                    if ((fN2[count2] >= 0x61) && (fN2[count2] <= 0x7A))
+                    {
+                        fN2[count2] -= 0x20;
+                    }
+                    count2++;
+                }
+            }
 
-		   	 			// Convert lower-case to upper-case
-		   	 			if ((fN2[count3] >= 0x61) && (fN2[count3] <= 0x7A))
-		   	 			{
-		   	 			    fN2[count3] -= 0x20;
-						}
-						count3++;
-					}
-    		    }
-			}
-		}
-	}
+            if(count4 < temp)
+            {
+                // Discard the '.' part
+                count4++;
 
-	// If the file name follows LFN format
+                // Copy the extn to 8th position onwards. Ex: "FILE    .Tx "
+                for (count3 = 8; (count3 < 11) && (count4 < temp);count4++ )
+                {
+                    if(localFileName[count4])
+                    {
+                        fN2[count3] = localFileName[count4];
+
+                        // Convert lower-case to upper-case
+                        if ((fN2[count3] >= 0x61) && (fN2[count3] <= 0x7A))
+                        {
+                            fN2[count3] -= 0x20;
+                        }
+                        count3++;
+                    }
+                }
+            }
+        }
+    }
+
+    // If the file name follows LFN format
     if((NAME_LFN_TYPE == fileNameType) || (TRUE == supportLFN))
-	{
-		#if defined(SUPPORT_LFN)  	
+    {
+        #if defined(SUPPORT_LFN)
 
-			// point fN2 to long file name
-			fN2 = (char *)(fptr -> utf16LFNptr);
+            // point fN2 to long file name
+            fN2 = (char *)(fptr -> utf16LFNptr);
 
-			if(!utfModeFileName)
-			{
-				localFileName = asciiFilename;
-			}
+            if(!utfModeFileName)
+            {
+                localFileName = asciiFilename;
+            }
 
-			// Copy the LFN name in the adress specified by FSFILE pointer
-			count2 = 0;
-			for(count1 = 0;count1 < temp;count1++)
-			{
-				if(utfModeFileName)
-				{
-					fptr -> utf16LFNptr[count1] = utf16Filename[count1];
-					if(AscciIndication)
-					{
-						if(utf16Filename[count1] > 0xFF)
-						{
-							fptr->AsciiEncodingType = FALSE;
-							AscciIndication = FALSE;
-						}
-					}
-				}
-				else
-				{
-					fN2[count2++] = localFileName[count1];
-					fN2[count2++] = (BYTE)0x00;
-				}
-			}
-			fptr -> utf16LFNptr[count1] = 0x0000;
+            // Copy the LFN name in the adress specified by FSFILE pointer
+            count2 = 0;
+            for(count1 = 0;count1 < temp;count1++)
+            {
+                if(utfModeFileName)
+                {
+                    fptr -> utf16LFNptr[count1] = utf16Filename[count1];
+                    if(AscciIndication)
+                    {
+                        if(utf16Filename[count1] > 0xFF)
+                        {
+                            fptr->AsciiEncodingType = FALSE;
+                            AscciIndication = FALSE;
+                        }
+                    }
+                }
+                else
+                {
+                    fN2[count2++] = localFileName[count1];
+                    fN2[count2++] = (BYTE)0x00;
+                }
+            }
+            fptr -> utf16LFNptr[count1] = 0x0000;
 
-			fptr->utf16LFNlength = fileNameLength;
-		#else
-			return FALSE;
-		#endif
-	}
+            fptr->utf16LFNlength = fileNameLength;
+        #else
+            return FALSE;
+        #endif
+    }
 
-	// Free the temporary heap used for intermediate execution
-	return TRUE;
+    // Free the temporary heap used for intermediate execution
+    return TRUE;
 }
 
 #ifdef ALLOW_DIRS
@@ -7310,287 +7310,287 @@ BYTE FormatFileName( const char* fileName, FILEOBJ fptr, BYTE mode)
 BYTE FormatDirName (char * string,FILEOBJ fptr, BYTE mode)
 {
     char tempString [12];
-	FILE_DIR_NAME_TYPE fileNameType;
+    FILE_DIR_NAME_TYPE fileNameType;
     int temp,count1,count2;
     BOOL supportLFN = FALSE;
-	char *localFileName;
+    char *localFileName;
 
-	// go with static allocation
-	#if defined(SUPPORT_LFN)
-    	int count3,count4;
-		BOOL	AscciIndication = TRUE;
-		count1 = 256;
-	#else
-		count1 = 12;
-	#endif
+    // go with static allocation
+    #if defined(SUPPORT_LFN)
+        int count3,count4;
+        BOOL    AscciIndication = TRUE;
+        count1 = 256;
+    #else
+        count1 = 12;
+    #endif
 
-	// Calculate the String length
-	#ifdef SUPPORT_LFN
-	if(utfModeFileName)
-	{
-		utf16Filename = (unsigned short int *)string;
-		fileNameLength = 0;
-		while(utf16Filename[fileNameLength])
-		{
-			fileNameLength++;
-		}
-	}
-	else
-	#endif
-	{
-		asciiFilename = string;
-		fileNameLength = strlen(string);
-	}
+    // Calculate the String length
+    #ifdef SUPPORT_LFN
+    if(utfModeFileName)
+    {
+        utf16Filename = (unsigned short int *)string;
+        fileNameLength = 0;
+        while(utf16Filename[fileNameLength])
+        {
+            fileNameLength++;
+        }
+    }
+    else
+    #endif
+    {
+        asciiFilename = string;
+        fileNameLength = strlen(string);
+    }
 
-	if(fileNameLength > count1)
-	{
-		return FALSE;
-	}
+    if(fileNameLength > count1)
+    {
+        return FALSE;
+    }
 
     // Make sure the characters are valid
     fileNameType = ValidateChars(mode);
 
     // If the file name doesn't follow 8P3 or LFN format, then return FALSE
     if(NAME_ERROR == fileNameType)
-	{
-		return FALSE;
-	}
+    {
+        return FALSE;
+    }
 
-	temp = fileNameLength;
+    temp = fileNameLength;
 
-	#if defined(SUPPORT_LFN)
-		fptr->AsciiEncodingType = TRUE;
-		fptr->utf16LFNlength = 0;
-	#endif
+    #if defined(SUPPORT_LFN)
+        fptr->AsciiEncodingType = TRUE;
+        fptr->utf16LFNlength = 0;
+    #endif
 
-	// If LFN is supported and the file name is UTF16 type or Ascii mixed type,
-	// go for LFN support rather than trying to adjust in 8P3 format
-	if(NAME_8P3_ASCII_MIXED_TYPE == fileNameType)
-	{
-		#if defined(SUPPORT_LFN)
-			supportLFN = TRUE;
-		#endif
-	}
+    // If LFN is supported and the file name is UTF16 type or Ascii mixed type,
+    // go for LFN support rather than trying to adjust in 8P3 format
+    if(NAME_8P3_ASCII_MIXED_TYPE == fileNameType)
+    {
+        #if defined(SUPPORT_LFN)
+            supportLFN = TRUE;
+        #endif
+    }
 
-	#if defined(SUPPORT_LFN)
-	if(NAME_8P3_UTF16_TYPE == fileNameType)
-	{
-		for (count3 = 0; count3 < temp; count3++)
-		{
-			if(utf16Filename[count3] > 0xFF)
-			{
-				fileNameType = NAME_8P3_UTF16_NONASCII_TYPE;
-				supportLFN = TRUE;
-				break;
-			}
-		}
+    #if defined(SUPPORT_LFN)
+    if(NAME_8P3_UTF16_TYPE == fileNameType)
+    {
+        for (count3 = 0; count3 < temp; count3++)
+        {
+            if(utf16Filename[count3] > 0xFF)
+            {
+                fileNameType = NAME_8P3_UTF16_NONASCII_TYPE;
+                supportLFN = TRUE;
+                break;
+            }
+        }
 
-		if(count3 == temp)
-		{
-			fileNameType = NAME_8P3_UTF16_ASCII_CAPS_TYPE;
+        if(count3 == temp)
+        {
+            fileNameType = NAME_8P3_UTF16_ASCII_CAPS_TYPE;
 
-			for (count3 = 0; count3 < temp; count3++)
-			{
-				if((utf16Filename[count3] >= 0x61) && (utf16Filename[count3] <= 0x7A))
-				{
-					fileNameType = NAME_8P3_UTF16_ASCII_MIXED_TYPE;
-					supportLFN = TRUE;
-					break;
-				}
-			}
-		}
-	}
-	#endif
+            for (count3 = 0; count3 < temp; count3++)
+            {
+                if((utf16Filename[count3] >= 0x61) && (utf16Filename[count3] <= 0x7A))
+                {
+                    fileNameType = NAME_8P3_UTF16_ASCII_MIXED_TYPE;
+                    supportLFN = TRUE;
+                    break;
+                }
+            }
+        }
+    }
+    #endif
 
-	// If the file name follows LFN format
+    // If the file name follows LFN format
     if((NAME_LFN_TYPE == fileNameType) || (TRUE == supportLFN))
-	{
-		#if !defined(SUPPORT_LFN)
-        	return FALSE;
-		#else
-			fptr -> utf16LFNptr = (unsigned short int *)string;
-		
-			if(utfModeFileName)
-			{
-				if(utf16Filename != (unsigned short int *)string)
-				{
-					// Copy the validated/Fomated name in the UTF16 string
-					for(count1 = 0; count1 < temp; count1++)
-					{
-						fptr -> utf16LFNptr[count1] = utf16Filename[count1];
-						if(AscciIndication)
-						{
-							if(utf16Filename[count1] > 0xFF)
-							{
-								fptr->AsciiEncodingType = FALSE;
-								AscciIndication = FALSE;
-							}
-						}
-					}
-					fptr -> utf16LFNptr[count1] = 0x0000;
-				}
-				else
-				{
-					for(count1 = 0; count1 < temp; count1++)
-					{
-						if(AscciIndication)
-						{
-							if(utf16Filename[count1] > 0xFF)
-							{
-								fptr->AsciiEncodingType = FALSE;
-								AscciIndication = FALSE;
-								break;
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				#ifdef FS_DYNAMIC_MEM
-	    			unsigned short int *tempAsciiLFN = (unsigned short int *)FS_malloc((temp + 1) * 2);
-				#else
-					unsigned short int	tempAsciiLFN[temp + 1];
-				#endif
+    {
+        #if !defined(SUPPORT_LFN)
+            return FALSE;
+        #else
+            fptr -> utf16LFNptr = (unsigned short int *)string;
 
-				localFileName = (char *)tempAsciiLFN;
+            if(utfModeFileName)
+            {
+                if(utf16Filename != (unsigned short int *)string)
+                {
+                    // Copy the validated/Fomated name in the UTF16 string
+                    for(count1 = 0; count1 < temp; count1++)
+                    {
+                        fptr -> utf16LFNptr[count1] = utf16Filename[count1];
+                        if(AscciIndication)
+                        {
+                            if(utf16Filename[count1] > 0xFF)
+                            {
+                                fptr->AsciiEncodingType = FALSE;
+                                AscciIndication = FALSE;
+                            }
+                        }
+                    }
+                    fptr -> utf16LFNptr[count1] = 0x0000;
+                }
+                else
+                {
+                    for(count1 = 0; count1 < temp; count1++)
+                    {
+                        if(AscciIndication)
+                        {
+                            if(utf16Filename[count1] > 0xFF)
+                            {
+                                fptr->AsciiEncodingType = FALSE;
+                                AscciIndication = FALSE;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                #ifdef FS_DYNAMIC_MEM
+                    unsigned short int *tempAsciiLFN = (unsigned short int *)FS_malloc((temp + 1) * 2);
+                #else
+                    unsigned short int  tempAsciiLFN[temp + 1];
+                #endif
 
-				// Copy the validated/Fomated name in the Ascii string
-				count2 = 0;
+                localFileName = (char *)tempAsciiLFN;
 
-				for(count1 = 0; count1 < temp; count1++)
-				{
-					localFileName[count2++] = asciiFilename[count1];
+                // Copy the validated/Fomated name in the Ascii string
+                count2 = 0;
 
-					localFileName[count2++] = (BYTE)0x00;
+                for(count1 = 0; count1 < temp; count1++)
+                {
+                    localFileName[count2++] = asciiFilename[count1];
 
-				}
+                    localFileName[count2++] = (BYTE)0x00;
 
-				// Copy the validated/Fomated name in the UTF16 string
-				for(count1 = 0; count1 < temp; count1++)
-				{
-					fptr -> utf16LFNptr[count1] = tempAsciiLFN[count1];
-				}
+                }
 
-				#ifdef FS_DYNAMIC_MEM
-	    			FS_free((unsigned char *)tempAsciiLFN);
-				#endif
-				fptr -> utf16LFNptr[count1] = 0x0000;
-			}
+                // Copy the validated/Fomated name in the UTF16 string
+                for(count1 = 0; count1 < temp; count1++)
+                {
+                    fptr -> utf16LFNptr[count1] = tempAsciiLFN[count1];
+                }
 
-			fptr->utf16LFNlength = fileNameLength;
-		#endif
-	}
-	else
-	{
-		#ifdef SUPPORT_LFN
-		if(utfModeFileName)
-		{
-			localFileName = (char *)utf16Filename;
+                #ifdef FS_DYNAMIC_MEM
+                    FS_free((unsigned char *)tempAsciiLFN);
+                #endif
+                fptr -> utf16LFNptr[count1] = 0x0000;
+            }
 
-			// Copy the name part in the temporary string
-		    count4 = 0;
-		    for (count3 = 0; (count3 < temp) && (utf16Filename[count3] != '.') && (utf16Filename[count3] != 0); count3++)
-		    {
-				count1 = count3 * 2;
-				if(localFileName[count1])
-				{
-			        tempString[count4] = localFileName[count1];
-					count4++;
-					if(count4 == 8)
-						break;
-				}
-		 
-				if(localFileName[count1 + 1])
-				{
-			        tempString[count4] = localFileName[count1 + 1];
-					count4++;
-					if(count4 == 8)
-						break;
-				}
-		    }
+            fptr->utf16LFNlength = fileNameLength;
+        #endif
+    }
+    else
+    {
+        #ifdef SUPPORT_LFN
+        if(utfModeFileName)
+        {
+            localFileName = (char *)utf16Filename;
 
-			// File the remaining name portion with spaces
-		    while (count4 < 8)
-		    {
-		        tempString [count4++] = 0x20;
-		    }
+            // Copy the name part in the temporary string
+            count4 = 0;
+            for (count3 = 0; (count3 < temp) && (utf16Filename[count3] != '.') && (utf16Filename[count3] != 0); count3++)
+            {
+                count1 = count3 * 2;
+                if(localFileName[count1])
+                {
+                    tempString[count4] = localFileName[count1];
+                    count4++;
+                    if(count4 == 8)
+                        break;
+                }
 
-			// Copy the extension part in the temporary string
-		    if (utf16Filename[count3] == '.')
-		    {
-				count1 = count3 * 2 + 2;
-		        while (localFileName[count1] != 0)
-		        {
-					if(localFileName[count3])
-					{
-				        tempString[count4] = localFileName[count3];
-						count4++;
-						if(count4 == 11)
-							break;
-					}
-		        }
-		    }
+                if(localFileName[count1 + 1])
+                {
+                    tempString[count4] = localFileName[count1 + 1];
+                    count4++;
+                    if(count4 == 8)
+                        break;
+                }
+            }
 
-			count1 = count4;
-		}
-		else
-		#endif
-		{
-			// Copy the name part in the temporary string
-		    for (count1 = 0; (count1 < 8) && (*(asciiFilename + count1) != '.') && (*(asciiFilename + count1) != 0); count1++)
-		    {
-		        tempString[count1] = *(asciiFilename + count1);
-		    }
+            // File the remaining name portion with spaces
+            while (count4 < 8)
+            {
+                tempString [count4++] = 0x20;
+            }
 
-			count2 = count1;
+            // Copy the extension part in the temporary string
+            if (utf16Filename[count3] == '.')
+            {
+                count1 = count3 * 2 + 2;
+                while (localFileName[count1] != 0)
+                {
+                    if(localFileName[count3])
+                    {
+                        tempString[count4] = localFileName[count3];
+                        count4++;
+                        if(count4 == 11)
+                            break;
+                    }
+                }
+            }
 
-			// File the remaining name portion with spaces
-		    while (count1 < 8)
-		    {
-		        tempString [count1++] = 0x20;
-		    }
+            count1 = count4;
+        }
+        else
+        #endif
+        {
+            // Copy the name part in the temporary string
+            for (count1 = 0; (count1 < 8) && (*(asciiFilename + count1) != '.') && (*(asciiFilename + count1) != 0); count1++)
+            {
+                tempString[count1] = *(asciiFilename + count1);
+            }
 
-			// Copy the extension part in the temporary string
-		    if (*(asciiFilename + count2) == '.')
-		    {
-		        count2++;
-		        while ((*(asciiFilename + count2) != 0) && (count1 < FILE_NAME_SIZE_8P3))
-		        {
-		            tempString[count1++] = *(asciiFilename + count2++);
-		        }
-		    }
-		}
+            count2 = count1;
 
-		// File the remaining portion with spaces
-		while (count1 < FILE_NAME_SIZE_8P3)
-		{
-		    tempString[count1++] = 0x20;
-		}
+            // File the remaining name portion with spaces
+            while (count1 < 8)
+            {
+                tempString [count1++] = 0x20;
+            }
 
-		// Forbidden
-		if (tempString[0] == 0x20)
-		{
-		    tempString[0] = '_';
-		}
+            // Copy the extension part in the temporary string
+            if (*(asciiFilename + count2) == '.')
+            {
+                count2++;
+                while ((*(asciiFilename + count2) != 0) && (count1 < FILE_NAME_SIZE_8P3))
+                {
+                    tempString[count1++] = *(asciiFilename + count2++);
+                }
+            }
+        }
 
-		// point fN2 to short file name
-		localFileName = fptr -> name;
+        // File the remaining portion with spaces
+        while (count1 < FILE_NAME_SIZE_8P3)
+        {
+            tempString[count1++] = 0x20;
+        }
 
-		// Copy the formated name in string
-		for (count1 = 0; count1 < FILE_NAME_SIZE_8P3; count1++)
-		{
-		    localFileName[count1] = tempString[count1];
+        // Forbidden
+        if (tempString[0] == 0x20)
+        {
+            tempString[0] = '_';
+        }
 
-			// Convert lower-case to upper-case
-			if ((tempString[count1] >= 0x61) && (tempString[count1] <= 0x7A))
-			{
-			    localFileName[count1] -= 0x20;
-			}
-		}
-	}
+        // point fN2 to short file name
+        localFileName = fptr -> name;
 
-	return TRUE;
+        // Copy the formated name in string
+        for (count1 = 0; count1 < FILE_NAME_SIZE_8P3; count1++)
+        {
+            localFileName[count1] = tempString[count1];
+
+            // Convert lower-case to upper-case
+            if ((tempString[count1] >= 0x61) && (tempString[count1] <= 0x7A))
+            {
+                localFileName[count1] -= 0x20;
+            }
+        }
+    }
+
+    return TRUE;
 }
 #endif
 
@@ -7621,184 +7621,184 @@ BYTE FormatDirName (char * string,FILEOBJ fptr, BYTE mode)
   *************************************************************/
 FILE_DIR_NAME_TYPE ValidateChars(BYTE mode)
 {
-	FILE_DIR_NAME_TYPE fileNameType;
+    FILE_DIR_NAME_TYPE fileNameType;
     unsigned short int count1;
-	#if defined(SUPPORT_LFN)
-	unsigned short int utf16Value;
+    #if defined(SUPPORT_LFN)
+    unsigned short int utf16Value;
     unsigned short int count2;
-	int		count3;
-	#endif
+    int     count3;
+    #endif
     unsigned char radix = FALSE,asciiValue;
 
-	#if defined(SUPPORT_LFN)
+    #if defined(SUPPORT_LFN)
 
-		// Remove the spaces if they are present before the file name
-		for (count1 = 0; count1 < fileNameLength; count1++)
-		{
-	        if(utfModeFileName)
-			{
-				if((utf16Filename[count1] != ' ') && (utf16Filename[count1] != '.'))
-				{
-					utf16Filename = utf16Filename + count1;
-					break;
-				}
-			}
-			else if((asciiFilename[count1] != ' ') && (asciiFilename[count1] != '.'))
-			{
-				asciiFilename = asciiFilename + count1;
-				break;
-	    	}
-	    }
+        // Remove the spaces if they are present before the file name
+        for (count1 = 0; count1 < fileNameLength; count1++)
+        {
+            if(utfModeFileName)
+            {
+                if((utf16Filename[count1] != ' ') && (utf16Filename[count1] != '.'))
+                {
+                    utf16Filename = utf16Filename + count1;
+                    break;
+                }
+            }
+            else if((asciiFilename[count1] != ' ') && (asciiFilename[count1] != '.'))
+            {
+                asciiFilename = asciiFilename + count1;
+                break;
+            }
+        }
 
-	    count2 = 0;
+        count2 = 0;
 
-		// Remove the spaces  & dots if they are present after the file name
-	    for (count3 = fileNameLength - count1 - 1; count3 > 0; count3--)
-	    {
-	        if(utfModeFileName)
-			{
-				if((utf16Filename[count3] != ' ') && (utf16Filename[count3] != '.'))
-				{
-					break;
-				}
-			}
-			else if((asciiFilename[count3] != ' ') && (asciiFilename[count3] != '.'))
-			{
-				break;
-	    	}
+        // Remove the spaces  & dots if they are present after the file name
+        for (count3 = fileNameLength - count1 - 1; count3 > 0; count3--)
+        {
+            if(utfModeFileName)
+            {
+                if((utf16Filename[count3] != ' ') && (utf16Filename[count3] != '.'))
+                {
+                    break;
+                }
+            }
+            else if((asciiFilename[count3] != ' ') && (asciiFilename[count3] != '.'))
+            {
+                break;
+            }
 
-	    	count2++;
-	    }
+            count2++;
+        }
 
-		fileNameLength = fileNameLength - count1 - count2;
+        fileNameLength = fileNameLength - count1 - count2;
 
-    	if(( fileNameLength > MAX_FILE_NAME_LENGTH_LFN ) || (fileNameLength == 0))// 255
-        	return NAME_ERROR; //long file name
+        if(( fileNameLength > MAX_FILE_NAME_LENGTH_LFN ) || (fileNameLength == 0))// 255
+            return NAME_ERROR; //long file name
 
     #endif
 
- 	// If the string length is greater then 8P3 length, then assume
-	// the file name as LFN type provided there are no errors in the
-	// below for loop.
-	#ifdef SUPPORT_LFN
-	if(utfModeFileName)
-	{
-		if((fileNameLength * 2) > (TOTAL_FILE_SIZE_8P3 * 2))
-		{
-			fileNameType = NAME_LFN_TYPE;
-		}
-		else
-		{
-			fileNameType = NAME_8P3_UTF16_TYPE;
-		}
-	}
-	else
-	#endif
-	{
-		if(fileNameLength > TOTAL_FILE_SIZE_8P3)
-		{
-			fileNameType = NAME_LFN_TYPE;
-		}
-		else
-		{
-			fileNameType = NAME_8P3_ASCII_CAPS_TYPE;
-		}
-	}
+    // If the string length is greater then 8P3 length, then assume
+    // the file name as LFN type provided there are no errors in the
+    // below for loop.
+    #ifdef SUPPORT_LFN
+    if(utfModeFileName)
+    {
+        if((fileNameLength * 2) > (TOTAL_FILE_SIZE_8P3 * 2))
+        {
+            fileNameType = NAME_LFN_TYPE;
+        }
+        else
+        {
+            fileNameType = NAME_8P3_UTF16_TYPE;
+        }
+    }
+    else
+    #endif
+    {
+        if(fileNameLength > TOTAL_FILE_SIZE_8P3)
+        {
+            fileNameType = NAME_LFN_TYPE;
+        }
+        else
+        {
+            fileNameType = NAME_8P3_ASCII_CAPS_TYPE;
+        }
+    }
 
-	for( count1 = 0; count1 < fileNameLength; count1++ )
-	{
-		#ifdef SUPPORT_LFN
-		if(utfModeFileName)
-		{
-			utf16Value = utf16Filename[count1];
-		    // Characters not valid for either of 8P3 & LFN format
-		    if (((utf16Value < 0x20) && (utf16Value != 0x05)) || (utf16Value == 0x22) || 
-				(utf16Value == 0x2F) || (utf16Value == 0x3A) || (utf16Value == 0x3C) || 
-		        (utf16Value == 0x3E) || (utf16Value == 0x5C) || (utf16Value == 0x7C))
-		    {
-		        return NAME_ERROR;
-		    }
+    for( count1 = 0; count1 < fileNameLength; count1++ )
+    {
+        #ifdef SUPPORT_LFN
+        if(utfModeFileName)
+        {
+            utf16Value = utf16Filename[count1];
+            // Characters not valid for either of 8P3 & LFN format
+            if (((utf16Value < 0x20) && (utf16Value != 0x05)) || (utf16Value == 0x22) ||
+                (utf16Value == 0x2F) || (utf16Value == 0x3A) || (utf16Value == 0x3C) ||
+                (utf16Value == 0x3E) || (utf16Value == 0x5C) || (utf16Value == 0x7C))
+            {
+                return NAME_ERROR;
+            }
 
-	        // Check for partial string search chars
-	        if (mode == FALSE)
-	        {
-	            if ((utf16Value == '*') || (utf16Value == '?'))
-	            {
-	    		    return NAME_ERROR;
-	        	}
-	        }
+            // Check for partial string search chars
+            if (mode == FALSE)
+            {
+                if ((utf16Value == '*') || (utf16Value == '?'))
+                {
+                    return NAME_ERROR;
+                }
+            }
 
-			if(fileNameType != NAME_LFN_TYPE)
-			{
-				// Characters valid for LFN format only
-			    if ((utf16Value == 0x20) || (utf16Value == 0x2B) || (utf16Value == 0x2C) || 
-					(utf16Value == 0x3B) || (utf16Value == 0x3D) || (utf16Value == 0x5B) || 
-					(utf16Value == 0x5D) || ((utf16Value == 0x2E) && (radix == TRUE)))
-			    {
-					fileNameType = NAME_LFN_TYPE;
-					continue;
-			    }
+            if(fileNameType != NAME_LFN_TYPE)
+            {
+                // Characters valid for LFN format only
+                if ((utf16Value == 0x20) || (utf16Value == 0x2B) || (utf16Value == 0x2C) ||
+                    (utf16Value == 0x3B) || (utf16Value == 0x3D) || (utf16Value == 0x5B) ||
+                    (utf16Value == 0x5D) || ((utf16Value == 0x2E) && (radix == TRUE)))
+                {
+                    fileNameType = NAME_LFN_TYPE;
+                    continue;
+                }
 
-	    	    // only one radix ('.') character is allowed in 8P3 format, where as 
-				// multiple radices can be present in LFN format
-	    	    if (utf16Filename[count1] == 0x2E)
-	    	    {
-	    	        radix = TRUE;
-	    	    }
-			}
-		}
-		else 
-		#endif
-		{
-			asciiValue = asciiFilename[count1];
-			if(((asciiValue < 0x20) && (asciiValue != 0x05)) || (asciiValue == 0x22) ||
-				(asciiValue == 0x2F) || (asciiValue == 0x3A) || (asciiValue == 0x3C) ||
-				(asciiValue == 0x3E) || (asciiValue == 0x5C) || (asciiValue == 0x7C))
-			{
-				return NAME_ERROR;
-			}
+                // only one radix ('.') character is allowed in 8P3 format, where as
+                // multiple radices can be present in LFN format
+                if (utf16Filename[count1] == 0x2E)
+                {
+                    radix = TRUE;
+                }
+            }
+        }
+        else
+        #endif
+        {
+            asciiValue = asciiFilename[count1];
+            if(((asciiValue < 0x20) && (asciiValue != 0x05)) || (asciiValue == 0x22) ||
+                (asciiValue == 0x2F) || (asciiValue == 0x3A) || (asciiValue == 0x3C) ||
+                (asciiValue == 0x3E) || (asciiValue == 0x5C) || (asciiValue == 0x7C))
+            {
+                return NAME_ERROR;
+            }
 
-	        // Check for partial string search chars
-	        if (mode == FALSE)
-	        {
-	            if ((asciiValue == '*') || (asciiValue == '?'))
-	            {
-	    		    return NAME_ERROR;
-	        	}
-	        }
+            // Check for partial string search chars
+            if (mode == FALSE)
+            {
+                if ((asciiValue == '*') || (asciiValue == '?'))
+                {
+                    return NAME_ERROR;
+                }
+            }
 
-			if(fileNameType != NAME_LFN_TYPE)
-			{
-				// Characters valid for LFN format only
-			    if ((asciiValue == 0x20) || (asciiValue == 0x2B) || (asciiValue == 0x2C) ||
-			    	(asciiValue == 0x3B) || (asciiValue == 0x3D) || (asciiValue == 0x5B) ||
-			        (asciiValue == 0x5D) || ((asciiValue == 0x2E) && (radix == TRUE)))
-			    {
-					fileNameType = NAME_LFN_TYPE;
-					continue;
-			    }
+            if(fileNameType != NAME_LFN_TYPE)
+            {
+                // Characters valid for LFN format only
+                if ((asciiValue == 0x20) || (asciiValue == 0x2B) || (asciiValue == 0x2C) ||
+                    (asciiValue == 0x3B) || (asciiValue == 0x3D) || (asciiValue == 0x5B) ||
+                    (asciiValue == 0x5D) || ((asciiValue == 0x2E) && (radix == TRUE)))
+                {
+                    fileNameType = NAME_LFN_TYPE;
+                    continue;
+                }
 
-	    	    // only one radix ('.') character is allowed in 8P3 format, where as 
-				// multiple radices can be present in LFN format
-	    	    if (asciiValue == 0x2E)
-	    	    {
-	    	        radix = TRUE;
-	    	    }
+                // only one radix ('.') character is allowed in 8P3 format, where as
+                // multiple radices can be present in LFN format
+                if (asciiValue == 0x2E)
+                {
+                    radix = TRUE;
+                }
 
-				// If the characters are mixed type & are within 8P3 length range
-				// then store file type as 8P3 mixed type format
-				if(fileNameType != NAME_8P3_ASCII_MIXED_TYPE)
-				{
-					if((asciiValue >= 0x61) && (asciiValue <= 0x7A))
-					{
-						fileNameType = NAME_8P3_ASCII_MIXED_TYPE;
-					}
-				}
-			}
-		}
-	}
+                // If the characters are mixed type & are within 8P3 length range
+                // then store file type as 8P3 mixed type format
+                if(fileNameType != NAME_8P3_ASCII_MIXED_TYPE)
+                {
+                    if((asciiValue >= 0x61) && (asciiValue <= 0x7A))
+                    {
+                        fileNameType = NAME_8P3_ASCII_MIXED_TYPE;
+                    }
+                }
+            }
+        }
+    }
 
-	return fileNameType;
+    return fileNameType;
 }
 
 
@@ -7994,24 +7994,24 @@ int FSfseek(FSFILE *stream, long offset, int whence)
     The FSerrno variable will be changed.
   Description:
     Renames the file with the ascii ROM string(PIC18).The Fsrenamepgm
-    function will copy the rom fileName specified by the user into a 
+    function will copy the rom fileName specified by the user into a
     RAM array and pass that array into the FSrename function.
   Remarks:
-    This function is for use with PIC18 when passing arguments in ROM.                       
+    This function is for use with PIC18 when passing arguments in ROM.
   *****************************************************************/
 
 int FSrenamepgm (const rom char * fileName, FSFILE * fo)
 {
-	#if defined(SUPPORT_LFN)
+    #if defined(SUPPORT_LFN)
 
-		char tempArray[257];
-		unsigned short int count;
-	#else
+        char tempArray[257];
+        unsigned short int count;
+    #else
 
-		char	tempArray[13];
+        char    tempArray[13];
 
-	    BYTE count;
-	#endif
+        BYTE count;
+    #endif
 
 
     *fileName;
@@ -8051,23 +8051,23 @@ int FSrenamepgm (const rom char * fileName, FSFILE * fo)
 
 FSFILE * FSfopenpgm(const rom char * fileName, const rom char *mode)
 {
-	#if defined(SUPPORT_LFN)
-    	char tempArray[257];
-    	unsigned short int count = 0;
+    #if defined(SUPPORT_LFN)
+        char tempArray[257];
+        unsigned short int count = 0;
     #else
-    	char tempArray[13];
-    	BYTE count = 0;
-	#endif
+        char tempArray[13];
+        BYTE count = 0;
+    #endif
     char M[2];
 
     for(;;)
-	{
-		tempArray[count] = fileName[count];
-		if(tempArray[count])
-			count++;
-		else
-			break;
-	}
+    {
+        tempArray[count] = fileName[count];
+        if(tempArray[count])
+            count++;
+        else
+            break;
+    }
 
     for (count = 0; count < 2; count++)
     {
@@ -8101,15 +8101,15 @@ FSFILE * FSfopenpgm(const rom char * fileName, const rom char *mode)
 #ifdef ALLOW_WRITES
 int FSremovepgm (const rom char * fileName)
 {
-	#ifdef SUPPORT_LFN
-		char tempArray[257];
-		unsigned short int count;
-	#else
+    #ifdef SUPPORT_LFN
+        char tempArray[257];
+        unsigned short int count;
+    #else
 
-		char	tempArray[13];
+        char    tempArray[13];
 
-	    BYTE count;
-	#endif
+        BYTE count;
+    #endif
 
 
     *fileName;
@@ -8151,16 +8151,16 @@ int FSremovepgm (const rom char * fileName)
 #ifdef ALLOW_FILESEARCH
 int FindFirstpgm (const rom char * fileName, unsigned int attr, SearchRec * rec)
 {
-	#if defined(SUPPORT_LFN)
+    #if defined(SUPPORT_LFN)
 
-		char tempArray[257];
-		unsigned short int count;
-	#else
+        char tempArray[257];
+        unsigned short int count;
+    #else
 
-		char	tempArray[13];
+        char    tempArray[13];
 
-	    BYTE count;
-	#endif
+        BYTE count;
+    #endif
 
 
     *fileName;
@@ -8482,7 +8482,7 @@ DWORD WriteFAT (DISK *dsk, DWORD ccls, DWORD value, BYTE forceWrite)
         RAMwrite (gFATBuffer, p+3, ((value & 0x0f000000) >> 24));   // the MSB nibble is supposed to be "0" in FAT32. So mask it.
     }
     else
-    
+
 #endif
     {
         if (dsk->type == FAT16)
@@ -8550,9 +8550,9 @@ DWORD WriteFAT (DISK *dsk, DWORD ccls, DWORD value, BYTE forceWrite)
 
 // This string is used by dir functions to hold dir names temporarily
 #if defined(SUPPORT_LFN)
-	char tempDirectoryString [522];
+    char tempDirectoryString [522];
 #else
-	char tempDirectoryString [14];
+    char tempDirectoryString [14];
 #endif
 /**************************************************************************
   Function:
@@ -8573,7 +8573,7 @@ DWORD WriteFAT (DISK *dsk, DWORD ccls, DWORD value, BYTE forceWrite)
     Changes the current working directory to the ascii input path(PIC24/PIC32/dsPIC).
     The FSchdir function passes a RAM pointer to the path to the chdirhelper function.
   Remarks:
-    None                                            
+    None
   **************************************************************************/
 
 int FSchdir (char * path)
@@ -8602,15 +8602,15 @@ int FSchdir (char * path)
     UTF16 format (PIC24/PIC32/dsPIC).The FSchdir function passes a RAM
     pointer to the path to the chdirhelper function.
   Remarks:
-    None                                            
+    None
   **************************************************************************/
 #ifdef SUPPORT_LFN
 int wFSchdir (unsigned short int * path)
 {
-	int result;
-	utfModeFileName = TRUE;
+    int result;
+    utfModeFileName = TRUE;
     result = chdirhelper (0, (char *)path, NULL);
-	utfModeFileName = FALSE;
+    utfModeFileName = FALSE;
     return result;
 }
 #endif
@@ -8667,11 +8667,11 @@ int FSchdirpgm (const rom char * path)
 #ifdef SUPPORT_LFN
 int wFSchdirpgm (const rom unsigned short int * path)
 {
-	int result;
-	utfModeFileName = TRUE;
+    int result;
+    utfModeFileName = TRUE;
     result = chdirhelper (1, NULL, (const char *)path);
-	utfModeFileName = FALSE;
-	return result;
+    utfModeFileName = FALSE;
+    return result;
 }
 #endif
 
@@ -8727,9 +8727,9 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
     rom char * temppath2 = romptr;
     rom unsigned short int * utf16path2 = (rom unsigned short int *)romptr;
 #endif
-	#ifdef SUPPORT_LFN
-		unsigned short int *utf16path = (unsigned short int *)ramptr;
-	#endif
+    #ifdef SUPPORT_LFN
+        unsigned short int *utf16path = (unsigned short int *)ramptr;
+    #endif
 
     FSFILE tempCWDobj2;
     FILEOBJ tempCWD = &tempCWDobj2;
@@ -8741,38 +8741,38 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
    // Check the first char of the path
 #ifdef ALLOW_PGMFUNCTIONS
     if (mode)
-	{
-		#ifdef SUPPORT_LFN
-		if(utfModeFileName)
+    {
+        #ifdef SUPPORT_LFN
+        if(utfModeFileName)
 
-		{
+        {
 
-			i = *utf16path2;
-		}
-		else
-		#endif
-		{
-			i = *temppath2;
-		}
+            i = *utf16path2;
+        }
+        else
+        #endif
+        {
+            i = *temppath2;
+        }
     }
     else
 #endif
-	{
-		#ifdef SUPPORT_LFN
-		if(utfModeFileName)
+    {
+        #ifdef SUPPORT_LFN
+        if(utfModeFileName)
 
-		{
+        {
 
-			i = *utf16path;
-		}
-		else
-		#endif
-		{
-			i = *temppath;
-		}
+            i = *utf16path;
+        }
+        else
+        #endif
+        {
+            i = *temppath;
+        }
     }
 
-	// if NULL character return error
+    // if NULL character return error
     if (i == 0)
     {
         FSerrno = CE_INVALID_ARGUMENT;
@@ -8789,38 +8789,38 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                 if (mode)
                 {
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
 
-					{
+                    {
 
-                	    utf16path2++;
-                	    i = *utf16path2;
-					}
-					else
-					#endif
-					{
-                	    temppath2++;
-                	    i = *temppath2;
-					}
+                        utf16path2++;
+                        i = *utf16path2;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath2++;
+                        i = *temppath2;
+                    }
                 }
                 else
                 {
 #endif
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
 
-					{
+                    {
 
-                	    utf16path++;
-                	    i = *utf16path;
-					}
-					else
-					#endif
-					{
-                	    temppath++;
-                	    i = *temppath;
-					}
+                        utf16path++;
+                        i = *utf16path;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath++;
+                        i = *temppath;
+                    }
 #ifdef ALLOW_PGMFUNCTIONS
                 }
 #endif
@@ -8831,38 +8831,38 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                     if (mode)
                     {
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
 
-						{
+                        {
 
-                		    utf16path2++;
-                		    i = *utf16path2;
-						}
-						else
-						#endif
-						{
-                		    temppath2++;
-                		    i = *temppath2;
-						}
+                            utf16path2++;
+                            i = *utf16path2;
+                        }
+                        else
+                        #endif
+                        {
+                            temppath2++;
+                            i = *temppath2;
+                        }
                     }
                     else
                     {
 #endif
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
 
-						{
+                        {
 
-                		    utf16path++;
-                		    i = *utf16path;
-						}
-						else
-						#endif
-						{
-                		    temppath++;
-                		    i = *temppath;
-						}
+                            utf16path++;
+                            i = *utf16path;
+                        }
+                        else
+                        #endif
+                        {
+                            temppath++;
+                            i = *temppath;
+                        }
 #ifdef ALLOW_PGMFUNCTIONS
                     }
 #endif
@@ -8895,13 +8895,13 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
                             j = 0;
                             tempCWD->name[j++] = '\\';
 //                            if(utfModeFileName)
-//							{
-//                            	tempCWD->name[j++] = 0x00;
-//							}
+//                          {
+//                              tempCWD->name[j++] = 0x00;
+//                          }
                             for (;j < 11;)
                             {
                                 tempCWD->name[j] = 0x20;
-                            	++j;
+                                ++j;
                             }
 
                             /* While moving to Root, get the Root cluster value */
@@ -8914,19 +8914,19 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
                             j = 0;
                             tempCWD->name[j++] = '.';
 //                            if(utfModeFileName)
-//							{
-//                            	tempCWD->name[j++] = 0x00;
-//                            	tempCWD->name[j++] = '.';
-//                            	tempCWD->name[j++] = 0x00;
-//							}
-//							else
-							{
-                            	tempCWD->name[j++] = '.';
+//                          {
+//                              tempCWD->name[j++] = 0x00;
+//                              tempCWD->name[j++] = '.';
+//                              tempCWD->name[j++] = 0x00;
+//                          }
+//                          else
+                            {
+                                tempCWD->name[j++] = '.';
                             }
                             for (; j < 11;)
                             {
                                 tempCWD->name[j] = 0x20;
-                            	++j;
+                                ++j;
                             }
                         }
                         // Cache the dot entry
@@ -8942,38 +8942,38 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                             if (mode)
                             {
-								#ifdef SUPPORT_LFN
-								if(utfModeFileName)
+                                #ifdef SUPPORT_LFN
+                                if(utfModeFileName)
 
-								{
+                                {
 
-                				    utf16path2++;
-                				    i = *utf16path2;
-								}
-								else
-								#endif
-								{
-                				    temppath2++;
-                				    i = *temppath2;
-								}
+                                    utf16path2++;
+                                    i = *utf16path2;
+                                }
+                                else
+                                #endif
+                                {
+                                    temppath2++;
+                                    i = *temppath2;
+                                }
                             }
                             else
                             {
 #endif
-								#ifdef SUPPORT_LFN
-								if(utfModeFileName)
+                                #ifdef SUPPORT_LFN
+                                if(utfModeFileName)
 
-								{
+                                {
 
-                				    utf16path++;
-                				    i = *utf16path;
-								}
-								else
-								#endif
-								{
-                				    temppath++;
-                				    i = *temppath;
-								}
+                                    utf16path++;
+                                    i = *utf16path;
+                                }
+                                else
+                                #endif
+                                {
+                                    temppath++;
+                                    i = *temppath;
+                                }
 #ifdef ALLOW_PGMFUNCTIONS
                             }
 #endif
@@ -9004,38 +9004,38 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                                 if (mode)
                                 {
-									#ifdef SUPPORT_LFN
-									if(utfModeFileName)
+                                    #ifdef SUPPORT_LFN
+                                    if(utfModeFileName)
 
-									{
+                                    {
 
-                					    utf16path2++;
-                					    i = *utf16path2;
-									}
-									else
-									#endif
-									{
-                					    temppath2++;
-                					    i = *temppath2;
-									}
+                                        utf16path2++;
+                                        i = *utf16path2;
+                                    }
+                                    else
+                                    #endif
+                                    {
+                                        temppath2++;
+                                        i = *temppath2;
+                                    }
                                 }
                                 else
                                 {
 #endif
-									#ifdef SUPPORT_LFN
-									if(utfModeFileName)
+                                    #ifdef SUPPORT_LFN
+                                    if(utfModeFileName)
 
-									{
+                                    {
 
-                					    utf16path++;
-                					    i = *utf16path;
-									}
-									else
-									#endif
-									{
-                					    temppath++;
-                					    i = *temppath;
-									}
+                                        utf16path++;
+                                        i = *utf16path;
+                                    }
+                                    else
+                                    #endif
+                                    {
+                                        temppath++;
+                                        i = *temppath;
+                                    }
 #ifdef ALLOW_PGMFUNCTIONS
                                 }
 #endif
@@ -9065,38 +9065,38 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
             if (mode)
             {
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
 
-				{
+                {
 
                     utf16path2++;
                     i = *utf16path2;
-				}
-				else
-				#endif
-				{
+                }
+                else
+                #endif
+                {
                     temppath2++;
                     i = *temppath2;
-				}
+                }
             }
             else
             {
 #endif
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
 
-				{
+                {
 
                     utf16path++;
                     i = *utf16path;
-				}
-				else
-				#endif
-				{
+                }
+                else
+                #endif
+                {
                     temppath++;
                     i = *temppath;
-				}
+                }
 #ifdef ALLOW_PGMFUNCTIONS
             }
 #endif
@@ -9116,13 +9116,13 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
                 j = 0;
                 cwdptr->name[j++] = '\\';
 //                if(utfModeFileName)
-//				{
-//                	cwdptr->name[j++] = 0x00;
-//				}
+//              {
+//                  cwdptr->name[j++] = 0x00;
+//              }
                 for (; j < 11;)
                 {
                     cwdptr->name[j] = 0x20;
-                	++j;
+                    ++j;
                 }
                 return 0;
             }
@@ -9134,13 +9134,13 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
                 j = 0;
                 tempCWD->name[j++] = '\\';
 //                if(utfModeFileName)
-//				{
-//                	tempCWD->name[j++] = 0x00;
-//				}
+//              {
+//                  tempCWD->name[j++] = 0x00;
+//              }
                 for (; j < 11;)
                 {
                     tempCWD->name[j] = 0x20;
-                	++j;
+                    ++j;
                 }
             }
             break;
@@ -9151,106 +9151,106 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
             if (mode)
             {
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
 
-				{
+                {
 
-            	    // Change directories as specified
-					k = 512;
-
-
-
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempDirectoryString[j++] = i;
-            	        tempDirectoryString[j++] = i >> 8;
-            	        i = *(++utf16path2);
-            	    }
-
-					tempDirectoryString[j++] = 0;
-				}
-
-				else
-
-				#endif
-        		{
-
-					#if defined(SUPPORT_LFN)
-
-						k = 256;
-
-					#else
-
-						k = 12;
-
-					#endif
+                    // Change directories as specified
+                    k = 512;
 
 
 
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempDirectoryString[j++] = i;
-            	        i = *(++temppath2);
-            	    }
-				}
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempDirectoryString[j++] = i;
+                        tempDirectoryString[j++] = i >> 8;
+                        i = *(++utf16path2);
+                    }
+
+                    tempDirectoryString[j++] = 0;
+                }
+
+                else
+
+                #endif
+                {
+
+                    #if defined(SUPPORT_LFN)
+
+                        k = 256;
+
+                    #else
+
+                        k = 12;
+
+                    #endif
+
+
+
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempDirectoryString[j++] = i;
+                        i = *(++temppath2);
+                    }
+                }
 
             }
             else
             {
 #endif
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
 
-				{
+                {
 
-            	    // Change directories as specified
-					k = 512;
-
-
-
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempDirectoryString[j++] = i;
-            	        tempDirectoryString[j++] = i >> 8;
-            	        i = *(++utf16path);
-            	    }
-
-					tempDirectoryString[j++] = 0;
-				}
-
-				else
-
-				#endif
-        		{
-
-					#if defined(SUPPORT_LFN)
-
-						k = 256;
-
-					#else
-
-						k = 12;
-
-					#endif
+                    // Change directories as specified
+                    k = 512;
 
 
 
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempDirectoryString[j++] = i;
-            	        i = *(++temppath);
-            	    }
-				}
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempDirectoryString[j++] = i;
+                        tempDirectoryString[j++] = i >> 8;
+                        i = *(++utf16path);
+                    }
+
+                    tempDirectoryString[j++] = 0;
+                }
+
+                else
+
+                #endif
+                {
+
+                    #if defined(SUPPORT_LFN)
+
+                        k = 256;
+
+                    #else
+
+                        k = 12;
+
+                    #endif
+
+
+
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempDirectoryString[j++] = i;
+                        i = *(++temppath);
+                    }
+                }
 
 #ifdef ALLOW_PGMFUNCTIONS
             }
 #endif
- 
+
             tempDirectoryString[j++] = 0;
 
             // We got a whole 12 chars
@@ -9262,36 +9262,36 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                     if (mode)
                     {
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
 
-						{
+                        {
 
-                        	i = *(++utf16path2);
-                    	}
-						else
-						#endif
-						{
+                            i = *(++utf16path2);
+                        }
+                        else
+                        #endif
+                        {
 
-                        	i = *(++temppath2);
-                    	}
+                            i = *(++temppath2);
+                        }
                     }
                     else
                     {
 #endif
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
 
-						{
+                        {
 
-                        	i = *(++utf16path);
-                    	}
-						else
-						#endif
-						{
+                            i = *(++utf16path);
+                        }
+                        else
+                        #endif
+                        {
 
-                        	i = *(++temppath);
-                    	}
+                            i = *(++temppath);
+                        }
 #ifdef ALLOW_PGMFUNCTIONS
                     }
 #endif
@@ -9322,13 +9322,13 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
                 }
 
                 // Get the new name
-				#if defined(SUPPORT_LFN)
-					if(!tempCWD->utf16LFNlength)
-				#endif
-                		for (j = 0; j < 11; j++)
-                		{
-                    		tempCWD->name[j] = gFileTemp.name[j];
-                		}
+                #if defined(SUPPORT_LFN)
+                    if(!tempCWD->utf16LFNlength)
+                #endif
+                        for (j = 0; j < 11; j++)
+                        {
+                            tempCWD->name[j] = gFileTemp.name[j];
+                        }
 
                 tempCWD->dirclus = gFileTemp.cluster;
                 tempCWD->dirccls = tempCWD->dirclus;
@@ -9348,38 +9348,38 @@ int chdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                     if (mode)
                     {
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
 
-						{
+                        {
 
-                		    utf16path2++;
-                		    i = *utf16path2;
-						}
-						else
-						#endif
-						{
-                		    temppath2++;
-                		    i = *temppath2;
-						}
+                            utf16path2++;
+                            i = *utf16path2;
+                        }
+                        else
+                        #endif
+                        {
+                            temppath2++;
+                            i = *temppath2;
+                        }
                     }
                     else
                     {
 #endif
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
 
-						{
+                        {
 
-                		    utf16path++;
-                		    i = *utf16path;
-						}
-						else
-						#endif
-						{
-                		    temppath++;
-                		    i = *temppath;
-						}
+                            utf16path++;
+                            i = *utf16path;
+                        }
+                        else
+                        #endif
+                        {
+                            temppath++;
+                            i = *temppath;
+                        }
 #ifdef ALLOW_PGMFUNCTIONS
                     }
 #endif
@@ -9429,19 +9429,19 @@ char defaultArray [10];
     working directory, if it isn't already present.  This could
     occur if the user switched to the dotdot entry of a
     subdirectory immediately before calling this function.  The
-    function will then copy the current working directory name 
-    into the buffer backwards, and insert a backslash character.  
-    Next, the function will continuously switch to the previous 
+    function will then copy the current working directory name
+    into the buffer backwards, and insert a backslash character.
+    Next, the function will continuously switch to the previous
     directories and copy their names backwards into the buffer
     until it reaches the root.  If the buffer overflows, it
     will be treated as a circular buffer, and data will be
     copied over existing characters, starting at the beginning.
     Once the root directory is reached, the text in the buffer
     will be swapped, so that the buffer contains as much of the
-    current working directory name as possible, starting at the 
+    current working directory name as possible, starting at the
     root.
   Remarks:
-    None                                                       
+    None
   **************************************************************/
 char * FSgetcwd (char * path, int numchars)
 {
@@ -9459,13 +9459,13 @@ char * FSgetcwd (char * path, int numchars)
     char aChar;
     DIRENTRY entry;
 
-	#if defined(SUPPORT_LFN)
-	WORD prevHandle;
-	UINT16_VAL tempShift;
-	FSFILE cwdTemp;
-	LFN_ENTRY *lfno;
-	unsigned short int *tempLFN = (unsigned short int *)&tempDirectoryString[0];
-	#endif
+    #if defined(SUPPORT_LFN)
+    WORD prevHandle;
+    UINT16_VAL tempShift;
+    FSFILE cwdTemp;
+    LFN_ENTRY *lfno;
+    unsigned short int *tempLFN = (unsigned short int *)&tempDirectoryString[0];
+    #endif
 
     FSerrno = CE_GOOD;
 
@@ -9487,10 +9487,10 @@ char * FSgetcwd (char * path, int numchars)
     FileObjectCopy (tempCWD, cwdptr);
 
     if (((tempCWD->name[0] == '.') && (tempCWD->name[1] == '.'))
-		#if defined(SUPPORT_LFN)	
-	 	|| tempCWD->utf16LFNlength
-		#endif
-		)
+        #if defined(SUPPORT_LFN)
+        || tempCWD->utf16LFNlength
+        #endif
+        )
     {
         // We last changed directory into a dotdot entry
         // Save the value of the current directory
@@ -9549,118 +9549,118 @@ char * FSgetcwd (char * path, int numchars)
             TempClusterCalc = GetFullClusterNumber(entry); // Get complete cluster number in a loop.
         }
 
-		#if defined(SUPPORT_LFN)
-       	FileObjectCopy (&cwdTemp, tempCWD);
-	   	prevHandle = fHandle - 1;
+        #if defined(SUPPORT_LFN)
+        FileObjectCopy (&cwdTemp, tempCWD);
+        prevHandle = fHandle - 1;
 
-	   	lfno = (LFN_ENTRY *)Cache_File_Entry (tempCWD, &prevHandle, FALSE);
-
-
-	   	while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
-
-	   			&& (lfno->LFN_SequenceNo != DIR_EMPTY))
-
-	   	{
-
-	   		tempShift.byte.LB = lfno->LFN_Part1[0];
-
-	   		tempShift.byte.HB = lfno->LFN_Part1[1];
-
-	   		tempLFN[i++] = tempShift.Val;
-
-	   		tempShift.byte.LB = lfno->LFN_Part1[2];
-
-	   		tempShift.byte.HB = lfno->LFN_Part1[3];
-
-	   		tempLFN[i++] = tempShift.Val;
-
-	   		tempShift.byte.LB = lfno->LFN_Part1[4];
-
-	   		tempShift.byte.HB = lfno->LFN_Part1[5];
-
-	   		tempLFN[i++] = tempShift.Val;
-
-	   		tempShift.byte.LB = lfno->LFN_Part1[6];
-
-	   		tempShift.byte.HB = lfno->LFN_Part1[7];
-
-	   		tempLFN[i++] = tempShift.Val;
-
-	   		tempShift.byte.LB = lfno->LFN_Part1[8];
-
-	   		tempShift.byte.HB = lfno->LFN_Part1[9];
-
-	   		tempLFN[i++] = tempShift.Val;
+        lfno = (LFN_ENTRY *)Cache_File_Entry (tempCWD, &prevHandle, FALSE);
 
 
+        while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
 
-	   		tempLFN[i++] = lfno->LFN_Part2[0];
+                && (lfno->LFN_SequenceNo != DIR_EMPTY))
 
-	   		tempLFN[i++] = lfno->LFN_Part2[1];
+        {
 
-	   		tempLFN[i++] = lfno->LFN_Part2[2];
+            tempShift.byte.LB = lfno->LFN_Part1[0];
 
-	   		tempLFN[i++] = lfno->LFN_Part2[3];
+            tempShift.byte.HB = lfno->LFN_Part1[1];
 
-	   		tempLFN[i++] = lfno->LFN_Part2[4];
+            tempLFN[i++] = tempShift.Val;
 
-	   		tempLFN[i++] = lfno->LFN_Part2[5];
+            tempShift.byte.LB = lfno->LFN_Part1[2];
+
+            tempShift.byte.HB = lfno->LFN_Part1[3];
+
+            tempLFN[i++] = tempShift.Val;
+
+            tempShift.byte.LB = lfno->LFN_Part1[4];
+
+            tempShift.byte.HB = lfno->LFN_Part1[5];
+
+            tempLFN[i++] = tempShift.Val;
+
+            tempShift.byte.LB = lfno->LFN_Part1[6];
+
+            tempShift.byte.HB = lfno->LFN_Part1[7];
+
+            tempLFN[i++] = tempShift.Val;
+
+            tempShift.byte.LB = lfno->LFN_Part1[8];
+
+            tempShift.byte.HB = lfno->LFN_Part1[9];
+
+            tempLFN[i++] = tempShift.Val;
 
 
 
-	   		tempLFN[i++] = lfno->LFN_Part3[0];
+            tempLFN[i++] = lfno->LFN_Part2[0];
 
-	   		tempLFN[i++] = lfno->LFN_Part3[1];
+            tempLFN[i++] = lfno->LFN_Part2[1];
 
-	   
+            tempLFN[i++] = lfno->LFN_Part2[2];
 
-	   		prevHandle = prevHandle - 1;
+            tempLFN[i++] = lfno->LFN_Part2[3];
 
-	   		lfno = (LFN_ENTRY *)Cache_File_Entry (tempCWD, &prevHandle, FALSE);
+            tempLFN[i++] = lfno->LFN_Part2[4];
 
-	   	}
+            tempLFN[i++] = lfno->LFN_Part2[5];
 
-	   	FileObjectCopy (tempCWD, &cwdTemp);
-		#endif
 
-	   	if(i == 0)
-	   	{
-	   	    for (j = 0; j < 11; j++)
-       	    {
-        	    tempCWD->name[j] = entry->DIR_Name[j];
-        	    cwdptr->name[j] = entry->DIR_Name[j];
-       	    }
-			#if defined(SUPPORT_LFN)
-	   		cwdptr->utf16LFNlength = 0;
 
-	   		tempCWD->utf16LFNlength = 0;
+            tempLFN[i++] = lfno->LFN_Part3[0];
 
-			#endif
-	   	}
+            tempLFN[i++] = lfno->LFN_Part3[1];
 
-		#if defined(SUPPORT_LFN)
-	   	else
-	   	{
 
-	   		tempCWD->utf16LFNlength = i;
 
-			for(j = 12;j >= 0;j--)
-			{
-				if((tempLFN[i - j - 1]) == 0x0000)
-				{
-					tempCWD->utf16LFNlength = i - j - 1;
-					break;
-				}
-			}
-			cwdptr->utf16LFNlength = tempCWD->utf16LFNlength;
+            prevHandle = prevHandle - 1;
 
-	   		tempCWD->utf16LFNptr = (unsigned short int *)&tempDirectoryString[0];
+            lfno = (LFN_ENTRY *)Cache_File_Entry (tempCWD, &prevHandle, FALSE);
 
-	   		cwdptr->utf16LFNptr = (unsigned short int *)&tempDirectoryString[0];
+        }
 
-	   	}
+        FileObjectCopy (tempCWD, &cwdTemp);
+        #endif
 
-		#endif
+        if(i == 0)
+        {
+            for (j = 0; j < 11; j++)
+            {
+                tempCWD->name[j] = entry->DIR_Name[j];
+                cwdptr->name[j] = entry->DIR_Name[j];
+            }
+            #if defined(SUPPORT_LFN)
+            cwdptr->utf16LFNlength = 0;
+
+            tempCWD->utf16LFNlength = 0;
+
+            #endif
+        }
+
+        #if defined(SUPPORT_LFN)
+        else
+        {
+
+            tempCWD->utf16LFNlength = i;
+
+            for(j = 12;j >= 0;j--)
+            {
+                if((tempLFN[i - j - 1]) == 0x0000)
+                {
+                    tempCWD->utf16LFNlength = i - j - 1;
+                    break;
+                }
+            }
+            cwdptr->utf16LFNlength = tempCWD->utf16LFNlength;
+
+            tempCWD->utf16LFNptr = (unsigned short int *)&tempDirectoryString[0];
+
+            cwdptr->utf16LFNptr = (unsigned short int *)&tempDirectoryString[0];
+
+        }
+
+        #endif
         // Reset our temp dir back to that cluster
         tempCWD->dirclus = curclus;
         tempCWD->dirccls = curclus;
@@ -9669,12 +9669,12 @@ char * FSgetcwd (char * path, int numchars)
     }
 
     // There's actually some kind of name value in the cwd
-	#if defined(SUPPORT_LFN)
-    if (((tempCWD->name[0] == '\\') && (tempCWD->utf16LFNlength == 0x0000)) || 
-		((tempCWD->utf16LFNlength != 0x0000) && (tempCWD->utf16LFNptr[0] == (unsigned short int)'\\')) || (numchars == 0x02)) 
-	#else
+    #if defined(SUPPORT_LFN)
+    if (((tempCWD->name[0] == '\\') && (tempCWD->utf16LFNlength == 0x0000)) ||
+        ((tempCWD->utf16LFNlength != 0x0000) && (tempCWD->utf16LFNptr[0] == (unsigned short int)'\\')) || (numchars == 0x02))
+    #else
     if ((tempCWD->name[0] == '\\') || (numchars == 0x02))
-	#endif
+    #endif
     {
         // Easy, our CWD is the root
         *returnPointer = '\\';
@@ -9687,130 +9687,130 @@ char * FSgetcwd (char * path, int numchars)
         // Loop until we get back to the root
         while (tempCWD->dirclus != FatRootDirClusterValue)
         {
-			#if defined(SUPPORT_LFN)
+            #if defined(SUPPORT_LFN)
             if(tempCWD->utf16LFNlength)
             {
-			    i = tempCWD->utf16LFNlength * 2 - 1;
-			    while(i >= 0)
-				{
-					#ifdef SUPPORT_LFN
-					if(twoByteMode)
-					{
-						returnPointer[index++] = tempDirectoryString[i--];
-	            	    if (index == totalchars)
-	            	    {
-	            	        index = 0;
-	            	        bufferOverflow = TRUE;
-	            	    }
-					}
-					else
-					#endif
-					{
-						if(tempDirectoryString[i])
-						{
-							returnPointer[index++] = tempDirectoryString[i];
-	           		  	  	if (index == totalchars)
-	           		  	  	{
-	           		  	  	    index = 0;
-	           		  	  	    bufferOverflow = TRUE;
-	           		  	  	}
-							
-						}
-						i--;
-					}
-				}
-			}
-			else
-			#endif
-			{
-	            j = 10;
-	            while (tempCWD->name[j] == 0x20)
-	                j--;
-	            if (j >= 8)
-	            {
-	                while (j >= 8)
-	                {
-	                    *(returnPointer + index++) = tempCWD->name[j--];
-	                    // This is a circular buffer
-	                    // Any unnecessary values will be overwritten
-	                    if (index == totalchars)
-	                    {
-	                        index = 0;
-	                        bufferOverflow = TRUE;
-	                    }
+                i = tempCWD->utf16LFNlength * 2 - 1;
+                while(i >= 0)
+                {
+                    #ifdef SUPPORT_LFN
+                    if(twoByteMode)
+                    {
+                        returnPointer[index++] = tempDirectoryString[i--];
+                        if (index == totalchars)
+                        {
+                            index = 0;
+                            bufferOverflow = TRUE;
+                        }
+                    }
+                    else
+                    #endif
+                    {
+                        if(tempDirectoryString[i])
+                        {
+                            returnPointer[index++] = tempDirectoryString[i];
+                            if (index == totalchars)
+                            {
+                                index = 0;
+                                bufferOverflow = TRUE;
+                            }
 
-						#ifdef SUPPORT_LFN
-						if(twoByteMode)
-						{
-							returnPointer[index++] = 0x00;
-	   	    		  	   if (index == totalchars)
-	   	    		  	   {
-	   	    		  	       index = 0;
-	   	    		  	       bufferOverflow = TRUE;
-	   	    		  	   }
-						}
-						#endif
-	                }
+                        }
+                        i--;
+                    }
+                }
+            }
+            else
+            #endif
+            {
+                j = 10;
+                while (tempCWD->name[j] == 0x20)
+                    j--;
+                if (j >= 8)
+                {
+                    while (j >= 8)
+                    {
+                        *(returnPointer + index++) = tempCWD->name[j--];
+                        // This is a circular buffer
+                        // Any unnecessary values will be overwritten
+                        if (index == totalchars)
+                        {
+                            index = 0;
+                            bufferOverflow = TRUE;
+                        }
 
-	                *(returnPointer + index++) = '.';
-	                if (index == totalchars)
-	                {
-	                    index = 0;
-	                    bufferOverflow = TRUE;
-	                }
+                        #ifdef SUPPORT_LFN
+                        if(twoByteMode)
+                        {
+                            returnPointer[index++] = 0x00;
+                           if (index == totalchars)
+                           {
+                               index = 0;
+                               bufferOverflow = TRUE;
+                           }
+                        }
+                        #endif
+                    }
 
-					#ifdef SUPPORT_LFN
-					if(twoByteMode)
-					{
-						returnPointer[index++] = 0x00;
-	   	    		    if (index == totalchars)
-	   	    		    {
-	   	    		        index = 0;
-	   	    		        bufferOverflow = TRUE;
-	   	    		    }
-					}
-					#endif
-	            }
+                    *(returnPointer + index++) = '.';
+                    if (index == totalchars)
+                    {
+                        index = 0;
+                        bufferOverflow = TRUE;
+                    }
 
-	            while (tempCWD->name[j] == 0x20)
-	                j--;
+                    #ifdef SUPPORT_LFN
+                    if(twoByteMode)
+                    {
+                        returnPointer[index++] = 0x00;
+                        if (index == totalchars)
+                        {
+                            index = 0;
+                            bufferOverflow = TRUE;
+                        }
+                    }
+                    #endif
+                }
 
-	            while (j >= 0)
-	            {
-	                *(returnPointer + index++) = tempCWD->name[j--];
-	                // This is a circular buffer
-	                // Any unnecessary values will be overwritten
-	                if (index == totalchars)
-	                {
-	                    index = 0;
-	                    bufferOverflow = TRUE;
-	                }
+                while (tempCWD->name[j] == 0x20)
+                    j--;
 
-					#ifdef SUPPORT_LFN
-					if(twoByteMode)
-					{
-						returnPointer[index++] = 0x00;
-	   	    		    if (index == totalchars)
-	   	    		    {
-	   	    		        index = 0;
-	   	    		        bufferOverflow = TRUE;
-	   	    		    }
-					}
-					#endif
-	            }
-			}
+                while (j >= 0)
+                {
+                    *(returnPointer + index++) = tempCWD->name[j--];
+                    // This is a circular buffer
+                    // Any unnecessary values will be overwritten
+                    if (index == totalchars)
+                    {
+                        index = 0;
+                        bufferOverflow = TRUE;
+                    }
 
-			#ifdef SUPPORT_LFN
-			if(twoByteMode)
-			{
-				returnPointer[index++] = 0x00;
-	            if (index == totalchars)
-	            {
-	                index = 0;
-	                bufferOverflow = TRUE;
-	            }
-			}
-			#endif
+                    #ifdef SUPPORT_LFN
+                    if(twoByteMode)
+                    {
+                        returnPointer[index++] = 0x00;
+                        if (index == totalchars)
+                        {
+                            index = 0;
+                            bufferOverflow = TRUE;
+                        }
+                    }
+                    #endif
+                }
+            }
+
+            #ifdef SUPPORT_LFN
+            if(twoByteMode)
+            {
+                returnPointer[index++] = 0x00;
+                if (index == totalchars)
+                {
+                    index = 0;
+                    bufferOverflow = TRUE;
+                }
+            }
+            #endif
 
             // Put a backslash delimiter in front of the dir name
             *(returnPointer + index++) = '\\';
@@ -9912,27 +9912,27 @@ char * FSgetcwd (char * path, int numchars)
     working directory, if it isn't already present.  This could
     occur if the user switched to the dotdot entry of a
     subdirectory immediately before calling this function.  The
-    function will then copy the current working directory name 
-    into the buffer backwards, and insert a backslash character.  
-    Next, the function will continuously switch to the previous 
+    function will then copy the current working directory name
+    into the buffer backwards, and insert a backslash character.
+    Next, the function will continuously switch to the previous
     directories and copy their names backwards into the buffer
     until it reaches the root.  If the buffer overflows, it
     will be treated as a circular buffer, and data will be
     copied over existing characters, starting at the beginning.
     Once the root directory is reached, the text in the buffer
     will be swapped, so that the buffer contains as much of the
-    current working directory name as possible, starting at the 
+    current working directory name as possible, starting at the
     root.
   Remarks:
-    None                                                       
+    None
   **************************************************************/
 char * wFSgetcwd (unsigned short int * path, int numchars)
 {
-	char *result;
-	twoByteMode = TRUE;
+    char *result;
+    twoByteMode = TRUE;
     result = FSgetcwd ((char *)path,numchars);
-	twoByteMode = FALSE;
-	return result;
+    twoByteMode = FALSE;
+    return result;
 }
 #endif
 
@@ -9968,15 +9968,15 @@ BYTE GetPreviousEntry (FSFILE * fo)
     DWORD dirclus;
     DIRENTRY dirptr;
 
-	#ifdef SUPPORT_LFN
-		unsigned short int *tempLFN = (unsigned short int *)&tempDirectoryString[0];
-		FSFILE cwdTemp;
-		LFN_ENTRY *lfno;
+    #ifdef SUPPORT_LFN
+        unsigned short int *tempLFN = (unsigned short int *)&tempDirectoryString[0];
+        FSFILE cwdTemp;
+        LFN_ENTRY *lfno;
 
-		WORD prevHandle;
-		UINT16_VAL tempShift;
+        WORD prevHandle;
+        UINT16_VAL tempShift;
 
-	#endif
+    #endif
 
     // Load the previous entry
     dirptr = Cache_File_Entry (fo, &fHandle, TRUE);
@@ -10054,123 +10054,123 @@ BYTE GetPreviousEntry (FSFILE * fo)
         // Copy the actual directory location back
         fo->dirclus = dirclus;
         fo->dirccls = dirclus;
-	}
+    }
 
-   	i = 0;
-	#ifdef SUPPORT_LFN
-       	FileObjectCopy (&cwdTemp, fo);
-	   	prevHandle = fHandle - 2;
+    i = 0;
+    #ifdef SUPPORT_LFN
+        FileObjectCopy (&cwdTemp, fo);
+        prevHandle = fHandle - 2;
 
-	   	lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
+        lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
 
-		// Get the long file name of the short file name(if present)
-	   	while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
+        // Get the long file name of the short file name(if present)
+        while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
 
-	   			&& (lfno->LFN_SequenceNo != DIR_EMPTY))
+                && (lfno->LFN_SequenceNo != DIR_EMPTY))
 
-	   	{
+        {
 
-	   		tempShift.byte.LB = lfno->LFN_Part1[0];
+            tempShift.byte.LB = lfno->LFN_Part1[0];
 
-	   		tempShift.byte.HB = lfno->LFN_Part1[1];
+            tempShift.byte.HB = lfno->LFN_Part1[1];
 
-	   		tempLFN[i++] = tempShift.Val;
+            tempLFN[i++] = tempShift.Val;
 
-	   		tempShift.byte.LB = lfno->LFN_Part1[2];
+            tempShift.byte.LB = lfno->LFN_Part1[2];
 
-	   		tempShift.byte.HB = lfno->LFN_Part1[3];
+            tempShift.byte.HB = lfno->LFN_Part1[3];
 
-	   		tempLFN[i++] = tempShift.Val;
+            tempLFN[i++] = tempShift.Val;
 
-	   		tempShift.byte.LB = lfno->LFN_Part1[4];
+            tempShift.byte.LB = lfno->LFN_Part1[4];
 
-	   		tempShift.byte.HB = lfno->LFN_Part1[5];
+            tempShift.byte.HB = lfno->LFN_Part1[5];
 
-	   		tempLFN[i++] = tempShift.Val;
+            tempLFN[i++] = tempShift.Val;
 
-	   		tempShift.byte.LB = lfno->LFN_Part1[6];
+            tempShift.byte.LB = lfno->LFN_Part1[6];
 
-	   		tempShift.byte.HB = lfno->LFN_Part1[7];
+            tempShift.byte.HB = lfno->LFN_Part1[7];
 
-	   		tempLFN[i++] = tempShift.Val;
+            tempLFN[i++] = tempShift.Val;
 
-	   		tempShift.byte.LB = lfno->LFN_Part1[8];
+            tempShift.byte.LB = lfno->LFN_Part1[8];
 
-	   		tempShift.byte.HB = lfno->LFN_Part1[9];
+            tempShift.byte.HB = lfno->LFN_Part1[9];
 
-	   		tempLFN[i++] = tempShift.Val;
-
-
-	   		tempLFN[i++] = lfno->LFN_Part2[0];
-
-	   		tempLFN[i++] = lfno->LFN_Part2[1];
-
-	   		tempLFN[i++] = lfno->LFN_Part2[2];
-
-	   		tempLFN[i++] = lfno->LFN_Part2[3];
-
-	   		tempLFN[i++] = lfno->LFN_Part2[4];
-
-	   		tempLFN[i++] = lfno->LFN_Part2[5];
+            tempLFN[i++] = tempShift.Val;
 
 
-	   		tempLFN[i++] = lfno->LFN_Part3[0];
+            tempLFN[i++] = lfno->LFN_Part2[0];
 
-	   		tempLFN[i++] = lfno->LFN_Part3[1];
+            tempLFN[i++] = lfno->LFN_Part2[1];
 
-	   
+            tempLFN[i++] = lfno->LFN_Part2[2];
 
-	   		prevHandle = prevHandle - 1;
+            tempLFN[i++] = lfno->LFN_Part2[3];
 
-	   		lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
+            tempLFN[i++] = lfno->LFN_Part2[4];
 
-	   	}
+            tempLFN[i++] = lfno->LFN_Part2[5];
 
 
-	   	FileObjectCopy (fo, &cwdTemp);
-	#endif
+            tempLFN[i++] = lfno->LFN_Part3[0];
 
-   	if(i == 0)
+            tempLFN[i++] = lfno->LFN_Part3[1];
 
-	{
-   	    for (j = 0; j < 11; j++)
-        	fo->name[j] = dirptr->DIR_Name[j];
-		#ifdef SUPPORT_LFN
-   			fo->utf16LFNlength = 0;
 
-   		#endif
-   	}
-	#ifdef SUPPORT_LFN
-   	else
 
-   	{
+            prevHandle = prevHandle - 1;
 
-		fo->utf16LFNlength = i;
+            lfno = (LFN_ENTRY *)Cache_File_Entry (fo, &prevHandle, FALSE);
 
-		
+        }
 
-		for(j = 12;j >= 0;j--)
 
-		{
+        FileObjectCopy (fo, &cwdTemp);
+    #endif
 
-			if((tempLFN[i - j - 1]) == 0x0000)
+    if(i == 0)
 
-			{
+    {
+        for (j = 0; j < 11; j++)
+            fo->name[j] = dirptr->DIR_Name[j];
+        #ifdef SUPPORT_LFN
+            fo->utf16LFNlength = 0;
 
-				fo->utf16LFNlength = i - j - 1;
+        #endif
+    }
+    #ifdef SUPPORT_LFN
+    else
 
-				break;
+    {
 
-			}
+        fo->utf16LFNlength = i;
 
-		}
 
-		
-   		fo->utf16LFNptr = (unsigned short int *)&tempDirectoryString[0];
 
-   	}
+        for(j = 12;j >= 0;j--)
 
-	#endif
+        {
+
+            if((tempLFN[i - j - 1]) == 0x0000)
+
+            {
+
+                fo->utf16LFNlength = i - j - 1;
+
+                break;
+
+            }
+
+        }
+
+
+        fo->utf16LFNptr = (unsigned short int *)&tempDirectoryString[0];
+
+    }
+
+    #endif
 
     return 0;
 }
@@ -10189,13 +10189,13 @@ BYTE GetPreviousEntry (FSFILE * fo)
     0 -   The specified directory was created successfully
     EOF - The specified directory could not be created
   Side Effects:
-    Will create all non-existent directories in the path. The FSerrno 
+    Will create all non-existent directories in the path. The FSerrno
     variable will be changed.
   Description:
     Creates a directory as per the ascii input path (PIC24/PIC32/dsPIC).
     This function doesn't move the current working directory setting.
   Remarks:
-    None                                            
+    None
   **************************************************************************/
 
 #ifdef ALLOW_WRITES
@@ -10217,21 +10217,21 @@ int FSmkdir (char * path)
     0 -   The specified directory was created successfully
     EOF - The specified directory could not be created
   Side Effects:
-    Will create all non-existent directories in the path. The FSerrno 
+    Will create all non-existent directories in the path. The FSerrno
     variable will be changed.
   Description:
     Creates a directory as per the UTF16 input path (PIC24/PIC32/dsPIC).
     This function doesn't move the current working directory setting.
   Remarks:
-    None                                            
+    None
   **************************************************************************/
 #ifdef SUPPORT_LFN
 int wFSmkdir (unsigned short int * path)
 {
-	int	result;
-	utfModeFileName = TRUE;
+    int result;
+    utfModeFileName = TRUE;
     result = mkdirhelper (0, (char *)path, NULL);
-	utfModeFileName = FALSE;
+    utfModeFileName = FALSE;
     return result;
 }
 #endif
@@ -10240,7 +10240,7 @@ int wFSmkdir (unsigned short int * path)
   Function:
     int FSmkdirpgm (const rom char * path)
   Summary:
-    Creates a directory as per the path mentioned in the input string on 
+    Creates a directory as per the path mentioned in the input string on
     PIC18 devices.
   Conditions:
     None
@@ -10250,10 +10250,10 @@ int wFSmkdir (unsigned short int * path)
     0 -   The specified directory was created successfully
     EOF - The specified directory could not be created
   Side Effects:
-    Will create all non-existent directories in the path. The FSerrno 
+    Will create all non-existent directories in the path. The FSerrno
     variable will be changed.
   Description:
-    Creates a directory as per the path mentioned in the input string on 
+    Creates a directory as per the path mentioned in the input string on
     PIC18 devices.'FSmkdirpgm' creates the directories as per the input
     string path.This function doesn't move the current working
     directory setting.
@@ -10291,10 +10291,10 @@ int FSmkdirpgm (const rom char * path)
 #ifdef SUPPORT_LFN
 int wFSmkdirpgm (const rom unsigned short int * path)
 {
-	int result;
-	utfModeFileName = TRUE;
+    int result;
+    utfModeFileName = TRUE;
     result = mkdirhelper (1, NULL, (const char *)path);
-	utfModeFileName = FALSE;
+    utfModeFileName = FALSE;
     return result;
 }
 #endif
@@ -10348,7 +10348,7 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
     rom char * temppath2 = romptr;
     rom unsigned short int * utf16path2 = (rom unsigned short int *)romptr;
 #endif
-	unsigned short int *utf16path = (unsigned short int *)ramptr;
+    unsigned short int *utf16path = (unsigned short int *)ramptr;
     FILEOBJ tempCWD = &tempCWDobj;
 
 #ifdef __18CXX
@@ -10359,9 +10359,9 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 // Do Dynamic allocation if the macro is defined or
 // go with static allocation
 #if defined(SUPPORT_LFN)
-	char tempArray[514];
+    char tempArray[514];
 #else
-	char tempArray[14];
+    char tempArray[14];
 #endif
 
     FSerrno = CE_GOOD;
@@ -10375,231 +10375,231 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
     if (mode == 1)
     {
-		#ifdef SUPPORT_LFN
-		if(utfModeFileName)
-		{
-	        // Scan for too-long file names
-	        while (1)
-	        {
-	            i = 0;
-	            while((*utf16path2 != 0) && (*utf16path2 != '.')&& (*utf16path2 != '\\'))
-	            {
-	                utf16path2++;
-	                i++;
-	            }
+        #ifdef SUPPORT_LFN
+        if(utfModeFileName)
+        {
+            // Scan for too-long file names
+            while (1)
+            {
+                i = 0;
+                while((*utf16path2 != 0) && (*utf16path2 != '.')&& (*utf16path2 != '\\'))
+                {
+                    utf16path2++;
+                    i++;
+                }
 
-		        if (i > 256)
-		        {
-		            FSerrno = CE_INVALID_ARGUMENT;
-		            return -1;
-		        }
+                if (i > 256)
+                {
+                    FSerrno = CE_INVALID_ARGUMENT;
+                    return -1;
+                }
 
-	            j = 0;
-	            if (*utf16path2 == '.')
-	            {
-	                utf16path2++;
-	                while ((*utf16path2 != 0) && (*utf16path2 != '\\'))
-	                {
-	                    utf16path2++;
-	                    j++;
-	                }
-		    	    if ((i + j) > 256)
-		    	    {
-		    	        FSerrno = CE_INVALID_ARGUMENT;
-		    	        return -1;
-		    	    }
-	            }
+                j = 0;
+                if (*utf16path2 == '.')
+                {
+                    utf16path2++;
+                    while ((*utf16path2 != 0) && (*utf16path2 != '\\'))
+                    {
+                        utf16path2++;
+                        j++;
+                    }
+                    if ((i + j) > 256)
+                    {
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                }
 
-				if((i + j) > k)
-				{
-					k = (i + j);
-				}
+                if((i + j) > k)
+                {
+                    k = (i + j);
+                }
 
-	            while (*utf16path2 == '\\')
-	                utf16path2++;
-	            if (*utf16path2 == 0)
-	                break;
-	        }
-    	}
-		else
-		#endif
-		{
-	        // Scan for too-long file names
-	        while (1)
-	        {
-	            i = 0;
-	            while((*temppath2 != 0) && (*temppath2 != '.')&& (*temppath2 != '\\'))
-	            {
-	                temppath2++;
-	                i++;
-	            }
+                while (*utf16path2 == '\\')
+                    utf16path2++;
+                if (*utf16path2 == 0)
+                    break;
+            }
+        }
+        else
+        #endif
+        {
+            // Scan for too-long file names
+            while (1)
+            {
+                i = 0;
+                while((*temppath2 != 0) && (*temppath2 != '.')&& (*temppath2 != '\\'))
+                {
+                    temppath2++;
+                    i++;
+                }
 
-				#if defined(SUPPORT_LFN)
-		            if (i > 256)
-		            {
-		                FSerrno = CE_INVALID_ARGUMENT;
-		                return -1;
-		            }
-				#else
-		            if (i > 8)
-		            {
-		                FSerrno = CE_INVALID_ARGUMENT;
-		                return -1;
-		            }
-				#endif
+                #if defined(SUPPORT_LFN)
+                    if (i > 256)
+                    {
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                #else
+                    if (i > 8)
+                    {
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                #endif
 
-	            j = 0;
-	            if (*temppath2 == '.')
-	            {
-	                temppath2++;
-	                while ((*temppath2 != 0) && (*temppath2 != '\\'))
-	                {
-	                    temppath2++;
-	                    j++;
-	                }
-					#if defined(SUPPORT_LFN)
-		    	        if ((i + j) > 256)
-		    	        {
-		    	            FSerrno = CE_INVALID_ARGUMENT;
-		    	            return -1;
-		    	        }
-					#else
-		    	        if (j > 3)
-		    	        {
-		    	            FSerrno = CE_INVALID_ARGUMENT;
-		    	            return -1;
-		    	        }
-					#endif
-	            }
+                j = 0;
+                if (*temppath2 == '.')
+                {
+                    temppath2++;
+                    while ((*temppath2 != 0) && (*temppath2 != '\\'))
+                    {
+                        temppath2++;
+                        j++;
+                    }
+                    #if defined(SUPPORT_LFN)
+                        if ((i + j) > 256)
+                        {
+                            FSerrno = CE_INVALID_ARGUMENT;
+                            return -1;
+                        }
+                    #else
+                        if (j > 3)
+                        {
+                            FSerrno = CE_INVALID_ARGUMENT;
+                            return -1;
+                        }
+                    #endif
+                }
 
-				if((i + j) > k)
-				{
-					k = (i + j);
-				}
+                if((i + j) > k)
+                {
+                    k = (i + j);
+                }
 
-	            while (*temppath2 == '\\')
-	                temppath2++;
-	            if (*temppath2 == 0)
-	                break;
-	        }
-    	}
+                while (*temppath2 == '\\')
+                    temppath2++;
+                if (*temppath2 == 0)
+                    break;
+            }
+        }
     }
     else
 #endif
-	{
-		#ifdef SUPPORT_LFN
-		if(utfModeFileName)
-		{
-			utf16path = (unsigned short int *)ramptr;
-	        // Scan for too-long file names
-	        while (1)
-	        {
-	            i = 0;
-	            while((*utf16path != 0) && (*utf16path != '.')&& (*utf16path != '\\'))
-	            {
-	                utf16path++;
-	                i++;
-	            }
-		        if (i > 256)
-		        {
-		            FSerrno = CE_INVALID_ARGUMENT;
-		            return -1;
-		        }
+    {
+        #ifdef SUPPORT_LFN
+        if(utfModeFileName)
+        {
+            utf16path = (unsigned short int *)ramptr;
+            // Scan for too-long file names
+            while (1)
+            {
+                i = 0;
+                while((*utf16path != 0) && (*utf16path != '.')&& (*utf16path != '\\'))
+                {
+                    utf16path++;
+                    i++;
+                }
+                if (i > 256)
+                {
+                    FSerrno = CE_INVALID_ARGUMENT;
+                    return -1;
+                }
 
-	            j = 0;
-	            if (*utf16path == '.')
-	            {
-	                utf16path++;
-	                while ((*utf16path != 0) && (*utf16path != '\\'))
-	                {
-	                    utf16path++;
-	                    j++;
-	                }
-		    	    if ((i + j) > 256)
-		    	    {
-		    	        FSerrno = CE_INVALID_ARGUMENT;
-		    	        return -1;
-		    	    }
-	            }
+                j = 0;
+                if (*utf16path == '.')
+                {
+                    utf16path++;
+                    while ((*utf16path != 0) && (*utf16path != '\\'))
+                    {
+                        utf16path++;
+                        j++;
+                    }
+                    if ((i + j) > 256)
+                    {
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                }
 
-				if((i + j) > k)
-				{
-					k = (i + j);
-				}
+                if((i + j) > k)
+                {
+                    k = (i + j);
+                }
 
-	            while (*utf16path == '\\')
-	                utf16path++;
-	            if (*utf16path == 0)
-	                break;
-	        }
-		}
-		else
-		#endif
-		{
-	        // Scan for too-long file names
-	        while (1)
-	        {
-	            i = 0;
-	            while((*temppath != 0) && (*temppath != '.')&& (*temppath != '\\'))
-	            {
-	                temppath++;
-	                i++;
-	            }
-				#if defined(SUPPORT_LFN)
-		            if (i > 256)
-		            {
-		                FSerrno = CE_INVALID_ARGUMENT;
-		                return -1;
-		            }
-				#else
-		            if (i > 8)
-		            {
-		                FSerrno = CE_INVALID_ARGUMENT;
-		                return -1;
-		            }
-				#endif
+                while (*utf16path == '\\')
+                    utf16path++;
+                if (*utf16path == 0)
+                    break;
+            }
+        }
+        else
+        #endif
+        {
+            // Scan for too-long file names
+            while (1)
+            {
+                i = 0;
+                while((*temppath != 0) && (*temppath != '.')&& (*temppath != '\\'))
+                {
+                    temppath++;
+                    i++;
+                }
+                #if defined(SUPPORT_LFN)
+                    if (i > 256)
+                    {
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                #else
+                    if (i > 8)
+                    {
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                #endif
 
-	            j = 0;
-	            if (*temppath == '.')
-	            {
-	                temppath++;
-	                while ((*temppath != 0) && (*temppath != '\\'))
-	                {
-	                    temppath++;
-	                    j++;
-	                }
-					#if defined(SUPPORT_LFN)
-		    	        if ((i + j) > 256)
-		    	        {
-		    	            FSerrno = CE_INVALID_ARGUMENT;
-		    	            return -1;
-		    	        }
-					#else
-		    	        if (j > 3)
-		    	        {
-		    	            FSerrno = CE_INVALID_ARGUMENT;
-		    	            return -1;
-		    	        }
-					#endif
-	            }
+                j = 0;
+                if (*temppath == '.')
+                {
+                    temppath++;
+                    while ((*temppath != 0) && (*temppath != '\\'))
+                    {
+                        temppath++;
+                        j++;
+                    }
+                    #if defined(SUPPORT_LFN)
+                        if ((i + j) > 256)
+                        {
+                            FSerrno = CE_INVALID_ARGUMENT;
+                            return -1;
+                        }
+                    #else
+                        if (j > 3)
+                        {
+                            FSerrno = CE_INVALID_ARGUMENT;
+                            return -1;
+                        }
+                    #endif
+                }
 
-				if((i + j) > k)
-				{
-					k = (i + j);
-				}
+                if((i + j) > k)
+                {
+                    k = (i + j);
+                }
 
-	            while (*temppath == '\\')
-	                temppath++;
-	            if (*temppath == 0)
-	                break;
-	        }
-		}
-	}
+                while (*temppath == '\\')
+                    temppath++;
+                if (*temppath == 0)
+                    break;
+            }
+        }
+    }
 
-	utf16path = (unsigned short int *)ramptr;
+    utf16path = (unsigned short int *)ramptr;
     temppath = ramptr;
 #ifdef ALLOW_PGMFUNCTIONS
-	utf16path2 = (rom unsigned short int *)romptr;
+    utf16path2 = (rom unsigned short int *)romptr;
     temppath2 = romptr;
 #endif
 
@@ -10613,57 +10613,57 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
         if (mode == 1)
         {
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
-            	i = *utf16path2;
-			else
-			#endif
-            	i = *temppath2;
-		}
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
+                i = *utf16path2;
+            else
+            #endif
+                i = *temppath2;
+        }
         else
 #endif
-		{
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
-            	i = *utf16path;
-			else
-			#endif
-            	i = *temppath;
-		}
+        {
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
+                i = *utf16path;
+            else
+            #endif
+                i = *temppath;
+        }
 
         if (i == '.')
         {
 #ifdef ALLOW_PGMFUNCTIONS
             if (mode == 1)
             {
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
-				{
-            	    utf16path2++;
-            	    i = *utf16path2;
-				}
-				else
-				#endif
-        	    {
-            	    temppath2++;
-            	    i = *temppath2;
-				}
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
+                {
+                    utf16path2++;
+                    i = *utf16path2;
+                }
+                else
+                #endif
+                {
+                    temppath2++;
+                    i = *temppath2;
+                }
             }
             else
             {
 #endif
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
-				{
-            	    utf16path++;
-            	    i = *utf16path;
-				}
-				else
-				#endif
-        	    {
-            	    temppath++;
-            	    i = *temppath;
-				}
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
+                {
+                    utf16path++;
+                    i = *utf16path;
+                }
+                else
+                #endif
+                {
+                    temppath++;
+                    i = *temppath;
+                }
 #ifdef ALLOW_PGMFUNCTIONS
             }
 #endif
@@ -10686,35 +10686,35 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                 if (mode == 1)
                 {
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
-					{
-            		    utf16path2++;
-            		    i = *utf16path2;
-					}
-					else
-					#endif
-        		    {
-            		    temppath2++;
-            		    i = *temppath2;
-					}
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
+                    {
+                        utf16path2++;
+                        i = *utf16path2;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath2++;
+                        i = *temppath2;
+                    }
                 }
                 else
 #endif
                 {
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
-					{
-            		    utf16path++;
-            		    i = *utf16path;
-					}
-					else
-					#endif
-        		    {
-            		    temppath++;
-            		    i = *temppath;
-					}
-				}
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
+                    {
+                        utf16path++;
+                        i = *utf16path;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath++;
+                        i = *temppath;
+                    }
+                }
 
                 if ((i != '\\') && (i != 0))
                 {
@@ -10723,18 +10723,18 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
                 }
 // dotdot entry
 #ifndef __18CXX
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
                 FSchdir (".\0.\0\0");
-			#endif
-			else
+            #endif
+            else
                 FSchdir ("..");
 #else
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
                 FSchdir (dotdotPath1);
-			else
-			#endif
+            else
+            #endif
                 FSchdir (dotdotPath);
 #endif
             }
@@ -10744,34 +10744,34 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                 if (mode == 1)
                 {
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
-					{
-            		    utf16path2++;
-            		    i = *utf16path2;
-					}
-					else
-					#endif
-        		    {
-            		    temppath2++;
-            		    i = *temppath2;
-					}
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
+                    {
+                        utf16path2++;
+                        i = *utf16path2;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath2++;
+                        i = *temppath2;
+                    }
                 }
                 else
                 {
 #endif
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
-					{
-            		    utf16path++;
-            		    i = *utf16path;
-					}
-					else
-					#endif
-        		    {
-            		    temppath++;
-            		    i = *temppath;
-					}
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
+                    {
+                        utf16path++;
+                        i = *utf16path;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath++;
+                        i = *temppath;
+                    }
 #ifdef ALLOW_PGMFUNCTIONS
                 }
 #endif
@@ -10794,9 +10794,9 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
                 i = 0;
                 cwdptr->name[i++] = '\\';
 //                if(utfModeFileName)
-//				{
-//                	cwdptr->name[i++] = 0x00;
-//				}
+//              {
+//                  cwdptr->name[i++] = 0x00;
+//              }
                 for (; i < 11; i++)
                 {
                     cwdptr->name[i] = 0x20;
@@ -10805,34 +10805,34 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                 if (mode == 1)
                 {
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
-					{
-            		    utf16path2++;
-            		    i = *utf16path2;
-					}
-					else
-					#endif
-        		    {
-            		    temppath2++;
-            		    i = *temppath2;
-					}
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
+                    {
+                        utf16path2++;
+                        i = *utf16path2;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath2++;
+                        i = *temppath2;
+                    }
                 }
                 else
                 {
 #endif
-					#ifdef SUPPORT_LFN
-					if(utfModeFileName)
-					{
-            		    utf16path++;
-            		    i = *utf16path;
-					}
-					else
-					#endif
-        		    {
-            		    temppath++;
-            		    i = *temppath;
-					}
+                    #ifdef SUPPORT_LFN
+                    if(utfModeFileName)
+                    {
+                        utf16path++;
+                        i = *utf16path;
+                    }
+                    else
+                    #endif
+                    {
+                        temppath++;
+                        i = *temppath;
+                    }
 #ifdef ALLOW_PGMFUNCTIONS
                 }
 #endif
@@ -10859,139 +10859,139 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
             if (mode == 1)
             {
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
-				{
-            	    // Change directories as specified
-            	    i = *utf16path2;
-            	    j = 0;
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
+                {
+                    // Change directories as specified
+                    i = *utf16path2;
+                    j = 0;
 
-					k = 512;
+                    k = 512;
 
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempArray[j++] = i;
-            	        tempArray[j++] = i >> 8;
-            	        utf16path2++;
-            	        i = *utf16path2;
-            	    }
-				}
-				else
-				#endif
-        		{
-            	    // Change directories as specified
-            	    i = *temppath2;
-            	    j = 0;
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempArray[j++] = i;
+                        tempArray[j++] = i >> 8;
+                        utf16path2++;
+                        i = *utf16path2;
+                    }
+                }
+                else
+                #endif
+                {
+                    // Change directories as specified
+                    i = *temppath2;
+                    j = 0;
 
-					#if defined(SUPPORT_LFN)
-						k = 256;
-					#else
-						k = 12;
-					#endif
+                    #if defined(SUPPORT_LFN)
+                        k = 256;
+                    #else
+                        k = 12;
+                    #endif
 
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempArray[j++] = i;
-            	        temppath2++;
-            	        i = *temppath2;
-            	    }
-				}
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempArray[j++] = i;
+                        temppath2++;
+                        i = *temppath2;
+                    }
+                }
             }
             else
             {
 #endif
-				#ifdef SUPPORT_LFN
-				if(utfModeFileName)
-				{
-            	    // Change directories as specified
-            	    i = *utf16path;
-            	    j = 0;
+                #ifdef SUPPORT_LFN
+                if(utfModeFileName)
+                {
+                    // Change directories as specified
+                    i = *utf16path;
+                    j = 0;
 
-					k = 512;
+                    k = 512;
 
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempArray[j++] = i;
-            	        tempArray[j++] = i >> 8;
-            	        utf16path++;
-            	        i = *utf16path;
-            	    }
-				}
-				else
-				#endif
-        		{
-            	    // Change directories as specified
-            	    i = *temppath;
-            	    j = 0;
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempArray[j++] = i;
+                        tempArray[j++] = i >> 8;
+                        utf16path++;
+                        i = *utf16path;
+                    }
+                }
+                else
+                #endif
+                {
+                    // Change directories as specified
+                    i = *temppath;
+                    j = 0;
 
-					#if defined(SUPPORT_LFN)
-						k = 256;
-					#else
-						k = 12;
-					#endif
+                    #if defined(SUPPORT_LFN)
+                        k = 256;
+                    #else
+                        k = 12;
+                    #endif
 
-            	    // Parse the next token
-            	    while ((i != 0) && (i != '\\') && (j < k))
-            	    {
-            	        tempArray[j++] = i;
-            	        temppath++;
-            	        i = *temppath;
-            	    }
-				}
+                    // Parse the next token
+                    while ((i != 0) && (i != '\\') && (j < k))
+                    {
+                        tempArray[j++] = i;
+                        temppath++;
+                        i = *temppath;
+                    }
+                }
 #ifdef ALLOW_PGMFUNCTIONS
             }
 #endif
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
-			{
-            	tempArray[j++] = 0;
-            	tempArray[j] = 0;
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
+            {
+                tempArray[j++] = 0;
+                tempArray[j] = 0;
 
-        	    if ((tempArray[0] == '.') && (tempArray[1] == 0))
-        	    {
-        	        if (((tempArray[2] != 0) || (tempArray[3] != 0)) && ((tempArray[2] != '.') || (tempArray[3] != 0)))
-        	        {
-        	            FileObjectCopy (cwdptr, tempCWD);
-        	            FSerrno = CE_INVALID_ARGUMENT;
-        	            return -1;
-        	        }
-        	        if (((tempArray[2] == '.') && (tempArray[3] == 0)) && ((tempArray[4] != 0) || (tempArray[5] != 0)))
-        	        {
-        	            FileObjectCopy (cwdptr, tempCWD);
-        	            FSerrno = CE_INVALID_ARGUMENT;
-        	            return -1;
-        	        }
-        	    }
-			}
-			else
-			#endif
-			{
-            	tempArray[j] = 0;
+                if ((tempArray[0] == '.') && (tempArray[1] == 0))
+                {
+                    if (((tempArray[2] != 0) || (tempArray[3] != 0)) && ((tempArray[2] != '.') || (tempArray[3] != 0)))
+                    {
+                        FileObjectCopy (cwdptr, tempCWD);
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                    if (((tempArray[2] == '.') && (tempArray[3] == 0)) && ((tempArray[4] != 0) || (tempArray[5] != 0)))
+                    {
+                        FileObjectCopy (cwdptr, tempCWD);
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                }
+            }
+            else
+            #endif
+            {
+                tempArray[j] = 0;
 
-        	    if (tempArray[0] == '.')
-        	    {
-        	        if ((tempArray[1] != 0) && (tempArray[1] != '.'))
-        	        {
-        	            FileObjectCopy (cwdptr, tempCWD);
-        	            FSerrno = CE_INVALID_ARGUMENT;
-        	            return -1;
-        	        }
-        	        if ((tempArray[1] == '.') && (tempArray[2] != 0))
-        	        {
-        	            FileObjectCopy (cwdptr, tempCWD);
-        	            FSerrno = CE_INVALID_ARGUMENT;
-        	            return -1;
-        	        }
-        	    }
-			}
+                if (tempArray[0] == '.')
+                {
+                    if ((tempArray[1] != 0) && (tempArray[1] != '.'))
+                    {
+                        FileObjectCopy (cwdptr, tempCWD);
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                    if ((tempArray[1] == '.') && (tempArray[2] != 0))
+                    {
+                        FileObjectCopy (cwdptr, tempCWD);
+                        FSerrno = CE_INVALID_ARGUMENT;
+                        return -1;
+                    }
+                }
+            }
 
             // Try to change to it
             // If you can't we need to create it
             if (FSchdir (tempArray))
-				break;
+                break;
             else
             {
                 // We changed into the directory
@@ -11002,34 +11002,34 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
 #ifdef ALLOW_PGMFUNCTIONS
                     if (mode == 1)
                     {
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
-						{
-            			    utf16path2++;
-            			    i = *utf16path2;
-						}
-						else
-						#endif
-        			    {
-            			    temppath2++;
-            			    i = *temppath2;
-						}
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
+                        {
+                            utf16path2++;
+                            i = *utf16path2;
+                        }
+                        else
+                        #endif
+                        {
+                            temppath2++;
+                            i = *temppath2;
+                        }
                     }
                     else
                     {
 #endif
-						#ifdef SUPPORT_LFN
-						if(utfModeFileName)
-						{
-            			    utf16path++;
-            			    i = *utf16path;
-						}
-						else
-						#endif
-        			    {
-            			    temppath++;
-            			    i = *temppath;
-						}
+                        #ifdef SUPPORT_LFN
+                        if(utfModeFileName)
+                        {
+                            utf16path++;
+                            i = *utf16path;
+                        }
+                        else
+                        #endif
+                        {
+                            temppath++;
+                            i = *temppath;
+                        }
 #ifdef ALLOW_PGMFUNCTIONS
                     }
 #endif
@@ -11043,35 +11043,35 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
             }
         }
 
-		#ifdef SUPPORT_LFN
-		if(utfModeFileName)
-		{
-			unsigned short int *tempPtr1;
-			unsigned short int *tempPtr2;
-			k = 0;
-			tempPtr1 = (unsigned short int *)&tempArray[0];
-			tempPtr2 = (unsigned short int *)&tempDirectoryString[0];
+        #ifdef SUPPORT_LFN
+        if(utfModeFileName)
+        {
+            unsigned short int *tempPtr1;
+            unsigned short int *tempPtr2;
+            k = 0;
+            tempPtr1 = (unsigned short int *)&tempArray[0];
+            tempPtr2 = (unsigned short int *)&tempDirectoryString[0];
 
-			for(;;)
-			{
-				tempPtr2[k] = tempPtr1[k];
-				if(tempPtr2[k])
-					k++;
-				else
-					break;
-			}
-		}
-		else
-		#endif
-		{
-			strcpy(&tempDirectoryString[0],&tempArray[0]);
-		}
+            for(;;)
+            {
+                tempPtr2[k] = tempPtr1[k];
+                if(tempPtr2[k])
+                    k++;
+                else
+                    break;
+            }
+        }
+        else
+        #endif
+        {
+            strcpy(&tempDirectoryString[0],&tempArray[0]);
+        }
 
         // Create a dir here
         if (!CreateDIR (tempDirectoryString))
         {
             FileObjectCopy (cwdptr, tempCWD);
-        	return -1;
+            return -1;
         }
 
         // Try to change to that directory
@@ -11079,53 +11079,53 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
         {
             FileObjectCopy (cwdptr, tempCWD);
             FSerrno = CE_BADCACHEREAD;
-        	return -1;
+            return -1;
         }
 
 #ifdef ALLOW_PGMFUNCTIONS
         if (mode == 1)
         {
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
-			{
-	            while (*utf16path2 == '\\')
-	            {
-	                utf16path2++;
-	                i = *utf16path2;
-	            }
-			}
-			else
-			#endif
-        	{
-        	    // Check for another backslash
-        	    while (*temppath2 == '\\')
-        	    {
-        	        temppath2++;
-        	        i = *temppath2;
-        	    }
-			}
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
+            {
+                while (*utf16path2 == '\\')
+                {
+                    utf16path2++;
+                    i = *utf16path2;
+                }
+            }
+            else
+            #endif
+            {
+                // Check for another backslash
+                while (*temppath2 == '\\')
+                {
+                    temppath2++;
+                    i = *temppath2;
+                }
+            }
         }
         else
         {
 #endif
-			#ifdef SUPPORT_LFN
-			if(utfModeFileName)
-			{
-        	    while (*utf16path == '\\')
-        	    {
-        	        utf16path++;
-        	        i = *utf16path;
-        	    }
-			}
-			else
-			#endif
-        	{
-        	    while (*temppath == '\\')
-        	    {
-        	        temppath++;
-        	        i = *temppath;
-        	    }
-			}
+            #ifdef SUPPORT_LFN
+            if(utfModeFileName)
+            {
+                while (*utf16path == '\\')
+                {
+                    utf16path++;
+                    i = *utf16path;
+                }
+            }
+            else
+            #endif
+            {
+                while (*temppath == '\\')
+                {
+                    temppath++;
+                    i = *temppath;
+                }
+            }
 #ifdef ALLOW_PGMFUNCTIONS
         }
 #endif
@@ -11135,7 +11135,7 @@ int mkdirhelper (BYTE mode, char * ramptr, char * romptr)
         {
             // We already have one
             FileObjectCopy (cwdptr, tempCWD);
-        	return 0;
+            return 0;
         }
     }
 }
@@ -11257,7 +11257,7 @@ BYTE writeDotEntries (DISK * disk, DWORD dotAddress, DWORD dotdotAddress)
 
     size = sizeof (_DIRENTRY);
 
-	memset(disk->buffer, 0x00, disk->sectorSize);
+    memset(disk->buffer, 0x00, disk->sectorSize);
 
     entry.DIR_Name[0] = '.';
 
@@ -11359,7 +11359,7 @@ BYTE writeDotEntries (DISK * disk, DWORD dotAddress, DWORD dotdotAddress)
     None
   Input:
     path -      The path of the directory to remove
-    rmsubdirs - 
+    rmsubdirs -
               - TRUE -  All sub-dirs and files in the target dir will be removed
               - FALSE - FSrmdir will not remove non-empty directories
   Return Values:
@@ -11389,7 +11389,7 @@ int FSrmdir (char * path, unsigned char rmsubdirs)
     None
   Input:
     path -      The path of the directory to remove
-    rmsubdirs - 
+    rmsubdirs -
               - TRUE -  All sub-dirs and files in the target dir will be removed
               - FALSE - FSrmdir will not remove non-empty directories
   Return Values:
@@ -11406,10 +11406,10 @@ int FSrmdir (char * path, unsigned char rmsubdirs)
 #ifdef SUPPORT_LFN
 int wFSrmdir (unsigned short int * path, unsigned char rmsubdirs)
 {
-	int result;
-	utfModeFileName = TRUE;
+    int result;
+    utfModeFileName = TRUE;
     result = rmdirhelper (0, (char *)path, NULL, rmsubdirs);
-	utfModeFileName = FALSE;
+    utfModeFileName = FALSE;
     return result;
 }
 #endif
@@ -11423,7 +11423,7 @@ int wFSrmdir (unsigned short int * path, unsigned char rmsubdirs)
     None.
   Input:
     path -      The path of the directory to remove (ROM)
-    rmsubdirs - 
+    rmsubdirs -
               - TRUE -  All sub-dirs and files in the target dir will be removed
               - FALSE - FSrmdir will not remove non-empty directories
   Return Values:
@@ -11475,10 +11475,10 @@ int FSrmdirpgm (const rom char * path, unsigned char rmsubdirs)
 #ifdef SUPPORT_LFN
 int wFSrmdirpgm (const rom unsigned short int * path, unsigned char rmsubdirs)
 {
-	int result;
-	utfModeFileName = TRUE;
+    int result;
+    utfModeFileName = TRUE;
     result = rmdirhelper (1, NULL, (const char *)path, rmsubdirs);
-	utfModeFileName = FALSE;
+    utfModeFileName = FALSE;
     return result;
 }
 #endif
@@ -11540,21 +11540,21 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
     short int Index3 = 0;
     char Index, Index2;
 
-	#if defined(SUPPORT_LFN)
+    #if defined(SUPPORT_LFN)
 
-		BOOL prevUtfModeFileName = utfModeFileName;
-		char tempArray[514];
-    	WORD prevHandle;
-    	LFN_ENTRY *lfno;
-    	FSFILE cwdTemp;
-		UINT16_VAL tempShift;
-		unsigned short int *tempLFN = (unsigned short int *)&tempArray[0];
-		BOOL	forFirstTime;
-	#else
+        BOOL prevUtfModeFileName = utfModeFileName;
+        char tempArray[514];
+        WORD prevHandle;
+        LFN_ENTRY *lfno;
+        FSFILE cwdTemp;
+        UINT16_VAL tempShift;
+        unsigned short int *tempLFN = (unsigned short int *)&tempArray[0];
+        BOOL    forFirstTime;
+    #else
 
-		char	tempArray[13];
+        char    tempArray[13];
 
-	#endif
+    #endif
 
 #ifndef __18CXX
 
@@ -11641,115 +11641,115 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
         // Do remove subdirectories and sub-files
         dirCleared = FALSE;
         subDirDepth = 0;
-		#if defined(SUPPORT_LFN)
-		tempCWD-> utf16LFNptr = (unsigned short int *)&tempArray[0];
-		fo-> utf16LFNptr = (unsigned short int *)&tempArray[0];
-		#endif
+        #if defined(SUPPORT_LFN)
+        tempCWD-> utf16LFNptr = (unsigned short int *)&tempArray[0];
+        fo-> utf16LFNptr = (unsigned short int *)&tempArray[0];
+        #endif
 
         while (!dirCleared)
         {
             if (entry->DIR_Name[0] != 0)
             {
                 if (((unsigned char)entry->DIR_Name[0] != 0xE5) && (entry->DIR_Attr == ATTR_LONG_NAME))
-				{
-					#if defined(SUPPORT_LFN)
-					lfno = (LFN_ENTRY *)entry;
+                {
+                    #if defined(SUPPORT_LFN)
+                    lfno = (LFN_ENTRY *)entry;
 
-					if(lfno->LFN_SequenceNo & 0x40)
-					{
-						Index3 = (lfno->LFN_SequenceNo - 0x41) * 13;
-						tempLFN[Index3 + 13] = 0x0000;
-						forFirstTime = TRUE;
-					}
-					else
-					{
-						Index3 = (lfno->LFN_SequenceNo - 1) * 13;
-						forFirstTime = FALSE;
-					}
+                    if(lfno->LFN_SequenceNo & 0x40)
+                    {
+                        Index3 = (lfno->LFN_SequenceNo - 0x41) * 13;
+                        tempLFN[Index3 + 13] = 0x0000;
+                        forFirstTime = TRUE;
+                    }
+                    else
+                    {
+                        Index3 = (lfno->LFN_SequenceNo - 1) * 13;
+                        forFirstTime = FALSE;
+                    }
 
-					tempShift.byte.LB = lfno->LFN_Part1[0];
-					tempShift.byte.HB = lfno->LFN_Part1[1];
-					tempLFN[Index3++] = tempShift.Val;
-					tempShift.byte.LB = lfno->LFN_Part1[2];
-					tempShift.byte.HB = lfno->LFN_Part1[3];
-					tempLFN[Index3++] = tempShift.Val;
-					tempShift.byte.LB = lfno->LFN_Part1[4];
-					tempShift.byte.HB = lfno->LFN_Part1[5];
-					tempLFN[Index3++] = tempShift.Val;
-					tempShift.byte.LB = lfno->LFN_Part1[6];
-					tempShift.byte.HB = lfno->LFN_Part1[7];
-					tempLFN[Index3++] = tempShift.Val;
-					tempShift.byte.LB = lfno->LFN_Part1[8];
-					tempShift.byte.HB = lfno->LFN_Part1[9];
-					tempLFN[Index3++] = tempShift.Val;
+                    tempShift.byte.LB = lfno->LFN_Part1[0];
+                    tempShift.byte.HB = lfno->LFN_Part1[1];
+                    tempLFN[Index3++] = tempShift.Val;
+                    tempShift.byte.LB = lfno->LFN_Part1[2];
+                    tempShift.byte.HB = lfno->LFN_Part1[3];
+                    tempLFN[Index3++] = tempShift.Val;
+                    tempShift.byte.LB = lfno->LFN_Part1[4];
+                    tempShift.byte.HB = lfno->LFN_Part1[5];
+                    tempLFN[Index3++] = tempShift.Val;
+                    tempShift.byte.LB = lfno->LFN_Part1[6];
+                    tempShift.byte.HB = lfno->LFN_Part1[7];
+                    tempLFN[Index3++] = tempShift.Val;
+                    tempShift.byte.LB = lfno->LFN_Part1[8];
+                    tempShift.byte.HB = lfno->LFN_Part1[9];
+                    tempLFN[Index3++] = tempShift.Val;
 
-					tempLFN[Index3++] = lfno->LFN_Part2[0];
-					tempLFN[Index3++] = lfno->LFN_Part2[1];
-					tempLFN[Index3++] = lfno->LFN_Part2[2];
-					tempLFN[Index3++] = lfno->LFN_Part2[3];
-					tempLFN[Index3++] = lfno->LFN_Part2[4];
-					tempLFN[Index3++] = lfno->LFN_Part2[5];
+                    tempLFN[Index3++] = lfno->LFN_Part2[0];
+                    tempLFN[Index3++] = lfno->LFN_Part2[1];
+                    tempLFN[Index3++] = lfno->LFN_Part2[2];
+                    tempLFN[Index3++] = lfno->LFN_Part2[3];
+                    tempLFN[Index3++] = lfno->LFN_Part2[4];
+                    tempLFN[Index3++] = lfno->LFN_Part2[5];
 
-					tempLFN[Index3++] = lfno->LFN_Part3[0];
-					tempLFN[Index3] = lfno->LFN_Part3[1];
+                    tempLFN[Index3++] = lfno->LFN_Part3[0];
+                    tempLFN[Index3] = lfno->LFN_Part3[1];
 
-					if(forFirstTime)
-					{
-						tempCWD->utf16LFNlength = Index3;
-						
-						for(Index = 12;Index >= 0;Index--)
-						{
-							if((tempLFN[Index3 - Index - 1]) == 0x0000)
-							{
-								tempCWD->utf16LFNlength = Index3 - Index - 1;
-								break;
-							}
-						}
-					
-						fo->utf16LFNlength = tempCWD->utf16LFNlength;
-					}
-                	handle++;
-					#endif
-				}
+                    if(forFirstTime)
+                    {
+                        tempCWD->utf16LFNlength = Index3;
+
+                        for(Index = 12;Index >= 0;Index--)
+                        {
+                            if((tempLFN[Index3 - Index - 1]) == 0x0000)
+                            {
+                                tempCWD->utf16LFNlength = Index3 - Index - 1;
+                                break;
+                            }
+                        }
+
+                        fo->utf16LFNlength = tempCWD->utf16LFNlength;
+                    }
+                    handle++;
+                    #endif
+                }
                 else if (((unsigned char)entry->DIR_Name[0] != 0xE5) && (entry->DIR_Attr != ATTR_VOLUME) && (entry->DIR_Attr != ATTR_LONG_NAME))
                 {
                     if ((entry->DIR_Attr & ATTR_DIRECTORY) == ATTR_DIRECTORY)
                     {
                         // We have a directory
                         subDirDepth++;
-						#if defined(SUPPORT_LFN)
-						if(tempCWD-> utf16LFNlength)
-						{
-							utfModeFileName = 1;
-							Index = FSchdir(&tempArray[0]);
-							utfModeFileName = prevUtfModeFileName;
-							tempCWD-> utf16LFNlength = 0;
-							fo-> utf16LFNlength = 0;
-						}
-						else
-						#endif
-						{
-                    	    for (Index = 0; (Index < DIR_NAMESIZE) && (entry->DIR_Name[(BYTE)Index] != 0x20); Index++)
-                    	    {
-                    	        tempArray[(BYTE)Index] = entry->DIR_Name[(BYTE)Index];
-                    	    }
-                    	    if (entry->DIR_Extension[0] != 0x20)
-                    	    {
-                    	        tempArray[(BYTE)Index++] = '.';
-                    	        for (Index2 = 0; (Index2 < DIR_EXTENSION) && (entry->DIR_Extension[(BYTE)Index2] != 0x20); Index2++)
-                    	        {
-                    	            tempArray[(BYTE)Index++] = entry->DIR_Extension[(BYTE)Index2];
-                    	        }
-                    	    }
-                    	    tempArray[(BYTE)Index] = 0;
-							#ifdef SUPPORT_LFN
-							utfModeFileName = 0;
-							#endif
-							Index = FSchdir(&tempArray[0]);
-							#ifdef SUPPORT_LFN
-							utfModeFileName = prevUtfModeFileName;
-							#endif
-						}
+                        #if defined(SUPPORT_LFN)
+                        if(tempCWD-> utf16LFNlength)
+                        {
+                            utfModeFileName = 1;
+                            Index = FSchdir(&tempArray[0]);
+                            utfModeFileName = prevUtfModeFileName;
+                            tempCWD-> utf16LFNlength = 0;
+                            fo-> utf16LFNlength = 0;
+                        }
+                        else
+                        #endif
+                        {
+                            for (Index = 0; (Index < DIR_NAMESIZE) && (entry->DIR_Name[(BYTE)Index] != 0x20); Index++)
+                            {
+                                tempArray[(BYTE)Index] = entry->DIR_Name[(BYTE)Index];
+                            }
+                            if (entry->DIR_Extension[0] != 0x20)
+                            {
+                                tempArray[(BYTE)Index++] = '.';
+                                for (Index2 = 0; (Index2 < DIR_EXTENSION) && (entry->DIR_Extension[(BYTE)Index2] != 0x20); Index2++)
+                                {
+                                    tempArray[(BYTE)Index++] = entry->DIR_Extension[(BYTE)Index2];
+                                }
+                            }
+                            tempArray[(BYTE)Index] = 0;
+                            #ifdef SUPPORT_LFN
+                            utfModeFileName = 0;
+                            #endif
+                            Index = FSchdir(&tempArray[0]);
+                            #ifdef SUPPORT_LFN
+                            utfModeFileName = prevUtfModeFileName;
+                            #endif
+                        }
 
                         // Change to the subdirectory
                         if (Index)
@@ -11773,20 +11773,20 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
                     }
                     else
                     {
-						#if defined(SUPPORT_LFN)
-						if(!tempCWD-> utf16LFNlength)
-						#endif
-						{
-                    	    for (Index = 0; Index < 8; Index++)
-                    	    {
-                    	        fo->name[(BYTE)Index] = entry->DIR_Name[(BYTE)Index];
-                    	    }
+                        #if defined(SUPPORT_LFN)
+                        if(!tempCWD-> utf16LFNlength)
+                        #endif
+                        {
+                            for (Index = 0; Index < 8; Index++)
+                            {
+                                fo->name[(BYTE)Index] = entry->DIR_Name[(BYTE)Index];
+                            }
 
-                    	    for (Index = 0; Index < 3; Index++)
-                    	    {
-                    	        fo->name[(BYTE)Index + 8] = entry->DIR_Extension[(BYTE)Index];
-                    	    }
-						}
+                            for (Index = 0; Index < 3; Index++)
+                            {
+                                fo->name[(BYTE)Index + 8] = entry->DIR_Extension[(BYTE)Index];
+                            }
+                        }
 
                         fo->dsk = &gDiskData;
 
@@ -11798,10 +11798,10 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
 
                         if (FILEerase(fo, &handle, TRUE))
                         {
-							#if defined(SUPPORT_LFN)
-							tempCWD-> utf16LFNlength = 0;
-							fo-> utf16LFNlength = 0;
-							#endif
+                            #if defined(SUPPORT_LFN)
+                            tempCWD-> utf16LFNlength = 0;
+                            fo-> utf16LFNlength = 0;
+                            #endif
                             FileObjectCopy (cwdptr, tempCWD);
                             FSerrno = CE_ERASE_FAIL;
                             return -1;
@@ -11810,10 +11810,10 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
                         {
                             handle++;
                         }
-						#if defined(SUPPORT_LFN)
-						tempCWD-> utf16LFNlength = 0;
-						fo-> utf16LFNlength = 0;
-						#endif
+                        #if defined(SUPPORT_LFN)
+                        tempCWD-> utf16LFNlength = 0;
+                        fo-> utf16LFNlength = 0;
+                        #endif
                     } // Check to see if it's a DIR entry
                 }// Check non-dir entry to see if its a valid file
                 else
@@ -11831,13 +11831,13 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
                 {
                     entry = Cache_File_Entry (cwdptr, &handle, FALSE);
                 }
-                
-				if (entry == NULL)
+
+                if (entry == NULL)
                 {
-					#if defined(SUPPORT_LFN)
-					tempCWD-> utf16LFNlength = 0;
-					fo-> utf16LFNlength = 0;
-					#endif
+                    #if defined(SUPPORT_LFN)
+                    tempCWD-> utf16LFNlength = 0;
+                    fo-> utf16LFNlength = 0;
+                    #endif
                     FileObjectCopy (cwdptr, tempCWD);
                     FSerrno = CE_BADCACHEREAD;
                     return -1;
@@ -11845,10 +11845,10 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
             }
             else
             {
-				#if defined(SUPPORT_LFN)
-				tempCWD-> utf16LFNlength = 0;
-				fo-> utf16LFNlength = 0;
-				#endif
+                #if defined(SUPPORT_LFN)
+                tempCWD-> utf16LFNlength = 0;
+                fo-> utf16LFNlength = 0;
+                #endif
 
                 // We have reached the end of the directory
                 if (subDirDepth != 0)
@@ -11868,25 +11868,25 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
                     handle2 = GetFullClusterNumber(entry); // Get complete cluster number.
 
 #ifndef __18CXX
-	#ifdef SUPPORT_LFN
-	if(utfModeFileName)
+    #ifdef SUPPORT_LFN
+    if(utfModeFileName)
 
         Index3 = FSchdir (".\0.\0\0");
 
-	else
+    else
 
-	#endif
+    #endif
         Index3 = FSchdir ("..");
 
 #else
-	#ifdef SUPPORT_LFN
-	if(utfModeFileName)
+    #ifdef SUPPORT_LFN
+    if(utfModeFileName)
 
         Index3 = FSchdir (dotdotname1);
 
-	else
+    else
 
-	#endif
+    #endif
         Index3 = FSchdir (dotdotname);
 
 #endif
@@ -11926,82 +11926,82 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
                         TempClusterCalc = GetFullClusterNumber(entry); // Get complete cluster number in a loop.
                     }
 
-					Index3 = 0;
-					#if defined(SUPPORT_LFN)
-        			FileObjectCopy (&cwdTemp, cwdptr);
-					prevHandle = handle - 1;
-					lfno = (LFN_ENTRY *)Cache_File_Entry (cwdptr, &prevHandle, FALSE);
+                    Index3 = 0;
+                    #if defined(SUPPORT_LFN)
+                    FileObjectCopy (&cwdTemp, cwdptr);
+                    prevHandle = handle - 1;
+                    lfno = (LFN_ENTRY *)Cache_File_Entry (cwdptr, &prevHandle, FALSE);
 
 
-					while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
-							&& (lfno->LFN_SequenceNo != DIR_EMPTY))
-					{
-						tempShift.byte.LB = lfno->LFN_Part1[0];
-						tempShift.byte.HB = lfno->LFN_Part1[1];
-						tempLFN[Index3++] = tempShift.Val;
-						tempShift.byte.LB = lfno->LFN_Part1[2];
-						tempShift.byte.HB = lfno->LFN_Part1[3];
-						tempLFN[Index3++] = tempShift.Val;
-						tempShift.byte.LB = lfno->LFN_Part1[4];
-						tempShift.byte.HB = lfno->LFN_Part1[5];
-						tempLFN[Index3++] = tempShift.Val;
-						tempShift.byte.LB = lfno->LFN_Part1[6];
-						tempShift.byte.HB = lfno->LFN_Part1[7];
-						tempLFN[Index3++] = tempShift.Val;
-						tempShift.byte.LB = lfno->LFN_Part1[8];
-						tempShift.byte.HB = lfno->LFN_Part1[9];
-						tempLFN[Index3++] = tempShift.Val;
+                    while((lfno->LFN_Attribute == ATTR_LONG_NAME) && (lfno->LFN_SequenceNo != DIR_DEL)
+                            && (lfno->LFN_SequenceNo != DIR_EMPTY))
+                    {
+                        tempShift.byte.LB = lfno->LFN_Part1[0];
+                        tempShift.byte.HB = lfno->LFN_Part1[1];
+                        tempLFN[Index3++] = tempShift.Val;
+                        tempShift.byte.LB = lfno->LFN_Part1[2];
+                        tempShift.byte.HB = lfno->LFN_Part1[3];
+                        tempLFN[Index3++] = tempShift.Val;
+                        tempShift.byte.LB = lfno->LFN_Part1[4];
+                        tempShift.byte.HB = lfno->LFN_Part1[5];
+                        tempLFN[Index3++] = tempShift.Val;
+                        tempShift.byte.LB = lfno->LFN_Part1[6];
+                        tempShift.byte.HB = lfno->LFN_Part1[7];
+                        tempLFN[Index3++] = tempShift.Val;
+                        tempShift.byte.LB = lfno->LFN_Part1[8];
+                        tempShift.byte.HB = lfno->LFN_Part1[9];
+                        tempLFN[Index3++] = tempShift.Val;
 
-						tempLFN[Index3++] = lfno->LFN_Part2[0];
-						tempLFN[Index3++] = lfno->LFN_Part2[1];
-						tempLFN[Index3++] = lfno->LFN_Part2[2];
-						tempLFN[Index3++] = lfno->LFN_Part2[3];
-						tempLFN[Index3++] = lfno->LFN_Part2[4];
-						tempLFN[Index3++] = lfno->LFN_Part2[5];
+                        tempLFN[Index3++] = lfno->LFN_Part2[0];
+                        tempLFN[Index3++] = lfno->LFN_Part2[1];
+                        tempLFN[Index3++] = lfno->LFN_Part2[2];
+                        tempLFN[Index3++] = lfno->LFN_Part2[3];
+                        tempLFN[Index3++] = lfno->LFN_Part2[4];
+                        tempLFN[Index3++] = lfno->LFN_Part2[5];
 
-						tempLFN[Index3++] = lfno->LFN_Part3[0];
-						tempLFN[Index3++] = lfno->LFN_Part3[1];
-				
-						prevHandle = prevHandle - 1;
-						lfno = (LFN_ENTRY *)Cache_File_Entry (cwdptr, &prevHandle, FALSE);
-					}
+                        tempLFN[Index3++] = lfno->LFN_Part3[0];
+                        tempLFN[Index3++] = lfno->LFN_Part3[1];
 
-					FileObjectCopy (cwdptr, &cwdTemp);
+                        prevHandle = prevHandle - 1;
+                        lfno = (LFN_ENTRY *)Cache_File_Entry (cwdptr, &prevHandle, FALSE);
+                    }
 
-					#endif
+                    FileObjectCopy (cwdptr, &cwdTemp);
 
-					if(Index3 == 0)
-					{
-                	    memset (tempArray, 0x00, 12);
-                	    for (Index = 0; Index < 8; Index++)
-                	    {
-                	        tempArray[(BYTE)Index] = entry->DIR_Name[(BYTE)Index];
-                	    }
-                	    for (Index = 0; Index < 3; Index++)
-                	    {
-                	        tempArray[(BYTE)Index + 8] = entry->DIR_Extension[(BYTE)Index];
-                	    }
-						#if defined(SUPPORT_LFN)
-						cwdptr->utf16LFNlength = 0;
-						#endif
-					}
-					#if defined(SUPPORT_LFN)
-					else
-					{
-						cwdptr->utf16LFNlength = Index3;
-						
-						for(Index = 12;Index >= 0;Index--)
-						{
-							if((tempLFN[Index3 - Index - 1]) == 0x0000)
-							{
-								cwdptr->utf16LFNlength = Index3 - Index - 1;
-								break;
-							}
-						}
+                    #endif
 
-						cwdptr->utf16LFNptr = (unsigned short int *)&tempArray[0];
-					}
-					#endif
+                    if(Index3 == 0)
+                    {
+                        memset (tempArray, 0x00, 12);
+                        for (Index = 0; Index < 8; Index++)
+                        {
+                            tempArray[(BYTE)Index] = entry->DIR_Name[(BYTE)Index];
+                        }
+                        for (Index = 0; Index < 3; Index++)
+                        {
+                            tempArray[(BYTE)Index + 8] = entry->DIR_Extension[(BYTE)Index];
+                        }
+                        #if defined(SUPPORT_LFN)
+                        cwdptr->utf16LFNlength = 0;
+                        #endif
+                    }
+                    #if defined(SUPPORT_LFN)
+                    else
+                    {
+                        cwdptr->utf16LFNlength = Index3;
+
+                        for(Index = 12;Index >= 0;Index--)
+                        {
+                            if((tempLFN[Index3 - Index - 1]) == 0x0000)
+                            {
+                                cwdptr->utf16LFNlength = Index3 - Index - 1;
+                                break;
+                            }
+                        }
+
+                        cwdptr->utf16LFNptr = (unsigned short int *)&tempArray[0];
+                    }
+                    #endif
                     // Erase the directory that we just cleared the subdirectories out of
 
                     if (eraseDir (&tempArray[0]))
@@ -12042,41 +12042,41 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
         FileObjectCopy (cwdptr, tempCWD);
         return -1;
     }
-	else
-	{
-		#if defined(SUPPORT_LFN)
-			if(!cwdptr->utf16LFNlength)
-		#endif
-			{
-        		memset (tempArray, 0x00, 12);
-        		for (Index = 0; Index < 11; Index++)
-        		{
-            		tempArray[(BYTE)Index] = cwdptr->name[(BYTE)Index];
-        		}			
-			}
-	}
+    else
+    {
+        #if defined(SUPPORT_LFN)
+            if(!cwdptr->utf16LFNlength)
+        #endif
+            {
+                memset (tempArray, 0x00, 12);
+                for (Index = 0; Index < 11; Index++)
+                {
+                    tempArray[(BYTE)Index] = cwdptr->name[(BYTE)Index];
+                }
+            }
+    }
 
     // If we're here, this directory is empty
 #ifndef __18CXX
-	#ifdef SUPPORT_LFN
-	if(utfModeFileName)
+    #ifdef SUPPORT_LFN
+    if(utfModeFileName)
 
         Index3 = FSchdir (".\0.\0\0");
 
-	else
+    else
 
-	#endif
+    #endif
         Index3 = FSchdir ("..");
 
 #else
-	#ifdef SUPPORT_LFN
-	if(utfModeFileName)
+    #ifdef SUPPORT_LFN
+    if(utfModeFileName)
 
         Index3 = FSchdir (dotdotname1);
 
-	else
+    else
 
-	#endif
+    #endif
         Index3 = FSchdir (dotdotname);
 
 #endif
@@ -12087,16 +12087,16 @@ int rmdirhelper (BYTE mode, char * ramptr, char * romptr, unsigned char rmsubdir
         return -1;
     }
 
-	#if defined(SUPPORT_LFN)
-	if(cwdptr->utf16LFNlength)
-	{
-		Index3 = eraseDir((char *)cwdptr->utf16LFNptr);
-	}
-	else
-	#endif
-	{
-		Index3 = eraseDir(tempArray);
-	}
+    #if defined(SUPPORT_LFN)
+    if(cwdptr->utf16LFNlength)
+    {
+        Index3 = eraseDir((char *)cwdptr->utf16LFNptr);
+    }
+    else
+    #endif
+    {
+        Index3 = eraseDir(tempArray);
+    }
 
     if (Index3)
     {
@@ -12149,33 +12149,33 @@ int eraseDir (char * path)
     // preserve CWD
     FileObjectCopy(&tempCWDobj2, cwdptr);
 
-	// If long file name not present, copy the 8.3 name in cwdptr
-	#if defined(SUPPORT_LFN)
+    // If long file name not present, copy the 8.3 name in cwdptr
+    #if defined(SUPPORT_LFN)
     if(!cwdptr->utf16LFNlength)
-	#endif
+    #endif
     {
-    	for (Index = 0; Index <11; Index++)
-    	{
-        	cwdptr->name[Index] = *(path + Index);
-    	}
-	}
+        for (Index = 0; Index <11; Index++)
+        {
+            cwdptr->name[Index] = *(path + Index);
+        }
+    }
 
     // copy file object over
     FileObjectCopy(&gFileTemp, cwdptr);
 
     // See if the file is found
-	if(FILEfind (cwdptr, &gFileTemp, LOOK_FOR_MATCHING_ENTRY, 0) == CE_GOOD)
-	{
-		if(FILEerase(cwdptr, &cwdptr->entry, TRUE) == CE_GOOD)
-			result = 0;
-		else
-			result = -1;
-	}
-	else
-		result = -1;
+    if(FILEfind (cwdptr, &gFileTemp, LOOK_FOR_MATCHING_ENTRY, 0) == CE_GOOD)
+    {
+        if(FILEerase(cwdptr, &cwdptr->entry, TRUE) == CE_GOOD)
+            result = 0;
+        else
+            result = -1;
+    }
+    else
+        result = -1;
 
-	FileObjectCopy(cwdptr, &tempCWDobj2);
-	return(result);
+    FileObjectCopy(cwdptr, &tempCWDobj2);
+    return(result);
 }
 #endif
 
@@ -12222,8 +12222,8 @@ int eraseDir (char * path)
     the current working directory searching for entries that match the specified
     parameters.  If a file is found, its parameters are copied into the SearchRec
     structure, as are the initial parameters passed in by the user and the position
-    of the file entry in the current working directory.If the return value of the 
-    function is 0 then "utf16LFNfoundLength" indicates whether the file found was 
+    of the file entry in the current working directory.If the return value of the
+    function is 0 then "utf16LFNfoundLength" indicates whether the file found was
     long file name or short file name(8P3 format). The "utf16LFNfoundLength" is non-zero
     for long file name and is zero for 8P3 format."utf16LFNfound" points to the
     address of long file name if found during the operation.
@@ -12238,18 +12238,18 @@ int FindFirst (const char * fileName, unsigned int attr, SearchRec * rec)
     WORD fHandle;
     BYTE j;
     BYTE Index;
-	#ifdef SUPPORT_LFN
-		short int indexLFN;
-	#endif
+    #ifdef SUPPORT_LFN
+        short int indexLFN;
+    #endif
 
     FSerrno = CE_GOOD;
 
-	#ifdef SUPPORT_LFN
-		fo->utf16LFNptr = &recordSearchName[0];
-		rec->utf16LFNfound = &recordFoundName[0];
-	#endif
+    #ifdef SUPPORT_LFN
+        fo->utf16LFNptr = &recordSearchName[0];
+        rec->utf16LFNfound = &recordFoundName[0];
+    #endif
 
-	// Format the file name as per 8.3 format or LFN format
+    // Format the file name as per 8.3 format or LFN format
     if( !FormatFileName(fileName, fo, 1) )
     {
         FSerrno = CE_INVALID_FILENAME;
@@ -12258,24 +12258,24 @@ int FindFirst (const char * fileName, unsigned int attr, SearchRec * rec)
 
     rec->initialized = FALSE;
 
-	#if defined(SUPPORT_LFN)
-	rec->AsciiEncodingType = fo->AsciiEncodingType;
-	recordSearchLength = fo->utf16LFNlength;
+    #if defined(SUPPORT_LFN)
+    rec->AsciiEncodingType = fo->AsciiEncodingType;
+    recordSearchLength = fo->utf16LFNlength;
 
-	// If file name is 8.3 format copy it in 'searchname' string
+    // If file name is 8.3 format copy it in 'searchname' string
     if(!recordSearchLength)
-	#endif
+    #endif
     {
-    	for (Index = 0; (Index < 12) && (fileName[Index] != 0); Index++)
-    	{
-        	rec->searchname[Index] = fileName[Index];
-    	}
+        for (Index = 0; (Index < 12) && (fileName[Index] != 0); Index++)
+        {
+            rec->searchname[Index] = fileName[Index];
+        }
 
-    	for (;Index < FILE_NAME_SIZE_8P3 + 2; Index++)
-    	{
-        	rec->searchname[Index] = 0;
-    	}
-	}
+        for (;Index < FILE_NAME_SIZE_8P3 + 2; Index++)
+        {
+            rec->searchname[Index] = 0;
+        }
+    }
 
     rec->searchattr = attr;
 #ifdef ALLOW_DIRS
@@ -12313,21 +12313,21 @@ int FindFirst (const char * fileName, unsigned int attr, SearchRec * rec)
 
     if (FILEopen (fo, &fHandle, 'r') == CE_GOOD)
     {
-		#if defined(SUPPORT_LFN)
-		rec->utf16LFNfoundLength = fo->utf16LFNlength;
-		if(fo->utf16LFNlength)
-		{
-			indexLFN = fo->utf16LFNlength;
-			recordFoundName[indexLFN] = 0x0000;
-			while(indexLFN--)
-				recordFoundName[indexLFN] = fileFoundString[indexLFN];
-		}
-		#endif
+        #if defined(SUPPORT_LFN)
+        rec->utf16LFNfoundLength = fo->utf16LFNlength;
+        if(fo->utf16LFNlength)
+        {
+            indexLFN = fo->utf16LFNlength;
+            recordFoundName[indexLFN] = 0x0000;
+            while(indexLFN--)
+                recordFoundName[indexLFN] = fileFoundString[indexLFN];
+        }
+        #endif
 
-		for(j = 0; j < FILE_NAME_SIZE_8P3 + 2 ; j++)
-		{
+        for(j = 0; j < FILE_NAME_SIZE_8P3 + 2 ; j++)
+        {
             rec->filename[j] = 0;
-		}
+        }
 
         // Copy as much name as there is
         if (fo->attributes != ATTR_VOLUME)
@@ -12337,16 +12337,16 @@ int FindFirst (const char * fileName, unsigned int attr, SearchRec * rec)
                rec->filename[Index] = fo->name[j];
             }
 
-			if(fo->name[8] != 0x20)
-			{
-            	rec->filename[Index++] = '.';
+            if(fo->name[8] != 0x20)
+            {
+                rec->filename[Index++] = '.';
 
-	            // Move to the extension, even if there are more space chars
-	            for (j = 8; (j < 11) && (fo->name[j] != 0x20); Index++, j++)
-	            {
-	               rec->filename[Index] = fo->name[j];
-	            }
-			}
+                // Move to the extension, even if there are more space chars
+                for (j = 8; (j < 11) && (fo->name[j] != 0x20); Index++, j++)
+                {
+                   rec->filename[Index] = fo->name[j];
+                }
+            }
         }
         else
         {
@@ -12397,7 +12397,7 @@ int FindFirst (const char * fileName, unsigned int attr, SearchRec * rec)
     directory.If the return value of the function is 0 then "utf16LFNfoundLength"
     indicates whether the file found was long file name or short file
     name(8P3 format). The "utf16LFNfoundLength" is non-zero for long file name
-    and is zero for 8P3 format."utf16LFNfound" points to the address of long 
+    and is zero for 8P3 format."utf16LFNfound" points to the address of long
     file name if found during the operation.
   Remarks:
     Call FindFirst or FindFirstpgm before calling this function
@@ -12408,9 +12408,9 @@ int FindNext (SearchRec * rec)
     FSFILE f;
     FILEOBJ fo = &f;
     BYTE i, j;
-	#ifdef SUPPORT_LFN
-		short int indexLFN;
-	#endif
+    #ifdef SUPPORT_LFN
+        short int indexLFN;
+    #endif
 
     FSerrno = CE_GOOD;
 
@@ -12429,23 +12429,23 @@ int FindNext (SearchRec * rec)
         return -1;
     }
 #endif
-    
-	#if defined(SUPPORT_LFN)
+
+    #if defined(SUPPORT_LFN)
     fo->AsciiEncodingType = rec->AsciiEncodingType;
     fo->utf16LFNlength = recordSearchLength;
-	if(fo->utf16LFNlength)
-	{
-	    fo->utf16LFNptr = &recordSearchName[0];
+    if(fo->utf16LFNlength)
+    {
+        fo->utf16LFNptr = &recordSearchName[0];
     }
-	else
-	#endif
-	{
-		// Format the file name
-	    if( !FormatFileName(rec->searchname, fo, 1) )
-	    {
-	        FSerrno = CE_INVALID_FILENAME;
-	        return -1;
-	    }
+    else
+    #endif
+    {
+        // Format the file name
+        if( !FormatFileName(rec->searchname, fo, 1) )
+        {
+            FSerrno = CE_INVALID_FILENAME;
+            return -1;
+        }
     }
 
     /* Brn: Copy the formatted name to "fo" which is necesary before calling "FILEfind" function */
@@ -12477,21 +12477,21 @@ int FindNext (SearchRec * rec)
     }
     else
     {
-		#if defined(SUPPORT_LFN)
-		rec->utf16LFNfoundLength = fo->utf16LFNlength;
-		if(fo->utf16LFNlength)
-		{
-			indexLFN = fo->utf16LFNlength;
-			recordFoundName[indexLFN] = 0x0000;
-			while(indexLFN--)
-				recordFoundName[indexLFN] = fileFoundString[indexLFN];
-		}
-		#endif
+        #if defined(SUPPORT_LFN)
+        rec->utf16LFNfoundLength = fo->utf16LFNlength;
+        if(fo->utf16LFNlength)
+        {
+            indexLFN = fo->utf16LFNlength;
+            recordFoundName[indexLFN] = 0x0000;
+            while(indexLFN--)
+                recordFoundName[indexLFN] = fileFoundString[indexLFN];
+        }
+        #endif
 
-		for(j = 0; j < FILE_NAME_SIZE_8P3 + 2 ; j++)
-		{
+        for(j = 0; j < FILE_NAME_SIZE_8P3 + 2 ; j++)
+        {
             rec->filename[j] = 0;
-		}
+        }
 
         if (fo->attributes != ATTR_VOLUME)
         {
@@ -12500,16 +12500,16 @@ int FindNext (SearchRec * rec)
                rec->filename[i] = fo->name[j];
             }
 
-			if(fo->name[8] != 0x20)
-			{
-            	rec->filename[i++] = '.';
+            if(fo->name[8] != 0x20)
+            {
+                rec->filename[i++] = '.';
 
-	            // Move to the extension, even if there are more space chars
-	            for (j = 8; (j < 11) && (fo->name[j] != 0x20); i++, j++)
-	            {
-	               rec->filename[i] = fo->name[j];
-	            }
-			}
+                // Move to the extension, even if there are more space chars
+                for (j = 8; (j < 11) && (fo->name[j] != 0x20); i++, j++)
+                {
+                   rec->filename[i] = fo->name[j];
+                }
+            }
         }
         else
         {
@@ -12563,8 +12563,8 @@ int FindNext (SearchRec * rec)
     the current working directory searching for entries that match the specified
     parameters.  If a file is found, its parameters are copied into the SearchRec
     structure, as are the initial parameters passed in by the user and the position
-    of the file entry in the current working directory.If the return value of the 
-    function is 0 then "utf16LFNfoundLength" indicates whether the file found was 
+    of the file entry in the current working directory.If the return value of the
+    function is 0 then "utf16LFNfoundLength" indicates whether the file found was
     long file name or short file name(8P3 format). The "utf16LFNfoundLength" is non-zero
     for long file name and is zero for 8P3 format."utf16LFNfound" points to the
     address of long file name if found during the operation.
@@ -12575,11 +12575,11 @@ int FindNext (SearchRec * rec)
 #ifdef SUPPORT_LFN
 int wFindFirst (const unsigned short int * fileName, unsigned int attr, SearchRec * rec)
 {
-	int result;
-	utfModeFileName = TRUE;
-	result = FindFirst ((const char *)fileName,attr,rec);
-	utfModeFileName = FALSE;
-	return result;
+    int result;
+    utfModeFileName = TRUE;
+    result = FindFirst ((const char *)fileName,attr,rec);
+    utfModeFileName = FALSE;
+    return result;
 }
 #endif
 

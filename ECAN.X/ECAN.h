@@ -40,8 +40,8 @@
  ******************************************************************************
 
 *******************************************************************************
-	USER REVISON HISTORY
-	note: modified to work with just PIC18F46K80
+    USER REVISON HISTORY
+    note: modified to work with just PIC18F46K80
 
 // 02/13/13 - changed COMSTATbits.FIFOEMPTY to COMSTATbits.NOT_FIFOEMPTY
 // 02/14/13 - added ECANSetCLKSELMode macro

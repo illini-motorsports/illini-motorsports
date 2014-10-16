@@ -72,7 +72,7 @@ Qt Creator can be used to work on development for the `c++` GUI applications we 
 
 #### [Static Qt Environment](http://qt-project.org/wiki/How-to-build-a-static-Qt-for-Windows-MinGW)
 Follow this guide to build a static version of the Qt applications. That will enable them to be run on anyone's windows computer without having to first install Qt on the computer.
- 
+
 ### Conventions and Style
 [This](https://github.com/outsideris/popularconvention) is a good place to start. It doesn't have anything specific to `c++` or `c`, but it can give you a good idea of the right way to go. If you're really bored, you can read [this](http://users.ece.cmu.edu/~eno/coding/CCodingStandard.html) as well.
 

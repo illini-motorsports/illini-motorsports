@@ -1,19 +1,19 @@
 /******************************************************************************
  *
- *					Thermocouple Reader C Main Code
+ *                  Thermocouple Reader C Main Code
  *
  ******************************************************************************
  * FileName:        Thermo.c
- * Dependencies:	delays.h,
- *					p18F46K80.h,
- *					timers.h,
- *					ECAN.h and
- *					Thermo.h
+ * Dependencies:    delays.h,
+ *                  p18F46K80.h,
+ *                  timers.h,
+ *                  ECAN.h and
+ *                  Thermo.h
  * Processor:       PIC18F46K80
  * Complier:        Microchip C18
- * Version:			1.00
- * Author:			George Schwieters
- * Created:			2012-2013
+ * Version:         1.00
+ * Author:          George Schwieters
+ * Created:         2012-2013
 
  *******************************************************************************
     USER REVISON HISTORY
@@ -322,18 +322,18 @@ void main(void) {
 void init_unused_pins(void) {
 
     // first configure to outputs
-    //	TRISAbits.TRISA0 = OUTPUT; CS0
-    //	TRISAbits.TRISA1 = OUTPUT; CS1
-    //	TRISAbits.TRISA2 = OUTPUT; CS2
-    //	TRISAbits.TRISA3 = OUTPUT; CS3
-    //	TRISAbits.TRISA5 = OUTPUT; CS4
-    //	TRISAbits.TRISA6 = OUTPUT; OSC2
-    //	TRISAbits.TRISA7 = OUTPUT; OSC1
+    //  TRISAbits.TRISA0 = OUTPUT; CS0
+    //  TRISAbits.TRISA1 = OUTPUT; CS1
+    //  TRISAbits.TRISA2 = OUTPUT; CS2
+    //  TRISAbits.TRISA3 = OUTPUT; CS3
+    //  TRISAbits.TRISA5 = OUTPUT; CS4
+    //  TRISAbits.TRISA6 = OUTPUT; OSC2
+    //  TRISAbits.TRISA7 = OUTPUT; OSC1
 
     TRISBbits.TRISB0 = OUTPUT;
     TRISBbits.TRISB1 = OUTPUT;
-    //	TRISBbits.TRISB2 = OUTPUT; CANTX
-    //	TRISBbits.TRISB3 = OUTPUT; CANRX
+    //  TRISBbits.TRISB2 = OUTPUT; CANTX
+    //  TRISBbits.TRISB3 = OUTPUT; CANRX
     TRISBbits.TRISB4 = OUTPUT;
     TRISBbits.TRISB5 = OUTPUT;
     TRISBbits.TRISB6 = OUTPUT;
@@ -342,9 +342,9 @@ void init_unused_pins(void) {
     TRISCbits.TRISC0 = OUTPUT;
     TRISCbits.TRISC1 = OUTPUT;
     TRISCbits.TRISC2 = OUTPUT;
-    //	TRISCbits.TRISC3 = OUTPUT; SCK
-    //	TRISCbits.TRISC4 = OUTPUT; SDI
-    //	TRISCbits.TRISC5 = OUTPUT; SDO
+    //  TRISCbits.TRISC3 = OUTPUT; SCK
+    //  TRISCbits.TRISC4 = OUTPUT; SDI
+    //  TRISCbits.TRISC5 = OUTPUT; SDO
     TRISCbits.TRISC6 = OUTPUT;
     TRISCbits.TRISC7 = OUTPUT;
 
@@ -360,21 +360,21 @@ void init_unused_pins(void) {
     TRISEbits.TRISE0 = OUTPUT;
     TRISEbits.TRISE1 = OUTPUT;
     TRISEbits.TRISE2 = OUTPUT;
-    //	TRISEbits.TRISE3 = OUTPUT; MCLR
+    //  TRISEbits.TRISE3 = OUTPUT; MCLR
 
     // then set pins low
-    //	LATAbits.LATA0 = 0; CS0
-    //	LATAbits.LATA1 = 0; CS1
-    //	LATAbits.LATA2 = 0; CS2
-    //	LATAbits.LATA3 = 0; CS3
-    //	LATAbits.LATA5 = 0; CS4
-    //	LATAbits.LATA6 = 0; OSC2
-    //	LATAbits.LATA7 = 0; OSC1
+    //  LATAbits.LATA0 = 0; CS0
+    //  LATAbits.LATA1 = 0; CS1
+    //  LATAbits.LATA2 = 0; CS2
+    //  LATAbits.LATA3 = 0; CS3
+    //  LATAbits.LATA5 = 0; CS4
+    //  LATAbits.LATA6 = 0; OSC2
+    //  LATAbits.LATA7 = 0; OSC1
 
     LATBbits.LATB0 = 0;
     LATBbits.LATB1 = 0;
-    //	LATBbits.LATB2 = 0; CANTX
-    //	LATBbits.LATB3 = 0; CANRX
+    //  LATBbits.LATB2 = 0; CANTX
+    //  LATBbits.LATB3 = 0; CANRX
     LATBbits.LATB4 = 0;
     LATBbits.LATB5 = 0;
     LATBbits.LATB6 = 0;
@@ -383,9 +383,9 @@ void init_unused_pins(void) {
     LATCbits.LATC0 = 0;
     LATCbits.LATC1 = 0;
     LATCbits.LATC2 = 0;
-    //	LATCbits.LATC3 = 0; SCK
-    //	LATCbits.LATC4 = 0; SDI
-    //	LATCbits.LATC5 = 0; SDO
+    //  LATCbits.LATC3 = 0; SCK
+    //  LATCbits.LATC4 = 0; SDI
+    //  LATCbits.LATC5 = 0; SDO
     LATCbits.LATC6 = 0;
     LATCbits.LATC7 = 0;
 
@@ -401,7 +401,7 @@ void init_unused_pins(void) {
     LATEbits.LATE0 = 0;
     LATEbits.LATE1 = 0;
     LATEbits.LATE2 = 0;
-    //	LATEbits.LATE3 = 0; MCLR
+    //  LATEbits.LATE3 = 0; MCLR
 
     return;
 }

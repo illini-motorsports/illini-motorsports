@@ -1,13 +1,13 @@
 
 /*
- *					Analog Node Main File
+ *                  Analog Node Main File
  *
- * File Name:		CANHub.c
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Version:			2.00
- * Author:			George Schwieters
- * Created:			2012-2013
+ * File Name:       CANHub.c
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Version:         2.00
+ * Author:          George Schwieters
+ * Created:         2012-2013
  */
 
 #include "ECAN.h"
@@ -114,14 +114,14 @@ void high_vector(void) {
 #pragma code
 
 /*
- *	void high_isr(void)
+ *  void high_isr(void)
  *
- *	Description:	This interrupt will service all high priority interrupts. This
- *					section should be as short as possible.
- *	Input(s): none
- *	Reaturn Value(s): none
- *	Side Effects:	This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
- *					global variables along with the millis, and RADIO_SW variables.
+ *  Description:    This interrupt will service all high priority interrupts. This
+ *                  section should be as short as possible.
+ *  Input(s): none
+ *  Reaturn Value(s): none
+ *  Side Effects:   This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
+ *                  global variables along with the millis, and RADIO_SW variables.
  */
 #pragma interrupt high_isr
 
@@ -335,15 +335,15 @@ void main(void) {
  */
 
 /*
- *	void sample(unsigned char *data, const unsigned char byte, const unsigned char ch)
+ *  void sample(unsigned char *data, const unsigned char byte, const unsigned char ch)
  *
- *	Description:	This reads the analog voltage of a pin and then puts the value into the
- *					data array that will be transmited over CAN.
- *	Input(s):	data - pointer to array of data bytes
- *				ch - which pin to sample
- *				byte - where to write the data in the passed array
- *	Return Value(s): none
- *	Side Effects: This modifies the memory pointed to by data.
+ *  Description:    This reads the analog voltage of a pin and then puts the value into the
+ *                  data array that will be transmited over CAN.
+ *  Input(s):   data - pointer to array of data bytes
+ *              ch - which pin to sample
+ *              byte - where to write the data in the passed array
+ *  Return Value(s): none
+ *  Side Effects: This modifies the memory pointed to by data.
  */
 void sample(unsigned char *data, const unsigned char byte, const unsigned char ch) {
 
@@ -358,18 +358,18 @@ void sample(unsigned char *data, const unsigned char byte, const unsigned char c
 }
 
 /*
- *	void sample(unsigned char *data, const unsigned char byte, const unsigned char ch)
+ *  void sample(unsigned char *data, const unsigned char byte, const unsigned char ch)
  *
- *	Description:	This takes in incoming data and reformats it to be read by Motec
- *					as an ADL CAN message.
- *	Input(s):	data - the data bytes from the recieved CAN message
- *				msg - the data bytes to be transmitted
- *				byte - the location of the recieved data within the recieved message
- *				offset - the offset to apply to the incoming data before getting transmitted
- *				ADL_ch - the ADL channel that we want the transmitted data to placed in
- *				order - the byte order of the incoming data (either INTEL or MOTOROLA)
- *	Return Value(s): none
- *	Side Effects: This modifies the memory pointed to by msg.
+ *  Description:    This takes in incoming data and reformats it to be read by Motec
+ *                  as an ADL CAN message.
+ *  Input(s):   data - the data bytes from the recieved CAN message
+ *              msg - the data bytes to be transmitted
+ *              byte - the location of the recieved data within the recieved message
+ *              offset - the offset to apply to the incoming data before getting transmitted
+ *              ADL_ch - the ADL channel that we want the transmitted data to placed in
+ *              order - the byte order of the incoming data (either INTEL or MOTOROLA)
+ *  Return Value(s): none
+ *  Side Effects: This modifies the memory pointed to by msg.
  */
 void process_resend(const unsigned char *data, unsigned char *msg,
         const unsigned char byte, const int offset, const unsigned char ADL_ch,

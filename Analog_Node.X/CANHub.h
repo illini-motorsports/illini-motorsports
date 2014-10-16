@@ -1,12 +1,12 @@
 
 /*
- *					Analog Node Main File Header
+ *                  Analog Node Main File Header
  *
- * File Name:		CANHub.h
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Author:			George Schwieters
- * Created:			2012-2013
+ * File Name:       CANHub.h
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Author:          George Schwieters
+ * Created:         2012-2013
  */
 
 #ifndef CANHUB_H
@@ -28,8 +28,8 @@
 
 #define INPUT 1
 #define OUTPUT 0
-#define INTEL 2		// least significant byte comes first
-#define MOTOROLA 3	// most significant byte comes first
+#define INTEL 2     // least significant byte comes first
+#define MOTOROLA 3  // most significant byte comes first
 
 // Set the emission period (in ms)
 // both must be a power of two for consistent sampling
@@ -48,7 +48,7 @@
 #ifdef FRONT
 
 // define msg IDs
-#define FAST_ID	0x060
+#define FAST_ID 0x060
 #define SLOW_ID 0x110
 
 // define number of sensors

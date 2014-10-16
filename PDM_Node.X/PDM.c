@@ -1,13 +1,13 @@
 
 /*
- *					PDM Node Main File
+ *                  PDM Node Main File
  *
- * File Name:		PDM.c
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Version:			1.00
- * Author:			George Schwieters
- * Created:			2013-2014
+ * File Name:       PDM.c
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Version:         1.00
+ * Author:          George Schwieters
+ * Created:         2013-2014
  */
 
 #include "ECAN.h"
@@ -141,15 +141,15 @@ void high_vector(void) {
 #pragma code
 
 /*
- *	void high_isr(void)
+ *  void high_isr(void)
  *
- *	Description:	This interrupt will service all high priority interrupts. This
- *					section should be as short as possible.
- *	Input(s): none
- *	Reaturn Value(s): none
- *	Side Effects:	This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
- *					global variables along with the millis, oil_temp, water_temp,
- *					oil_press, rpm, and FAN_SW variables.
+ *  Description:    This interrupt will service all high priority interrupts. This
+ *                  section should be as short as possible.
+ *  Input(s): none
+ *  Reaturn Value(s): none
+ *  Side Effects:   This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
+ *                  global variables along with the millis, oil_temp, water_temp,
+ *                  oil_press, rpm, and FAN_SW variables.
  */
 
 #pragma interrupt high_isr
@@ -215,7 +215,7 @@ void main(void) {
     unsigned int current_P[NUM_LOADS + 2];
     unsigned int CAN_current[NUM_LOADS + 2];
 
-    //init_unused_pins();		// there are no unused pins!!!
+    //init_unused_pins();       // there are no unused pins!!!
 
     /*
      * Variable Initialization
@@ -623,15 +623,15 @@ void main(void) {
  */
 
 /*
- *	void sample(int *data, const unsigned char index, const unsigned char ch)
+ *  void sample(int *data, const unsigned char index, const unsigned char ch)
  *
- *	Description:	Function to read the analog voltage of a pin and then put the value into the
- *					data array that will be transmited over CAN.
- *	Input(s): 	*data - pointer to array of data bytes
- *				ch - which pin to sample
- *				index - where to write the data in the passed array
- *	Return Value(s): none
- *	Side Effects: This will modify what data points to.
+ *  Description:    Function to read the analog voltage of a pin and then put the value into the
+ *                  data array that will be transmited over CAN.
+ *  Input(s):   *data - pointer to array of data bytes
+ *              ch - which pin to sample
+ *              index - where to write the data in the passed array
+ *  Return Value(s): none
+ *  Side Effects: This will modify what data points to.
  */
 void sample(int *data, const unsigned char index, const unsigned char ch) {
 
@@ -646,15 +646,15 @@ void sample(int *data, const unsigned char index, const unsigned char ch) {
 }
 
 /*
- *	void preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* water_temp_tmr)
+ *  void preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* water_temp_tmr)
  *
- *	Description:	This function checks on critical engine sensors
- *					to determine if we should kill the engine.
- *	Input(s): 	oil_press_tmr - timer for how long oil pressure can be in an error state
- *				oil_temp_tmr - timer for how long oil temperature can be in an error state
- *				water_temp_tmr - timer for how long water temperature can be in an error state
- *	Return Value(s): Boolean for whether or not we are fucked
- *	Side Effects: none
+ *  Description:    This function checks on critical engine sensors
+ *                  to determine if we should kill the engine.
+ *  Input(s):   oil_press_tmr - timer for how long oil pressure can be in an error state
+ *              oil_temp_tmr - timer for how long oil temperature can be in an error state
+ *              water_temp_tmr - timer for how long water temperature can be in an error state
+ *  Return Value(s): Boolean for whether or not we are fucked
+ *  Side Effects: none
  */
 unsigned char preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* water_temp_tmr) {
 
@@ -682,12 +682,12 @@ unsigned char preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* wa
 }
 
 /*
- *	void checkWaterTemp(unsigned char * FAN_AUTO)
+ *  void checkWaterTemp(unsigned char * FAN_AUTO)
  *
- *	Description:	This function checks if we should turn on the fan or not.
- *	Input(s): 	FAN_AUTO - pointer to a flag that controls turning on the fan automatically
- *	Return Value(s): none
- *	Side Effects: This modifies the flag pointed to by FAN_AUTO.
+ *  Description:    This function checks if we should turn on the fan or not.
+ *  Input(s):   FAN_AUTO - pointer to a flag that controls turning on the fan automatically
+ *  Return Value(s): none
+ *  Side Effects: This modifies the flag pointed to by FAN_AUTO.
  */
 void checkWaterTemp(unsigned char * FAN_AUTO) {
     if(*FAN_AUTO) {

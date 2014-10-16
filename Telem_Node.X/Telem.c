@@ -1,19 +1,19 @@
 /******************************************************************************
  *
- *					Telemetry Node C Main Code
+ *                  Telemetry Node C Main Code
  *
  ******************************************************************************
- * FileName:		Telem.c
- * Dependencies:	p18F46K80.h,
- *					Telem.h,
- *					timers.h,
- *					usart.h,
- *					ECAN.h,
- *					crc.h
- * Processor:		PIC18F46K80
- * Complier:		Microchip C18
- * Version:			1.00
- * Author:			George Schwieters
+ * FileName:        Telem.c
+ * Dependencies:    p18F46K80.h,
+ *                  Telem.h,
+ *                  timers.h,
+ *                  usart.h,
+ *                  ECAN.h,
+ *                  crc.h
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Version:         1.00
+ * Author:          George Schwieters
  ******************************************************************************
  * Revision History
  *

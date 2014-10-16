@@ -39,8 +39,8 @@
                  microcontrollers to support SD card SPI driver.
 
 *******************************************************************************
-	USER REVISON HISTORY
-	note: modified to work with just PIC18F46K80
+    USER REVISON HISTORY
+    note: modified to work with just PIC18F46K80
 //
 // 10/22/12 - removed extra macros for other platfroms and confirmed/set I/O pins and registers
 //
@@ -93,7 +93,7 @@
 // Description: The bitwise define for the SPI status register (i.e. _____bits)
 #define SPISTATbits         SSPSTATbits
 // Description: The interrupt flag
-#define SPI_INTERRUPT_FLAG  PIR1bits.SSPIF   
+#define SPI_INTERRUPT_FLAG  PIR1bits.SSPIF
 #define SPI_INTERRUPT_FLAG_ASM  PIR1, 3
 // Description: The enable bit
 #define SPIENABLE           SSPCON1bits.SSPEN

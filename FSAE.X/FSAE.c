@@ -58,13 +58,13 @@ void STI(void) {
 }
 
 /*
- *	void init_ADC(void)
+ *  void init_ADC(void)
  *
- *	Description:	This function will initialize the analog to digital
- *					converter.
- *	Input(s): none
- *	Return Value(s): none
- *	Side Effects: This will modify ADCON0, ADCON1 & ADCON2.
+ *  Description:    This function will initialize the analog to digital
+ *                  converter.
+ *  Input(s): none
+ *  Return Value(s): none
+ *  Side Effects: This will modify ADCON0, ADCON1 & ADCON2.
  */
 void init_ADC(void) {
     OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_OFF,
@@ -72,7 +72,7 @@ void init_ADC(void) {
 }
 
 /*
- *	void init_timer0(void)
+ *  void init_timer0(void)
  *
  *  Description:  This function will initialize Timer0 to take in the system clock
  *          and interrupt once every millisecond

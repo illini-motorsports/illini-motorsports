@@ -1,10 +1,10 @@
 /******************************************************************************
  *
- *					Thermocouple Reader C Main Code Header
+ *                  Thermocouple Reader C Main Code Header
  *
  ******************************************************************************
  * FileName:        Thermo.h
- * Dependencies:	none
+ * Dependencies:    none
  * Processor:       PIC18F46K80
  * Complier:        Microchip C18
 
@@ -17,7 +17,7 @@
  *******************************************************************************/
 
 #ifndef THERMO_H
-#define	THERMO_H
+#define THERMO_H
 
 
 /***********************************************/

@@ -16,7 +16,7 @@
 //          PLL as clock source (64MHz)
 // 02/14/13 - added ECAN_CLOCK_SOURCE_MODE define
 //          - added PIE5 IF enable defines
-//			- added interrupt priority defines
+//          - added interrupt priority defines
 // 03/08/13 - added filters to stop the ECAN module from recieving messages
 // 11/28/13 - added defines for individual buffer interrupts
 //
