@@ -6,7 +6,7 @@
 ## [Wiki](https://github.com/mass/illini-motorsports/wiki)
 All information that is necessary to know can be found in the wiki. If you have any questions about something we do on the team, that should be the first place you look.
 
-The wiki is split into three major sections: [General Information](https://github.com/mass/illini-motorsports/wiki/General), [Code](https://github.com/mass/illini-motorsports/wiki/Code), and [EAGLE](https://github.com/mass/illini-motorsports/wiki/EAGLE).
+The wiki is split into three major sections: [General Information](https://github.com/mass/illini-motorsports/wiki/General), [Code](https://github.com/mass/illini-motorsports/wiki/Code), and [Circuit Boards](https://github.com/mass/illini-motorsports/wiki/Circuit-Boards).
 
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from `master` (never merge them in).
