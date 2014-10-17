@@ -78,7 +78,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="..\ECAN.X"/>
+        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="TELEM"/>
         <property key="procedural-abstraction-passes" value="4"/>

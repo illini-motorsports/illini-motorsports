@@ -1,6 +1,5 @@
-
 /*
- *                  MDD File I/O Main Code Header
+ * MDD File I/O Main File Header
  *
  * File Name:       DAQ.h
  * Processor:       PIC18F46K80

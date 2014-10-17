@@ -1,10 +1,9 @@
-
 /*
- *                  MDD File I/O Main Code
+ * MDD File I/O Main File
  *
  * File Name:       DAQ.c
  * Processor:       PIC18F46K80
- * Complier:        Microchip C18
+ * Compiler:        Microchip C18
  * Version:         2.00
  * Author:          George Schwieters
  * Created:         2012-2013

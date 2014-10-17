@@ -8,8 +8,8 @@
  * Author:      George Schwieters
  * Created:     2013-2014
  */
+
 #include <stdlib.h>
-#include "p18F46K80.h"
 #include "timers.h"
 #include "ECAN.h"
 #include "FSAE.h"

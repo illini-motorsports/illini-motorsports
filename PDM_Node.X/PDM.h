@@ -1,10 +1,9 @@
-
 /*
- *                  PDM Node Main File Header
+ * PDM Node Main File Header
  *
  * File Name:       PDM.h
  * Processor:       PIC18F46K80
- * Complier:        Microchip C18
+ * Compiler:        Microchip C18
  * Author:          George Schwieters
  * Created:         2013-2014
  */
@@ -80,7 +79,7 @@
 #define START_ch ADC_CH5
 
 /*
- * Pin Defintions
+ * Pin Definitions
  */
 
 #define IGN_LAT     LATDbits.LATD0
