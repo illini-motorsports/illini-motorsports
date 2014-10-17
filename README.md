@@ -1,9 +1,8 @@
-# illini-motorsports
+# Illini Motorsports Electronics
 > Code repository for Illini Motorsports Electronics Subsystem. All code for the microcontrollers and other electronics projects will live here.
 
 ![car-image](http://motorsports.illinois.edu/img/car_2014.jpg)
 
-***
 
 ## [Wiki](https://github.com/mass/illini-motorsports/wiki)
 All information that is necessary to know can be found in the wiki. If you have any questions about something we do on the team, that should be the first place you look.
