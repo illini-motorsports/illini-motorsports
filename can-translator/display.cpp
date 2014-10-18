@@ -228,7 +228,10 @@ void AppDisplay::readData(bool isVectorFile) {
 
 void AppDisplay::convertFinish(bool success) {
   if(success) {
-    QMessageBox::information(this, "Conversion Completed!", "Output File: ./out.txt");
+    QString filename = data.filename;
+    QMessageBox::information(this, "Conversion Completed!",
+        QString("Output File: %1").arg(
+          filename.replace(".txt", ".out.txt", Qt::CaseInsensitive)));
   }
 
   btn_read_custom.setEnabled(true);

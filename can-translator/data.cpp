@@ -75,7 +75,9 @@ bool AppData::readDataVector() {
 }
 
 bool AppData::writeAxis() {
-  ofstream outFile(QCoreApplication::applicationDirPath().append("/out.txt").toLocal8Bit().data(), ios::out | ios::trunc);
+  QString outFilename = this->filename;
+  outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
+  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::trunc);
 
   if(outFile && outFile.good()) {
     outFile << "xtime [s]";
@@ -121,7 +123,9 @@ bool AppData::writeAxis() {
 }
 
 void AppData::writeLine() {
-  ofstream outFile(QCoreApplication::applicationDirPath().append("/out.txt").toLocal8Bit().data(), ios::out | ios::app);
+  QString outFilename = this->filename;
+  outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
+  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::app);
 
   if(outFile && outFile.good()) {
     outFile << endl;
