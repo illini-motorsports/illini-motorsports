@@ -4,11 +4,15 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-30
+ * @date Modified: 2014-10-18
  */
 #include "data.h"
 
-bool AppData::readData() {
+bool AppData::readData(bool isVectorFile) {
+  return isVectorFile ? readDataVector() : readDataCustom();
+}
+
+bool AppData::readDataCustom() {
   ifstream infile(this->filename.toLocal8Bit().data(), ios::in | ios::binary);
 
   if(infile && infile.good()) {
@@ -34,6 +38,11 @@ bool AppData::readData() {
     emit error("Problem with input file. Try again or try another file.");
     return false;
   }
+}
+
+bool AppData::readDataVector() {
+  emit error("Vector");
+  return false;
 }
 
 bool AppData::writeAxis() {

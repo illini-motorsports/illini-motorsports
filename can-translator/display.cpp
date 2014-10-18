@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-30
+ * @date Modified: 2014-10-18
  */
 #include "display.h"
 
@@ -36,13 +36,18 @@ AppDisplay::AppDisplay() : QWidget() {
   lbl_subheader.setAlignment(Qt::AlignCenter);
   layout_headers.addWidget(&lbl_subheader, 1);
 
-  lbl_keymaps.setText("[c] Convert File     [a] Select All     [n] Select None     [q] Quit");
+  lbl_keymaps.setText("[c] Convert Custom File     [v] Convert Vector File     [a] Select All     [n] Select None     [q] Quit");
   lbl_keymaps.setFont(font_subheader);
   lbl_keymaps.setAlignment(Qt::AlignCenter);
   layout_headers.addWidget(&lbl_keymaps, 1);
 
-  btn_read.setText("Select File to Convert");
-  layout.addWidget(&btn_read, 1);
+  btn_read_custom.setText("Select Custom File to Convert");
+  layout_reads.addWidget(&btn_read_custom, 1);
+
+  btn_read_vector.setText("Select Vector File to Convert");
+  layout_reads.addWidget(&btn_read_vector, 1);
+
+  layout.addLayout(&layout_reads);
 
   btn_select_all.setText("Select All Channels");
   layout_selects.addWidget(&btn_select_all, 1);
@@ -131,7 +136,8 @@ AppDisplay::AppDisplay() : QWidget() {
 
   connect(&btn_select_all, SIGNAL(clicked()), this, SLOT(selectAll()));
   connect(&btn_select_none, SIGNAL(clicked()), this, SLOT(selectNone()));
-  connect(&btn_read, SIGNAL(clicked()), this, SLOT(readData()));
+  connect(&btn_read_custom, SIGNAL(clicked()), this, SLOT(readDataCustom()));
+  connect(&btn_read_vector, SIGNAL(clicked()), this, SLOT(readDataVector()));
 }
 
 map<unsigned short, vector<bool> > AppDisplay::getEnabled() {
@@ -175,18 +181,28 @@ void AppDisplay::selectBoxes(bool checked) {
   }
 }
 
-void AppDisplay::readData() {
-  btn_read.setEnabled(false);
+void AppDisplay::readDataCustom() {
+  readData(false);
+}
+
+void AppDisplay::readDataVector() {
+  readData(true);
+}
+
+void AppDisplay::readData(bool isVectorFile) {
+  btn_read_custom.setEnabled(false);
+  btn_read_vector.setEnabled(false);
   btn_select_all.setEnabled(false);
   btn_select_none.setEnabled(false);
 
   data.filename = QFileDialog::getOpenFileName(this, "Open File", ".", "Files (*.*)");
   data.enabled = this->getEnabled();
-  if(data.writeAxis() && data.readData()) {
+  if(data.writeAxis() && data.readData(isVectorFile)) {
     QMessageBox::information(this, "Conversion Completed!", "Output File: ./out.txt");
   }
 
-  btn_read.setEnabled(true);
+  btn_read_custom.setEnabled(true);
+  btn_read_vector.setEnabled(true);
   btn_select_all.setEnabled(true);
   btn_select_none.setEnabled(true);
 }
@@ -200,9 +216,14 @@ void AppDisplay::updateProgress(int progress) {
 }
 
 void AppDisplay::keyPressEvent(QKeyEvent* e) {
-  // Opens file conversion dialog.
+  // Opens file conversion dialog for custom data files.
   if(e->text() == "c") {
-    btn_read.click();
+    btn_read_custom.click();
+  }
+
+  // Opens file conversion dialog for vector data files.
+  if(e->text() == "v") {
+    btn_read_vector.click();
   }
 
   // Selects all channel checkboxes.

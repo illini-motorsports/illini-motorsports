@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-29
+ * @date Modified: 2014-10-18
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -65,7 +65,13 @@ class AppDisplay : public QWidget {
      * Calls the cooresponding readData() method in the data class when
      * btn_read is pressed.
      */
-    void readData();
+    void readDataCustom();
+
+    /**
+     * Calls the cooresponding readData() method in the data class when
+     * btn_read is pressed.
+     */
+    void readDataVector();
 
     /**
      * Scans the grid of checkboxes to see which channels the user wants
@@ -103,6 +109,14 @@ class AppDisplay : public QWidget {
   private:
 
     /**
+     * Calls the cooresponding readData() method in the data class when
+     * btn_read is pressed.
+     *
+     * @params isVectorFile Whether the file to convert is in the Vector format.
+     */
+    void readData(bool isVectorFile);
+
+    /**
      * Sets all channel checkboxes as either checked or not checked.
      *
      * @param checked Whether to set the boxes as checked or not checked.
@@ -115,6 +129,7 @@ class AppDisplay : public QWidget {
     QVBoxLayout layout;
     QVBoxLayout layout_headers;
     QHBoxLayout layout_selects;
+    QHBoxLayout layout_reads;
 
     QLabel lbl_header;
     QLabel lbl_subheader;
@@ -122,7 +137,8 @@ class AppDisplay : public QWidget {
 
     QTableWidget table;
 
-    QPushButton btn_read;
+    QPushButton btn_read_custom;
+    QPushButton btn_read_vector;
     QPushButton btn_select_all;
     QPushButton btn_select_none;
 
