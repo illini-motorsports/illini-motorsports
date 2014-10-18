@@ -46,10 +46,24 @@ bool AppData::readDataVector() {
     QTextStream inputStream(&inputFile);
 
     inputStream.readLine();
+    int lineCounter = 0;
+    while(!inputStream.atEnd()) {
+      inputStream.readLine();
+      lineCounter++;
+    }
+    inputStream.seek(0);
+
+    int progressCounter = 0;
+    int iter = 0;
+    inputStream.readLine();
     while(!inputStream.atEnd()) {
       QString line = inputStream.readLine();
       if(!line.isEmpty()) {
         processLine(line.simplified());
+      }
+
+      if((((double) iter++) / ((double) lineCounter)) * 100.0 > progressCounter) {
+        emit progress(++progressCounter);
       }
     }
 
@@ -191,8 +205,6 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
 void AppData::processLine(QString line) {
   AppConfig config;
   map<unsigned short, Message> messages = config.getMessages();
-
-  emit progress(0);
 
   QStringList sections = line.split(" ", QString::SkipEmptyParts);
 
