@@ -11,6 +11,7 @@
 
 #include <QFont>
 #include <QLabel>
+#include <QThread>
 #include <QCheckBox>
 #include <QKeyEvent>
 #include <QFileDialog>
@@ -28,6 +29,43 @@
 
 #define WIDTH 1400
 #define HEIGHT 720
+
+/**
+ * Class which handles multithreading of the conversion process so that we
+ * don't lock up the GUI thread while converting data.
+ */
+class ComputeThread : public QThread {
+  Q_OBJECT
+
+  public:
+
+    /**
+     * Boolean which represents whether this thread is going to be used to
+     * convert a Vector log file or a custom log file.
+     */
+    bool isVectorFile;
+
+    /**
+     * Pointer to the instance of the data class used for the computation.
+     */
+    AppData* data;
+
+  signals:
+
+    /**
+     * Signal to be executed upon finishing the computation.
+     *
+     * @param success Whether the conversion was successful.
+     */
+    void finish(bool success);
+
+  private:
+
+    /**
+     * Starts the thread's main computation.
+     */
+    void run();
+};
 
 /**
  * Class which handles the construction of the GUI and button presses.
@@ -72,6 +110,13 @@ class AppDisplay : public QWidget {
      * btn_read is pressed.
      */
     void readDataVector();
+
+    /**
+     * Called when the thread has fininshed the conversion process.
+     *
+     * @param success Whether the conversion was successful.
+     */
+    void convertFinish(bool success);
 
     /**
      * Scans the grid of checkboxes to see which channels the user wants
@@ -123,6 +168,13 @@ class AppDisplay : public QWidget {
      */
     void selectBoxes(bool checked);
 
+    /**
+     * Sets all channel checkboxes as either enabled or not enabled.
+     *
+     * @param enabled Whether to set the boxes as enabled or not enabled.
+     */
+    void enableBoxes(bool enabled);
+
     AppConfig config;
     AppData data;
 
@@ -143,6 +195,8 @@ class AppDisplay : public QWidget {
     QPushButton btn_select_none;
 
     QProgressBar bar_convert;
+
+    ComputeThread computeThread;
 };
 
 #endif // APP_DISPLAY_H

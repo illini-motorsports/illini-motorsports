@@ -8,6 +8,14 @@
  */
 #include "display.h"
 
+void ComputeThread::run() {
+  bool success = this->data->writeAxis();
+  if(success) {
+    success = this->data->readData(this->isVectorFile);
+  }
+  finish(success);
+}
+
 AppDisplay::AppDisplay() : QWidget() {
   this->successful = false;
   this->resize(WIDTH, HEIGHT);
@@ -17,6 +25,8 @@ AppDisplay::AppDisplay() : QWidget() {
   connect(&data, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
   connect(&data, SIGNAL(progress(int)), this, SLOT(updateProgress(int)));
   connect(&config, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
+
+  computeThread.data = &data;
 
   layout.addLayout(&layout_headers);
 
@@ -134,6 +144,7 @@ AppDisplay::AppDisplay() : QWidget() {
   table.show();
   layout.addWidget(&table, 1);
 
+  connect(&computeThread, SIGNAL(finish(bool)), this, SLOT(convertFinish(bool)));
   connect(&btn_select_all, SIGNAL(clicked()), this, SLOT(selectAll()));
   connect(&btn_select_none, SIGNAL(clicked()), this, SLOT(selectNone()));
   connect(&btn_read_custom, SIGNAL(clicked()), this, SLOT(readDataCustom()));
@@ -181,6 +192,18 @@ void AppDisplay::selectBoxes(bool checked) {
   }
 }
 
+void AppDisplay::enableBoxes(bool enabled) {
+  map<unsigned short, Message> messages = config.getMessages();
+  bool conv;
+  for(int i = 0; i < table.rowCount(); i++) {
+    Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
+
+    for(int j = 0; j < msg.channels.size(); j++) {
+      ((QCheckBox*) table.cellWidget(i, 3 + j))->setEnabled(enabled);
+    }
+  }
+}
+
 void AppDisplay::readDataCustom() {
   readData(false);
 }
@@ -194,11 +217,17 @@ void AppDisplay::readData(bool isVectorFile) {
   btn_read_vector.setEnabled(false);
   btn_select_all.setEnabled(false);
   btn_select_none.setEnabled(false);
+  enableBoxes(false);
 
   data.filename = QFileDialog::getOpenFileName(this, "Open File", ".", "Files (*.*)");
   data.enabled = this->getEnabled();
 
-  if(data.writeAxis() && data.readData(isVectorFile)) {
+  computeThread.isVectorFile = isVectorFile;
+  computeThread.start();
+}
+
+void AppDisplay::convertFinish(bool success) {
+  if(success) {
     QMessageBox::information(this, "Conversion Completed!", "Output File: ./out.txt");
   }
 
@@ -206,6 +235,7 @@ void AppDisplay::readData(bool isVectorFile) {
   btn_read_vector.setEnabled(true);
   btn_select_all.setEnabled(true);
   btn_select_none.setEnabled(true);
+  enableBoxes(true);
 }
 
 void AppDisplay::handleError(QString error) {
@@ -242,3 +272,4 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
     QApplication::quit();
   }
 }
+
