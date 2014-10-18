@@ -41,7 +41,22 @@ bool AppData::readDataCustom() {
 }
 
 bool AppData::readDataVector() {
-  emit error("Vector");
+  QFile inputFile(this->filename);
+  if(inputFile.open(QIODevice::ReadOnly)) {
+    QTextStream inputStream(&inputFile);
+
+    inputStream.readLine();
+    while(!inputStream.atEnd()) {
+      QString line = inputStream.readLine();
+      if(!line.isEmpty()) {
+        processLine(line.simplified());
+      }
+    }
+
+    inputFile.close();
+    return true;
+  }
+  emit error("Problem with input file. Try again or try another file.");
   return false;
 }
 
@@ -171,4 +186,71 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
 
   delete[] buffer;
   buffer = NULL;
+}
+
+void AppData::processLine(QString line) {
+  AppConfig config;
+  map<unsigned short, Message> messages = config.getMessages();
+
+  emit progress(0);
+
+  QStringList sections = line.split(" ", QString::SkipEmptyParts);
+
+  if(sections.size() == 2 && sections[1].compare("Trigger") == 0) {
+    return;
+  }
+
+  if(sections.size() < 7) {
+    emit error("Invalid log file line.");
+    return;
+  }
+
+  bool successful = true;
+  unsigned short msgId;
+  msgId = sections[2].toUInt(&successful, 10);
+  if(!successful) {
+    emit error("Invalid message ID.");
+    return;
+  }
+
+  Message msg = messages[msgId];
+
+  if(msg.valid()) {
+    vector<bool> msgEnabled = this->enabled[msg.id];
+
+    int j = 0;
+    for(int i = 0; i < msg.channels.size(); i++) {
+      Channel chn = msg.channels[i];
+
+      if(msgEnabled[i]) {
+        double value;
+
+        successful = true;
+        unsigned char byteOne = sections[5 + (i * 2)].toUInt(&successful, 10);
+        unsigned char byteTwo = sections[5 + (i * 2) + 1].toUInt(&successful, 10);
+        if(!successful) {
+          emit error("Invalid channel data.");
+          return;
+        }
+
+        if(chn.isSigned) {
+          signed int data = msg.isBigEndian ? byteOne << 8 | byteTwo :
+            byteTwo << 8 | byteOne;
+          value = (double) data;
+        } else {
+          unsigned int data = msg.isBigEndian ? byteOne << 8 | byteTwo :
+            byteTwo << 8 | byteOne;
+          value = (double) data;
+        }
+        latestValues[messageIndices[msg.id]][j] = (value - chn.offset) * chn.scalar;
+        j++;
+      }
+    }
+
+    latestValues[0][0] = sections[0].toDouble();
+
+    writeLine();
+  } else {
+    //emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+  }
 }

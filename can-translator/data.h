@@ -121,6 +121,14 @@ class AppData : public QObject {
      * @param length The length of the buffer. (Thanks c++).
      */
     void processBuffer(unsigned char * buffer, int length);
+
+    /**
+     * Takes a single line of input from a Vector log file, converts the data,
+     * and writes it to the output file.
+     *
+     * @param line The line of input from a Vector log file.
+     */
+    void processLine(QString line);
 };
 
 #endif // DATA_H

@@ -197,6 +197,7 @@ void AppDisplay::readData(bool isVectorFile) {
 
   data.filename = QFileDialog::getOpenFileName(this, "Open File", ".", "Files (*.*)");
   data.enabled = this->getEnabled();
+
   if(data.writeAxis() && data.readData(isVectorFile)) {
     QMessageBox::information(this, "Conversion Completed!", "Output File: ./out.txt");
   }
