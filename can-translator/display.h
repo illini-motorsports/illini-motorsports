@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-10-18
+ * @date Modified: 2014-10-25
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -44,6 +44,11 @@ class ComputeThread : public QThread {
      * convert a Vector log file or a custom log file.
      */
     bool isVectorFile;
+
+    /**
+     * A list of names of files to convert.
+     */
+    QStringList filenames;
 
     /**
      * Pointer to the instance of the data class used for the computation.
