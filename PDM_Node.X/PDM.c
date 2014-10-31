@@ -4,7 +4,7 @@
  * File Name:       PDM.c
  * Processor:       PIC18F46K80
  * Compiler:        Microchip C18
- * Version:         1.00
+ * Version:         2.00
  * Author:          George Schwieters
  * Created:         2013-2014
  */
@@ -89,9 +89,11 @@
 
 // Timing variables
 static volatile int millis; // Holds timer0 rollover count
-static int P_tmr[NUM_LOADS - NON_INDUCTIVE];
+static int peak_tmr[NUM_LOADS - NON_INDUCTIVE];
 static int err_tmr[NUM_LOADS];
 static int PRIME_tmr;
+
+// Car data variables
 static volatile unsigned int FAN_SW; // Holds state of fan switch on steering wheel
 static volatile int water_temp, oil_temp, oil_press, rpm;
 
@@ -101,9 +103,11 @@ static unsigned char data[8]; // holds CAN data bytes
 static unsigned char dataLen; // holds number of CAN data bytes
 static ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
 
-// check header for correct order of constants; it coincides with the array
-// index order that is established with defines
-static const unsigned int P_tmr_const[5] = {
+/*
+ * Check header for correct order of constants; it coincides with the array
+ * index order that is established with defines
+ */
+static const unsigned int peak_tmr_const[5] = {
     500 /*IGN*/, 500 /*FUEL*/, 500 /*Water*/,
     500 /*Starter*/, 500 /*Fan*/
 };
@@ -113,7 +117,7 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
     AUX_ch, ECU_ch, START_ch_2, START_ch_3
 };
 
-// current multiplier / resistor value (the switch turns off at 4.5 V on the feedback pin)
+// Current multiplier / resistor value (the switch turns off at 4.5 V on the feedback pin)
 static const unsigned int current_ratio[NUM_LOADS] = {
     14 /*IGN*/, 14 /*FUEL*/,
     14 /*Water*/, 23 /*Starter0*/,
@@ -121,7 +125,7 @@ static const unsigned int current_ratio[NUM_LOADS] = {
     14 /*ECU*/
 };
 
-static const unsigned int current_P_ratio[NUM_LOADS] = {
+static const unsigned int current_peak_ratio[NUM_LOADS] = {
     28 /*IGN*/, 28 /*FUEL*/,
     28 /*Water*/, 47 /*Starter0*/,
     28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/,
@@ -209,13 +213,11 @@ void main(void) {
     int CAN_tmr = 0;
     Error_Status STATUS;
     unsigned char AUTO_FAN;
-    unsigned char PRIME = TRUE;
-    unsigned char ON = FALSE;
+    unsigned char PRIME = 1;
+    unsigned char ON = 0;
     unsigned char i;
     unsigned char err_count[NUM_LOADS];
     unsigned int current[NUM_LOADS + 2];
-    unsigned int current_P[NUM_LOADS + 2];
-    unsigned int CAN_current[NUM_LOADS + 2];
 
     // init_unused_pins();       // There are no unused pins!!!
 
@@ -223,12 +225,12 @@ void main(void) {
      * Variable Initialization
      */
 
-    // Clear error count for all loads
+    // Clear error count and peak timers for all loads
     for(i = 0; i < NUM_LOADS; i++) {
         err_count[i] = 0;
         err_tmr[i] = 0;
         if(i < NUM_LOADS - NON_INDUCTIVE) {
-            P_tmr[i] = 0;
+            peak_tmr[i] = 0;
         }
     }
 
@@ -239,7 +241,7 @@ void main(void) {
     water_temp = 0;
     oil_temp = 0;
     oil_press = 0;
-    FAN_SW = FALSE;
+    FAN_SW = 0;
 
     /*
      * Peripheral Initialization
@@ -318,67 +320,67 @@ void main(void) {
 
 #ifdef PARANOID_MODE
         // stay here during extreme conditions caused by oil pressure, oil temperature or water temperature
-        if(preventEngineBlowup(&oil_press_tmr, &oil_temp_tmr, &water_temp_tmr) == TRUE) {
+        if(preventEngineBlowup(&oil_press_tmr, &oil_temp_tmr, &water_temp_tmr)) {
             // turn off the car
             FUEL_LAT = PWR_OFF;
             IGN_LAT = PWR_OFF;
             START_LAT = PWR_OFF;
-            while(ON_SW);
+            while(ON_SW_PORT);
         }
 #endif
 
         // Check if we should automatically turn on the fan or not
         checkWaterTemp(&AUTO_FAN);
 
-        // Check if car is on
-        ON = rpm > ON_THRESHOLD ? TRUE : FALSE;
+        // Check if car's engine is on
+        ON = rpm > ON_THRESHOLD;
 
         // Determine how long the fuel pump should be left on
-        if(!ON_SW) {
-            PRIME = TRUE;
+        if(!ON_SW_PORT) {
+            PRIME = 1;
         } else if(millis - PRIME_tmr > PRIME_WAIT && FUEL_PORT) {
-            PRIME = FALSE;
+            PRIME = 0;
         }
 
         // turn on loads
         // check if already on and if so do nothing
         // also check if we are in an overcurrent condition in which case do nothing
-        if(ON_SW & !IGN_PORT & !STATUS.Ignition) {
+        if(ON_SW_PORT & !IGN_PORT & !STATUS.Ignition) {
             IGN_P_LAT = PWR_ON;
             IGN_LAT = PWR_ON;
-            P_tmr[IGN_val] = millis;
+            peak_tmr[IGN_val] = millis;
         }
-        if(((ON_SW & PRIME) | ON | START_PORT) & !FUEL_PORT & !STATUS.Fuel) {
+        if(((ON_SW_PORT & PRIME) | ON | START_PORT) & !FUEL_PORT & !STATUS.Fuel) {
             FUEL_P_LAT = PWR_ON;
             FUEL_LAT = PWR_ON;
-            P_tmr[FUEL_val] = millis;
+            peak_tmr[FUEL_val] = millis;
             PRIME_tmr = millis;
         }
         if((FAN_SW | AUTO_FAN | ON) & !WATER_PORT & !STATUS.Water & !START_PORT) {
             WATER_P_LAT = PWR_ON;
             WATER_LAT = PWR_ON;
-            P_tmr[WATER_val] = millis;
+            peak_tmr[WATER_val] = millis;
         }
-        if(!START_SW & !START_PORT & !STATUS.Starter) {
+        if(!START_SW_PORT & !START_PORT & !STATUS.Starter) {
             START_P_LAT = PWR_ON;
             START_LAT = PWR_ON;
-            P_tmr[START_val] = millis;
+            peak_tmr[START_val] = millis;
         }
         if((FAN_SW | AUTO_FAN) & !FAN_PORT & !STATUS.Fan & !START_PORT) {
             FAN_P_LAT = PWR_ON;
             FAN_LAT = PWR_ON;
-            P_tmr[FAN_val] = millis;
+            peak_tmr[FAN_val] = millis;
         }
 
         // turn off loads
         // check if the load is already off and if so do nothing
         // also turn off any overcurrent error state that may be enabled
-        if(!ON_SW & (IGN_PORT | STATUS.Ignition)) {
+        if(!ON_SW_PORT & (IGN_PORT | STATUS.Ignition)) {
             IGN_LAT = PWR_OFF;
             STATUS.Ignition = PWR_OFF;
             err_count[IGN_val] = 0;
         }
-        if((!ON_SW | (!PRIME & !ON & !START_PORT)) & (FUEL_PORT | STATUS.Fuel)) {
+        if((!ON_SW_PORT | (!PRIME & !ON & !START_PORT)) & (FUEL_PORT | STATUS.Fuel)) {
             FUEL_LAT = PWR_OFF;
             STATUS.Fuel = PWR_OFF;
             err_count[FUEL_val] = 0;
@@ -388,7 +390,7 @@ void main(void) {
             STATUS.Water = PWR_OFF;
             err_count[WATER_val] = 0;
         }
-        if(START_SW & (START_PORT | STATUS.Starter)) {
+        if(START_SW_PORT & (START_PORT | STATUS.Starter)) {
             START_LAT = PWR_OFF;
             STATUS.Starter = PWR_OFF;
             err_count[START_val] = 0;
@@ -402,7 +404,7 @@ void main(void) {
         // check peak control timers
         // if enough time has passed then change the current limit to steady state
         for(i = 0; i < NUM_LOADS - NON_INDUCTIVE; i++) {
-            if(millis - P_tmr[i] > P_tmr_const[i]) {
+            if(millis - peak_tmr[i] > peak_tmr_const[i]) {
                 switch(i) {
                     case FUEL_val:
                         if(FUEL_P_PORT) {
@@ -501,7 +503,7 @@ void main(void) {
         }
 #endif
 
-        // sample the current of the loads
+        // Sample the current of the loads
         for(i = 0; i < NUM_LOADS + 2; i++) {
             sample((int *) current, i, ch_num[i]);
         }
@@ -509,14 +511,33 @@ void main(void) {
         // Put total current value of starter in one location
         current[START_val] = current[START_val] + current[START_val_2] + current[START_val_3];
 
-        // scale input voltage to get current value
+        // Scale input voltage to get current value
         for(i = 0; i < NUM_LOADS; i++) {
-            current[i] = (unsigned long) current[i] * (unsigned long) current_ratio[i] * 5;
-            current_P[i] = (unsigned long) current[i] * (unsigned long) current_P_ratio[i] * 5;
+            unsigned char peak = 0;
+            switch(i) {
+                case FUEL_val:
+                    peak = FUEL_P_PORT;
+                    break;
+                case IGN_val:
+                    peak = IGN_P_PORT;
+                    break;
+                case WATER_val:
+                    peak = WATER_P_PORT;
+                    break;
+                case START_val:
+                    peak = START_P_PORT;
+                    break;
+                case FAN_val:
+                    peak = FAN_P_PORT;
+                    break;
+            }
+
+            current[i] = peak ? (unsigned long) current[i] * (unsigned long) current_peak_ratio[i] * 5 :
+                    (unsigned long) current[i] * (unsigned long) current_ratio[i] * 5;
         }
 
 #ifdef OVERCURRENT_HANDLING
-        // determine if there is an overcurrent condition
+        // Determine if there is an overcurrent condition
         for(i = 0; i < NUM_LOADS; i++) {
             if(current[i] < MIN_MA_OVERCURRENT * 10) {
                 switch(i) {
@@ -581,40 +602,14 @@ void main(void) {
         }
 #endif
 
-        // get the correct current data depeding on which state we are in with respect to peak control
-        for(i = 0; i < NUM_LOADS - NON_INDUCTIVE; i++) {
-            switch(i) {
-                case FUEL_val:
-                    CAN_current[i] = FUEL_P_PORT ? current_P[i] : current[i];
-                    break;
-                case IGN_val:
-                    CAN_current[i] = IGN_P_PORT ? current_P[i] : current[i];
-                    break;
-                case WATER_val:
-                    CAN_current[i] = WATER_P_PORT ? current_P[i] : current[i];
-                    break;
-                case START_val:
-                    CAN_current[i] = START_P_PORT ? current_P[i] : current[i];
-                    break;
-                case FAN_val:
-                    CAN_current[i] = FAN_P_PORT ? current_P[i] : current[i];
-                    break;
-            }
-        }
-
-        // get current data for non inductive loads
-        CAN_current[PCB_val] = current[PCB_val];
-        CAN_current[AUX_val] = current[AUX_val];
-        CAN_current[ECU_val] = current[ECU_val];
-
-        // send out the current data
+        // Send out the current data
         if(millis - CAN_tmr > CAN_PER) {
             CAN_tmr = millis;
-            ECANSendMessage(PDM_ID, (unsigned char *) CAN_current, 8,
+            ECANSendMessage(PDM_ID, (unsigned char *) current, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-            ECANSendMessage(PDM_ID + 1, ((unsigned char *) CAN_current) + 8, 8,
+            ECANSendMessage(PDM_ID + 1, ((unsigned char *) current) + 8, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-            ECANSendMessage(PDM_ID + 2, ((unsigned char *) CAN_current) + 16, 2,
+            ECANSendMessage(PDM_ID + 2, ((unsigned char *) current) + 16, 2,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
     }
@@ -657,28 +652,10 @@ void sample(int *data, const unsigned char index, const unsigned char ch) {
  *  Side Effects: none
  */
 unsigned char preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* water_temp_tmr) {
-
-    // check oil temperature to see if we're too hot
-    if(oil_temp > OT_THRESHOLD) {
-        return TRUE;
-    }
-    // check oil pressure for too low of pressure
-    if(rpm > RPM_THRESHOLD_H) {
-        if(oil_press < OP_THRESHOLD_H) {
-            return TRUE;
-        }
-    } else if(rpm > RPM_THRESHOLD_L) {
-        if(oil_press < OP_THRESHOLD_L) {
-            return TRUE;
-        }
-    }
-    // check engine temperature to see if we're too hot
-    if(water_temp > ET_THRESHOLD) {
-        return TRUE;
-    }
-
-    // nothing is wrong
-    return FALSE;
+    return (oil_temp > OT_THRESHOLD) ||
+            (rpm > RPM_THRESHOLD_H && oil_press < OP_THRESHOLD_H) ||
+            (rpm > RPM_THRESHOLD_L && oil_press < OP_THRESHOLD_L) ||
+            (water_temp > ET_THRESHOLD);
 }
 
 /*
@@ -692,11 +669,11 @@ unsigned char preventEngineBlowup(int* oil_press_tmr, int* oil_temp_tmr, int* wa
 void checkWaterTemp(unsigned char * FAN_AUTO) {
     if(*FAN_AUTO) {
         if(water_temp < FAN_THRESHOLD_L) {
-            *FAN_AUTO = FALSE;
+            *FAN_AUTO = 0;
         }
     } else {
         if(water_temp > FAN_THRESHOLD_H) {
-            *FAN_AUTO = TRUE;
+            *FAN_AUTO = 1;
         }
     }
 }

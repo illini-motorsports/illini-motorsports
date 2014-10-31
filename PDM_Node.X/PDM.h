@@ -56,65 +56,65 @@
 #define FAN_THRESHOLD_H 900 // 90.0
 #define FAN_THRESHOLD_L 840 // 84.0
 
-#define IGN_val 0
-#define FUEL_val 1
-#define WATER_val 2
-#define START_val 3
-#define FAN_val 4
-#define PCB_val 5
-#define AUX_val 6
-#define ECU_val 7
+#define IGN_val     0
+#define FUEL_val    1
+#define WATER_val   2
+#define START_val   3
+#define FAN_val     4
+#define PCB_val     5
+#define AUX_val     6
+#define ECU_val     7
 #define START_val_2 8
 #define START_val_3 9
 
-#define IGN_ch ADC_CH2
-#define FUEL_ch ADC_CH3
-#define WATER_ch ADC_CH1
-#define PCB_ch ADC_CH0
-#define ECU_ch ADC_CH8
-#define AUX_ch ADC_CH9
-#define FAN_ch ADC_CH4
-#define START_ch_3 ADC_CH7
-#define START_ch_2 ADC_CH6
-#define START_ch ADC_CH5
+#define IGN_ch      ADC_CH2
+#define FUEL_ch     ADC_CH3
+#define WATER_ch    ADC_CH1
+#define PCB_ch      ADC_CH0
+#define ECU_ch      ADC_CH8
+#define AUX_ch      ADC_CH9
+#define FAN_ch      ADC_CH4
+#define START_ch_3  ADC_CH7
+#define START_ch_2  ADC_CH6
+#define START_ch    ADC_CH5
 
 /*
  * Pin Definitions
  */
 
-#define IGN_LAT     LATDbits.LATD0
-#define IGN_P_LAT   LATDbits.LATD1
-#define FUEL_LAT    LATDbits.LATD2
-#define FUEL_P_LAT  LATDbits.LATD3
-#define FAN_LAT     LATDbits.LATD4
-#define FAN_P_LAT   LATDbits.LATD5
-#define START_LAT   LATDbits.LATD6
-#define START_P_LAT LATDbits.LATD7
+#define IGN_LAT         LATDbits.LATD0
+#define IGN_P_LAT       LATDbits.LATD1
+#define FUEL_LAT        LATDbits.LATD2
+#define FUEL_P_LAT      LATDbits.LATD3
+#define FAN_LAT         LATDbits.LATD4
+#define FAN_P_LAT       LATDbits.LATD5
+#define START_LAT       LATDbits.LATD6
+#define START_P_LAT     LATDbits.LATD7
 
-#define AUX_LAT     LATCbits.LATC2
-#define ECU_LAT     LATCbits.LATC3
-#define PCB_LAT     LATCbits.LATC4
-#define WATER_LAT   LATCbits.LATC6
-#define WATER_P_LAT LATCbits.LATC7
-#define TERM_LAT    LATCbits.LATC5
+#define AUX_LAT         LATCbits.LATC2
+#define ECU_LAT         LATCbits.LATC3
+#define PCB_LAT         LATCbits.LATC4
+#define TERM_LAT        LATCbits.LATC5
+#define WATER_LAT       LATCbits.LATC6
+#define WATER_P_LAT     LATCbits.LATC7
 
-#define IGN_PORT    PORTDbits.RD0
-#define IGN_P_PORT  PORTDbits.RD1
-#define FUEL_PORT   PORTDbits.RD2
-#define FUEL_P_PORT PORTDbits.RD3
-#define FAN_PORT    PORTDbits.RD4
-#define FAN_P_PORT  PORTDbits.RD5
-#define START_PORT  PORTDbits.RD6
+#define IGN_PORT        PORTDbits.RD0
+#define IGN_P_PORT      PORTDbits.RD1
+#define FUEL_PORT       PORTDbits.RD2
+#define FUEL_P_PORT     PORTDbits.RD3
+#define FAN_PORT        PORTDbits.RD4
+#define FAN_P_PORT      PORTDbits.RD5
+#define START_PORT      PORTDbits.RD6
 #define START_P_PORT    PORTDbits.RD7
 
-#define AUX_PORT    PORTCbits.RC2
-#define ECU_PORT    PORTCbits.RC3
-#define PCB_PORT    PORTCbits.RC4
-#define WATER_PORT  PORTCbits.RC6
+#define AUX_PORT        PORTCbits.RC2
+#define ECU_PORT        PORTCbits.RC3
+#define PCB_PORT        PORTCbits.RC4
+#define WATER_PORT      PORTCbits.RC6
 #define WATER_P_PORT    PORTCbits.RC7
 
-#define START_SW    PORTBbits.RB5
-#define ON_SW       PORTBbits.RB0
+#define START_SW_PORT   PORTBbits.RB5
+#define ON_SW_PORT      PORTBbits.RB0
 
 /*
  * Typedefs
