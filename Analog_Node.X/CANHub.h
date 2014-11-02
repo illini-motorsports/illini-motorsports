@@ -1,10 +1,9 @@
-
 /*
- *                  Analog Node Main File Header
+ * Analog Node Main File Header
  *
  * File Name:       CANHub.h
  * Processor:       PIC18F46K80
- * Complier:        Microchip C18
+ * Compiler:        Microchip C18
  * Author:          George Schwieters
  * Created:         2012-2013
  */

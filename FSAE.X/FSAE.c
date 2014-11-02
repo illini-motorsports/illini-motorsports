@@ -3,7 +3,7 @@
  *
  * File Name:   FSAE.c
  * Processor:   PIC18F46K80
- * Complier:    Microchip C18
+ * Compiler:    Microchip C18
  * Version:     1.00
  * Author:      George Schwieters
  * Created:     2014-2015

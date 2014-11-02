@@ -6,7 +6,6 @@
  * @date Created: 2014-06-24
  * @date Modified: 2014-06-24
  */
-#include <QApplication>
 #include "display.h"
 
 int main(int argc, char *argv[]) {

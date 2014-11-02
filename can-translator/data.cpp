@@ -4,11 +4,15 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-30
+ * @date Modified: 2014-10-18
  */
 #include "data.h"
 
-bool AppData::readData() {
+bool AppData::readData(bool isVectorFile) {
+  return isVectorFile ? readDataVector() : readDataCustom();
+}
+
+bool AppData::readDataCustom() {
   ifstream infile(this->filename.toLocal8Bit().data(), ios::in | ios::binary);
 
   if(infile && infile.good()) {
@@ -36,8 +40,44 @@ bool AppData::readData() {
   }
 }
 
+bool AppData::readDataVector() {
+  QFile inputFile(this->filename);
+  if(inputFile.open(QIODevice::ReadOnly)) {
+    QTextStream inputStream(&inputFile);
+
+    inputStream.readLine();
+    int lineCounter = 0;
+    while(!inputStream.atEnd()) {
+      inputStream.readLine();
+      lineCounter++;
+    }
+    inputStream.seek(0);
+
+    int progressCounter = 0;
+    int iter = 0;
+    inputStream.readLine();
+    while(!inputStream.atEnd()) {
+      QString line = inputStream.readLine();
+      if(!line.isEmpty()) {
+        processLine(line.simplified());
+      }
+
+      if((((double) iter++) / ((double) lineCounter)) * 100.0 > progressCounter) {
+        emit progress(++progressCounter);
+      }
+    }
+
+    inputFile.close();
+    return true;
+  }
+  emit error("Problem with input file. Try again or try another file.");
+  return false;
+}
+
 bool AppData::writeAxis() {
-  ofstream outFile(QCoreApplication::applicationDirPath().append("/out.txt").toLocal8Bit().data(), ios::out | ios::trunc);
+  QString outFilename = this->filename;
+  outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
+  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::trunc);
 
   if(outFile && outFile.good()) {
     outFile << "xtime [s]";
@@ -83,7 +123,9 @@ bool AppData::writeAxis() {
 }
 
 void AppData::writeLine() {
-  ofstream outFile(QCoreApplication::applicationDirPath().append("/out.txt").toLocal8Bit().data(), ios::out | ios::app);
+  QString outFilename = this->filename;
+  outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
+  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::app);
 
   if(outFile && outFile.good()) {
     outFile << endl;
@@ -162,4 +204,69 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
 
   delete[] buffer;
   buffer = NULL;
+}
+
+void AppData::processLine(QString line) {
+  AppConfig config;
+  map<unsigned short, Message> messages = config.getMessages();
+
+  QStringList sections = line.split(" ", QString::SkipEmptyParts);
+
+  if(sections.size() == 2 && sections[1].compare("Trigger") == 0) {
+    return;
+  }
+
+  if(sections.size() < 7) {
+    emit error("Invalid log file line.");
+    return;
+  }
+
+  bool successful = true;
+  unsigned short msgId;
+  msgId = sections[2].toUInt(&successful, 10);
+  if(!successful) {
+    emit error("Invalid message ID.");
+    return;
+  }
+
+  Message msg = messages[msgId];
+
+  if(msg.valid()) {
+    vector<bool> msgEnabled = this->enabled[msg.id];
+
+    int j = 0;
+    for(int i = 0; i < msg.channels.size(); i++) {
+      Channel chn = msg.channels[i];
+
+      if(msgEnabled[i]) {
+        double value;
+
+        successful = true;
+        unsigned char byteOne = sections[5 + (i * 2)].toUInt(&successful, 10);
+        unsigned char byteTwo = sections[5 + (i * 2) + 1].toUInt(&successful, 10);
+        if(!successful) {
+          emit error("Invalid channel data.");
+          return;
+        }
+
+        if(chn.isSigned) {
+          signed int data = msg.isBigEndian ? byteOne << 8 | byteTwo :
+            byteTwo << 8 | byteOne;
+          value = (double) data;
+        } else {
+          unsigned int data = msg.isBigEndian ? byteOne << 8 | byteTwo :
+            byteTwo << 8 | byteOne;
+          value = (double) data;
+        }
+        latestValues[messageIndices[msg.id]][j] = (value - chn.offset) * chn.scalar;
+        j++;
+      }
+    }
+
+    latestValues[0][0] = sections[0].toDouble();
+
+    writeLine();
+  } else {
+    //emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+  }
 }

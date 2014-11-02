@@ -1,10 +1,9 @@
-
 /*
  * Formula SAE Library Header File
  *
  * File Name:   FSAE.h
  * Processor:   PIC18F46K80
- * Complier:    Microchip C18
+ * Compiler:    Microchip C18
  * Author:      George Schwieters
  * Created:     2014-2015
  */

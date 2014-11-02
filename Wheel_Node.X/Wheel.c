@@ -1,10 +1,9 @@
-
 /*
- *                  Wheel Node Main File
+ * Wheel Node Main File
  *
  * File Name:       Wheel.c
  * Processor:       PIC18F46K80
- * Complier:        Microchip C18
+ * Compiler:        Microchip C18
  * Version:         1.00
  * Author:          George Schwieters
  * Created:         2013-2014

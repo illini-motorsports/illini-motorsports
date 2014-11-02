@@ -8,6 +8,7 @@
  * Author:      George Schwieters
  * Created:     2014-2015
  */
+
 #ifndef MAIN_H
 #define MAIN_H
 

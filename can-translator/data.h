@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-07-28
+ * @date Modified: 2014-10-18
  */
 #ifndef DATA_H
 #define DATA_H
@@ -34,9 +34,10 @@ class AppData : public QObject {
      * Opens up a data file and iterates through it, converting the raw data
      * to a format that can be imported into Darab.
      *
+     * @params isVectorFile Whether the file to convert is in the Vector format.
      * @returns Whether the read was successful.
      */
-    bool readData();
+    bool readData(bool isVectorFile);
 
     /**
      * Prints all the channels to the output file.
@@ -95,6 +96,24 @@ class AppData : public QObject {
     vector< vector<double> > latestValues;
 
     /**
+     * Converts data from our custom uSD logging protocol. Opens up a data
+     * file and iterates through it, converting the raw data to a format that
+     * can be imported into Darab.
+     *
+     * @returns Whether the read was successful.
+     */
+    bool readDataCustom();
+
+    /**
+     * Converts data from the Vector logging protocol. Opens up a data
+     * file and iterates through it, converting the raw data to a format that
+     * can be imported into Darab.
+     *
+     * @returns Whether the read was successful.
+     */
+    bool readDataVector();
+
+    /**
      * Loops through the provided buffer and converts the data within into the
      * output format. As the data is converted, it is written to the output file.
      *
@@ -102,6 +121,14 @@ class AppData : public QObject {
      * @param length The length of the buffer. (Thanks c++).
      */
     void processBuffer(unsigned char * buffer, int length);
+
+    /**
+     * Takes a single line of input from a Vector log file, converts the data,
+     * and writes it to the output file.
+     *
+     * @param line The line of input from a Vector log file.
+     */
+    void processLine(QString line);
 };
 
 #endif // DATA_H
