@@ -346,7 +346,7 @@ bool timeout(){
             sleep(1);
         }
     }else{
-        if(millis - lastInterrupt < 100) //Does data come in every 100 milliseconds?
+        if(millis - lastInterrupt < recieveMsgInterval) //Does data come in every 100 milliseconds?
             return false;
         return true;
     }
