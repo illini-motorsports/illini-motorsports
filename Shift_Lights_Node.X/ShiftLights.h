@@ -85,6 +85,10 @@
 
 #define BLINK_TIME 200
 
+typedef char bool;
+#define false 0
+#define true 1
+
 /*
  * Method Headers
  */
@@ -93,5 +97,11 @@ void high_isr(void);
 void set_led_to_color(unsigned char led, unsigned char color);
 void set_all(unsigned char color);
 void set_lights(unsigned char max);
+void startup(int currentTime);
+void excess(int type);
+void checkVolts();
+int length(int array[]);
+void multi_led_color(int led[], unsigned char color);
+void sleep(int seconds);
 
 #endif

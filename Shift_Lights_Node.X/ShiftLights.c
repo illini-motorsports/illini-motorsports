@@ -104,13 +104,8 @@ volatile signed int oilTemp = 0;
 volatile signed int engineTemp = 0;
 volatile signed int batteryVoltage = 0;
 
-typedef enum {
-    true, false
-};
-#define true 1;
-#define false 0;
-typedef char bool;
-bool errorVolts = 0, errorRPM = 0, errorOilTemp = 0, errorEngineTemp = 0, changedErrorState;
+//Error Booleans
+bool errorVolts = false, errorRPM = false, errorOilTemp = false, errorEngineTemp = false, changedErrorState = false;
 
 // ECAN variables
 unsigned long id; // holds CAN msgID
@@ -191,27 +186,47 @@ void high_isr(void) {
  * Side Effects: Will modify various LAT bits.
  */
 void set_led_to_color(unsigned char led, unsigned char color) {
-    if(led == 0) {
-        RED0_LAT = color & RED ? 0 : 1;
-        GREEN0_LAT = color & GREEN ? 0 : 1;
-        BLUE0_LAT = color & BLUE ? 0 : 1;
-    } else if(led == 1) {
-        RED1_LAT = color & RED ? 0 : 1;
-        GREEN1_LAT = color & GREEN ? 0 : 1;
-        BLUE1_LAT = color & BLUE ? 0 : 1;
-    } else if(led == 2) {
-        RED2_LAT = color & RED ? 0 : 1;
-        GREEN2_LAT = color & GREEN ? 0 : 1;
-        BLUE2_LAT = color & BLUE ? 0 : 1;
-    } else if(led == 3) {
-        RED3_LAT = color & RED ? 0 : 1;
-        GREEN3_LAT = color & GREEN ? 0 : 1;
-        BLUE3_LAT = color & BLUE ? 0 : 1;
-    } else if(led == 4) {
-        RED4_LAT = color & RED ? 0 : 1;
-        GREEN4_LAT = color & GREEN ? 0 : 1;
-        BLUE4_LAT = color & BLUE ? 0 : 1;
+    switch(led){
+        case 0:
+            RED0_LAT = color & RED ? 0 : 1;
+            GREEN0_LAT = color & GREEN ? 0 : 1;
+            BLUE0_LAT = color & BLUE ? 0 : 1;
+            break;
+        case 1:
+            RED1_LAT = color & RED ? 0 : 1;
+            GREEN1_LAT = color & GREEN ? 0 : 1;
+            BLUE1_LAT = color & BLUE ? 0 : 1;
+            break;
+        case 2:
+            RED2_LAT = color & RED ? 0 : 1;
+            GREEN2_LAT = color & GREEN ? 0 : 1;
+            BLUE2_LAT = color & BLUE ? 0 : 1;
+            break;
+        case 3:
+            RED3_LAT = color & RED ? 0 : 1;
+            GREEN3_LAT = color & GREEN ? 0 : 1;
+            BLUE3_LAT = color & BLUE ? 0 : 1;
+            break;
+        case 4:
+            RED4_LAT = color & RED ? 0 : 1;
+            GREEN4_LAT = color & GREEN ? 0 : 1;
+            BLUE4_LAT = color & BLUE ? 0 : 1;
+            break;
+        default:
+            break;
     }
+}
+void multi_led_color(int led[], unsigned char color){
+    int size = length(led);
+    int count = 0;
+    while(count < size){
+        set_led_to_color(led[count], color);
+        count++;
+    }
+}
+
+int length(int array[]) { //Seen with "const"
+  return sizeof(array)/sizeof(int);
 }
 
 /*
@@ -276,7 +291,50 @@ void excess(int type) {
 
     }
 }
-
+void startup(int currentTime){
+    while(true){
+        //Moving in towards the center then back out and final blinks twice
+        if(millis - currentTime < BLINK_TIME){
+            //turn two outer lights to red
+            int temp[] = {0,4};
+            multi_led_color(temp,RED);
+        }else if(millis - currentTime < BLINK_TIME * 2){
+            //turn next outer two to red
+            int temp[] = {1,3};
+            multi_led_color(temp,RED);
+        }else if(millis - currentTime < BLINK_TIME * 3){
+            //turn middle light to red
+            set_led_to_color(2,RED);
+        }else if(millis - currentTime < BLINK_TIME * 4){
+            //turn middle to green light
+            set_led_to_color(2,GREEN);
+        }else if(millis - currentTime < BLINK_TIME * 5){
+            //turn next outer two green light
+            int temp[] = {1,3};
+            multi_led_color(temp,GREEN);
+        }else if(millis - currentTime < BLINK_TIME * 6){
+            //turn most outer two to green light
+            int temp[] = {0,4};
+            multi_led_color(temp,GREEN);
+        }else if(millis - currentTime < BLINK_TIME * 6){
+            //Blink twice
+            int count = 0;
+            while(count < 6){
+                if(count % 2 == 0){ //check if i is even or odd. This will cause a blinking action
+                   set_all(GREEN);
+                }else{
+                    set_all(NONE);
+                }
+                sleep(1);
+                count++;
+            }
+        }
+    }
+}
+void sleep(int seconds){
+    int start = millis;
+    while(millis - start < seconds*1000){}
+}
 void display() {
     if(changedErrorState) {
         if(errorRPM && (!errorOilTemp && !errorEngineTemp && !errorVolts)) {
@@ -301,126 +359,95 @@ void display() {
 
 void main(void) {
 
-    /*
-     * Variable Declarations
-     */
+    // Variable Declarations
+        unsigned int blink_tmr = 0;
 
-    unsigned int blink_tmr = 0;
+    //Oscillator Setup
+        init_oscillator();
 
-    /*
-     * Oscillator Setup
-     */
+    //Peripherals Setup
+        ANCON0 = 0x00; // Default all pins to digital
+        ANCON1 = 0x00; // Default all pins to digital
 
-    init_oscillator();
+        // Turn on and configure the TIMER1 oscillator
+        OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
+        WriteTimer0(0x82); // Load timer register
+        millis = 0; // Clear milliseconds count
+        INTCONbits.TMR0IE = 1; // Turn on timer0 interupts
 
-    /*
-     * Peripherals Setup
-     */
+        TRISCbits.TRISC6 = OUTPUT; // programmable termination
+        TERM_LAT = FALSE;
 
-    ANCON0 = 0x00; // Default all pins to digital
-    ANCON1 = 0x00; // Default all pins to digital
+        ECANInitialize(); // setup ECAN
 
-    // Turn on and configure the TIMER1 oscillator
-    OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-    WriteTimer0(0x82); // Load timer register
-    millis = 0; // Clear milliseconds count
-    INTCONbits.TMR0IE = 1; // Turn on timer0 interupts
+        // interrupts setup
+        INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
+        INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
+        RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
 
-    TRISCbits.TRISC6 = OUTPUT; // programmable termination
-    TERM_LAT = FALSE;
+        init_unused_pins();
 
-    ECANInitialize(); // setup ECAN
+        // Set LED pins as outputs.
+        RED0_TRIS = OUTPUT;
+        GREEN0_TRIS = OUTPUT;
+        BLUE0_TRIS = OUTPUT;
+        RED1_TRIS = OUTPUT;
+        GREEN1_TRIS = OUTPUT;
+        BLUE1_TRIS = OUTPUT;
+        RED2_TRIS = OUTPUT;
+        GREEN2_TRIS = OUTPUT;
+        BLUE2_TRIS = OUTPUT;
+        RED3_TRIS = OUTPUT;
+        GREEN3_TRIS = OUTPUT;
+        BLUE3_TRIS = OUTPUT;
+        RED4_TRIS = OUTPUT;
+        GREEN4_TRIS = OUTPUT;
+        BLUE4_TRIS = OUTPUT;
 
-    // interrupts setup
-    INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
-    INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
-    RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
+        // Default all LEDs to off.
+        RED0_LAT = 1;
+        GREEN0_LAT = 1;
+        BLUE0_LAT = 1;
+        RED1_LAT = 1;
+        GREEN1_LAT = 1;
+        BLUE1_LAT = 1;
+        RED2_LAT = 1;
+        GREEN2_LAT = 1;
+        BLUE2_LAT = 1;
+        RED3_LAT = 1;
+        GREEN3_LAT = 1;
+        BLUE3_LAT = 1;
+        RED4_LAT = 1;
+        GREEN4_LAT = 1;
+        BLUE4_LAT = 1;
 
-    init_unused_pins();
+    //Begin startup animation and RPM display
+        startup(millis); //nice startup animation
 
-    // Set LED pins as outputs.
-    RED0_TRIS = OUTPUT;
-    GREEN0_TRIS = OUTPUT;
-    BLUE0_TRIS = OUTPUT;
-    RED1_TRIS = OUTPUT;
-    GREEN1_TRIS = OUTPUT;
-    BLUE1_TRIS = OUTPUT;
-    RED2_TRIS = OUTPUT;
-    GREEN2_TRIS = OUTPUT;
-    BLUE2_TRIS = OUTPUT;
-    RED3_TRIS = OUTPUT;
-    GREEN3_TRIS = OUTPUT;
-    BLUE3_TRIS = OUTPUT;
-    RED4_TRIS = OUTPUT;
-    GREEN4_TRIS = OUTPUT;
-    BLUE4_TRIS = OUTPUT;
+        blink_tmr = millis;
+        while(1) {
 
-    // Default all LEDs to off.
-    RED0_LAT = 1;
-    GREEN0_LAT = 1;
-    BLUE0_LAT = 1;
-    RED1_LAT = 1;
-    GREEN1_LAT = 1;
-    BLUE1_LAT = 1;
-    RED2_LAT = 1;
-    GREEN2_LAT = 1;
-    BLUE2_LAT = 1;
-    RED3_LAT = 1;
-    GREEN3_LAT = 1;
-    BLUE3_LAT = 1;
-    RED4_LAT = 1;
-    GREEN4_LAT = 1;
-    BLUE4_LAT = 1;
-
-    /* Startup - Show full RED lights for a while before doing anything else.
-    blink_tmr = millis;
-    while(1) {
-      if(millis - blink_tmr < BLINK_TIME)
-        set_all(RED);
-      else if(millis - blink_tmr < BLINK_TIME * 2)
-        set_all(RGB);
-      else if(millis - blink_tmr < BLINK_TIME * 3)
-        set_all(BLUE);
-      else if(millis - blink_tmr < BLINK_TIME * 4)
-        set_all(RED);
-      else if(millis - blink_tmr < BLINK_TIME * 5)
-        set_all(RGB);
-      else if(millis - blink_tmr < BLINK_TIME * 6)
-        set_all(BLUE);
-      else if(millis - blink_tmr < BLINK_TIME * 7)
-        set_all(RED);
-      else if(millis - blink_tmr < BLINK_TIME * 8)
-        set_all(RGB);
-      else if(millis - blink_tmr < BLINK_TIME * 9)
-        set_all(BLUE);
-      else
-        break;
-    }*/
-
-    blink_tmr = millis;
-    while(1) {
-
-        // Sets certain lights to NONE or REV_COLOR based on rpm value.
-        if(rpm >= REV_RANGE_LIMIT) {
-            if(millis - blink_tmr < BLINK_TIME) {
-                set_all(REV_LIMIT_COLOR);
-            } else if(millis - blink_tmr < BLINK_TIME * 2) {
+            // Sets certain lights to NONE or REV_COLOR based on rpm value.
+            if(rpm >= REV_RANGE_LIMIT) {
+               if(millis - blink_tmr < BLINK_TIME) {
+                    set_all(REV_LIMIT_COLOR);
+               }else if(millis - blink_tmr < BLINK_TIME * 2) {
+                    set_all(NONE);
+               }else{
+                    blink_tmr = millis;
+               }
+            }else if(rpm >= REV_RANGE_5) {
+                set_lights(5);
+            }else if(rpm >= REV_RANGE_4) {
+                set_lights(4);
+            }else if(rpm >= REV_RANGE_3) {
+                set_lights(3);
+            }else if(rpm >= REV_RANGE_2) {
+                set_lights(2);
+            }else if(rpm >= REV_RANGE_1) {
+                set_lights(1);
+            }else{
                 set_all(NONE);
-            } else {
-                blink_tmr = millis;
             }
-        } else if(rpm >= REV_RANGE_5) {
-            set_lights(5);
-        } else if(rpm >= REV_RANGE_4) {
-            set_lights(4);
-        } else if(rpm >= REV_RANGE_3) {
-            set_lights(3);
-        } else if(rpm >= REV_RANGE_2) {
-            set_lights(2);
-        } else if(rpm >= REV_RANGE_1) {
-            set_lights(1);
-        } else {
-            set_all(NONE);
         }
-    }
 }
