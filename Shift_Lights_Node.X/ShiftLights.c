@@ -138,8 +138,7 @@ void high_vector(void) {
 #pragma interrupt high_isr
 
 void high_isr(void) {
-    //set last interrupt time
-    lastInterrupt = millis;
+    
 
     // Check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
@@ -150,6 +149,9 @@ void high_isr(void) {
 
     // Check for recieved CAN message.
     if(PIR5bits.RXB1IF) {
+        //set last interrupt time
+        lastInterrupt = millis;
+
         PIR5bits.RXB1IF = FALSE; // Reset the flag.
 
         // Get data from recieve buffer.
@@ -226,12 +228,11 @@ void set_led_to_color(unsigned char led, unsigned char color) {
             break;
     }
 }
-void multi_led_color(int led[], unsigned char color){
-    int size = length(led);
-    int count = 0;
-    while(count < size){
+void multi_led_color(int led[], unsigned char color, int size){
+    //int size = length(led);
+    int count;
+    for(count = 0; count < size; count++){
         set_led_to_color(led[count], color);
-        count++;
     }
 }
 
@@ -348,19 +349,25 @@ bool checkEngineTemp(){
           False(0) if the RPM isnt coming in anymore
  **If lastInterrupt is negative one that means nothing has coming yet** -> set time out error of 10 seconds
  */
-bool timeout(){
+bool timeout(bool shouldSleep){
     if(lastInterrupt == -1){
         int count = 0;
-        while(count < 10){ //timeout at 10 seconds if no data has come in at all
+        if(shouldSleep){
+            while(count < 5){ //timeout at 10 seconds if no data has come in at all
+                if(lastInterrupt != -1)
+                    return false;
+                sleep(1,1000);
+                count++;
+            }
+        }else{
             if(lastInterrupt != -1)
-               return false;
-            sleep(1);
+                return false;
         }
     }else{
         if(millis - lastInterrupt < recieveMsgInterval) //Does data come in every 100 milliseconds?
             return false;
-        return true;
     }
+    return true;
 }
 /*
  Description: Checks for any irregularities with the engine, oil, and battery.
@@ -378,11 +385,17 @@ void startup(int currentTime){
         if(millis - currentTime < BLINK_TIME){
             //turn two outer lights to red
             int temp[] = {0,4};
-            multi_led_color(temp,RED);
+            multi_led_color(temp,RED, 2);
+
+            //set_led_to_color(0,RED);
+            //set_led_to_color(4,RED);
         }else if(millis - currentTime < BLINK_TIME * 2){
             //turn next outer two to red
             int temp[] = {1,3};
-            multi_led_color(temp,RED);
+            multi_led_color(temp,RED, 2);
+
+            //set_led_to_color(1,RED);
+            //set_led_to_color(3,RED);
         }else if(millis - currentTime < BLINK_TIME * 3){
             //turn middle light to red
             set_led_to_color(2,RED);
@@ -392,61 +405,72 @@ void startup(int currentTime){
         }else if(millis - currentTime < BLINK_TIME * 5){
             //turn next outer two green light
             int temp[] = {1,3};
-            multi_led_color(temp,GREEN);
+            multi_led_color(temp,GREEN, 2);
+
+            //set_led_to_color(1,GREEN);
+            //et_led_to_color(3,GREEN);
         }else if(millis - currentTime < BLINK_TIME * 6){
             //turn most outer two to green light
             int temp[] = {0,4};
-            multi_led_color(temp,GREEN);
-        }else if(millis - currentTime < BLINK_TIME * 6){
+            multi_led_color(temp,GREEN, 2);
+
+            //set_led_to_color(0,GREEN);
+            //set_led_to_color(4,GREEN);
+        }else if(millis - currentTime < BLINK_TIME * 7){
             //Blink twice
             blink_all(2, GREEN);
+        }else{
+            set_all(NONE);
+            break;
         }
     }
 }
-void sleep(int seconds){
+void sleep(int seconds, int milliAmount){
     int start = millis;
-    while(millis - start < seconds*1000){}
+    while(millis - start < seconds*milliAmount){}
 }
 void blink_all(int numOfTimes, unsigned char color){
-    int count = 0, full = 0;
+    int count = 0, full = 1;
     while(count < numOfTimes){
-        while(full < 3){ //full blink
-            if(count % 2 == 0){ //check if i is even or odd. This will cause a blinking action
+        full = 1;
+        while(full <= 3){ //full blink
+            if(full % 2 == 0){ //check if i is even or odd. This will cause a blinking action
                 set_all(color);
             }else{
                 set_all(NONE);
             }
-            sleep(1);
+            sleep(1, 100);
             full++;
         }
         count++;
     }
 }
-void alternate_blink(int ledSet1[], unsigned char color1, int ledSet2[], unsigned char color2, int numOfTimes){
-    int count = 0, full = 0;
+void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes){
+    int count = 0, full = 1;
     while(count < numOfTimes){
-        while(full < 3){ //full blink
+        full = 1;
+        while(full <= 3){ //full blink
             if(count % 2 == 0){ //check if i is even or odd. This will cause a blinking action
-                multi_led_color(ledSet1, color1);
-                multi_led_color(ledSet2, NONE);
+                multi_led_color(ledSet1, color1, size1);
+                multi_led_color(ledSet2, NONE, size2);
             }else{
-                multi_led_color(ledSet1, NONE);
-                multi_led_color(ledSet2, color2);
+                multi_led_color(ledSet1, NONE, size1);
+                multi_led_color(ledSet2, color2, size2);
             }
-            sleep(1);
+            sleep(1,100);
             full++;
         }
         count++;
     }
     //end alternating blink
-    multi_led_color(ledSet1, NONE);
-    multi_led_color(ledSet2, NONE);
+    multi_led_color(ledSet1, NONE, size1);
+    multi_led_color(ledSet2, NONE, size2);
 }
 void display() {
-    if(timeout())
+    if(timeout(true))
         errorDisplay(1);
     while(true){
-        if(timeout() || !checkStatus()){
+        if(timeout(false) || !checkStatus()){
             //No messages coming anymore.
             errorDisplay(0);
         }else{
@@ -474,18 +498,20 @@ void errorDisplay(int error){
     switch(error){
         case 0:
             //General Error
-            while(timeout() || !checkStatus()){
+            while(true){
                 int ledSet1[] = {0,2,4};
                 int ledSet2[] = {1,3};
-                alternate_blink(ledSet1, RED_BLUE, ledSet2, GREEN_BLUE, 2); //blink twice then check to see if error still exists
+                alternate_blink(ledSet1, 3, RED_BLUE, ledSet2, 2, GREEN_BLUE, 2); //blink twice then check to see if error still exists
+                if(!timeout(false) || checkStatus())
+                    return;
             }
-            break;
         case 1:
             //No messages have coming in initally
-            while(timeout()){
-                blink_all(2, RED);
+            while(true){
+                blink_all(2,RED);
+                if(!timeout(false))
+                    return;
             }
-            break;
         default:
             break;
     }
