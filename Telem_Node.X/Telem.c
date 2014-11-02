@@ -164,7 +164,7 @@ void high_isr(void) {
     }
     //if more than 500 ms have passed then send error message
     if(millis - lastMsgTime > 500) {
-        send_msg(ERROR);
+        send_msg(ERROR,0);
     }
 
     // check for recieved CAN message
@@ -177,9 +177,9 @@ void high_isr(void) {
     }
 
     if(millis % ADDR_PER)
-        send_msg(ADDR);
+        send_msg(ADDR,-1);
     if(millis % DATA_PER)
-        send_msg(DATA);
+        send_msg(DATA,-1);
 
     return;
 }
@@ -336,7 +336,7 @@ void write(BYTE data) {
 
  *********************************************************************************/
 
-void send_msg(BYTE type) {
+void send_msg(BYTE type,unsigned int errorType) {
 
     BYTE i;
 
@@ -362,8 +362,16 @@ void send_msg(BYTE type) {
             msg[i + 4] = chan_addr[i];
         }
     } else if(type == ERROR) {
-        for(i = 0; i < msg[3]; i++)
-            msg[i + 4] = 0xff;
+        if(errorType == SIGNAL)
+        {
+            for(i = 0; i < msg[3]; i++)
+                msg[i + 4] = 0x00;
+        }
+        else if(errorType == CAN)
+        {
+            for(i = 0; i < msg[3]; i++)
+                msg[i + 4] = 0xFF;
+        }
     }
     // add message counter bytes
     msg[4 + msg[3] + 0] = ((BYTE*) & msg_counter)[3];

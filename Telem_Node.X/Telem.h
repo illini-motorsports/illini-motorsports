@@ -43,6 +43,9 @@
 #define ADDR        0x02
 #define ERROR       0x03
 
+#define SIGNAL      0
+#define CAN         1
+
 #define DATA_PER    1000
 #define ADDR_PER    10000
 
@@ -67,7 +70,7 @@
 
 void high_isr(void);
 void write(BYTE data);
-void send_msg(BYTE type);
+void send_msg(BYTE type,unsigned int errorType);
 void send(BYTE num);
 void bufferData(void);
 

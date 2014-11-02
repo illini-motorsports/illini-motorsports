@@ -29,6 +29,7 @@ using std::vector;
 
 #define DATA    0x01
 #define ADDR    0x02
+#define ERROR   0x03
 
 #define INITIAL_REMAINDER 0xFFFFFFFF
 
