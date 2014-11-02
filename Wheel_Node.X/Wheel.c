@@ -104,7 +104,7 @@ ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
 static volatile int chan[NUM_CHAN];
 static volatile int gear;
 static int CANerror_flag;
-static int error_id;
+static int error_flag[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
 
 static const unsigned char d_place_arr[NUM_CHAN] = {
     2, // oil temperature
@@ -170,6 +170,7 @@ void high_isr(void) {
 
 
         bufferData(); // put data in an array
+        checkRangeError(); //checks range and sets flags
     }
 
     return;
@@ -202,7 +203,7 @@ void main(void) {
             bounceTimer[RIGHT] = millis;
     CANint_tmr = millis;
     CANerror_flag = 0;
-    error_id = -1;
+    error_flag;
 
     displayStates[LEFT] = OIL_T;
     displayStates[RIGHT] = ENGINE_T;
@@ -269,15 +270,6 @@ void main(void) {
             CANerror_flag = 0;
         }
 
-        error_id = checkRangeError();
-/*
-        if(error_id != -1){
-            //CANerror_flag = 1;
-        }
-        else{
-            //CANerror_flag = 0;
-        }
-*/
         // check for change in button state
         if(cycleStates[LEFT] != CYCLE_L & millis - bounceTimer[LEFT] > BOUNCE_TIME) {
             // save new state
@@ -590,7 +582,7 @@ void updateDisp(unsigned char side) {
         }
     }        // data is being displayed
     else {
-        if(error_id != -1 && millis - refreshTime[side] > REFRESH_TIME) {
+        if(error_flag[displayStates[side]] == 1 && millis - refreshTime[side] > REFRESH_TIME) {
             refreshTime[side] = millis;
             //consider turning this into an updateText call
             if(!side) {
@@ -654,40 +646,52 @@ void bufferData(void) {
  *  void checkRangeError(void)
  *
  *  Description:   This checks the values of all readings,  making sure they
- *                  are in range and sending error info if not.
+ *                  are in range and settng error flag if not.
  *
  *  Input(s):
- *  Return Value(s): id of system causing an error, -1 if no error
- *  Side Effects: None
+ *  Return Value(s):
+ *  Side Effects: sets error flags for each channel
  */
-int checkRangeError(void) {
+void checkRangeError(void) {
     if(id == MOTEC_ID) {
         if(chan[RPM] > RPM_MAX || chan[RPM] < RPM_MIN){
-            return RPM;
+            error_flag[RPM] = 1;
+        } else{
+            error_flag[RPM] = 0;
         }
 
         if(chan[OIL_P] > OIL_P_MAX || chan[OIL_P] < OIL_P_MIN){
-            return OIL_P;
+            error_flag[OIL_P] = 1;
+        } else{
+            error_flag[OIL_P] = 0;
         }
         
         if(chan[OIL_T] > OIL_T_MAX || chan[OIL_T] < OIL_T_MIN){
-            return OIL_T;
+            error_flag[OIL_T] = 1;
+        } else{
+            error_flag[OIL_T] = 0;
         }
 
     } else if(id == MOTEC_ID + 1) {
         if(chan[VOLTAGE] > VOLTAGE_MAX || chan[VOLTAGE] < VOLTAGE_MIN){
-            return VOLTAGE;
+            error_flag[VOLTAGE] = 1;
+        } else{
+            error_flag[VOLTAGE] = 0;
         }
 
         if(chan[ENGINE_T] > ENGINE_T_MAX || chan[ENGINE_T] < ENGINE_T_MIN){
-            return ENGINE_T;
+            error_flag[ENGINE_T] = 1;
+        } else{
+            error_flag[ENGINE_T] = 0;
         }
     } else if(id == MOTEC_ID + 4) {
         if(chan[SPEED] > SPEED_MAX || chan[SPEED] < SPEED_MIN){
-            return SPEED;
+            error_flag[SPEED] = 1;
+        } else{
+            error_flag[SPEED] = 0;
         }
     }
-    return -1;
+    return;
 }
 
 /*
