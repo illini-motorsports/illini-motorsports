@@ -104,5 +104,17 @@ void checkVolts();
 int length(int array[]);
 void multi_led_color(int led[], unsigned char color);
 void sleep(int seconds);
+bool checkStatus();
+bool timeout();
+bool checkEngineTemp();
+bool checkOilTemp();
+bool checkOilPressure();
+bool checkBatteryVolts();
+bool lastAccessWithinMsgInterval(int i);
+void blink_all(int numOfTimes, unsigned char color);
+void alternate_blink(int ledSet1[], unsigned char color1, int ledSet2[], unsigned char color2, int numOfTimes);
+void display();
+void errorDisplay(int error);
+
 
 #endif
