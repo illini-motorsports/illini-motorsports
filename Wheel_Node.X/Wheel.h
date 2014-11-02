@@ -59,6 +59,22 @@
 #define REFRESH_TIME    150
 #define BOUNCE_TIME     100
 #define CAN_PER         200
+#define CAN_RECIEVE_MAX  2000
+
+//data reading limits
+//TODO
+#define RPM_MAX         14000
+#define RPM_MIN             0
+#define OIL_P_MAX
+#define OIL_P_MIN
+#define OIL_T_MAX
+#define OIL_T_MIN
+#define ENGINE_T_MAX
+#define ENGINE_T_MIN
+#define VOLTAGE_MAX
+#define VOLTAGE_MIN
+#define SPEED_MAX
+#define SPEED_MIN
 
 // data channel indicies
 #define OIL_T       0
@@ -67,8 +83,8 @@
 #define OIL_P       3
 #define SPEED       4
 #define RPM         5
-#define CANERR1         6   //***EL
-#define CANERR2         7   //***EL
+#define CANERR1     6   
+#define CANERR2     7   
 
 // addresses for display driver
 #define NO_OP       0x00
@@ -155,7 +171,8 @@ void write_num(int data, unsigned char d_place, unsigned char side);
 void blank_display(unsigned char side);
 void write_gear(unsigned char gear);
 void driver_write(unsigned char addr, unsigned char data);
-void write_CANerror(void); //***EL
+void write_CANerror(void);
+int checkRangeError(void);
 void high_isr(void);
 void bufferData(void);
 void ADLsample(unsigned char *data, const unsigned char ADLoffset,

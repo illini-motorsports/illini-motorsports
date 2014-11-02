@@ -49,6 +49,8 @@ class AppDisplay : public QWidget {
      */
     void updateData(unsigned char msgId, double data);
 
+    void errorMessage(bool hasError);
+
     void updateMessageCounter(unsigned int num);
 
     void updateDropCounter(unsigned int num);

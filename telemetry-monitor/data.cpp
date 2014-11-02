@@ -130,6 +130,15 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
                     channelAddr[i] = read_Data[i + 4];
                 }
             }
+            else if(type == ERROR) {
+                // resize the address vector if necessary
+                if(channelAddr.empty() || channelAddr.size() != num)
+                    channelAddr.resize(num);
+                // get addresses
+                for(int i = 0; i < num; i++)
+                    channelAddr[i] = read_Data[i + 4];
+                display.errorMessage(true);
+            }
         }
 
         // clean up now that we're done

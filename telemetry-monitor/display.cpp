@@ -58,6 +58,7 @@ AppDisplay::AppDisplay(QWidget* parent) : QWidget(parent) {
 
   lbl_stats_right_title = new QLabel("Dropped Messages");
   lbl_stats_right_title->setFont(font_stats_title);
+  lbl_stats_right_title->setStyleSheet("QLabel { background-color: yellow; }");
   lbl_stats_right_title->setAlignment(Qt::AlignCenter);
   layout_stats_right->addWidget(lbl_stats_right_title, 3);
 
@@ -225,6 +226,13 @@ void AppDisplay::updateData(unsigned char msgId, double data) {
   }
 }
 
+void AppDisplay::errorMessage(bool hasError) {
+    if(hasError)
+        lbl_stats_right_title->setStyleSheet("QLabel { background-color: red; }");
+    else
+        lbl_stats_right_title->setStyleSheet("QLabel { background-color: green; }");
+}
+
 void AppDisplay::updateMessageCounter(unsigned int data) {
   lbl_stats_left_data->setText(QString::number(data));
 }
@@ -254,6 +262,12 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
   // Quits the application.
   if(e->text() == "q") {
     onQuit();
+  }
+  if(e->text() == "g") {
+      errorMessage(false);
+  }
+  if(e->text() == "r") {
+      errorMessage(true);
   }
 }
 
