@@ -107,7 +107,7 @@ volatile signed int lastInterrupt = -1;
 
 volatile signed int lastRPMAccess = -1,
         lastOilPressureAccess = -1, lastOilTempAccess = -1, lastEngineTempAccess = -1, lastVoltageAccess = -1;
-int recieveMsgInterval = 100; //milliseconds?
+volatile signed int recieveMsgInterval = 500; //milliseconds?
 
 
 // ECAN variables
@@ -312,7 +312,14 @@ bool checkBatteryVolts(){
           False(0) if oil pressure below the threshold.
  */
 bool checkOilPressure(){
-    return true;
+    if(lastOilPressureAccess == -1 || !lastAccessWithinMsgInterval(2) || !lastAccessWithinMsgInterval(1)){
+        return false;
+    }else if(rpm > RPM_THRESHOLD_H && oilPressure < OP_THRESHOLD_H){
+        return false;
+    }else if(rpm > RPM_THRESHOLD_L && oilPressure < OP_THRESHOLD_L){
+        return false;
+    }else
+        return true;
 }
 /*
  Function checks the oil temp.
@@ -320,6 +327,8 @@ bool checkOilPressure(){
           False(0) if the oil temp is below the threshold.
  */
 bool checkOilTemp(){
+    if(lastOilTempAccess == -1 || !lastAccessWithinMsgInterval(3) || oilTemp <= OT_THRESHOLD)
+        return false;
     return true;
 }
 /*
@@ -328,6 +337,8 @@ bool checkOilTemp(){
           False(0) if the engine temp is below the threshold.
  */
 bool checkEngineTemp(){
+    if(lastEngineTempAccess == -1 || !lastAccessWithinMsgInterval(4) || engineTemp <= ET_THRESHOLD)
+        return false;
     return true;
 }
 /*

@@ -84,6 +84,13 @@
 #define REV_COLOR       BLUE
 #define REV_LIMIT_COLOR RED
 
+#define OP_THRESHOLD_L 160
+#define OP_THRESHOLD_H 250
+#define OT_THRESHOLD 2100
+#define ET_THRESHOLD 1150
+#define RPM_THRESHOLD_H 4000
+#define RPM_THRESHOLD_L 1000
+
 #define BLINK_TIME 200
 
 typedef char bool;
