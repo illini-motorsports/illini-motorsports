@@ -104,6 +104,7 @@ ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
 static volatile int chan[NUM_CHAN];
 static volatile int gear;
 static int CANerror_flag;
+static int error_id;
 
 static const unsigned char d_place_arr[NUM_CHAN] = {
     2, // oil temperature
@@ -186,7 +187,7 @@ void main(void) {
     unsigned char cycleStates[2], intensity;
     unsigned int bounceTimer[2];
     unsigned int CAN_tmr;
-    unsigned long CANTRANSMISSIONRATE = 20000;
+   
 
     /*
      * Variable Initialization
@@ -201,6 +202,7 @@ void main(void) {
             bounceTimer[RIGHT] = millis;
     CANint_tmr = millis;
     CANerror_flag = 0;
+    error_id = -1;
 
     displayStates[LEFT] = OIL_T;
     displayStates[RIGHT] = ENGINE_T;
@@ -258,12 +260,24 @@ void main(void) {
     while(1) {
 
         //Check that can is sending messages
-        if(millis - CANint_tmr > CANTRANSMISSIONRATE) //CANTRANSMISSIONRATE is a placeholder for the expected CAN data update rate.
+        if(millis - CANint_tmr > CAN_RECIEVE_MAX)
         {
             write_CANerror();
             CANerror_flag = 1;
         }
+        else{
+            CANerror_flag = 0;
+        }
 
+        error_id = checkRangeError();
+/*
+        if(error_id != -1){
+            //CANerror_flag = 1;
+        }
+        else{
+            //CANerror_flag = 0;
+        }
+*/
         // check for change in button state
         if(cycleStates[LEFT] != CYCLE_L & millis - bounceTimer[LEFT] > BOUNCE_TIME) {
             // save new state
@@ -275,8 +289,9 @@ void main(void) {
                     displayStates[LEFT] = 0;
                 // put the appropriate text on the displays and
                 // get the current time for timing logic
-                if(CANerror_flag != 1);
-                updateText(LEFT, displayStates);
+                if(CANerror_flag != 1){
+                    updateText(LEFT, displayStates);
+                }
                 holdText[LEFT] = TRUE;
                 blinkTimer[LEFT] = holdTimer[LEFT] = millis;
             }
@@ -432,12 +447,7 @@ void write_CANerror(void) {
     driver_write(DIG3, text_arr[CANERR2][0]);
     driver_write(DIG4, text_arr[CANERR2][1]);
     driver_write(DIG5, text_arr[CANERR2][2]);
-    ///////////////////////
-    //code for LED indicator
-    //
-    //
-    //
-    ///////////////////////
+
     return;
 }
 
@@ -580,7 +590,22 @@ void updateDisp(unsigned char side) {
         }
     }        // data is being displayed
     else {
-        if(millis - refreshTime[side] > REFRESH_TIME) {
+        if(error_id != -1 && millis - refreshTime[side] > REFRESH_TIME) {
+            refreshTime[side] = millis;
+            //consider turning this into an updateText call
+            if(!side) {
+                // send out characters one at a time
+                driver_write(DIG2, text_arr[CANERR1][0]);
+                driver_write(DIG1, text_arr[CANERR1][1]);
+                driver_write(DIG0, text_arr[CANERR1][2]);
+            } else {
+                driver_write(DIG3, text_arr[CANERR1][0]);
+                driver_write(DIG4, text_arr[CANERR1][1]);
+                driver_write(DIG5, text_arr[CANERR1][2]);
+            }
+
+    }
+    else if(millis - refreshTime[side] > REFRESH_TIME) {
             refreshTime[side] = millis;
             write_num(chan[displayStates[side]], d_place_arr[displayStates[side]], side);
         }
@@ -590,10 +615,10 @@ void updateDisp(unsigned char side) {
 }
 
 /*
- *  void updateDisp(unsigned char side)
+ *  void bufferData(void)
  *
- *  Description:    This will determine what should be displayed on the displays
- *                  based on timers.
+ *  Description:    This interprets the CAN message nd writes it to the buffer.
+ *
  *  Input(s): none
  *  Return Value(s): none
  *  Side Effects: The chan and gear variables will be modified.
@@ -622,6 +647,47 @@ void bufferData(void) {
     }
 
     return;
+}
+
+
+/*
+ *  void checkRangeError(void)
+ *
+ *  Description:   This checks the values of all readings,  making sure they
+ *                  are in range and sending error info if not.
+ *
+ *  Input(s):
+ *  Return Value(s): id of system causing an error, -1 if no error
+ *  Side Effects: None
+ */
+int checkRangeError(void) {
+    if(id == MOTEC_ID) {
+        if(chan[RPM] > RPM_MAX || chan[RPM] < RPM_MIN){
+            return RPM;
+        }
+
+        if(chan[OIL_P] > OIL_P_MAX || chan[OIL_P] < OIL_P_MIN){
+            return OIL_P;
+        }
+        
+        if(chan[OIL_T] > OIL_T_MAX || chan[OIL_T] < OIL_T_MIN){
+            return OIL_T;
+        }
+
+    } else if(id == MOTEC_ID + 1) {
+        if(chan[VOLTAGE] > VOLTAGE_MAX || chan[VOLTAGE] < VOLTAGE_MIN){
+            return VOLTAGE;
+        }
+
+        if(chan[ENGINE_T] > ENGINE_T_MAX || chan[ENGINE_T] < ENGINE_T_MIN){
+            return ENGINE_T;
+        }
+    } else if(id == MOTEC_ID + 4) {
+        if(chan[SPEED] > SPEED_MAX || chan[SPEED] < SPEED_MIN){
+            return SPEED;
+        }
+    }
+    return -1;
 }
 
 /*
