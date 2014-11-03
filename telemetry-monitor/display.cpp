@@ -7,6 +7,7 @@
  * @date Modified: 2014-05-19
  */
 #include "display.h"
+#include <QDebug>
 
 AppDisplay::AppDisplay(QWidget* parent) : QWidget(parent) {
   this->resize(WIDTH, HEIGHT);
@@ -156,6 +157,8 @@ AppDisplay::AppDisplay(QWidget* parent) : QWidget(parent) {
     bars_bar[i]->setMaximum(messages.at(bar_ids[i]).maxBar);
     layouts_bar[i]->addWidget(bars_bar[i], 4);
   }
+  timer = new QTimer(this);
+  connect(timer, SIGNAL(timeout()), this, SLOT(outOfRange()));
 
   /*
    * Connects the error signal from the serial port to the handleError()
@@ -227,10 +230,14 @@ void AppDisplay::updateData(unsigned char msgId, double data) {
 }
 
 void AppDisplay::errorMessage(bool hasError) {
-    if(hasError)
+    if(hasError) {
         lbl_stats_right_title->setStyleSheet("QLabel { background-color: red; }");
-    else
+        lbl_stats_left_title->setStyleSheet("QLabel { background-color: red; }");
+    }
+    else {
         lbl_stats_right_title->setStyleSheet("QLabel { background-color: green; }");
+        lbl_stats_left_title->setStyleSheet("QLabel { background-color: green; }");
+    }
 }
 
 void AppDisplay::updateMessageCounter(unsigned int data) {
@@ -273,6 +280,12 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
 
 void AppDisplay::readData() {
   data.readData(*serialPort, *this);
+  timer->start(500);
+}
+
+void AppDisplay::outOfRange() {
+    qDebug() << "out of range";
+  lbl_stats_left_title->setStyleSheet("QLabel { background-color: red; }");
 }
 
 void AppDisplay::handleError(QSerialPort::SerialPortError error) {

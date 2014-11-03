@@ -21,6 +21,7 @@
 #include <QFont>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
+#include <QTimer>
 #include "config.h"
 #include "data.h"
 
@@ -64,6 +65,7 @@ class AppDisplay : public QWidget {
 
   private slots:
     void readData();
+    void outOfRange();
     void handleError(QSerialPort::SerialPortError error);
     void onQuit();
 
@@ -110,6 +112,8 @@ class AppDisplay : public QWidget {
     QLabel* lbls_bar_title[NUM_BARS];
     QLabel* lbls_bar_data[NUM_BARS];
     QProgressBar* bars_bar[NUM_BARS];
+
+    QTimer* timer;
 };
 
 #endif // APP_DISPLAY_H

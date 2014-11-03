@@ -108,7 +108,7 @@
 /***********************************************/
 
 volatile int millis; // holds timer0 rollover count
-volatile int lastMsgTime; //time of the last message sent by the CAN
+volatile int lastMsgTime = 0; //time of the last message sent by the CAN
 
 unsigned long msg_counter;
 unsigned long crc32;
@@ -162,10 +162,7 @@ void high_isr(void) {
         WriteTimer0(0x85); // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
-    //if more than 500 ms have passed then send error message
-    if(millis - lastMsgTime > 500) {
-        send_msg(ERROR,0);
-    }
+    
 
     // check for recieved CAN message
     if(PIR5bits.RXB1IF) {
@@ -176,10 +173,17 @@ void high_isr(void) {
         bufferData(); // put data in an array
     }
 
-    if(millis % ADDR_PER)
-        send_msg(ADDR,-1);
-    if(millis % DATA_PER)
-        send_msg(DATA,-1);
+    //if more than 500 ms have passed then send error message
+    if(millis - lastMsgTime > 500) {
+        send_msg(ERROR,0);
+    }
+    else
+    {
+        if(millis % ADDR_PER)
+            send_msg(ADDR,-1);
+        if(millis % DATA_PER)
+            send_msg(DATA,-1);
+    }
 
     return;
 }
@@ -349,7 +353,7 @@ void send_msg(BYTE type,unsigned int errorType) {
     else if(type == ADDR)
         msg[3] = NUM_MSG;
     else if(type == ERROR)
-        msg[3] = ERROR;
+        msg[3] = 1;
     // send message bytes
     if(type == DATA) {
         // add data now
