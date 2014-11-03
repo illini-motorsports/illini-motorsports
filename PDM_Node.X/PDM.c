@@ -92,10 +92,11 @@ static volatile int millis; // Holds timer0 rollover count
 static int peak_tmr[NUM_LOADS - NON_INDUCTIVE];
 static int err_tmr[NUM_LOADS];
 static int PRIME_tmr;
+static int CAN_tmr;
 
 // Car data variables
 static volatile unsigned int FAN_SW; // Holds state of fan switch on steering wheel
-static volatile int water_temp, oil_temp, oil_press, rpm;
+static volatile signed int water_temp, oil_temp, oil_press, rpm, voltage;
 
 // ECAN variables
 static unsigned long id; // holds CAN msgID
@@ -152,9 +153,8 @@ void high_vector(void) {
  *  Reaturn Value(s): none
  *  Side Effects: This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
  *                global variables along with the millis, oil_temp, water_temp,
- *                oil_press, rpm, and FAN_SW variables.
+ *                oil_press, rpm, voltage, and FAN_SW variables.
  */
-
 #pragma interrupt high_isr
 
 void high_isr(void) {
@@ -162,46 +162,51 @@ void high_isr(void) {
     // Check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
         INTCONbits.TMR0IF = 0;
-        TMR0L = TMR0_RELOAD; // load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
+        TMR0L = TMR0_RELOAD; // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
 
     // Check for recieved CAN message
     if(PIR5bits.RXB1IF) {
         // Reset the flag
-        PIR5bits.RXB1IF = FALSE;
+        PIR5bits.RXB1IF = 0;
 
-        // Get data from receive buffer.
+        // Get data from receive buffer
         ECANReceiveMessage(&id, data, &dataLen, &flags);
 
-        if(id == ENGINE_TEMP_ID) {
-            ((unsigned char*) &water_temp)[0] = data[ENGINE_TEMP_BYTE + 1];
-            ((unsigned char*) &water_temp)[1] = data[ENGINE_TEMP_BYTE];
-        }
-        if(id == OIL_TEMP_ID) {
-            ((unsigned char*) &oil_temp)[0] = data[OIL_TEMP_BYTE + 1];
-            ((unsigned char*) &oil_temp)[1] = data[OIL_TEMP_BYTE];
-        }
-        if(id == OIL_PRESS_ID) {
-            ((unsigned char*) &oil_press)[0] = data[OIL_PRESS_BYTE + 1];
-            ((unsigned char*) &oil_press)[1] = data[OIL_PRESS_BYTE];
-        }
-        if(id == RPM_ID) {
-            ((unsigned char*) &rpm)[0] = data[RPM_BYTE + 1];
-            ((unsigned char*) &rpm)[1] = data[RPM_BYTE];
-        }
-        if(id == FAN_SW_ID) {
-            if(data[0] == FAN_SW_ADL_ID) {
-                FAN_SW = data[FAN_SW_BYTE];
-            }
+        switch(id) {
+            case ENGINE_TEMP_ID: // VOLTAGE_ID
+                ((unsigned char*) &water_temp)[0] = data[ENGINE_TEMP_BYTE + 1];
+                ((unsigned char*) &water_temp)[1] = data[ENGINE_TEMP_BYTE];
+
+                ((unsigned char*) &voltage)[0] = data[VOLTAGE_BYTE + 1];
+                ((unsigned char*) &voltage)[1] = data[VOLTAGE_BYTE];
+                break;
+            case OIL_TEMP_ID: // OIL_PRESS_ID, RPM_ID
+                ((unsigned char*) &oil_temp)[0] = data[OIL_TEMP_BYTE + 1];
+                ((unsigned char*) &oil_temp)[1] = data[OIL_TEMP_BYTE];
+
+                ((unsigned char*) &oil_press)[0] = data[OIL_PRESS_BYTE + 1];
+                ((unsigned char*) &oil_press)[1] = data[OIL_PRESS_BYTE];
+
+                ((unsigned char*) &rpm)[0] = data[RPM_BYTE + 1];
+                ((unsigned char*) &rpm)[1] = data[RPM_BYTE];
+                break;
+            case FAN_SW_ID:
+                if(data[0] == FAN_SW_ADL_ID) {
+                    FAN_SW = data[FAN_SW_BYTE];
+                }
+                break;
         }
     }
 }
 
 void main(void) {
 
+    // init_unused_pins();       // There are no unused pins!!!
+
     /*
-     * Variable Declarations
+     * Variable Declarations and Initialization
      */
 
 #ifdef PARANOID_MODE
@@ -210,38 +215,42 @@ void main(void) {
     int water_temp_tmr = 0;
 #endif
 
-    int CAN_tmr = 0;
     Error_Status STATUS;
-    unsigned char AUTO_FAN;
+
+    unsigned char AUTO_FAN = 0;
     unsigned char PRIME = 1;
     unsigned char ON = 0;
+
     unsigned char i;
+
     unsigned char err_count[NUM_LOADS];
     unsigned int current[NUM_LOADS + 2];
 
-    // init_unused_pins();       // There are no unused pins!!!
-
-    /*
-     * Variable Initialization
-     */
-
     // Clear error count and peak timers for all loads
-    for(i = 0; i < NUM_LOADS; i++) {
-        err_count[i] = 0;
-        err_tmr[i] = 0;
+    for(i = 0; i < NUM_LOADS + 2; i++) {
+        current[i] = 0;
+        if(i < NUM_LOADS) {
+            err_count[i] = 0;
+            err_tmr[i] = 0;
+        }
         if(i < NUM_LOADS - NON_INDUCTIVE) {
             peak_tmr[i] = 0;
         }
     }
 
     // Clear variables
+    millis = 0;
     PRIME_tmr = 0;
+    CAN_tmr = 0;
+
     STATUS.bits = 0;
-    rpm = 0;
+
+    FAN_SW = 0;
     water_temp = 0;
     oil_temp = 0;
     oil_press = 0;
-    FAN_SW = 0;
+    rpm = 0;
+    voltage = 0;
 
     /*
      * Peripheral Initialization
@@ -303,10 +312,10 @@ void main(void) {
     ECU_LAT = PWR_ON;
     PCB_LAT = PWR_ON;
 
-    TRISCbits.TRISC5 = OUTPUT; // relay input
-    TERM_LAT = PWR_OFF;
+    TRISCbits.TRISC5 = OUTPUT; // Relay input
+    TERM_LAT = PWR_OFF; // Not terminating
 
-    ECANInitialize(); // setup ECAN
+    ECANInitialize(); // Setup ECAN
 
     // Interrupts setup
     RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
@@ -317,6 +326,61 @@ void main(void) {
      */
 
     while(1) {
+
+        /*
+         * Current
+         * =======
+         * Check out-of-range values (paranoid mode)
+         * Set AUTO_FAN
+         * Set ON
+         * Set PRIME
+         * Turn on loads and start peak timers for inductive loads. Ignore
+         *     loads which are in an overcurrent state.
+         * Turn off loads and clear error count
+         * Switch to transient for inductive loads if enough time has passed
+         * Turn on previously overcurrented loads if enough time has passed
+         *    and the error count is small enough
+         * Sample current
+         * Scale current
+         * Turn off loads if overcurrenting?????
+         * Send out current data on CAN
+         */
+
+        /*
+         * New
+         * ===
+         * Set ON
+         * Set AUTO_FAN
+         * Set PRIME
+         * Check out-of-range values from below. This could cause some
+         *     conditions to be overrided or the car to be killed.
+         * Power on or off loads depending on external conditions. If powering
+         *     on, start peak timers for inductive loads and ignore loads which
+         *     are in an overcurrent state. If powering off, clear error count.
+         * If enough time has passed, switch to transient current limit for
+         *     inductive loads.
+         * If enough time has passed and successive error count is small enough,
+         *     turn on loads which were previously overcurrenting. Do not
+         *     override important condtiions from the error checks above.
+         * Detect if an overcurrent condition is occuring, and power off the
+         *     loads if one is detected. Also set the correct STATUS bit and
+         *     update the error timer.
+         * Sample current
+         * Scale current
+         * Send out current data on CAN
+         *
+         * out-of-range
+         * ------------
+         * Check voltage < voltage_crit for crit_wait millis
+         * Check voltage < voltage_low for low_wait millis
+         * Check no CAN for CAN_wait millis
+         * Check no CAN for CAN_wait_crit millis
+         * Check high oil_temp for low_wait millis
+         * Check high engine_temp for low_wait millis
+         * Check oil_temp > oil_temp_crit for crit_wait millis
+         * Check engine_temp > engine_temp_crit for engine_temp_wait millis
+         * Check oil_press < oil_press_crit for crit_wait millis
+         */
 
 #ifdef PARANOID_MODE
         // stay here during extreme conditions caused by oil pressure, oil temperature or water temperature
@@ -333,7 +397,7 @@ void main(void) {
         checkWaterTemp(&AUTO_FAN);
 
         // Check if car's engine is on
-        ON = rpm > ON_THRESHOLD;
+        ON = rpm > RPM_ON_THRESHOLD;
 
         // Determine how long the fuel pump should be left on
         if(!ON_SW_PORT) {
@@ -603,7 +667,7 @@ void main(void) {
 #endif
 
         // Send out the current data
-        if(millis - CAN_tmr > CAN_PER) {
+        if(millis - CAN_tmr > CAN_PERIOD) {
             CAN_tmr = millis;
             ECANSendMessage(PDM_ID, (unsigned char *) current, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
