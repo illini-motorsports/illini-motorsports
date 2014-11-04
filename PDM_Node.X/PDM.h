@@ -38,7 +38,6 @@
 #define ERROR_WAIT 500
 #define ERROR_LIMIT 4
 #define ERROR_RESET 120000
-#define CAN_PER 500
 
 // error conditions
 #define OP_THRESHOLD_L 160      // 16.0
@@ -47,9 +46,10 @@
 #define ET_THRESHOLD 1150       // 115.0
 #define RPM_THRESHOLD_H 4000    // 4,000
 #define RPM_THRESHOLD_L 1000    // 1,000
+#define VOLTAGE_THRESHOLD 1250  // 12.5
 
 // for RPM
-#define ON_THRESHOLD 600
+#define RPM_ON_THRESHOLD 600
 
 #define MIN_MA_OVERCURRENT 50
 

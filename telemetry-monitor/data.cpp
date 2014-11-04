@@ -64,7 +64,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
         // check for header
         if((unsigned char)read_Data[0] == 0x80 && (unsigned char)read_Data[1] == 0x81 && (unsigned char)read_Data[2] == 0x82) {
             // get number of bytes to read
-            num = read_Data[3];
+            num = read_Data[3];          
         }
         else {
             // something is wrong restart
@@ -115,6 +115,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
                 read_Data[4 + num + 4 + 1 + 3];
         if(check == crc32 || 1) {
             // process the message
+            //qDebug() << "Type" << type;
             if(type == DATA && !channelAddr.empty()) {
                 // map the data
                 for(int i = 0; i < num; i = i + 2) {
