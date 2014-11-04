@@ -22,6 +22,7 @@
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 #include <QTimer>
+#include <QDebug>
 #include "config.h"
 #include "data.h"
 

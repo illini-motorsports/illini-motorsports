@@ -175,13 +175,14 @@ void high_isr(void) {
 
     //if more than 500 ms have passed then send error message
     if(millis - lastMsgTime > 500) {
-        send_msg(ERROR,0);
+        if(millis % ERROR_PER == 0)
+            send_msg(ERROR,0);
     }
     else
     {
-        if(millis % ADDR_PER)
+        if(millis % ADDR_PER == 0)
             send_msg(ADDR,-1);
-        if(millis % DATA_PER)
+        if(millis % DATA_PER == 0)
             send_msg(DATA,-1);
     }
 
@@ -201,6 +202,7 @@ void main(void) {
      *************************/
 
     unsigned long test;
+    int index;
     char test_msg[10] = "123456789";
     msg_counter = 0;
 
@@ -212,7 +214,11 @@ void main(void) {
     chan_addr[SPEED / 2] = SPD;
     chan_addr[RPM / 2] = TACH;
 
-
+    
+    for(index = 0; index < NUM_MSG * 2; index++)
+    {
+        chan_data[index] = 0;
+    }
     /*************************
      * Oscillator Set-Up     *
      *************************/
@@ -275,7 +281,7 @@ void main(void) {
     BAUDCON2bits.TXCKP = 0; // do not invert the transmitted bits
 
     TRISCbits.TRISC6 = OUTPUT; // programmable termination
-    TERM_LAT = FALSE;
+    TERM_LAT = TRUE;
 
     ECANInitialize(); // setup ECAN
 

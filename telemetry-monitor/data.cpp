@@ -121,6 +121,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
                 for(int i = 0; i < num; i = i + 2) {
                     channelData[channelAddr[i / 2]] = (unsigned char)read_Data[i + 4] * 0x0100 + (unsigned char)read_Data[i + 5];
                 }
+                display.errorMessage(false);
             }
             else if(type == ADDR) {
                 // resize the address vector if necessary
@@ -130,6 +131,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
                 for(int i = 0; i < num; i++) {
                     channelAddr[i] = read_Data[i + 4];
                 }
+                display.errorMessage(false);
             }
             else if(type == ERROR) {
                 // resize the address vector if necessary

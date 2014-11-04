@@ -46,8 +46,9 @@
 #define SIGNAL      0
 #define CAN         1
 
-#define DATA_PER    1000
-#define ADDR_PER    10000
+#define DATA_PER    10
+#define ADDR_PER    100
+#define ERROR_PER   100
 
 #define ECU_ID_0    0x200
 #define ECU_ID_1    0x201

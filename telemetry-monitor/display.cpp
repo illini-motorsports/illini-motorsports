@@ -200,7 +200,6 @@ void AppDisplay::updateData(unsigned char msgId, double data) {
       } else {
         lbls_right_data[i - NUM_METRICS]->setText(QString::number(data) +
             " " + messages.at(metric_ids[i]).units);
-
         if(data >= messages.at(metric_ids[i]).danger_high ||
             data <= messages.at(metric_ids[i]).danger_low) {
           lbls_right_data[i - NUM_METRICS]->setStyleSheet("QLabel { background-color: red; color: white; }");

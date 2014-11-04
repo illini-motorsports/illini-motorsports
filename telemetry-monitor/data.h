@@ -15,6 +15,7 @@
 #include <QIODevice>
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QDebug>
 #include "config.h"
 
 using std::map;
