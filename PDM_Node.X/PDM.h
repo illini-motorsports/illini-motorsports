@@ -5,6 +5,7 @@
  * Processor:       PIC18F46K80
  * Compiler:        Microchip C18
  * Author:          George Schwieters
+ * Author:          Andrew Mass
  * Created:         2013-2014
  */
 
@@ -19,8 +20,6 @@
 
 //#define INTERNAL
 //#define DEBUGGING
-//#define PARANOID_MODE
-//#define OVERCURRENT_HANDLING
 #define MCHP_C18
 
 /*
@@ -35,23 +34,21 @@
 // timing (ms)
 #define PRIME_WAIT 500
 #define CAN_PERIOD 500
-#define ERROR_WAIT 500
-#define ERROR_LIMIT 4
-#define ERROR_RESET 120000
 
-// error conditions
-#define OP_THRESHOLD_L 160      // 16.0
-#define OP_THRESHOLD_H 250      // 25.0
-#define OT_THRESHOLD 2100       // 210.0
-#define ET_THRESHOLD 1150       // 115.0
+#define CRIT_WAIT 2000
+#define CRIT_WAIT_CAN 10000
+
+// Error conditions
+//TODO: Set these values appropriately
+#define VOLTAGE_CRIT 1150       // 11.5
+#define OIL_PRESS_CRIT_L 160    // 16.0
+#define OIL_PRESS_CRIT_H 250    // 25.0
+#define ENGINE_TEMP_CRIT 1150   // 115.0
+#define OIL_TEMP_CRIT 2100      // 210.0
+
+#define RPM_ON_THRESHOLD 600
 #define RPM_THRESHOLD_H 4000    // 4,000
 #define RPM_THRESHOLD_L 1000    // 1,000
-#define VOLTAGE_THRESHOLD 1250  // 12.5
-
-// for RPM
-#define RPM_ON_THRESHOLD 600
-
-#define MIN_MA_OVERCURRENT 50
 
 #define FAN_THRESHOLD_H 900 // 90.0
 #define FAN_THRESHOLD_L 840 // 84.0
@@ -140,8 +137,5 @@ typedef union {
 
 void high_isr(void);
 void sample(int *data, const unsigned char index, const unsigned char ch);
-unsigned char preventEngineBlowup(int * oil_press_tmr,
-        int * oil_temp_tmr, int * water_temp_tmr);
-void checkWaterTemp(unsigned char * turn_on);
 
 #endif
