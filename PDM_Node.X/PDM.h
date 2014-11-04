@@ -19,7 +19,6 @@
  */
 
 //#define INTERNAL
-//#define DEBUGGING
 #define MCHP_C18
 
 /*
@@ -31,28 +30,32 @@
 #define NUM_LOADS 8
 #define NON_INDUCTIVE 3
 
-// timing (ms)
+// Timing (ms)
 #define PRIME_WAIT 500
 #define CAN_PERIOD 500
-
 #define CRIT_WAIT 2000
 #define CRIT_WAIT_CAN 10000
 
 // Error conditions
 //TODO: Set these values appropriately
-#define VOLTAGE_CRIT 1150       // 11.5
-#define OIL_PRESS_CRIT_L 160    // 16.0
-#define OIL_PRESS_CRIT_H 250    // 25.0
-#define ENGINE_TEMP_CRIT 1150   // 115.0
-#define OIL_TEMP_CRIT 2100      // 210.0
+#define VOLTAGE_CRIT 1150       // 11.5 V
+#define OIL_PRESS_CRIT_L 160    // 16.0 psi
+#define OIL_PRESS_CRIT_H 250    // 25.0 psi
+#define ENGINE_TEMP_CRIT 1150   // 115.0 C
+#define OIL_TEMP_CRIT 2100      // 210.0 C
 
-#define RPM_ON_THRESHOLD 600
-#define RPM_THRESHOLD_H 4000    // 4,000
-#define RPM_THRESHOLD_L 1000    // 1,000
+#define VOLTAGE_WARN 1250       // 12.5 V
+#define ENGINE_TEMP_WARN 1000   // 100.0 C
+#define OIL_TEMP_WARN 1800      // 180.0 C
 
-#define FAN_THRESHOLD_H 900 // 90.0
-#define FAN_THRESHOLD_L 840 // 84.0
+// Thresholds
+#define RPM_ON_THRESHOLD 600    // 600 rpm
+#define RPM_THRESHOLD_H 4000    // 4,000 rpm
+#define RPM_THRESHOLD_L 1000    // 1,000 rpm
+#define FAN_THRESHOLD_H 900     // 90.0 C
+#define FAN_THRESHOLD_L 840     // 84.0 C
 
+// Indices for arrays
 #define IGN_val     0
 #define FUEL_val    1
 #define WATER_val   2
@@ -64,6 +67,7 @@
 #define START_val_2 8
 #define START_val_3 9
 
+// Analog channel definitions
 #define IGN_ch      ADC_CH2
 #define FUEL_ch     ADC_CH3
 #define WATER_ch    ADC_CH1

@@ -90,10 +90,7 @@
 
 // Timing variables
 static volatile unsigned long millis; // Holds timer0 rollover count
-static unsigned long peak_tmr[NUM_LOADS - NON_INDUCTIVE];
-static unsigned long err_tmr[NUM_LOADS];
-static unsigned long PRIME_tmr;
-static unsigned long CAN_tmr;
+static volatile unsigned long CAN_tmr;
 
 // Car data variables
 static volatile unsigned int FAN_SW; // Holds state of fan switch on steering wheel
@@ -158,7 +155,8 @@ void high_vector(void) {
  *  Reaturn Value(s): none
  *  Side Effects: This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
  *                global variables along with the millis, oil_temp, water_temp,
- *                oil_press, rpm, voltage, and FAN_SW variables.
+ *                oil_press, rpm, voltage, and FAN_SW variables as well as
+ *                each variable's respective timer.
  */
 #pragma interrupt high_isr
 
@@ -225,13 +223,16 @@ void main(void) {
     Error_Status STATUS;
 
     unsigned char AUTO_FAN = 0;
+    unsigned char UNDER_VOLTAGE, OVER_TEMP = 0;
     unsigned char PRIME = 1;
     unsigned char ON = 0;
 
     unsigned char i;
 
-    unsigned char err_count[NUM_LOADS];
     unsigned int current[NUM_LOADS + 2];
+
+    unsigned long peak_tmr[NUM_LOADS - NON_INDUCTIVE];
+    unsigned long PRIME_tmr = 0;
 
     unsigned char voltage_crit_pending, oil_press_crit_pending,
             engine_temp_crit_pending, oil_temp_crit_pending = 0;
@@ -241,10 +242,6 @@ void main(void) {
     // Clear error count and peak timers for all loads
     for(i = 0; i < NUM_LOADS + 2; i++) {
         current[i] = 0;
-        if(i < NUM_LOADS) {
-            err_count[i] = 0;
-            err_tmr[i] = 0;
-        }
         if(i < NUM_LOADS - NON_INDUCTIVE) {
             peak_tmr[i] = 0;
         }
@@ -252,7 +249,6 @@ void main(void) {
 
     // Clear variables
     millis = 0;
-    PRIME_tmr = 0;
     CAN_tmr = 0;
 
     STATUS.bits = 0;
@@ -352,8 +348,8 @@ void main(void) {
          ** Set ON
          ** Set AUTO_FAN
          ** Set PRIME
-         * Check out-of-range values from below. This could cause some
-         *     conditions to be overrided or the car to be killed.
+         ** Check out-of-range values. This could cause some conditions to be
+         **    overridden(rode?, rided?) or the car to be killed.
          * Power on or off loads depending on external conditions. If powering
          *     on, start peak timers for inductive loads. If powering off,
          *     clear error count.
@@ -363,18 +359,9 @@ void main(void) {
          * Scale current
          * Send out current data on CAN
          *
-         * out-of-range
-         * ------------
-         ** Check no CAN for CAN_wait_crit millis
-         ** Check voltage < voltage_crit for crit_wait millis
-         ** Check oil_press < oil_press_crit for crit_wait millis
-         ** Check oil_temp > oil_temp_crit for crit_wait millis
-         ** Check engine_temp > engine_temp_crit for engine_temp_wait millis
-         *
-         * Check voltage < voltage_low for low_wait millis
-         * Check no CAN for CAN_wait millis
-         * Check high oil_temp for low_wait millis
-         * Check high engine_temp for low_wait millis
+         * todo
+         * ====
+         * Check whether CAN values are "stale"
          */
 
         // Check if car's engine is on
@@ -478,6 +465,13 @@ void main(void) {
         } else {
             oil_temp_crit_pending = 0;
         }
+
+        // Determine if the battery voltage is too low
+        UNDER_VOLTAGE = (voltage_tmr > 0 && voltage > VOLTAGE_WARN);
+
+        // Determine if the engine or oil is too hot
+        OVER_TEMP = (engine_temp_tmr > 0 && engine_temp > ENGINE_TEMP_WARN) ||
+                (oil_temp_tmr > 0 && oil_temp_tmr > OIL_TEMP_WARN);
 
         /*
          *
