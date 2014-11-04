@@ -270,7 +270,16 @@ void set_lights(unsigned char max) {
         }
     }
 }
-
+void set_lights_with_color(unsigned char max,unsigned char color){
+    unsigned char i = 0;
+    for(; i < 5; i++) {
+        if(max > i) {
+            set_led_to_color(i, color);
+        } else {
+            set_led_to_color(i, NONE);
+        }
+    }
+}
 bool lastAccessWithinMsgInterval(int i){
     switch(i){
         case 0:
@@ -297,13 +306,18 @@ bool lastAccessWithinMsgInterval(int i){
             return false;
     }
 }
+bool checkRPM(){
+    if(!lastAccessWithinMsgInterval(1))
+        return false;
+    return true;
+}
 /*
  Function checks the volts from the battery.
  Outputs: True (1) if volts are in balance, above the threshold.
           False(0) if volts are below the threshold.
  */
 bool checkBatteryVolts(){
-    if(lastVoltageAccess == -1 || !lastAccessWithinMsgInterval(0) || batteryVoltage < 13)
+    if(!lastAccessWithinMsgInterval(0) || batteryVoltage < 13)
         return false; //Battery is below 13 volts, throw error.
     return true;
 }
@@ -313,7 +327,7 @@ bool checkBatteryVolts(){
           False(0) if oil pressure below the threshold.
  */
 bool checkOilPressure(){
-    if(lastOilPressureAccess == -1 || !lastAccessWithinMsgInterval(2) || !lastAccessWithinMsgInterval(1)){
+    if(!lastAccessWithinMsgInterval(2) || !lastAccessWithinMsgInterval(1)){
         return false;
     }else if(rpm > RPM_THRESHOLD_H && oilPressure < OP_THRESHOLD_H){
         return false;
@@ -324,23 +338,23 @@ bool checkOilPressure(){
 }
 /*
  Function checks the oil temp.
- Outputs: True (1) if the oil temp is in balance or above the threshold.
-          False(0) if the oil temp is below the threshold.
+ Outputs: True (1) if the oil temp is in balance or below the threshold.
+          False(0) if the oil temp is above the threshold.
  */
 bool checkOilTemp(){
-    if(lastOilTempAccess == -1 || !lastAccessWithinMsgInterval(3) || oilTemp <= OT_THRESHOLD)
-        return false;
-    return true;
+    if(!lastAccessWithinMsgInterval(3) || oilTemp <= OT_THRESHOLD)
+        return true;
+    return false;
 }
 /*
  Function checks the temp from the engine.
- Outputs: True (1) if the engine temp is in balance or above the threshold.
-          False(0) if the engine temp is below the threshold.
+ Outputs: True (1) if the engine temp is in balance or below the threshold.
+          False(0) if the engine temp is above the threshold.
  */
 bool checkEngineTemp(){
-    if(lastEngineTempAccess == -1 || !lastAccessWithinMsgInterval(4) || engineTemp <= ET_THRESHOLD)
-        return false;
-    return true;
+    if(!lastAccessWithinMsgInterval(4) || engineTemp <= ET_THRESHOLD)
+        return true;
+    return false;
 }
 /*
  Function checks if messages are still coming.
@@ -353,7 +367,7 @@ bool timeout(bool shouldSleep){
     if(lastInterrupt == -1){
         int count = 0;
         if(shouldSleep){
-            while(count < 5){ //timeout at 10 seconds if no data has come in at all
+            while(count < 3){ //timeout at 10 seconds if no data has come in at all
                 if(lastInterrupt != -1)
                     return false;
                 sleep(1,1000);
@@ -418,7 +432,7 @@ void startup(int currentTime){
             //set_led_to_color(4,GREEN);
         }else if(millis - currentTime < BLINK_TIME * 7){
             //Blink twice
-            blink_all(2, GREEN);
+            blink_all(3, GREEN);
         }else{
             set_all(NONE);
             break;
@@ -467,7 +481,7 @@ void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2
     multi_led_color(ledSet2, NONE, size2);
 }
 void display() {
-    if(timeout(true))
+    if(timeout(false))
         errorDisplay(1);
     while(true){
         if(timeout(false) || !checkStatus()){
@@ -475,22 +489,7 @@ void display() {
             errorDisplay(0);
         }else{
             //Normal RPM display
-            //Sets certain lights to NONE or REV_COLOR based on rpm value.
-            if(rpm >= REV_RANGE_LIMIT) {
-                set_all(GREEN);
-            }else if(rpm >= REV_RANGE_5) {
-                set_lights(5);
-            }else if(rpm >= REV_RANGE_4) {
-                set_lights(4);
-            }else if(rpm >= REV_RANGE_3) {
-                set_lights(3);
-            }else if(rpm >= REV_RANGE_2) {
-                set_lights(2);
-            }else if(rpm >= REV_RANGE_1) {
-                set_lights(1);
-            }else{
-                set_all(NONE);
-            }
+            RPMDisplayer(REV_COLOR);
         }
     }
 }
@@ -501,6 +500,8 @@ void errorDisplay(int error){
             while(true){
                 int ledSet1[] = {0,2,4};
                 int ledSet2[] = {1,3};
+                while(checkRPM() && !checkStatus())
+                    RPMDisplayer(RED_GREEN);
                 alternate_blink(ledSet1, 3, RED_BLUE, ledSet2, 2, GREEN_BLUE, 2); //blink twice then check to see if error still exists
                 if(!timeout(false) || checkStatus())
                     return;
@@ -512,8 +513,27 @@ void errorDisplay(int error){
                 if(!timeout(false))
                     return;
             }
+        case 2:
         default:
             break;
+    }
+}
+void RPMDisplayer(char color){
+    //Sets certain lights to NONE or REV_COLOR based on rpm value.
+    if(rpm >= REV_RANGE_LIMIT) {
+        blink_all(1,GREEN);
+    }else if(rpm >= REV_RANGE_5) {
+        set_lights_with_color(5, color);
+    }else if(rpm >= REV_RANGE_4) {
+        set_lights_with_color(4, color);
+    }else if(rpm >= REV_RANGE_3) {
+        set_lights_with_color(3, color);
+    }else if(rpm >= REV_RANGE_2) {
+        set_lights_with_color(2, color);
+    }else if(rpm >= REV_RANGE_1) {
+        set_lights_with_color(1, color);
+    }else{
+        set_all(NONE);
     }
 }
 /*

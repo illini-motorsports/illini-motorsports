@@ -122,6 +122,8 @@ void blink_all(int numOfTimes, unsigned char color);
 void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes);
 void display();
 void errorDisplay(int error);
+void set_lights_with_color(unsigned char max,unsigned char color);
+void RPMDisplayer(char color);
 
 
 #endif
