@@ -28,7 +28,6 @@
 #define PWR_OFF 0
 #define PWR_ON 1
 #define NUM_LOADS 8
-#define NON_INDUCTIVE 3
 
 // Timing (ms)
 #define PRIME_WAIT 500
@@ -36,14 +35,21 @@
 #define CRIT_WAIT 2000
 #define CRIT_WAIT_CAN 10000
 
-// Error conditions
-//TODO: Set these values appropriately
+// Peak current wait times (ms)
+#define IGN_PEAK_WAIT 500
+#define FUEL_PEAK_WAIT 500
+#define WATER_PEAK_WAIT 500
+#define START_PEAK_WAIT 500
+#define FAN_PEAK_WAIT 500
+
+// Critical error conditions
 #define VOLTAGE_CRIT 1150       // 11.5 V
 #define OIL_PRESS_CRIT_L 160    // 16.0 psi
 #define OIL_PRESS_CRIT_H 250    // 25.0 psi
 #define ENGINE_TEMP_CRIT 1150   // 115.0 C
 #define OIL_TEMP_CRIT 2100      // 210.0 C
 
+// Warning error conditions
 #define VOLTAGE_WARN 1250       // 12.5 V
 #define ENGINE_TEMP_WARN 1000   // 100.0 C
 #define OIL_TEMP_WARN 1800      // 180.0 C
@@ -122,7 +128,7 @@
  */
 
 void high_isr(void);
-void killCar();
+void killCar(void);
 void sample(int *data, const unsigned char index, const unsigned char ch);
 
 #endif

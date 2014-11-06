@@ -14,6 +14,11 @@
 #include "FSAE.h"
 #include "PDM.h"
 
+//TODO: Check whether CAN data is stale?
+//TODO: Use UNDER_VOLTAGE and OVER_TEMP variables
+//TODO: Set CRIT and WARN values appropriately
+//TODO: Add code control defines
+
 /*
  * PIC18F46K80 Configuration Bits
  */
@@ -90,7 +95,7 @@
 
 // Timing variables
 static volatile unsigned long millis; // Holds timer0 rollover count
-static volatile unsigned long CAN_tmr;
+static volatile unsigned long CAN_rec_tmr;
 
 // Car data variables
 static volatile unsigned int FAN_SW; // Holds state of fan switch on steering wheel
@@ -106,33 +111,24 @@ static unsigned char data[8]; // holds CAN data bytes
 static unsigned char dataLen; // holds number of CAN data bytes
 static ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
 
-/*
- * Check header for correct order of constants; it coincides with the array
- * index order that is established with defines
- */
-static const unsigned int peak_tmr_const[5] = {
-    500 /*IGN*/, 500 /*FUEL*/, 500 /*Water*/,
-    500 /*Starter*/, 500 /*Fan*/
-};
-
 static const unsigned char ch_num[NUM_LOADS + 2] = {
     IGN_ch, FUEL_ch, WATER_ch, START_ch, FAN_ch, PCB_ch,
     AUX_ch, ECU_ch, START_ch_2, START_ch_3
 };
 
-// Current multiplier / resistor value (the switch turns off at 4.5 V on the feedback pin)
-static const unsigned int current_ratio[NUM_LOADS] = {
-    14 /*IGN*/, 14 /*FUEL*/,
-    14 /*Water*/, 23 /*Starter0*/,
-    14 /*Fan*/, 14 /*PCB*/, 8 /*AUX*/,
-    14 /*ECU*/
+/*
+ * Current multiplier / resistor value
+ *
+ * The switch turns off at 4.5 V on the feedback pin
+ */
+static const unsigned long current_ratio[NUM_LOADS] = {
+    14 /*IGN*/, 14 /*FUEL*/, 14 /*Water*/, 23 /*Starter0*/,
+    14 /*Fan*/, 14 /*PCB*/, 8 /*AUX*/, 14 /*ECU*/
 };
 
-static const unsigned int current_peak_ratio[NUM_LOADS] = {
-    28 /*IGN*/, 28 /*FUEL*/,
-    28 /*Water*/, 47 /*Starter0*/,
-    28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/,
-    0 /*ECU*/
+static const unsigned long current_peak_ratio[NUM_LOADS] = {
+    28 /*IGN*/, 28 /*FUEL*/, 28 /*Water*/, 47 /*Starter0*/,
+    28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/, 0 /*ECU*/
 };
 
 /*
@@ -144,6 +140,7 @@ static const unsigned int current_peak_ratio[NUM_LOADS] = {
 void high_vector(void) {
     _asm goto high_isr _endasm
 }
+
 #pragma code
 
 /*
@@ -161,7 +158,6 @@ void high_vector(void) {
 #pragma interrupt high_isr
 
 void high_isr(void) {
-
     // Check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
         INTCONbits.TMR0IF = 0;
@@ -174,10 +170,10 @@ void high_isr(void) {
         // Reset the flag
         PIR5bits.RXB1IF = 0;
 
+        CAN_rec_tmr = millis;
+
         // Get data from receive buffer
         ECANReceiveMessage(&id, data, &dataLen, &flags);
-
-        CAN_tmr = millis;
 
         switch(id) {
             case ENGINE_TEMP_ID: // VOLTAGE_ID
@@ -213,41 +209,47 @@ void high_isr(void) {
 }
 
 void main(void) {
-
-    // init_unused_pins();       // There are no unused pins!!!
+    // init_unused_pins(); // There are no unused pins!!! :)
 
     /*
      * Variable Declarations and Initialization
      */
 
+    unsigned char ON = 0;
+    unsigned char PRIME = 1;
     unsigned char AUTO_FAN = 0;
     unsigned char UNDER_VOLTAGE, OVER_TEMP = 0;
-    unsigned char PRIME = 1;
-    unsigned char ON = 0;
 
-    unsigned char i;
+    unsigned char i = 0;
 
     unsigned int current[NUM_LOADS + 2];
 
-    unsigned long peak_tmr[NUM_LOADS - NON_INDUCTIVE];
     unsigned long PRIME_tmr = 0;
+    unsigned long IGN_peak_tmr = 0;
+    unsigned long FUEL_peak_tmr = 0;
+    unsigned long WATER_peak_tmr = 0;
+    unsigned long START_peak_tmr = 0;
+    unsigned long FAN_peak_tmr = 0;
+    unsigned long CAN_send_tmr = 0;
 
-    unsigned char voltage_crit_pending, oil_press_crit_pending,
-            engine_temp_crit_pending, oil_temp_crit_pending = 0;
-    unsigned long voltage_crit_tmr, oil_press_crit_tmr,
-            engine_temp_crit_tmr, oil_temp_crit_tmr = 0;
+    unsigned long voltage_crit_tmr = 0;
+    unsigned long oil_press_crit_tmr = 0;
+    unsigned long engine_temp_crit_tmr = 0;
+    unsigned long oil_temp_crit_tmr = 0;
+
+    unsigned char voltage_crit_pending = 0;
+    unsigned char oil_press_crit_pending = 0;
+    unsigned char engine_temp_crit_pending = 0;
+    unsigned char oil_temp_crit_pending = 0;
 
     // Clear error count and peak timers for all loads
     for(i = 0; i < NUM_LOADS + 2; i++) {
         current[i] = 0;
-        if(i < NUM_LOADS - NON_INDUCTIVE) {
-            peak_tmr[i] = 0;
-        }
     }
 
     // Clear variables
     millis = 0;
-    CAN_tmr = 0;
+    CAN_rec_tmr = 0;
 
     FAN_SW = 0;
     engine_temp = 0;
@@ -339,28 +341,6 @@ void main(void) {
      */
 
     while(1) {
-
-        /*
-         * New
-         * ===
-         ** Set ON
-         ** Set AUTO_FAN
-         ** Set PRIME
-         ** Check out-of-range values. This could cause some conditions to be
-         **    overridden(rode?, rided?) or the car to be killed.
-         ** Power on or off loads depending on external conditions. If powering
-         **     on, start peak timers for inductive loads.
-         * If enough time has passed, switch to transient current limit for
-         *     inductive loads.
-         * Sample current
-         * Scale current
-         * Send out current data on CAN
-         *
-         * todo
-         * ====
-         * Check whether CAN values are "stale"
-         */
-
         // Check if car's engine is on
         ON = rpm > RPM_ON_THRESHOLD;
 
@@ -382,7 +362,7 @@ void main(void) {
          * If the latest CAN message was received more than CRIT_WAIT
          * milliseconds ago, kill the car.
          */
-        if(millis - CAN_tmr > CRIT_WAIT_CAN) {
+        if(millis - CAN_rec_tmr > CRIT_WAIT_CAN) {
             killCar();
         }
 
@@ -456,7 +436,7 @@ void main(void) {
             oil_temp_crit_pending = 1;
 
             if(millis - oil_temp_crit_tmr > CRIT_WAIT) {
-                //TODO: Kill the car
+                killCar();
             }
         } else {
             oil_temp_crit_pending = 0;
@@ -484,7 +464,7 @@ void main(void) {
             if(!IGN_PORT) {
                 IGN_P_LAT = PWR_ON;
                 IGN_LAT = PWR_ON;
-                peak_tmr[IGN_val] = millis;
+                IGN_peak_tmr = millis;
             }
         } else {
             if(IGN_PORT) {
@@ -497,7 +477,7 @@ void main(void) {
             if(!FUEL_PORT) {
                 FUEL_P_LAT = PWR_ON;
                 FUEL_LAT = PWR_ON;
-                peak_tmr[FUEL_val] = millis;
+                FUEL_peak_tmr = millis;
                 PRIME_tmr = millis;
             }
         } else if(!ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
@@ -512,7 +492,7 @@ void main(void) {
             if(!WATER_PORT) {
                 WATER_P_LAT = PWR_ON;
                 WATER_LAT = PWR_ON;
-                peak_tmr[WATER_val] = millis;
+                WATER_peak_tmr = millis;
             }
         } else if((!ON && !AUTO_FAN && !FAN_SW) || START_PORT) {
             if(WATER_PORT) {
@@ -525,7 +505,7 @@ void main(void) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
-                peak_tmr[START_val] = millis;
+                START_peak_tmr = millis;
             }
         } else if(START_SW_PORT) {
             if(START_PORT) {
@@ -538,7 +518,7 @@ void main(void) {
             if(!FAN_PORT) {
                 FAN_P_LAT = PWR_ON;
                 FAN_LAT = PWR_ON;
-                peak_tmr[FAN_val] = millis;
+                FAN_peak_tmr = millis;
             }
         } else if((!FAN_SW && !AUTO_FAN) || START_PORT) {
             if(FAN_PORT) {
@@ -547,38 +527,34 @@ void main(void) {
         }
 
         /*
-        // check peak control timers
-        // if enough time has passed then change the current limit to steady state
-        for(i = 0; i < NUM_LOADS - NON_INDUCTIVE; i++) {
-            if(millis - peak_tmr[i] > peak_tmr_const[i]) {
-                switch(i) {
-                    case FUEL_val:
-                        if(FUEL_P_PORT) {
-                            FUEL_P_LAT = PWR_OFF;
-                        }
-                        break;
-                    case IGN_val:
-                        if(IGN_P_PORT) {
-                            IGN_P_LAT = PWR_OFF;
-                        }
-                        break;
-                    case WATER_val:
-                        if(WATER_P_PORT) {
-                            WATER_P_LAT = PWR_OFF;
-                        }
-                        break;
-                    case START_val:
-                        if(START_P_PORT) {
-                            START_P_LAT = PWR_OFF;
-                        }
-                        break;
-                    case FAN_val:
-                        if(FAN_P_PORT) {
-                            FAN_P_LAT = PWR_OFF;
-                        }
-                        break;
-                }
-            }
+         * Check peak control timers.
+         *
+         * If enough time has passed then change the current limit to steady state.
+         */
+
+        // IGN
+        if(millis - IGN_peak_tmr > IGN_PEAK_WAIT && IGN_P_PORT) {
+            IGN_P_LAT = PWR_OFF;
+        }
+
+        // FUEL
+        if(millis - FUEL_peak_tmr > FUEL_PEAK_WAIT && FUEL_P_PORT) {
+            FUEL_P_LAT = PWR_OFF;
+        }
+
+        // WATER
+        if(millis - WATER_peak_tmr > WATER_PEAK_WAIT && WATER_P_PORT) {
+            WATER_P_LAT = PWR_OFF;
+        }
+
+        // START
+        if(millis - START_peak_tmr > START_PEAK_WAIT && START_P_PORT) {
+            START_P_LAT = PWR_OFF;
+        }
+
+        // FAN
+        if(millis - FAN_peak_tmr > FAN_PEAK_WAIT && FAN_P_PORT) {
+            FAN_P_LAT = PWR_OFF;
         }
 
         // Sample the current of the loads
@@ -610,13 +586,14 @@ void main(void) {
                     break;
             }
 
-            current[i] = peak ? (unsigned long) current[i] * (unsigned long) current_peak_ratio[i] * 5 :
-                    (unsigned long) current[i] * (unsigned long) current_ratio[i] * 5;
+            // Use a different ratio if the load is currently in peak control
+            current[i] = peak ? (unsigned long) current[i] * current_peak_ratio[i] * 5 :
+                    (unsigned long) current[i] * current_ratio[i] * 5;
         }
 
         // Send out the current data
-        if(millis - CAN_tmr > CAN_PERIOD) {
-            CAN_tmr = millis;
+        if(millis - CAN_send_tmr > CAN_PERIOD) {
+            CAN_send_tmr = millis;
             ECANSendMessage(PDM_ID, (unsigned char *) current, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
             ECANSendMessage(PDM_ID + 1, ((unsigned char *) current) + 8, 8,
@@ -624,7 +601,6 @@ void main(void) {
             ECANSendMessage(PDM_ID + 2, ((unsigned char *) current) + 16, 2,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
-         */
     }
 }
 
@@ -641,17 +617,23 @@ void main(void) {
  * Return Values(s): none
  * Side Effects: All inductive loads will be powered off, which will kill the
  *               engine. The device will be reset if the driver cycles the
- *               ON switch.
+ *               ON switch. All maskable interrupts will be disabled.
  */
 void killCar() {
+    // Disable interrupts
+    CLI();
+
+    // Shut off all inductive loads
     IGN_LAT = PWR_OFF;
     FUEL_LAT = PWR_OFF;
     WATER_LAT = PWR_OFF;
     FAN_LAT = PWR_OFF;
     START_LAT = PWR_OFF;
 
+    // Do nothing until the ON switch is turned off.
     while(ON_SW_PORT);
 
+    // Perform a MCLR reset of the device.
     _asm RESET _endasm
 }
 
@@ -667,11 +649,12 @@ void killCar() {
  *  Side Effects: This will modify what data points to.
  */
 void sample(int *data, const unsigned char index, const unsigned char ch) {
+    // Configure which pin you want to read and start A/D converter
+    SelChanConvADC(ch);
 
-    SelChanConvADC(ch); // configure which pin you want to read and start A/D converter
+    // Wait for complete conversion
+    while(BusyADC());
 
-    while(BusyADC()); // wait for complete conversion
-
-    // put result in data array in accordance with specified byte location
+    // Put result in data array in accordance with specified byte location
     data[index] = ReadADC();
 }
