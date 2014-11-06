@@ -220,8 +220,6 @@ void main(void) {
      * Variable Declarations and Initialization
      */
 
-    Error_Status STATUS;
-
     unsigned char AUTO_FAN = 0;
     unsigned char UNDER_VOLTAGE, OVER_TEMP = 0;
     unsigned char PRIME = 1;
@@ -250,8 +248,6 @@ void main(void) {
     // Clear variables
     millis = 0;
     CAN_tmr = 0;
-
-    STATUS.bits = 0;
 
     FAN_SW = 0;
     engine_temp = 0;
@@ -308,6 +304,7 @@ void main(void) {
     TRISCbits.TRISC6 = OUTPUT; // Water relay input
     TRISCbits.TRISC7 = OUTPUT; // Water peak
 
+    // Turn off all inductive loads
     IGN_LAT = PWR_OFF;
     IGN_P_LAT = PWR_OFF;
     FUEL_LAT = PWR_OFF;
@@ -323,6 +320,7 @@ void main(void) {
     TRISCbits.TRISC3 = OUTPUT; // ECU relay input
     TRISCbits.TRISC4 = OUTPUT; // PCB relay input
 
+    // Turn on non-inductive loads
     AUX_LAT = PWR_ON;
     ECU_LAT = PWR_ON;
     PCB_LAT = PWR_ON;
@@ -350,9 +348,8 @@ void main(void) {
          ** Set PRIME
          ** Check out-of-range values. This could cause some conditions to be
          **    overridden(rode?, rided?) or the car to be killed.
-         * Power on or off loads depending on external conditions. If powering
-         *     on, start peak timers for inductive loads. If powering off,
-         *     clear error count.
+         ** Power on or off loads depending on external conditions. If powering
+         **     on, start peak timers for inductive loads.
          * If enough time has passed, switch to transient current limit for
          *     inductive loads.
          * Sample current
@@ -367,14 +364,13 @@ void main(void) {
         // Check if car's engine is on
         ON = rpm > RPM_ON_THRESHOLD;
 
-        //Set whether to automatically run the fan based on water temperature
+        // Set whether to automatically run the fan based on water temperature
         if(engine_temp < FAN_THRESHOLD_L) {
             AUTO_FAN = 0;
         } else if(engine_temp > FAN_THRESHOLD_H) {
             AUTO_FAN = 1;
         }
 
-        //TODO: Understand this code
         // Determine how long the fuel pump should be left on
         if(!ON_SW_PORT) {
             PRIME = 1;
@@ -387,7 +383,7 @@ void main(void) {
          * milliseconds ago, kill the car.
          */
         if(millis - CAN_tmr > CRIT_WAIT_CAN) {
-            //TODO: Kill the car
+            killCar();
         }
 
         /*
@@ -402,7 +398,7 @@ void main(void) {
             voltage_crit_pending = 1;
 
             if(millis - voltage_crit_tmr > CRIT_WAIT) {
-                //TODO: Kill the car
+                killCar();
             }
         } else {
             voltage_crit_pending = 0;
@@ -424,7 +420,7 @@ void main(void) {
             oil_press_crit_pending = 1;
 
             if(millis - oil_press_crit_tmr > CRIT_WAIT) {
-                //TODO: Kill the car
+                killCar();
             }
         } else {
             oil_press_crit_pending = 0;
@@ -442,7 +438,7 @@ void main(void) {
             engine_temp_crit_pending = 1;
 
             if(millis - engine_temp_crit_tmr > CRIT_WAIT) {
-                //TODO: Kill the car
+                killCar();
             }
         } else {
             engine_temp_crit_pending = 0;
@@ -474,66 +470,83 @@ void main(void) {
                 (oil_temp_tmr > 0 && oil_temp_tmr > OIL_TEMP_WARN);
 
         /*
+         * Toggle inductive loads.
          *
-        // turn on loads
-        // check if already on and if so do nothing
-        // also check if we are in an overcurrent condition in which case do nothing
-        if(ON_SW_PORT & !IGN_PORT & !STATUS.Ignition) {
-            IGN_P_LAT = PWR_ON;
-            IGN_LAT = PWR_ON;
-            peak_tmr[IGN_val] = millis;
-        }
-        if(((ON_SW_PORT & PRIME) | ON | START_PORT) & !FUEL_PORT & !STATUS.Fuel) {
-            FUEL_P_LAT = PWR_ON;
-            FUEL_LAT = PWR_ON;
-            peak_tmr[FUEL_val] = millis;
-            PRIME_tmr = millis;
-        }
-        if((FAN_SW | AUTO_FAN | ON) & !WATER_PORT & !STATUS.Water & !START_PORT) {
-            WATER_P_LAT = PWR_ON;
-            WATER_LAT = PWR_ON;
-            peak_tmr[WATER_val] = millis;
-        }
-        if(!START_SW_PORT & !START_PORT & !STATUS.Starter) {
-            START_P_LAT = PWR_ON;
-            START_LAT = PWR_ON;
-            peak_tmr[START_val] = millis;
-        }
-        if((FAN_SW | AUTO_FAN) & !FAN_PORT & !STATUS.Fan & !START_PORT) {
-            FAN_P_LAT = PWR_ON;
-            FAN_LAT = PWR_ON;
-            peak_tmr[FAN_val] = millis;
+         * When turning on a load, turn on the peak latch as well and set the
+         * peak timer. The peak latch will be disabled at a set time later.
+         *
+         * Only power on or power off a load if it is not already on or off
+         * respectively, even if the conditions match.
+         */
+
+        // IGN
+        if(ON_SW_PORT) {
+            if(!IGN_PORT) {
+                IGN_P_LAT = PWR_ON;
+                IGN_LAT = PWR_ON;
+                peak_tmr[IGN_val] = millis;
+            }
+        } else {
+            if(IGN_PORT) {
+                IGN_LAT = PWR_OFF;
+            }
         }
 
-        // turn off loads
-        // check if the load is already off and if so do nothing
-        // also turn off any overcurrent error state that may be enabled
-        if(!ON_SW_PORT & (IGN_PORT | STATUS.Ignition)) {
-            IGN_LAT = PWR_OFF;
-            STATUS.Ignition = PWR_OFF;
-            err_count[IGN_val] = 0;
-        }
-        if((!ON_SW_PORT | (!PRIME & !ON & !START_PORT)) & (FUEL_PORT | STATUS.Fuel)) {
-            FUEL_LAT = PWR_OFF;
-            STATUS.Fuel = PWR_OFF;
-            err_count[FUEL_val] = 0;
-        }
-        if((!ON & !AUTO_FAN & !FAN_SW & (WATER_PORT | STATUS.Water)) | START_PORT) {
-            WATER_LAT = PWR_OFF;
-            STATUS.Water = PWR_OFF;
-            err_count[WATER_val] = 0;
-        }
-        if(START_SW_PORT & (START_PORT | STATUS.Starter)) {
-            START_LAT = PWR_OFF;
-            STATUS.Starter = PWR_OFF;
-            err_count[START_val] = 0;
-        }
-        if((!FAN_SW & !AUTO_FAN & (FAN_PORT | STATUS.Fan)) | START_PORT) {
-            FAN_LAT = PWR_OFF;
-            STATUS.Fan = PWR_OFF;
-            err_count[FAN_val] = 0;
+        // FUEL
+        if((ON_SW_PORT && PRIME) || ON || START_PORT) {
+            if(!FUEL_PORT) {
+                FUEL_P_LAT = PWR_ON;
+                FUEL_LAT = PWR_ON;
+                peak_tmr[FUEL_val] = millis;
+                PRIME_tmr = millis;
+            }
+        } else if(!ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
+            if(FUEL_PORT) {
+                FUEL_LAT = PWR_OFF;
+            }
         }
 
+        // WATER
+        // TODO: Replace (FAN_SW || AUTO_FAN) with (FAN_PORT)?
+        if((FAN_SW || AUTO_FAN || ON) && !START_PORT) {
+            if(!WATER_PORT) {
+                WATER_P_LAT = PWR_ON;
+                WATER_LAT = PWR_ON;
+                peak_tmr[WATER_val] = millis;
+            }
+        } else if((!ON && !AUTO_FAN && !FAN_SW) || START_PORT) {
+            if(WATER_PORT) {
+                WATER_LAT = PWR_OFF;
+            }
+        }
+
+        // START
+        if(!START_SW_PORT) {
+            if(!START_PORT) {
+                START_P_LAT = PWR_ON;
+                START_LAT = PWR_ON;
+                peak_tmr[START_val] = millis;
+            }
+        } else if(START_SW_PORT) {
+            if(START_PORT) {
+                START_LAT = PWR_OFF;
+            }
+        }
+
+        // FAN
+        if((FAN_SW || AUTO_FAN) && !START_PORT) {
+            if(!FAN_PORT) {
+                FAN_P_LAT = PWR_ON;
+                FAN_LAT = PWR_ON;
+                peak_tmr[FAN_val] = millis;
+            }
+        } else if((!FAN_SW && !AUTO_FAN) || START_PORT) {
+            if(FAN_PORT) {
+                FAN_LAT = PWR_OFF;
+            }
+        }
+
+        /*
         // check peak control timers
         // if enough time has passed then change the current limit to steady state
         for(i = 0; i < NUM_LOADS - NON_INDUCTIVE; i++) {
@@ -618,6 +631,29 @@ void main(void) {
 /*
  *  Local Functions
  */
+
+/*
+ * void killCar()
+ *
+ * Description: Kills the car and blocks until the ON switch is cycled. Then
+ *              the microcontroller is software reset.
+ * Inputs(s): none
+ * Return Values(s): none
+ * Side Effects: All inductive loads will be powered off, which will kill the
+ *               engine. The device will be reset if the driver cycles the
+ *               ON switch.
+ */
+void killCar() {
+    IGN_LAT = PWR_OFF;
+    FUEL_LAT = PWR_OFF;
+    WATER_LAT = PWR_OFF;
+    FAN_LAT = PWR_OFF;
+    START_LAT = PWR_OFF;
+
+    while(ON_SW_PORT);
+
+    _asm RESET _endasm
+}
 
 /*
  *  void sample(int *data, const unsigned char index, const unsigned char ch)

@@ -118,28 +118,11 @@
 #define ON_SW_PORT      PORTBbits.RB0
 
 /*
- * Typedefs
+ * Function Definitions
  */
 
-typedef union {
-
-    struct {
-        unsigned char bits;
-    };
-
-    struct {
-        unsigned Fuel : 1;
-        unsigned Ignition : 1;
-        unsigned Starter : 1;
-        unsigned Water : 1;
-        unsigned Fan : 1;
-        unsigned PCB : 1;
-        unsigned ECU : 1;
-        unsigned AUX : 1;
-    };
-} Error_Status;
-
 void high_isr(void);
+void killCar();
 void sample(int *data, const unsigned char index, const unsigned char ch);
 
 #endif
