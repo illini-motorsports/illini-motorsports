@@ -14,10 +14,8 @@
 #include "FSAE.h"
 #include "PDM.h"
 
-//TODO: Check whether CAN data is stale?
-//TODO: Use UNDER_VOLTAGE and OVER_TEMP variables
 //TODO: Set CRIT and WARN values appropriately
-//TODO: Add code control defines
+//TODO: Replace (FAN_SW || AUTO_FAN || OVER_TEMP) with (FAN_PORT)?
 
 /*
  * PIC18F46K80 Configuration Bits
@@ -232,6 +230,7 @@ void main(void) {
     unsigned long FAN_peak_tmr = 0;
     unsigned long CAN_send_tmr = 0;
 
+#ifdef CRIT_KILL
     unsigned long voltage_crit_tmr = 0;
     unsigned long oil_press_crit_tmr = 0;
     unsigned long engine_temp_crit_tmr = 0;
@@ -241,6 +240,7 @@ void main(void) {
     unsigned char oil_press_crit_pending = 0;
     unsigned char engine_temp_crit_pending = 0;
     unsigned char oil_temp_crit_pending = 0;
+#endif
 
     // Clear error count and peak timers for all loads
     for(i = 0; i < NUM_LOADS + 2; i++) {
@@ -358,6 +358,7 @@ void main(void) {
             PRIME = 0;
         }
 
+#ifdef CAN_KILL
         /*
          * If the latest CAN message was received more than CRIT_WAIT
          * milliseconds ago, kill the car.
@@ -365,7 +366,9 @@ void main(void) {
         if(millis - CAN_rec_tmr > CRIT_WAIT_CAN) {
             killCar();
         }
+#endif
 
+#ifdef CRIT_KILL
         /*
          * If the voltage is critically low, wait for a short amount of time to
          * see if it returns to a safe value. If it doesn't, kill the car.
@@ -441,6 +444,7 @@ void main(void) {
         } else {
             oil_temp_crit_pending = 0;
         }
+#endif
 
         // Determine if the battery voltage is too low
         UNDER_VOLTAGE = (voltage_tmr > 0 && voltage > VOLTAGE_WARN);
@@ -487,14 +491,13 @@ void main(void) {
         }
 
         // WATER
-        // TODO: Replace (FAN_SW || AUTO_FAN) with (FAN_PORT)?
-        if((FAN_SW || AUTO_FAN || ON) && !START_PORT) {
+        if((FAN_SW || AUTO_FAN || OVER_TEMP || ON) && !UNDER_VOLTAGE && !START_PORT) {
             if(!WATER_PORT) {
                 WATER_P_LAT = PWR_ON;
                 WATER_LAT = PWR_ON;
                 WATER_peak_tmr = millis;
             }
-        } else if((!ON && !AUTO_FAN && !FAN_SW) || START_PORT) {
+        } else if((!ON && !AUTO_FAN && !FAN_SW && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
             if(WATER_PORT) {
                 WATER_LAT = PWR_OFF;
             }
@@ -514,13 +517,13 @@ void main(void) {
         }
 
         // FAN
-        if((FAN_SW || AUTO_FAN) && !START_PORT) {
+        if((FAN_SW || AUTO_FAN || OVER_TEMP) && !UNDER_VOLTAGE && !START_PORT) {
             if(!FAN_PORT) {
                 FAN_P_LAT = PWR_ON;
                 FAN_LAT = PWR_ON;
                 FAN_peak_tmr = millis;
             }
-        } else if((!FAN_SW && !AUTO_FAN) || START_PORT) {
+        } else if((!FAN_SW && !AUTO_FAN && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
             if(FAN_PORT) {
                 FAN_LAT = PWR_OFF;
             }

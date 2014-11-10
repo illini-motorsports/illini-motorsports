@@ -20,6 +20,8 @@
 
 //#define INTERNAL
 #define MCHP_C18
+#define CAN_KILL
+#define CRIT_KILL
 
 /*
  * Magic Numbers
