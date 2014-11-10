@@ -22,6 +22,7 @@
 #define MCHP_C18
 #define CAN_KILL
 #define CRIT_KILL
+#define MAX_START
 
 /*
  * Magic Numbers
@@ -36,6 +37,7 @@
 #define CAN_PERIOD 500
 #define CRIT_WAIT 2000
 #define CRIT_WAIT_CAN 10000
+#define START_WAIT 4000
 
 // Peak current wait times (ms)
 #define IGN_PEAK_WAIT 500

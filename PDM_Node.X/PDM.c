@@ -223,12 +223,17 @@ void main(void) {
     unsigned int current[NUM_LOADS + 2];
 
     unsigned long PRIME_tmr = 0;
+    unsigned long CAN_send_tmr = 0;
+
+#ifdef MAX_START
+    unsigned long START_tmr = 0;
+#endif
+
     unsigned long IGN_peak_tmr = 0;
     unsigned long FUEL_peak_tmr = 0;
     unsigned long WATER_peak_tmr = 0;
     unsigned long START_peak_tmr = 0;
     unsigned long FAN_peak_tmr = 0;
-    unsigned long CAN_send_tmr = 0;
 
 #ifdef CRIT_KILL
     unsigned long voltage_crit_tmr = 0;
@@ -503,7 +508,27 @@ void main(void) {
             }
         }
 
+        /*
+         * Note: Because there is no "cooldown" timer, if the start switch
+         * remains in the on position the MAX_START code will not prevent
+         * cranking longer than START_WAIT milliseconds.
+         */
+#ifdef MAX_START
         // START
+        if(!START_SW_PORT && millis - START_tmr < START_WAIT) {
+            if(!START_PORT) {
+                START_P_LAT = PWR_ON;
+                START_LAT = PWR_ON;
+                START_peak_tmr = millis;
+                START_tmr = millis;
+            }
+        } else if(START_SW_PORT || millis - START_tmr >= START_WAIT) {
+            if(START_PORT) {
+                START_LAT = PWR_OFF;
+                START_tmr = 0;
+            }
+        }
+#else
         if(!START_SW_PORT) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
@@ -515,6 +540,7 @@ void main(void) {
                 START_LAT = PWR_OFF;
             }
         }
+#endif
 
         // FAN
         if((FAN_SW || AUTO_FAN || OVER_TEMP) && !UNDER_VOLTAGE && !START_PORT) {
