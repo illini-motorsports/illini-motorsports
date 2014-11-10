@@ -523,9 +523,12 @@ void main(void) {
                 START_tmr = millis;
             }
         } else if(START_SW_PORT || millis - START_tmr >= START_WAIT) {
+            if(START_SW_PORT) {
+                // Reset START_tmr if the start switch is in the off position
+                START_tmr = 0;
+            }
             if(START_PORT) {
                 START_LAT = PWR_OFF;
-                START_tmr = 0;
             }
         }
 #else
