@@ -80,7 +80,19 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
             theMsg.push_back(read_Data[i]);
         }
     }
+    // get crc32 and process the message
+    if(read_Data.size() > 4 + num + 4 + 1 + 3) {
+        // check the crc32
+        //char test_msg[10] = "123456789";
+        unsigned int check = crcFast(read_Data, 4 + num + 4 + 1);
+        unsigned int crc32 = (read_Data[4 + num + 4 + 1 + 0] * 256 * 256 * 256) +
+                (read_Data[4 + num + 4 + 1 + 1] * 256 * 256) +
+                (read_Data[4 + num + 4 + 1 + 2] * 256) +
+                read_Data[4 + num + 4 + 1 + 3];
 
+        if(check == crc32) {
+            qDebug() << "Check" << check;
+            qDebug() << "CRC32" << crc32;
     // get message count
     if(read_Data.size() > 4 + 12 + 4) {
         messageCount = read_Data[7 + num] + read_Data[6 + num] * 0x100 +
@@ -89,11 +101,12 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
         if(prev_message_counter == 0) {
           prev_message_counter = messageCount;
         }
-
+        /*
         if(messageCount - prev_message_counter > 1) {
           num_dropped_messages += (messageCount - prev_message_counter - 1);
           display.updateDropCounter(num_dropped_messages);
         }
+        */
 
         prev_message_counter = messageCount;
 
@@ -104,16 +117,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
     if(read_Data.size() > 4 + num + 4) {
         type = read_Data[4 + num + 4];
     }
-    // get crc32 and process the message
-    if(read_Data.size() > 4 + num + 4 + 1 + 3) {
-        // check the crc32
-        //char test_msg[10] = "123456789";
-        unsigned int check = crcFast(read_Data, 4 + num + 4 + 1);
-        unsigned int crc32 = (read_Data[4 + num + 4 + 1 + 0] * 256 * 256 * 256) +
-                (read_Data[4 + num + 4 + 1 + 1] * 256 * 256) +
-                (read_Data[4 + num + 4 + 1 + 2] * 256) +
-                read_Data[4 + num + 4 + 1 + 3];
-        if(check == crc32 || 1) {
+
             // process the message
             //qDebug() << "Type" << type;
             if(type == DATA && !channelAddr.empty()) {
@@ -143,6 +147,13 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
                 display.errorMessage(true);
             }
         }
+        else
+        {
+            qDebug() << "Not matching";
+            num_dropped_messages++;
+            qDebug() << num_dropped_messages;
+            display.updateDropCounter(num_dropped_messages);
+        }
 
         // clean up now that we're done
         read_Data.remove(0, 4 + num + 4 + 1 + 4);
@@ -157,7 +168,13 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
         }
 
     }
-
+else
+{
+    qDebug() << "Not matching";
+    num_dropped_messages++;
+    //qDebug() << num_dropped_messages;
+    display.updateDropCounter(num_dropped_messages);
+}
     // Set the display to connected if a valid message has been received.
     if(prev_message_counter > 0) {
       display.setConnected(true);

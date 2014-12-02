@@ -93,6 +93,18 @@ AppDisplay::AppDisplay(QWidget* parent) : QWidget(parent) {
   lbl_connected->setFont(font_subheader);
   layout->addWidget(lbl_connected, 1);
 
+  lbl_can_error = new QLabel("Can Error");
+  lbl_can_error->setFont(font_subheader);
+  lbl_can_error->setAlignment(Qt::AlignCenter);
+  lbl_can_error->setStyleSheet("QLabel { background-color: yellow; }");
+  layout_stats_right->addWidget(lbl_can_error, 1);
+
+  lbl_out_of_range = new QLabel("Out of range");
+  lbl_out_of_range->setFont(font_subheader);
+  lbl_out_of_range->setAlignment(Qt::AlignCenter);
+  lbl_out_of_range->setStyleSheet("QLabel { background-color: yellow; }");
+  layout_stats_left->addWidget(lbl_out_of_range, 1);
+
   layout_sub = new QHBoxLayout();
   layout->addLayout(layout_sub, 10);
 
@@ -230,12 +242,10 @@ void AppDisplay::updateData(unsigned char msgId, double data) {
 
 void AppDisplay::errorMessage(bool hasError) {
     if(hasError) {
-        lbl_stats_right_title->setStyleSheet("QLabel { background-color: red; }");
-        lbl_stats_left_title->setStyleSheet("QLabel { background-color: red; }");
+        lbl_can_error->setStyleSheet("QLabel { background-color: red; }");
     }
     else {
-        lbl_stats_right_title->setStyleSheet("QLabel { background-color: green; }");
-        lbl_stats_left_title->setStyleSheet("QLabel { background-color: green; }");
+        lbl_can_error->setStyleSheet("QLabel { background-color: green; }");
     }
 }
 
@@ -269,11 +279,9 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
   if(e->text() == "q") {
     onQuit();
   }
-  if(e->text() == "g") {
-      errorMessage(false);
-  }
   if(e->text() == "r") {
-      errorMessage(true);
+      lbl_out_of_range->setStyleSheet("QLabel { background-color: green; }");
+      lbl_can_error->setStyleSheet("QLabel { background-color: green; }");
   }
 }
 
@@ -284,7 +292,7 @@ void AppDisplay::readData() {
 
 void AppDisplay::outOfRange() {
     qDebug() << "out of range";
-  lbl_stats_left_title->setStyleSheet("QLabel { background-color: red; }");
+  lbl_out_of_range->setStyleSheet("QLabel { background-color: red; }");
 }
 
 void AppDisplay::handleError(QSerialPort::SerialPortError error) {

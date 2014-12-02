@@ -98,6 +98,8 @@ class AppDisplay : public QWidget {
     QLabel* lbl_ports;
     QPushButton* btn_quit;
     QLabel* lbl_connected;
+    QLabel* lbl_can_error;
+    QLabel* lbl_out_of_range;
 
     QLabel* lbl_stats_left_title;
     QLabel* lbl_stats_left_data;
