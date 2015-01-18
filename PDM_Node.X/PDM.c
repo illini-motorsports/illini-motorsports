@@ -93,7 +93,6 @@
 
 // Timing variables
 static volatile unsigned long millis; // Holds timer0 rollover count
-static volatile unsigned long CAN_rec_tmr;
 
 // Car data variables
 static volatile unsigned int FAN_SW; // Holds state of fan switch on steering wheel
@@ -104,10 +103,10 @@ static volatile unsigned long FAN_SW_tmr, engine_temp_tmr, oil_temp_tmr,
 oil_press_tmr, rpm_tmr, voltage_tmr;
 
 // ECAN variables
-static unsigned long id; // holds CAN msgID
-static unsigned char data[8]; // holds CAN data bytes
-static unsigned char dataLen; // holds number of CAN data bytes
-static ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
+static unsigned long id; // Holds CAN msgID
+static unsigned char data[8]; // Holds CAN data bytes
+static unsigned char dataLen; // Holds number of CAN data bytes
+static ECAN_RX_MSG_FLAGS flags; // Holds information about recieved message
 
 static const unsigned char ch_num[NUM_LOADS + 2] = {
     IGN_ch, FUEL_ch, WATER_ch, START_ch, FAN_ch, PCB_ch,
@@ -167,8 +166,6 @@ void high_isr(void) {
     if(PIR5bits.RXB1IF) {
         // Reset the flag
         PIR5bits.RXB1IF = 0;
-
-        CAN_rec_tmr = millis;
 
         // Get data from receive buffer
         ECANReceiveMessage(&id, data, &dataLen, &flags);
@@ -254,7 +251,6 @@ void main(void) {
 
     // Clear variables
     millis = 0;
-    CAN_rec_tmr = 0;
 
     FAN_SW = 0;
     engine_temp = 0;
@@ -332,7 +328,7 @@ void main(void) {
     ECU_LAT = PWR_ON;
     PCB_LAT = PWR_ON;
 
-    TRISCbits.TRISC5 = OUTPUT; // Relay input
+    TRISCbits.TRISC5 = OUTPUT; // Relay output
     TERM_LAT = PWR_OFF; // Not terminating
 
     ECANInitialize(); // Setup ECAN
@@ -362,16 +358,6 @@ void main(void) {
         } else if(millis - PRIME_tmr > PRIME_WAIT && FUEL_PORT) {
             PRIME = 0;
         }
-
-#ifdef CAN_KILL
-        /*
-         * If the latest CAN message was received more than CRIT_WAIT
-         * milliseconds ago, kill the car.
-         */
-        if(millis - CAN_rec_tmr > CRIT_WAIT_CAN) {
-            killCar();
-        }
-#endif
 
 #ifdef CRIT_KILL
         /*
