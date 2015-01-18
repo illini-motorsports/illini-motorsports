@@ -22,6 +22,7 @@
 #define MCHP_C18
 #define CRIT_KILL
 #define MAX_START
+#define BASIC_CONTROL 1
 
 /*
  * Magic Numbers
@@ -34,8 +35,13 @@
 // Timing (ms)
 #define PRIME_WAIT 500
 #define CAN_PERIOD 500
-#define CRIT_WAIT 2000
 #define START_WAIT 4000
+#define BASIC_CONTROL_WAIT 1000
+
+// Critical kill wait timers (ms)
+#define CRIT_WAIT_VOLTAGE 2000
+#define CRIT_WAIT_OIL_PRESS 500
+#define CRIT_WAIT_TEMP 5000
 
 // Peak current wait times (ms)
 #define IGN_PEAK_WAIT 500
@@ -45,23 +51,21 @@
 #define FAN_PEAK_WAIT 500
 
 // Critical error conditions
-#define VOLTAGE_CRIT 1150       // 11.5 V
+#define VOLTAGE_CRIT 1100       // 11.0 V
 #define OIL_PRESS_CRIT_L 160    // 16.0 psi
 #define OIL_PRESS_CRIT_H 250    // 25.0 psi
 #define ENGINE_TEMP_CRIT 1150   // 115.0 C
-#define OIL_TEMP_CRIT 2100      // 210.0 C
+#define OIL_TEMP_CRIT 1800      // 180.0 C
 
 // Warning error conditions
 #define VOLTAGE_WARN 1250       // 12.5 V
 #define ENGINE_TEMP_WARN 1000   // 100.0 C
-#define OIL_TEMP_WARN 1800      // 180.0 C
+#define OIL_TEMP_WARN 1650      // 165.0 C
 
 // Thresholds
 #define RPM_ON_THRESHOLD 600    // 600 rpm
 #define RPM_THRESHOLD_H 4000    // 4,000 rpm
 #define RPM_THRESHOLD_L 1000    // 1,000 rpm
-#define FAN_THRESHOLD_H 900     // 90.0 C
-#define FAN_THRESHOLD_L 840     // 84.0 C
 
 // Indices for arrays
 #define IGN_val     0

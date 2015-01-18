@@ -212,7 +212,6 @@ void main(void) {
 
     unsigned char ON = 0;
     unsigned char PRIME = 1;
-    unsigned char AUTO_FAN = 0;
     unsigned char UNDER_VOLTAGE, OVER_TEMP = 0;
 
     unsigned char i = 0;
@@ -221,6 +220,7 @@ void main(void) {
 
     unsigned long PRIME_tmr = 0;
     unsigned long CAN_send_tmr = 0;
+    unsigned long CAN_recv_tmr = 0;
 
 #ifdef MAX_START
     unsigned long START_tmr = 0;
@@ -345,13 +345,6 @@ void main(void) {
         // Check if car's engine is on
         ON = rpm > RPM_ON_THRESHOLD;
 
-        // Set whether to automatically run the fan based on water temperature
-        if(engine_temp < FAN_THRESHOLD_L) {
-            AUTO_FAN = 0;
-        } else if(engine_temp > FAN_THRESHOLD_H) {
-            AUTO_FAN = 1;
-        }
-
         // Determine how long the fuel pump should be left on
         if(!ON_SW_PORT) {
             PRIME = 1;
@@ -371,7 +364,7 @@ void main(void) {
             }
             voltage_crit_pending = 1;
 
-            if(millis - voltage_crit_tmr > CRIT_WAIT) {
+            if(millis - voltage_crit_tmr > CRIT_WAIT_VOLTAGE) {
                 killCar();
             }
         } else {
@@ -393,7 +386,7 @@ void main(void) {
             }
             oil_press_crit_pending = 1;
 
-            if(millis - oil_press_crit_tmr > CRIT_WAIT) {
+            if(millis - oil_press_crit_tmr > CRIT_WAIT_OIL_PRESS) {
                 killCar();
             }
         } else {
@@ -411,7 +404,7 @@ void main(void) {
             }
             engine_temp_crit_pending = 1;
 
-            if(millis - engine_temp_crit_tmr > CRIT_WAIT) {
+            if(millis - engine_temp_crit_tmr > CRIT_WAIT_TEMP) {
                 killCar();
             }
         } else {
@@ -429,7 +422,7 @@ void main(void) {
             }
             oil_temp_crit_pending = 1;
 
-            if(millis - oil_temp_crit_tmr > CRIT_WAIT) {
+            if(millis - oil_temp_crit_tmr > CRIT_WAIT_TEMP) {
                 killCar();
             }
         } else {
@@ -454,43 +447,104 @@ void main(void) {
          * respectively, even if the conditions match.
          */
 
-        // IGN
-        if(ON_SW_PORT) {
+        if(BASIC_CONTROL && (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
+                millis - engine_temp_tmr > BASIC_CONTROL_WAIT ||
+                millis - voltage_tmr > BASIC_CONTROL_WAIT ||
+                millis - oil_temp_tmr > BASIC_CONTROL_WAIT ||
+                millis - oil_press_tmr > BASIC_CONTROL_WAIT ||
+                millis - rpm_tmr > BASIC_CONTROL_WAIT)) {
+            /**
+             * Perform basic load control.
+             *
+             * Turn on all loads except START and do not allow them to turn off
+             * until exiting basic load control. START will still be controlled
+             * normally as it does not depend on CAN.
+             */
+
+            // IGN
             if(!IGN_PORT) {
                 IGN_P_LAT = PWR_ON;
                 IGN_LAT = PWR_ON;
                 IGN_peak_tmr = millis;
             }
-        } else {
-            if(IGN_PORT) {
-                IGN_LAT = PWR_OFF;
-            }
-        }
 
-        // FUEL
-        if((ON_SW_PORT && PRIME) || ON || START_PORT) {
+            // FUEL
             if(!FUEL_PORT) {
                 FUEL_P_LAT = PWR_ON;
                 FUEL_LAT = PWR_ON;
                 FUEL_peak_tmr = millis;
                 PRIME_tmr = millis;
             }
-        } else if(!ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
-            if(FUEL_PORT) {
-                FUEL_LAT = PWR_OFF;
-            }
-        }
 
-        // WATER
-        if((FAN_SW || AUTO_FAN || OVER_TEMP || ON) && !UNDER_VOLTAGE && !START_PORT) {
+            // WATER
             if(!WATER_PORT) {
                 WATER_P_LAT = PWR_ON;
                 WATER_LAT = PWR_ON;
                 WATER_peak_tmr = millis;
             }
-        } else if((!ON && !AUTO_FAN && !FAN_SW && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
-            if(WATER_PORT) {
-                WATER_LAT = PWR_OFF;
+
+            // FAN
+            if(!FAN_PORT) {
+                FAN_P_LAT = PWR_ON;
+                FAN_LAT = PWR_ON;
+                FAN_peak_tmr = millis;
+            }
+        } else {
+            /**
+             * Perform regular load control.
+             */
+
+            // IGN
+            if(ON_SW_PORT) {
+                if(!IGN_PORT) {
+                    IGN_P_LAT = PWR_ON;
+                    IGN_LAT = PWR_ON;
+                    IGN_peak_tmr = millis;
+                }
+            } else {
+                if(IGN_PORT) {
+                    IGN_LAT = PWR_OFF;
+                }
+            }
+
+            // FUEL
+            if((ON_SW_PORT && PRIME) || ON || START_PORT) {
+                if(!FUEL_PORT) {
+                    FUEL_P_LAT = PWR_ON;
+                    FUEL_LAT = PWR_ON;
+                    FUEL_peak_tmr = millis;
+                    PRIME_tmr = millis;
+                }
+            } else if(!ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
+                if(FUEL_PORT) {
+                    FUEL_LAT = PWR_OFF;
+                }
+            }
+
+            // WATER
+            if((FAN_SW || OVER_TEMP || ON) && !UNDER_VOLTAGE && !START_PORT) {
+                if(!WATER_PORT) {
+                    WATER_P_LAT = PWR_ON;
+                    WATER_LAT = PWR_ON;
+                    WATER_peak_tmr = millis;
+                }
+            } else if((!ON && !FAN_SW && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
+                if(WATER_PORT) {
+                    WATER_LAT = PWR_OFF;
+                }
+            }
+
+            // FAN
+            if((FAN_SW || OVER_TEMP) && !UNDER_VOLTAGE && !START_PORT) {
+                if(!FAN_PORT) {
+                    FAN_P_LAT = PWR_ON;
+                    FAN_LAT = PWR_ON;
+                    FAN_peak_tmr = millis;
+                }
+            } else if((!FAN_SW && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
+                if(FAN_PORT) {
+                    FAN_LAT = PWR_OFF;
+                }
             }
         }
 
@@ -530,19 +584,6 @@ void main(void) {
             }
         }
 #endif
-
-        // FAN
-        if((FAN_SW || AUTO_FAN || OVER_TEMP) && !UNDER_VOLTAGE && !START_PORT) {
-            if(!FAN_PORT) {
-                FAN_P_LAT = PWR_ON;
-                FAN_LAT = PWR_ON;
-                FAN_peak_tmr = millis;
-            }
-        } else if((!FAN_SW && !AUTO_FAN && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
-            if(FAN_PORT) {
-                FAN_LAT = PWR_OFF;
-            }
-        }
 
         /*
          * Check peak control timers.
