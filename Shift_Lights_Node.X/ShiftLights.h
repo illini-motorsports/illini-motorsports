@@ -84,18 +84,19 @@
 #define REV_COLOR       BLUE
 #define REV_LIMIT_COLOR RED
 
-#define OP_THRESHOLD_L 160
-#define OP_THRESHOLD_H 250
-#define OT_THRESHOLD 2100
-#define ET_THRESHOLD 1150
+#define OP_THRESHOLD_L  160
+#define OP_THRESHOLD_H  250
+#define OT_THRESHOLD    2100
+#define ET_THRESHOLD    1150
 #define RPM_THRESHOLD_H 4000
 #define RPM_THRESHOLD_L 1000
+#define VOLT_THRESHOLD  1250
 
-#define BLINK_TIME 200
+#define BLINK_TIME      200
 
 typedef char bool;
-#define false 0
-#define true 1
+#define false   0
+#define true    1
 
 /*
  * Method Headers
@@ -105,18 +106,16 @@ void high_isr(void);
 void set_led_to_color(unsigned char led, unsigned char color);
 void set_all(unsigned char color);
 void set_lights(unsigned char max);
-void startup(int currentTime);
+void startup(long currentTime);
 void excess(int type);
-void checkVolts();
 int length(int array[]);
 void multi_led_color(int led[], unsigned char color, int size);
-void sleep(int seconds, int milliAmount);
-bool checkStatus();
-bool timeout(bool sleep);
-bool checkEngineTemp();
-bool checkOilTemp();
-bool checkOilPressure();
-bool checkBatteryVolts();
+bool healthyStatus();
+bool recievingInterrupts();
+bool healthyEngineTemp();
+bool healthyOilTemp();
+bool healthyOilPressure();
+bool healthyBatteryVolts();
 bool lastAccessWithinMsgInterval(int i);
 void blink_all(int numOfTimes, unsigned char color);
 void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes);
@@ -124,6 +123,7 @@ void display();
 void errorDisplay(int error);
 void set_lights_with_color(unsigned char max,unsigned char color);
 void RPMDisplayer(char color);
-
+bool checkRPM();
+void sleep(int seconds, int milliAmount);
 
 #endif

@@ -96,18 +96,23 @@
  * Global Variable Declarations
  */
 
-volatile unsigned int millis = 0; // Holds timer0 rollover count.
+volatile unsigned long millis = 0; // Holds timer0 rollover count.
 
+/*
+ * MAIN INFORMATION:
+ */
 volatile signed int rpm = 0;
 volatile signed int oilPressure = 0;
 volatile signed int oilTemp = 0;
 volatile signed int engineTemp = 0;
 volatile signed int batteryVoltage = 0;
-volatile signed int lastInterrupt = -1;
 
-volatile signed int lastRPMAccess = -1,
-        lastOilPressureAccess = -1, lastOilTempAccess = -1, lastEngineTempAccess = -1, lastVoltageAccess = -1;
-volatile signed int recieveMsgInterval = 500; //milliseconds?
+volatile signed long lastInterrupt = -1; //variable used to give last time interrupt occured for the main information.
+
+volatile unsigned long lastRPMAccess = -1, lastOilPressureAccess = -1, lastOilTempAccess = -1, lastEngineTempAccess = -1, lastVoltageAccess = -1;
+
+volatile unsigned long recieveMsgInterval = 500; //milliseconds?
+volatile signed char stdColor = BLUE, errColor = RED_GREEN;
 
 
 // ECAN variables
@@ -138,7 +143,7 @@ void high_vector(void) {
 #pragma interrupt high_isr
 
 void high_isr(void) {
-    
+
 
     // Check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
@@ -146,10 +151,8 @@ void high_isr(void) {
         WriteTimer0(0x85); // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
-
     // Check for recieved CAN message.
     if(PIR5bits.RXB1IF) {
-        //set last interrupt time
         lastInterrupt = millis;
 
         PIR5bits.RXB1IF = FALSE; // Reset the flag.
@@ -280,171 +283,125 @@ void set_lights_with_color(unsigned char max,unsigned char color){
         }
     }
 }
+/* FUNCTION: give a particular number, it will look and see if messages of a particular varaible have been coming in at the right time interval.
+ * RETURNS:  TRUE (1) if the message has come in before or on the message time interval (500 milli)
+ *           FALSE(0) if the message has NOT come in during the message time interval.
+ */
 bool lastAccessWithinMsgInterval(int i){
     switch(i){
         case 0:
-            if(millis - lastVoltageAccess < recieveMsgInterval)
+            if(millis - lastVoltageAccess <= recieveMsgInterval)
                 return true;
             return false;
         case 1:
-            if(millis - lastRPMAccess < recieveMsgInterval)
+            if(millis - lastRPMAccess <= recieveMsgInterval)
                 return true;
             return false;
         case 2:
-            if(millis - lastOilPressureAccess < recieveMsgInterval)
+            if(millis - lastOilPressureAccess <= recieveMsgInterval)
                 return true;
             return false;
         case 3:
-            if(millis - lastOilTempAccess < recieveMsgInterval)
+            if(millis - lastOilTempAccess <= recieveMsgInterval)
                 return true;
             return false;
         case 4:
-            if(millis - lastEngineTempAccess < recieveMsgInterval)
+            if(millis - lastEngineTempAccess <= recieveMsgInterval)
                 return true;
             return false;
         default:
             return false;
     }
 }
+/* FUNCTION:
+ * RETURNS: TRUE (1)
+ *          FALSE(0)
+ */
 bool checkRPM(){
     if(!lastAccessWithinMsgInterval(1))
         return false;
     return true;
 }
+
 /*
  Function checks the volts from the battery.
- Outputs: True (1) if volts are in balance, above the threshold.
-          False(0) if volts are below the threshold.
+ Outputs: True (1) if volts are in balance, above the threshold.            (HEALTHY!)
+          False(0) if volts are below the threshold.                        (SICK!)
  */
-bool checkBatteryVolts(){
-    if(!lastAccessWithinMsgInterval(0) || batteryVoltage < 13)
-        return false; //Battery is below 13 volts, throw error.
+bool healthyBatteryVolts(){
+    if(batteryVoltage < VOLT_THRESHOLD)
+        return false;
+    if(!lastAccessWithinMsgInterval(0))
+        return false;
     return true;
 }
+
 /*
  Function checks the pressure of the oil.
- Outputs: True (1) if oil pressure is in balance or above the threshold.
-          False(0) if oil pressure below the threshold.
+ Outputs: True (1) if oil pressure is in balance or above the threshold.    (HEALTHY!)
+          False(0) if oil pressure below the threshold.                     (SICK!)
  */
-bool checkOilPressure(){
-    if(!lastAccessWithinMsgInterval(2) || !lastAccessWithinMsgInterval(1)){
+bool healthyOilPressure(){
+    if(!lastAccessWithinMsgInterval(1) || !lastAccessWithinMsgInterval(2))
         return false;
-    }else if(rpm > RPM_THRESHOLD_H && oilPressure < OP_THRESHOLD_H){
-        return false;
-    }else if(rpm > RPM_THRESHOLD_L && oilPressure < OP_THRESHOLD_L){
-        return false;
-    }else
+    else if(rpm > RPM_THRESHOLD_H && oilPressure < OP_THRESHOLD_H)
+        return false; //Why is this bad?
+    else if(rpm > RPM_THRESHOLD_L && oilPressure < OP_THRESHOLD_L)
+        return false; //Again why is this bad?
+    else
         return true;
 }
+
 /*
  Function checks the oil temp.
- Outputs: True (1) if the oil temp is in balance or below the threshold.
-          False(0) if the oil temp is above the threshold.
+ Outputs: True (1) if the oil temp is in balance or below the threshold.    (HEALTHY!)
+          False(0) if the oil temp is above the threshold.                  (SICK!)
  */
-bool checkOilTemp(){
-    if(!lastAccessWithinMsgInterval(3) || oilTemp <= OT_THRESHOLD)
-        return true;
-    return false;
-}
-/*
- Function checks the temp from the engine.
- Outputs: True (1) if the engine temp is in balance or below the threshold.
-          False(0) if the engine temp is above the threshold.
- */
-bool checkEngineTemp(){
-    if(!lastAccessWithinMsgInterval(4) || engineTemp <= ET_THRESHOLD)
-        return true;
-    return false;
-}
-/*
- Function checks if messages are still coming.
- Outputs: True (1) if messages are still coming which means the interrupt time and current time 
-                   difference is below or equal to the rate at which new data comes in at.
-          False(0) if the RPM isnt coming in anymore
- **If lastInterrupt is negative one that means nothing has coming yet** -> set time out error of 10 seconds
- */
-bool timeout(bool shouldSleep){
-    if(lastInterrupt == -1){
-        int count = 0;
-        if(shouldSleep){
-            while(count < 3){ //timeout at 10 seconds if no data has come in at all
-                if(lastInterrupt != -1)
-                    return false;
-                sleep(1,1000);
-                count++;
-            }
-        }else{
-            if(lastInterrupt != -1)
-                return false;
-        }
-    }else{
-        if(millis - lastInterrupt < recieveMsgInterval) //Does data come in every 100 milliseconds?
-            return false;
-    }
-    return true;
-}
-/*
- Description: Checks for any irregularities with the engine, oil, and battery.
- Returns: True if status is good, false if status is bad as irregularities exist
- DO NOT: call checkRPM(), this is used in display RPM specific error.
- */
-bool checkStatus(){
-    if(!checkBatteryVolts() || !checkOilPressure() || !checkOilTemp() || !checkEngineTemp())
+bool healthyOilTemp(){
+    if(oilTemp > OT_THRESHOLD)
+        return false;
+    if(!lastAccessWithinMsgInterval(3))
         return false;
     return true;
 }
-void startup(int currentTime){
-    while(true){
-        //Moving in towards the center then back out and final blinks twice
-        if(millis - currentTime < BLINK_TIME){
-            //turn two outer lights to red
-            int temp[] = {0,4};
-            multi_led_color(temp,RED, 2);
 
-            //set_led_to_color(0,RED);
-            //set_led_to_color(4,RED);
-        }else if(millis - currentTime < BLINK_TIME * 2){
-            //turn next outer two to red
-            int temp[] = {1,3};
-            multi_led_color(temp,RED, 2);
-
-            //set_led_to_color(1,RED);
-            //set_led_to_color(3,RED);
-        }else if(millis - currentTime < BLINK_TIME * 3){
-            //turn middle light to red
-            set_led_to_color(2,RED);
-        }else if(millis - currentTime < BLINK_TIME * 4){
-            //turn middle to green light
-            set_led_to_color(2,GREEN);
-        }else if(millis - currentTime < BLINK_TIME * 5){
-            //turn next outer two green light
-            int temp[] = {1,3};
-            multi_led_color(temp,GREEN, 2);
-
-            //set_led_to_color(1,GREEN);
-            //et_led_to_color(3,GREEN);
-        }else if(millis - currentTime < BLINK_TIME * 6){
-            //turn most outer two to green light
-            int temp[] = {0,4};
-            multi_led_color(temp,GREEN, 2);
-
-            //set_led_to_color(0,GREEN);
-            //set_led_to_color(4,GREEN);
-        }else if(millis - currentTime < BLINK_TIME * 7){
-            //Blink twice
-            blink_all(3, GREEN);
-        }else{
-            set_all(NONE);
-            break;
-        }
-    }
+/*
+ Function checks the temp from the engine.
+ Outputs: True (1) if the engine temp is in balance or below the threshold.  (HEALTHY!)
+          False(0) if the engine temp is above the threshold.                (SICK!)
+ */
+bool healthyEngineTemp(){
+    if(engineTemp > ET_THRESHOLD) //if engine temp. is above threshold, that is very bad!
+        return false;
+    if(!lastAccessWithinMsgInterval(4))
+        return false;
+    return true;
 }
+
+/*
+ *
+ */
 void sleep(int seconds, int milliAmount){
     int start = millis;
     while(millis - start < seconds*milliAmount){}
 }
+
+/* FUNCTION:
+ *
+ */
 void blink_all(int numOfTimes, unsigned char color){
-    int count = 0, full = 1;
+    int i, d;
+    for(i = 0; i < numOfTimes; i++){
+        for(d = 1; d <= 3; d++){
+            if(d % 2 == 0)
+                set_all(color);
+            else
+                set_all(NONE);
+            sleep(1,100);
+        }
+    }
+
+    /*int count = 0, full = 1;
     while(count < numOfTimes){
         full = 1;
         while(full <= 3){ //full blink
@@ -457,8 +414,11 @@ void blink_all(int numOfTimes, unsigned char color){
             full++;
         }
         count++;
-    }
+    }*/
 }
+/* FUNCTION:
+ *
+ */
 void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes){
     int count = 0, full = 1;
     while(count < numOfTimes){
@@ -480,19 +440,50 @@ void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2
     multi_led_color(ledSet1, NONE, size1);
     multi_led_color(ledSet2, NONE, size2);
 }
+
+/* FUNCTION: tells whether or not we have begun recieving messages and whether or not we are recieving them in the correct interval.
+ * RETURNS:  TRUE  (1) if we have begun recieving messages and are still recieving them in the correct interval of time.
+ *           FALSE (0) if we have NOT begun recieving messages or are not recieving them in the correct interval of time.
+ */
+bool recievingInterrupts(){
+    if(lastInterrupt != -1){
+        if(millis - lastInterrupt <= recieveMsgInterval)
+            return true;
+        else
+            return false;
+    }else
+        return false;
+}
+
+/* FUNCTION: Checks for any irregularities with the engine, oil, and battery.
+ * RETURNS: TRUE  (0) if status is good.
+ *          FALSE (1) if status is bad, as irregularities exist.
+ *
+ * DO NOT: call checkRPM(), this is used in display RPM specific error.
+ */
+bool healthyStatus(){
+    if(!healthyEngineTemp() || !healthyOilPressure() || !healthyOilTemp() || !healthyBatteryVolts())
+        return false;
+    return true;
+}
+/* FUNCTION:
+ *
+ */
 void display() {
-    if(timeout(false))
-        errorDisplay(1);
     while(true){
-        if(timeout(false) || !checkStatus()){
+        if(!recievingInterrupts())
+            errorDisplay(1);
+        else if(!healthyStatus() && recievingInterrupts())
             //No messages coming anymore.
             errorDisplay(0);
-        }else{
+        else
             //Normal RPM display
-            RPMDisplayer(REV_COLOR);
-        }
+            RPMDisplayer(stdColor);
     }
 }
+/* FUNCTION:
+ *
+ */
 void errorDisplay(int error){
     switch(error){
         case 0:
@@ -500,24 +491,25 @@ void errorDisplay(int error){
             while(true){
                 int ledSet1[] = {0,2,4};
                 int ledSet2[] = {1,3};
-                while(checkRPM() && !checkStatus())
-                    RPMDisplayer(RED_GREEN);
-                alternate_blink(ledSet1, 3, RED_BLUE, ledSet2, 2, GREEN_BLUE, 2); //blink twice then check to see if error still exists
-                if(!timeout(false) || checkStatus())
+                while(checkRPM() && !healthyStatus())
+                    RPMDisplayer(errColor);
+                if(healthyStatus())
                     return;
+                else
+                    alternate_blink(ledSet1, 3, RED_BLUE, ledSet2, 2, GREEN_BLUE, 2); //blink twice then check to see if error still exists
             }
         case 1:
-            //No messages have coming in initally
-            while(true){
+            //No interrupts occuring at all
+            while(!recievingInterrupts())
                 blink_all(2,RED);
-                if(!timeout(false))
-                    return;
-            }
-        case 2:
+            break;
         default:
             break;
     }
 }
+/* FUNCTION:
+ *
+ */
 void RPMDisplayer(char color){
     //Sets certain lights to NONE or REV_COLOR based on rpm value.
     if(rpm >= REV_RANGE_LIMIT) {
@@ -536,37 +528,75 @@ void RPMDisplayer(char color){
         set_all(NONE);
     }
 }
+
+/* FUNCTION: Gives a pretty startup animation. Just makin' things look pretty here.
+ *
+ */
+void startup(long currentTime){
+    while(true){
+        //Moving in towards the center then back out and final blinks twice
+        if(millis - currentTime < BLINK_TIME){
+            //turn two outer lights to red
+            int temp[] = {0,4};
+            multi_led_color(temp,RED, 2);
+        }else if(millis - currentTime < BLINK_TIME * 2){
+            //turn next outer two to red
+            int temp[] = {1,3};
+            multi_led_color(temp,RED, 2);
+        }else if(millis - currentTime < BLINK_TIME * 3){
+            //turn middle light to red
+            set_led_to_color(2,RED);
+        }else if(millis - currentTime < BLINK_TIME * 4){
+            //turn middle to green light
+            set_led_to_color(2,GREEN);
+        }else if(millis - currentTime < BLINK_TIME * 5){
+            //turn next outer two green light
+            int temp[] = {1,3};
+            multi_led_color(temp,GREEN, 2);
+        }else if(millis - currentTime < BLINK_TIME * 6){
+            //turn most outer two to green light
+            int temp[] = {0,4};
+            multi_led_color(temp,GREEN, 2);
+        }else if(millis - currentTime < BLINK_TIME * 7){
+            //Blink twice
+            blink_all(3, GREEN);
+        }else{
+            set_all(NONE);
+            break;
+        }
+    }
+}
+
 /*
  * Main Loop
  */
-
 void main(void) {
 
-    // Variable Declarations
+        // Variable Declarations
         unsigned int blink_tmr = 0;
 
-    //Oscillator Setup
+        //Oscillator Setup
         init_oscillator();
 
-    //Peripherals Setup
-        ANCON0 = 0x00; // Default all pins to digital
-        ANCON1 = 0x00; // Default all pins to digital
+        //Peripherals Setup
+        ANCON0 = 0x00;                      // Default all pins to digital
+        ANCON1 = 0x00;                      // Default all pins to digital
 
         // Turn on and configure the TIMER1 oscillator
         OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-        WriteTimer0(0x82); // Load timer register
-        millis = 0; // Clear milliseconds count
-        INTCONbits.TMR0IE = 1; // Turn on timer0 interupts
+        WriteTimer0(0x82);                  // Load timer register
+        millis = 0;                         // Clear milliseconds count
+        INTCONbits.TMR0IE = 1;              // Turn on timer0 interupts
 
-        TRISCbits.TRISC6 = OUTPUT; // programmable termination
+        TRISCbits.TRISC6 = OUTPUT;          // programmable termination
         TERM_LAT = FALSE;
 
-        ECANInitialize(); // setup ECAN
+        ECANInitialize();                   //setup ECAN
 
         // interrupts setup
-        INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
-        INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
-        RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
+        INTCONbits.GIE = 1;                 // Global Interrupt Enable (1 enables)
+        INTCONbits.PEIE = 1;                // Peripheral Interrupt Enable (1 enables)
+        RCONbits.IPEN = 0;                  // Interrupt Priority Enable (1 enables)
 
         init_unused_pins();
 
@@ -604,38 +634,7 @@ void main(void) {
         GREEN4_LAT = 1;
         BLUE4_LAT = 1;
 
-    //Begin startup animation and RPM display
-        startup(millis); //nice startup animation
+        //Begin startup animation and RPM display
+        startup(millis);                        //nice startup animation
         display();
-
-
-
-        //Old code is listed below delete when testing has concluded as successful on above code.
-
-        /*blink_tmr = millis;
-        while(1) {
-
-            // Sets certain lights to NONE or REV_COLOR based on rpm value.
-            if(rpm >= REV_RANGE_LIMIT) {
-               if(millis - blink_tmr < BLINK_TIME) {
-                    set_all(REV_LIMIT_COLOR);
-               }else if(millis - blink_tmr < BLINK_TIME * 2) {
-                    set_all(NONE);
-               }else{
-                    blink_tmr = millis;
-               }
-            }else if(rpm >= REV_RANGE_5) {
-                set_lights(5);
-            }else if(rpm >= REV_RANGE_4) {
-                set_lights(4);
-            }else if(rpm >= REV_RANGE_3) {
-                set_lights(3);
-            }else if(rpm >= REV_RANGE_2) {
-                set_lights(2);
-            }else if(rpm >= REV_RANGE_1) {
-                set_lights(1);
-            }else{
-                set_all(NONE);
-            }
-        }*/
 }
