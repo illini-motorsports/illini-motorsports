@@ -15,6 +15,7 @@
 #include "FSAE.h"
 #include "CAN.h"
 #include "ShiftLights.h"
+#include "delays.h"
 
 //TODO: What to do if millis isn't updating.
 //TODO: What to do if rmp isn't updating.
@@ -109,7 +110,7 @@ volatile signed int batteryVoltage = 0;
 
 volatile signed long lastInterrupt = -1; //variable used to give last time interrupt occured for the main information.
 
-volatile unsigned long lastRPMAccess = -1, lastOilPressureAccess = -1, lastOilTempAccess = -1, lastEngineTempAccess = -1, lastVoltageAccess = -1;
+volatile signed long lastRPMAccess = -1, lastOilPressureAccess = -1, lastOilTempAccess = -1, lastEngineTempAccess = -1, lastVoltageAccess = -1;
 
 volatile unsigned long recieveMsgInterval = 500; //milliseconds?
 volatile signed char stdColor = BLUE, errColor = RED_GREEN;
@@ -382,9 +383,16 @@ bool healthyEngineTemp(){
  *
  */
 void sleep(int seconds, int milliAmount){
-    int start = millis;
-    while(millis - start < seconds*milliAmount){}
+    //int start = millis;
+    //while(millis - start < seconds*milliAmount){}
+    Delay10KTCYx(50);
 }
+/*void sleep(int milliSeconds){
+    int startTime = millis, continuingTime = millis;
+    while(continuingTime - startTime < milliSeconds){
+
+    }
+}*/
 
 /* FUNCTION:
  *
@@ -446,13 +454,10 @@ void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2
  *           FALSE (0) if we have NOT begun recieving messages or are not recieving them in the correct interval of time.
  */
 bool recievingInterrupts(){
-    if(lastInterrupt != -1){
+    if(lastInterrupt != -1)
         if(millis - lastInterrupt <= recieveMsgInterval)
             return true;
-        else
-            return false;
-    }else
-        return false;
+    return false;
 }
 
 /* FUNCTION: Checks for any irregularities with the engine, oil, and battery.
@@ -471,12 +476,12 @@ bool healthyStatus(){
  */
 void display() {
     while(true){
-        if(!recievingInterrupts())
+        if(recievingInterrupts() == false)
             errorDisplay(1);
-        else if(!healthyStatus() && recievingInterrupts())
+        else if(recievingInterrupts() == true && healthyStatus() == false)
             //No messages coming anymore.
             errorDisplay(0);
-        else
+        else if(checkRPM())
             //Normal RPM display
             RPMDisplayer(stdColor);
     }
@@ -500,8 +505,9 @@ void errorDisplay(int error){
             }
         case 1:
             //No interrupts occuring at all
-            while(!recievingInterrupts())
+            while(!recievingInterrupts()){
                 blink_all(2,RED);
+            }
             break;
         default:
             break;
