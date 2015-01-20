@@ -91,10 +91,9 @@
 static volatile int millis; // holds timer0 rollover count
 
 // timing
-static unsigned int refreshTime[2], blinkTimer[2], holdTimer[2], numHoldTimer[2];
-static unsigned char blinkStates[2], holdText[2], holdNum[2], displayStates[2];
-static unsigned char blinkStates2[2]; //for "warning" range error blinking sequence
-static unsigned int CANint_tmr, CANerr_tmr;
+static unsigned int refreshTime[2], blinkTimer[2], holdTimer[2];
+static unsigned char blinkStates[2], holdText[2], displayStates[2];
+static unsigned int CANint_tmr;
 
 // ECAN variables
 static unsigned long id; // holds CAN msgID
@@ -107,7 +106,6 @@ static volatile int gear;
 static int CANdata_flag;
 static int CANerror_flag;
 static int error_flag[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
-static int hold_err;
 
 static const unsigned char d_place_arr[NUM_CHAN] = {
     2, // oil temperature
@@ -167,16 +165,11 @@ void high_isr(void) {
 
     //check for CAN bus error
     if(PIR5bits.ERRIF){
-        PIR5bits.ERRIF = FALSE;
-      /*  if(millis - CANerr_tmr > CAN_ERR_MAX)
-        {
-            CANerr_tmr = millis;
-            PIR5bits.ERRIF = FALSE;
-        }
-       */
         CANerror_flag = 1;
     }
-
+    else{
+        CANerror_flag = 0;
+    }
 
     // check for recieved CAN message
     if(PIR5bits.RXB1IF) {
@@ -186,6 +179,8 @@ void high_isr(void) {
         // get data from recieve buffer
         //ECANReceiveMessage(&id, data, &dataLen, &flags);
         ECANReceiveMessage(&id, data, &dataLen, &flags);
+
+
         bufferData(); // put data in an array
         checkRangeError(); //checks range and sets flags
     }
@@ -215,21 +210,17 @@ void main(void) {
     cycleStates[LEFT] = CYCLE_L;
     cycleStates[RIGHT] = CYCLE_R;
     holdText[LEFT] = holdText[RIGHT] = TRUE;
-    holdNum[LEFT] = holdNum[RIGHT] = FALSE;
     refreshTime[LEFT] = refreshTime[RIGHT] = holdTimer[LEFT] = holdTimer[RIGHT] =
             blinkTimer[LEFT] = blinkTimer[RIGHT] = bounceTimer[LEFT] =
-            bounceTimer[RIGHT] = numHoldTimer[LEFT] = numHoldTimer[RIGHT] = millis;
+            bounceTimer[RIGHT] = millis;
     CANint_tmr = millis;
-    CANerr_tmr = millis;
 
 
     CANdata_flag = 0;
     CANerror_flag=0;
-    hold_err = 0;
 
     displayStates[LEFT] = OIL_T;
     displayStates[RIGHT] = ENGINE_T;
-    blinkStates2[LEFT] = blinkStates2[RIGHT] = 0;
 
     /*
      * Peripheral Initialization
@@ -284,24 +275,20 @@ void main(void) {
     while(1) {
 
         
-    
-
-        if(CANerror_flag ==1){
-            write_CAN_error();
-            if(millis - CANerr_tmr > CAN_ERR_MAX){
-                CANerr_tmr = millis;
-                CANerror_flag = 0;
-            }
-        }
+     
         //Check that can is sending messages
-        else if(millis - CANint_tmr > CAN_DATA_MAX)
+        if(millis - CANint_tmr > CAN_RECIEVE_MAX)
         {
             write_CAN_data_error();
             CANdata_flag = 1;
         }
-       // else{
-      //      CANdata_flag = 0;
-     //   }
+        else{
+            CANdata_flag = 0;
+        }
+
+        if(CANerror_flag ==1 ){
+            write_CAN_error();
+        }
 
         // check for change in button state
         if(cycleStates[LEFT] != CYCLE_L & millis - bounceTimer[LEFT] > BOUNCE_TIME) {
@@ -319,9 +306,7 @@ void main(void) {
                     updateText(LEFT, displayStates);
                 }
                 holdText[LEFT] = TRUE;
-                holdNum[LEFT] = FALSE;
                 blinkTimer[LEFT] = holdTimer[LEFT] = millis;
-                blinkStates2[LEFT] = 0;
             }
         }
         if(cycleStates[RIGHT] != CYCLE_R & millis - bounceTimer[RIGHT] > BOUNCE_TIME) {
@@ -333,9 +318,7 @@ void main(void) {
                 if(CANdata_flag != 1&& CANerror_flag != 1)
                     updateText(RIGHT, displayStates);
                 holdText[RIGHT] = TRUE;
-                holdNum[RIGHT] = FALSE;
                 blinkTimer[RIGHT] = holdTimer[RIGHT] = millis;
-                blinkStates2[RIGHT] = 0;
             }
         }
 
@@ -549,12 +532,9 @@ void write_num(int data, unsigned char d_place, unsigned char side) {
     unsigned char num_0, num_1, num_2;
 
     // get individual digits of full number
-    if(!holdNum[side])
-    {
-        num_2 = data % 10;
-        num_1 = (data % 100) / 10;
-        num_0 = (data % 1000) / 100;
-    }
+    num_2 = data % 10;
+    num_1 = (data % 100) / 10;
+    num_0 = (data % 1000) / 100;
 
     // convert values to data bytes for display driver
     num_0 = num_arr[num_0];
@@ -572,122 +552,15 @@ void write_num(int data, unsigned char d_place, unsigned char side) {
         }
     }
 
-
-
-    if(error_flag[displayStates[side]] != 0 || holdNum[side] == TRUE){
-        if(error_flag[displayStates[side]] >= 2 || holdNum[side] == TRUE){
-
-            if(holdNum[side] == FALSE){ //if entered because of new out of range value
-                hold_err = error_flag[displayStates[side]]; //temp store error value for displaying
-            }
-            holdNum[side] = TRUE; //set to hold the number
-            if(millis - numHoldTimer[side] > WARN_TIME){ //check the warning wait time
-                   holdNum[side] = FALSE;
-                   numHoldTimer[side] = millis;
-            }
-
-                if(millis - blinkTimer[side] > BLINK_TIME) {
-                // redisplay the text
-                    if(blinkStates[side]) {
-                        blinkStates2[side] = (blinkStates2[side] + 1) % 4;
-                        blinkStates[side] = FALSE;
-                        if(blinkStates2[side] < 2) //we should display the number
-                        {
-                            if(!side) {
-                                driver_write(DIG2, num_0);
-                                driver_write(DIG1, num_1);
-                                driver_write(DIG0, num_2);
-                            } else {
-                                driver_write(DIG3, num_0);
-                                driver_write(DIG4, num_1);
-                                driver_write(DIG5, num_2);
-                            }
-                        }
-                        else{ //we should display the word
-                            if(displayStates[side] != VOLTAGE){
-                                if(!side) {
-                                    driver_write(CHAR_h, num_0);
-                                    driver_write(CHAR_o, num_1);
-                                    driver_write(CHAR_t, num_2);
-                                } else {
-                                    driver_write(CHAR_h, num_0);
-                                    driver_write(CHAR_o, num_1);
-                                    driver_write(CHAR_t, num_2);
-                                }
-                            }
-                            else{
-                                if(hold_err == 2){
-                                    if(!side) {
-                                        driver_write(CHAR_H, num_0);
-                                        driver_write(CHAR_I, num_1);
-                                        driver_write(BLANK, num_2);
-                                    } else {
-                                        driver_write(CHAR_H, num_0);
-                                        driver_write(CHAR_I, num_1);
-                                        driver_write(BLANK, num_2);
-                                    }
-                                }
-                                else if(hold_err == 3){
-                                    if(!side) {
-                                        driver_write(CHAR_L, num_0);
-                                        driver_write(CHAR_O, num_1);
-                                        driver_write(BLANK, num_2);
-                                    } else {
-                                        driver_write(CHAR_L, num_0);
-                                        driver_write(CHAR_O, num_1);
-                                        driver_write(BLANK, num_2);
-                                    }
-                                }
-                            }
-                        }
-                        blinkTimer[side] = millis;
-                    } // blank the displays
-                    else {
-                        blinkStates[side] = TRUE;
-                        blank_display(side);
-                        blinkTimer[side] = millis;
-                    }
-                }
-
-
-
-
-        } else{ //error_flag[] == 1
-             //Blink Value
-            if(millis - blinkTimer[side] > BLINK_TIME) {
-            // redisplay the text
-                if(blinkStates[side]) {
-                    blinkStates[side] = FALSE;
-                    if(!side) {
-                        driver_write(DIG2, num_0);
-                        driver_write(DIG1, num_1);
-                        driver_write(DIG0, num_2);
-                    } else {
-                        driver_write(DIG3, num_0);
-                        driver_write(DIG4, num_1);
-                        driver_write(DIG5, num_2);
-                    }
-                    blinkTimer[side] = millis;
-                } // blank the displays
-                else {
-                    blinkStates[side] = TRUE;
-                    blank_display(side);
-                    blinkTimer[side] = millis;
-                }
-            }
-         }
-    }
-    else{
     // write the number to the indicated side
-        if(!side) {
-            driver_write(DIG2, num_0);
-            driver_write(DIG1, num_1);
-            driver_write(DIG0, num_2);
-        } else {
-            driver_write(DIG3, num_0);
-            driver_write(DIG4, num_1);
-            driver_write(DIG5, num_2);
-        }
+    if(!side) {
+        driver_write(DIG2, num_0);
+        driver_write(DIG1, num_1);
+        driver_write(DIG0, num_2);
+    } else {
+        driver_write(DIG3, num_0);
+        driver_write(DIG4, num_1);
+        driver_write(DIG5, num_2);
     }
 
     return;
@@ -836,31 +709,20 @@ void checkRangeError(void) {
         }
         
         if(chan[OIL_T] > OIL_T_MAX || chan[OIL_T] < OIL_T_MIN){
-            if(chan[OIL_T] > OIL_T_WARN){
-                error_flag[OIL_T] = 2;
-            } else{
-                error_flag[OIL_T] = 1;
-            }
+            error_flag[OIL_T] = 1;
         } else{
             error_flag[OIL_T] = 0;
         }
 
     } else if(id == MOTEC_ID + 1) {
-        if(chan[VOLTAGE] * 10 < VOLTAGE_MIN){
-            error_flag[VOLTAGE] = 3;
-        }
-        else if(chan[VOLTAGE] > VOLTAGE_MAX){
-            error_flag[VOLTAGE] = 2;
+        if(chan[VOLTAGE] > VOLTAGE_MAX || chan[VOLTAGE] < VOLTAGE_MIN){
+            error_flag[VOLTAGE] = 1;
         } else{
             error_flag[VOLTAGE] = 0;
         }
 
         if(chan[ENGINE_T] > ENGINE_T_MAX || chan[ENGINE_T] < ENGINE_T_MIN){
-            if(chan[ENGINE_T] > ENGINE_T_WARN){
-                error_flag[ENGINE_T] = 2;
-            } else{
-                error_flag[ENGINE_T] = 1;
-            }
+            error_flag[ENGINE_T] = 1;
         } else{
             error_flag[ENGINE_T] = 0;
         }
