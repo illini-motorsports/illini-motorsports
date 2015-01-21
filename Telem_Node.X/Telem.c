@@ -112,7 +112,7 @@ volatile int lastMsgTime = 0; //time of the last message sent by the CAN
 
 unsigned long msg_counter;
 unsigned long crc32;
-BYTE msg[4 /* header */ + NUM_MSG * 2 /* msg bytes */ + 4 /* msg counter */ + 1 /* message type */ + 4 /* CRC32 */];
+BYTE msg[4 /* header */ + NUM_MSG * 2 /* msg bytes */ + 1 /* message type */ + 4 /* CRC32 */];
 BYTE chan_data[NUM_MSG * 2];
 BYTE chan_addr[NUM_MSG];
 
@@ -162,7 +162,7 @@ void high_isr(void) {
         WriteTimer0(0x85); // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
-    
+
 
     // check for recieved CAN message
     if(PIR5bits.RXB1IF) {
@@ -214,7 +214,7 @@ void main(void) {
     chan_addr[SPEED / 2] = SPD;
     chan_addr[RPM / 2] = TACH;
 
-    
+
     for(index = 0; index < NUM_MSG * 2; index++)
     {
         chan_data[index] = 0;
@@ -383,21 +383,22 @@ void send_msg(BYTE type,unsigned int errorType) {
                 msg[i + 4] = 0xFF;
         }
     }
+    //remove these
     // add message counter bytes
-    msg[4 + msg[3] + 0] = ((BYTE*) & msg_counter)[3];
-    msg[4 + msg[3] + 1] = ((BYTE*) & msg_counter)[2];
-    msg[4 + msg[3] + 2] = ((BYTE*) & msg_counter)[1];
-    msg[4 + msg[3] + 3] = ((BYTE*) & msg_counter)[0];
+//    msg[4 + msg[3] + 0] = ((BYTE*) & msg_counter)[3];
+//    msg[4 + msg[3] + 1] = ((BYTE*) & msg_counter)[2];
+//    msg[4 + msg[3] + 2] = ((BYTE*) & msg_counter)[1];
+//    msg[4 + msg[3] + 3] = ((BYTE*) & msg_counter)[0];
     // add message type
-    msg[4 + msg[3] + 4] = type;
+    msg[4 + msg[3]] = type;
     // calculate the CRC32 and append to the end of the message
-    crc32 = crcFast(msg, 4 + msg[3] + 4 + 1);
-    msg[4 + msg[3] + 5 + 0] = ((BYTE*) & crc32)[3];
-    msg[4 + msg[3] + 5 + 1] = ((BYTE*) & crc32)[2];
-    msg[4 + msg[3] + 5 + 2] = ((BYTE*) & crc32)[1];
-    msg[4 + msg[3] + 5 + 3] = ((BYTE*) & crc32)[0];
+    crc32 = crcFast(msg, 4 + msg[3] + 1);
+    msg[4 + msg[3] + 1] = ((BYTE*) & crc32)[3];
+    msg[4 + msg[3] + 2] = ((BYTE*) & crc32)[2];
+    msg[4 + msg[3] + 3] = ((BYTE*) & crc32)[1];
+    msg[4 + msg[3] + 4] = ((BYTE*) & crc32)[0];
     // transmit the message now
-    send(4 /* header */ + msg[3] /* msg bytes */ + 4 /* msg counter */ + 1 /* message type */ + 4 /* CRC32 */);
+    send(4 /* header */ + msg[3] /* msg bytes */  + 1 /* message type */ + 4 /* CRC32 */);
 
     msg_counter++;
 
