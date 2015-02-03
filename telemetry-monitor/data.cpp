@@ -52,7 +52,7 @@ void AppData::closeSerialPort(QSerialPort & serialPort) {
 
 void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
     static QByteArray read_Data;
-    static int messageCount;
+    static int messageCount = 0;
     static unsigned char num = 0;
     static unsigned char type = 0x00;
     static vector<unsigned char> theMsg;
@@ -64,7 +64,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
         // check for header
         if((unsigned char)read_Data[0] == 0x80 && (unsigned char)read_Data[1] == 0x81 && (unsigned char)read_Data[2] == 0x82) {
             // get number of bytes to read
-            num = read_Data[3];          
+            num = read_Data[3];
         }
         else {
             // something is wrong restart
@@ -81,42 +81,27 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
         }
     }
     // get crc32 and process the message
-    if(read_Data.size() > 4 + num + 4 + 1 + 3) {
+    if(read_Data.size() > 4 + num + 1 + 3) {
         // check the crc32
         //char test_msg[10] = "123456789";
-        unsigned int check = crcFast(read_Data, 4 + num + 4 + 1);
-        unsigned int crc32 = (read_Data[4 + num + 4 + 1 + 0] * 256 * 256 * 256) +
-                (read_Data[4 + num + 4 + 1 + 1] * 256 * 256) +
-                (read_Data[4 + num + 4 + 1 + 2] * 256) +
-                read_Data[4 + num + 4 + 1 + 3];
+        unsigned int check = crcFast(read_Data, 4 + num + 1);
+        unsigned int crc32 = (read_Data[4 + num + 1 + 0] * 256 * 256 * 256) +
+                (read_Data[4 + num + 1 + 1] * 256 * 256) +
+                (read_Data[4 + num + 1 + 2] * 256) +
+                read_Data[4 + num + 1 + 3];
 
         if(check == crc32) {
             qDebug() << "Check" << check;
             qDebug() << "CRC32" << crc32;
-    // get message count
-    if(read_Data.size() > 4 + 12 + 4) {
-        messageCount = read_Data[7 + num] + read_Data[6 + num] * 0x100 +
-            read_Data[5 + num] * 0x10000 + read_Data[4 + num] * 0x1000000;
+            // get message count
+            messageCount++;
+            display.updateMessageCounter(messageCount);
 
-        if(prev_message_counter == 0) {
-          prev_message_counter = messageCount;
-        }
-        /*
-        if(messageCount - prev_message_counter > 1) {
-          num_dropped_messages += (messageCount - prev_message_counter - 1);
-          display.updateDropCounter(num_dropped_messages);
-        }
-        */
 
-        prev_message_counter = messageCount;
-
-        display.updateMessageCounter(messageCount);
-    }
-
-    // get message type
-    if(read_Data.size() > 4 + num + 4) {
-        type = read_Data[4 + num + 4];
-    }
+            // get message type
+            if(read_Data.size() > 4 + num) {
+                type = read_Data[4 + num];
+            }
 
             // process the message
             //qDebug() << "Type" << type;
@@ -149,14 +134,14 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
         }
         else
         {
-            qDebug() << "Not matching";
+            qDebug() << "Not matching CRC";
             num_dropped_messages++;
-            qDebug() << num_dropped_messages;
+            //qDebug() << num_dropped_messages;
             display.updateDropCounter(num_dropped_messages);
         }
 
         // clean up now that we're done
-        read_Data.remove(0, 4 + num + 4 + 1 + 4);
+        read_Data.remove(0, 4 + num + 1 + 4);
         num = 0;
         type = 0x00;
         theMsg.clear();
@@ -166,17 +151,16 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
             display.updateData(channelAddr[i], ((double) channelData[channelAddr[i]]) * messages.at(channelAddr[i]).scalar);
           }
         }
-
     }
-else
-{
-    qDebug() << "Not matching";
-    num_dropped_messages++;
-    //qDebug() << num_dropped_messages;
-    display.updateDropCounter(num_dropped_messages);
-}
+    else
+    {
+        qDebug() << "Incorrect Size?";
+        num_dropped_messages++;
+        //qDebug() << num_dropped_messages;
+        display.updateDropCounter(num_dropped_messages);
+    }
     // Set the display to connected if a valid message has been received.
-    if(prev_message_counter > 0) {
+    if(messageCount > 0) {
       display.setConnected(true);
     }
 }
