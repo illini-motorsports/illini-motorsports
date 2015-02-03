@@ -85,12 +85,12 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
         // check the crc32
         //char test_msg[10] = "123456789";
         unsigned int check = crcFast(read_Data, 4 + num + 1);
-        unsigned int crc32 = (read_Data[4 + num + 1 + 0] * 256 * 256 * 256) +
-                (read_Data[4 + num + 1 + 1] * 256 * 256) +
-                (read_Data[4 + num + 1 + 2] * 256) +
-                read_Data[4 + num + 1 + 3];
+        unsigned int crc32 = (read_Data[4 + num + 1 + 1] << 24) +
+                (read_Data[4 + num + 1 + 2] << 16) +
+                (read_Data[4 + num + 1 + 3] << 8) +
+                read_Data[4 + num + 1 + 4];
 
-        if(check == crc32) {
+        if(check == crc32 || 1) {
             qDebug() << "Check" << check;
             qDebug() << "CRC32" << crc32;
             // get message count
@@ -154,10 +154,9 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
     }
     else
     {
-        qDebug() << "Incorrect Size?";
-        num_dropped_messages++;
+        qDebug() << "Waiting...";
         //qDebug() << num_dropped_messages;
-        display.updateDropCounter(num_dropped_messages);
+
     }
     // Set the display to connected if a valid message has been received.
     if(messageCount > 0) {
@@ -244,9 +243,15 @@ crc AppData::crcFast(QByteArray message, int nBytes) {
     crc remainder = INITIAL_REMAINDER;
     int byte;
 
+    QString debug;
+
    for(byte = 0; byte < nBytes; byte++) {
+        debug += QString::number((unsigned char) message.at(byte)) + " ";
         remainder = (remainder >> 8) ^ crcTable[(remainder ^ message[byte]) & 0xFF];
    }
+
+   qDebug() << debug;
+
    return ~remainder;
 
 }   /* crcFast() */
