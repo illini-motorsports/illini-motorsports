@@ -555,30 +555,30 @@ void main(void) {
          */
 #ifdef MAX_START
         // START
-        if(!START_SW_PORT && millis - START_tmr < START_WAIT) {
+        if(START_SW_PORT && (millis - START_tmr < START_WAIT)) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
                 START_peak_tmr = millis;
                 START_tmr = millis;
             }
-        } else if(START_SW_PORT || millis - START_tmr >= START_WAIT) {
-            if(START_SW_PORT) {
+        } else if(!START_SW_PORT || (millis - START_tmr >= START_WAIT)) {
+            if(!START_SW_PORT) {
                 // Reset START_tmr if the start switch is in the off position
-                START_tmr = 0;
+                START_tmr = millis;
             }
             if(START_PORT) {
                 START_LAT = PWR_OFF;
             }
         }
 #else
-        if(!START_SW_PORT) {
+        if(START_SW_PORT) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
                 START_peak_tmr = millis;
             }
-        } else if(START_SW_PORT) {
+        } else if(!START_SW_PORT) {
             if(START_PORT) {
                 START_LAT = PWR_OFF;
             }
