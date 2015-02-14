@@ -109,8 +109,8 @@ static unsigned char dataLen; // Holds number of CAN data bytes
 static ECAN_RX_MSG_FLAGS flags; // Holds information about recieved message
 
 static const unsigned char ch_num[NUM_LOADS + 2] = {
-    IGN_ch, FUEL_ch, WATER_ch, START_ch, FAN_ch, PCB_ch,
-    AUX_ch, ECU_ch, START_ch_2, START_ch_3
+    ECU_ch, FUEL_ch, WATER_ch, START_ch, FAN_ch, PCB_ch,
+    AUX_ch, START_ch_2, START_ch_3
 };
 
 /*
@@ -119,13 +119,13 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
  * The switch turns off at 4.5 V on the feedback pin
  */
 static const unsigned long current_ratio[NUM_LOADS] = {
-    14 /*IGN*/, 14 /*FUEL*/, 14 /*Water*/, 23 /*Starter0*/,
-    14 /*Fan*/, 14 /*PCB*/, 8 /*AUX*/, 14 /*ECU*/
+    14 /*ECU*/, 14 /*FUEL*/, 14 /*Water*/, 23 /*Starter0*/,
+    14 /*Fan*/, 14 /*PCB*/, 8 /*AUX*/
 };
 
 static const unsigned long current_peak_ratio[NUM_LOADS] = {
-    28 /*IGN*/, 28 /*FUEL*/, 28 /*Water*/, 47 /*Starter0*/,
-    28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/, 0 /*ECU*/
+    28 /*ECU*/, 28 /*FUEL*/, 28 /*Water*/, 47 /*Starter0*/,
+    28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
 };
 
 /*
@@ -226,7 +226,7 @@ void main(void) {
     unsigned long START_tmr = 0;
 #endif
 
-    unsigned long IGN_peak_tmr = 0;
+    unsigned long ECU_peak_tmr = 0;
     unsigned long FUEL_peak_tmr = 0;
     unsigned long WATER_peak_tmr = 0;
     unsigned long START_peak_tmr = 0;
@@ -296,20 +296,18 @@ void main(void) {
     TRISBbits.TRISB5 = INPUT; // Stater switch
     TRISBbits.TRISB0 = INPUT; // On switch
 
-    TRISDbits.TRISD0 = OUTPUT; // Ignition relay input
-    TRISDbits.TRISD1 = OUTPUT; // Ignition Peak
-    TRISDbits.TRISD2 = OUTPUT; // Fuel relay input
+    TRISDbits.TRISD0 = OUTPUT; // ECU MOSFET input
+    TRISDbits.TRISD1 = OUTPUT; // ECU peak
+    TRISDbits.TRISD2 = OUTPUT; // Fuel MOSFET input
     TRISDbits.TRISD3 = OUTPUT; // Fuel Peak
-    TRISDbits.TRISD4 = OUTPUT; // Fan relay input
+    TRISDbits.TRISD4 = OUTPUT; // Fan MOSFET input
     TRISDbits.TRISD5 = OUTPUT; // Fan Peak
-    TRISDbits.TRISD6 = OUTPUT; // Starter relay input
+    TRISDbits.TRISD6 = OUTPUT; // Starter MOSFET input
     TRISDbits.TRISD7 = OUTPUT; // Starter Peak
-    TRISCbits.TRISC6 = OUTPUT; // Water relay input
+    TRISCbits.TRISC6 = OUTPUT; // Water MOSFET input
     TRISCbits.TRISC7 = OUTPUT; // Water peak
 
-    // Turn off all inductive loads
-    IGN_LAT = PWR_OFF;
-    IGN_P_LAT = PWR_OFF;
+    // Turn off some inductive loads
     FUEL_LAT = PWR_OFF;
     FUEL_P_LAT = PWR_OFF;
     FAN_LAT = PWR_OFF;
@@ -319,13 +317,16 @@ void main(void) {
     START_LAT = PWR_OFF;
     START_P_LAT = PWR_OFF;
 
-    TRISCbits.TRISC2 = OUTPUT; // AUX relay input
-    TRISCbits.TRISC3 = OUTPUT; // ECU relay input
-    TRISCbits.TRISC4 = OUTPUT; // PCB relay input
+    // Turn on ECU
+    ECU_LAT = PWR_ON;
+    ECU_P_LAT = PWR_ON;
+    ECU_peak_tmr = millis;
+
+    TRISCbits.TRISC2 = OUTPUT; // AUX MOSFET input
+    TRISCbits.TRISC4 = OUTPUT; // PCB MOSFET input
 
     // Turn on non-inductive loads
     AUX_LAT = PWR_ON;
-    ECU_LAT = PWR_ON;
     PCB_LAT = PWR_ON;
 
     TRISCbits.TRISC5 = OUTPUT; // Relay output
@@ -461,13 +462,6 @@ void main(void) {
              * normally as it does not depend on CAN.
              */
 
-            // IGN
-            if(!IGN_PORT) {
-                IGN_P_LAT = PWR_ON;
-                IGN_LAT = PWR_ON;
-                IGN_peak_tmr = millis;
-            }
-
             // FUEL
             if(!FUEL_PORT) {
                 FUEL_P_LAT = PWR_ON;
@@ -493,19 +487,6 @@ void main(void) {
             /**
              * Perform regular load control.
              */
-
-            // IGN
-            if(ON_SW_PORT) {
-                if(!IGN_PORT) {
-                    IGN_P_LAT = PWR_ON;
-                    IGN_LAT = PWR_ON;
-                    IGN_peak_tmr = millis;
-                }
-            } else {
-                if(IGN_PORT) {
-                    IGN_LAT = PWR_OFF;
-                }
-            }
 
             // FUEL
             if((ON_SW_PORT && PRIME) || ON || START_PORT) {
@@ -591,9 +572,9 @@ void main(void) {
          * If enough time has passed then change the current limit to steady state.
          */
 
-        // IGN
-        if(millis - IGN_peak_tmr > IGN_PEAK_WAIT && IGN_P_PORT) {
-            IGN_P_LAT = PWR_OFF;
+        // ECU
+        if(millis - ECU_peak_tmr > ECU_PEAK_WAIT && ECU_P_PORT) {
+            ECU_P_LAT = PWR_OFF;
         }
 
         // FUEL
@@ -628,11 +609,11 @@ void main(void) {
         for(i = 0; i < NUM_LOADS; i++) {
             unsigned char peak = 0;
             switch(i) {
+                case ECU_val:
+                    peak = ECU_P_PORT;
+                    break;
                 case FUEL_val:
                     peak = FUEL_P_PORT;
-                    break;
-                case IGN_val:
-                    peak = IGN_P_PORT;
                     break;
                 case WATER_val:
                     peak = WATER_P_PORT;
@@ -683,7 +664,6 @@ void killCar() {
     CLI();
 
     // Shut off all inductive loads
-    IGN_LAT = PWR_OFF;
     FUEL_LAT = PWR_OFF;
     WATER_LAT = PWR_OFF;
     FAN_LAT = PWR_OFF;
