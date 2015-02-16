@@ -118,14 +118,21 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
  *
  * The switch turns off at 4.5 V on the feedback pin
  */
+
+// Notes:
+// (numerator of ratio) / { [(MOSFET current ratio on fb pin) / (resistance on fb pin)] * 1/(order of magnitude of result) * [(voltage range) / (max value of A/D converter)] }
+// 10000 / ((2800 / 900) * 1000 * (5 / 2^12))
+// gives milliamps
+// 10000 / ((8800 / 1000) * 100 * (5 / 2^12))
+// gives centiamps (for starter)
 static const unsigned long current_ratio[NUM_LOADS] = {
-    14 /*ECU*/, 14 /*FUEL*/, 14 /*Water*/, 23 /*Starter0*/,
-    14 /*Fan*/, 14 /*PCB*/, 8 /*AUX*/
+    2633 /*ECU*/, 2633 /*FUEL*/, 2633 /*Water*/, 9309 /*Starter0*/,
+    2633 /*Fan*/, 4388 /*PCB*/, 4388 /*AUX*/
 };
 
 static const unsigned long current_peak_ratio[NUM_LOADS] = {
-    28 /*ECU*/, 28 /*FUEL*/, 28 /*Water*/, 47 /*Starter0*/,
-    28 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
+    877 /*ECU*/, 877 /*FUEL*/, 877 /*Water*/, 2792 /*Starter0*/,
+    877 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
 };
 
 /*
@@ -217,6 +224,7 @@ void main(void) {
     unsigned char i = 0;
 
     unsigned int current[NUM_LOADS + 2];
+    unsigned long current_calc;
 
     unsigned long PRIME_tmr = 0;
     unsigned long CAN_send_tmr = 0;
@@ -627,8 +635,10 @@ void main(void) {
             }
 
             // Use a different ratio if the load is currently in peak control
-            current[i] = peak ? (unsigned long) current[i] * current_peak_ratio[i] * 5 :
-                    (unsigned long) current[i] * current_ratio[i] * 5;
+            current_calc = current[i];
+            current_calc = peak ? (current_calc * 10000) / current_peak_ratio[i] :
+                    (current_calc * 10000) / current_ratio[i];
+            current[i] = current_calc;
         }
 
         // Send out the current data
