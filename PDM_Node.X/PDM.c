@@ -465,31 +465,49 @@ void main(void) {
             /**
              * Perform basic load control.
              *
-             * Turn on all loads except START and do not allow them to turn off
-             * until exiting basic load control. START will still be controlled
-             * normally as it does not depend on CAN.
+             * FUEL, WATER, and FAN will turn on when the ON_SW is in the on
+             * position and turn off when the ON_SW is in the off position.
+             * START and ECU will still be controlled normally as they do not
+             * depend on CAN.
              */
 
-            // FUEL
-            if(!FUEL_PORT) {
-                FUEL_P_LAT = PWR_ON;
-                FUEL_LAT = PWR_ON;
-                FUEL_peak_tmr = millis;
-                PRIME_tmr = millis;
-            }
+            if(ON_SW_PORT) {
+                // FUEL
+                if(!FUEL_PORT) {
+                    FUEL_P_LAT = PWR_ON;
+                    FUEL_LAT = PWR_ON;
+                    FUEL_peak_tmr = millis;
+                    PRIME_tmr = millis;
+                }
 
-            // WATER
-            if(!WATER_PORT) {
-                WATER_P_LAT = PWR_ON;
-                WATER_LAT = PWR_ON;
-                WATER_peak_tmr = millis;
-            }
+                // WATER
+                if(!WATER_PORT) {
+                    WATER_P_LAT = PWR_ON;
+                    WATER_LAT = PWR_ON;
+                    WATER_peak_tmr = millis;
+                }
 
-            // FAN
-            if(!FAN_PORT) {
-                FAN_P_LAT = PWR_ON;
-                FAN_LAT = PWR_ON;
-                FAN_peak_tmr = millis;
+                // FAN
+                if(!FAN_PORT) {
+                    FAN_P_LAT = PWR_ON;
+                    FAN_LAT = PWR_ON;
+                    FAN_peak_tmr = millis;
+                }
+            } else {
+                // FUEL
+                if(FUEL_PORT) {
+                    FUEL_LAT = PWR_OFF;
+                }
+
+                // WATER
+                if(WATER_PORT) {
+                    WATER_LAT = PWR_OFF;
+                }
+
+                // FAN
+                if(FAN_PORT) {
+                    FAN_LAT = PWR_OFF;
+                }
             }
         } else {
             /**
