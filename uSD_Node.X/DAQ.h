@@ -1,10 +1,11 @@
 /*
- * MDD File I/O Main File Header
+ * Data Node Main File Header
  *
  * File Name:       DAQ.h
  * Processor:       PIC18F46K80
  * Complier:        Microchip C18
  * Author:          George Schwieters
+ * Author:          Andrew Mass
  * Created:         2012-2013
  */
 
@@ -26,12 +27,9 @@
  * Magic Numbers
  */
 
-#define BUFF_SIZE MEDIA_SECTOR_SIZE
+#define BUFFER_SIZE MEDIA_SECTOR_SIZE
 #define MSGS_READ 4
-#define MSG_ID_LEN 2
-#define TIMESTAMP_LEN 4
-#define ID_PLUS_TIME 6
-#define RPM_COMP 600    // check for an RPM above this value to know whether the engine is on or not
+#define RPM_THRESH 600 // RPM threshold for engine to be considered on
 
 /*
  * Pin Defintions
@@ -43,17 +41,11 @@
  * Typedefs
  */
 
-// main function flags and other information
+// Main function flags and other information
 
 typedef struct {
-    unsigned BufferAFull : 1;
-    unsigned Swap : 1;
-    unsigned Written : 1;
     unsigned NumRead : 3;
     unsigned MsgNum : 2;
-    unsigned EngTO : 1;
-    unsigned int BufferALen;
-    unsigned int BufferBLen;
 } MAIN;
 
 typedef struct {
@@ -61,16 +53,16 @@ typedef struct {
     BYTE * BufferB;
 } BUFF_HOLDER;
 
-void funct_error(void);
-void init_unused_pins(void);
-void service_FIFO(void);
+void low_isr(void);
+void high_isr(void);
+void abort(void);
+void read_CAN_buffers(void);
+
 void append_write_buffer(static const unsigned char * temp, static unsigned char applen);
 void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
         static unsigned int *bufflen, static const unsigned char applen,
         static const unsigned char offset);
-void high_isr(void);
-void low_isr(void);
-void swap_buff(void);
 void swap_len(void);
+void swap_buff(void);
 
 #endif
