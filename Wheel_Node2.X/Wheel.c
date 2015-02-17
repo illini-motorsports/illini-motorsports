@@ -94,6 +94,8 @@ static volatile int millis; // holds timer0 rollover count
 static unsigned int refreshTime[2], blinkTimer[2], holdTimer[2];
 static unsigned char blinkStates[2], holdText[2], displayStates[2];
 static unsigned int CANint_tmr;
+static unsigned int test_cycle_timer;
+static unsigned int testcycle1, testcycle2;
 
 // ECAN variables
 static unsigned long id; // holds CAN msgID
@@ -103,7 +105,6 @@ ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
 
 static volatile int chan[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
 static volatile int gear;
-static int CANdata_flag;
 static int CANerror_flag;
 static int error_flag[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
 
@@ -120,7 +121,7 @@ static const unsigned char num_arr[12] = {
     NUM_5, NUM_6, NUM_7, NUM_8, NUM_9,
     BLANK, CHAR_N
 };
-static const unsigned char text_arr[NUM_CHAN + 4][3] = {
+static const unsigned char text_arr[NUM_CHAN + 2][3] = {
     {BLANK, CHAR_O, CHAR_t}, // oil temperature
     {BLANK, CHAR_E, CHAR_t}, // engine temmperature
     {CHAR_b, CHAR_A, CHAR_t}, // battery voltage
@@ -128,9 +129,7 @@ static const unsigned char text_arr[NUM_CHAN + 4][3] = {
     {CHAR_S, CHAR_P, CHAR_d}, // ground speed
     {CHAR_t, CHAR_A, CHAR_c}, // engine RPM
     {CHAR_E, CHAR_r, CHAR_r}, // CAN error
-    {CHAR_C, CHAR_A, CHAR_N},
-    {BLANK, CHAR_N, CHAR_O}, //data error
-    {CHAR_d, CHAR_A, CHAR_t}
+    {CHAR_C, CHAR_A, CHAR_N}
 }; // CAN error
 
 /*
@@ -162,20 +161,11 @@ void high_isr(void) {
         TMR0L = TMR0_RELOAD; // load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
-
-    //check for CAN bus error
-    if(PIR5bits.ERRIF){
-        CANerror_flag = 1;
-    }
-    else{
-        CANerror_flag = 0;
-    }
-
     // check for recieved CAN message
     if(PIR5bits.RXB1IF) {
         PIR5bits.RXB1IF = FALSE; // reset the flag
         CANint_tmr = millis; //"reset" interrupt timer
-        CANdata_flag = 0; //reset flag
+        CANerror_flag = 0; //reset flag
         // get data from recieve buffer
         //ECANReceiveMessage(&id, data, &dataLen, &flags);
         ECANReceiveMessage(&id, data, &dataLen, &flags);
@@ -206,18 +196,20 @@ void main(void) {
      * Variable Initialization
      */
 
-    // intialize state
-    cycleStates[LEFT] = CYCLE_L;
-    cycleStates[RIGHT] = CYCLE_R;
+    // intialize states
+    testcycle1=0;
+    testcycle2=1;
+    cycleStates[LEFT] = testcycle1;
+    cycleStates[RIGHT] = testcycle2;
     holdText[LEFT] = holdText[RIGHT] = TRUE;
     refreshTime[LEFT] = refreshTime[RIGHT] = holdTimer[LEFT] = holdTimer[RIGHT] =
             blinkTimer[LEFT] = blinkTimer[RIGHT] = bounceTimer[LEFT] =
             bounceTimer[RIGHT] = millis;
     CANint_tmr = millis;
+    test_cycle_timer = millis;
 
-
-    CANdata_flag = 0;
-    CANerror_flag=0;
+    CANerror_flag = 0;
+    error_flag;
 
     displayStates[LEFT] = OIL_T;
     displayStates[RIGHT] = ENGINE_T;
@@ -273,26 +265,34 @@ void main(void) {
     TERM_LAT = FALSE;
 
     while(1) {
-     
+
         //Check that can is sending messages
         if(millis - CANint_tmr > CAN_RECIEVE_MAX)
         {
-            write_CAN_data_error();
-            CANdata_flag = 1;
+            write_CANerror();
+            CANerror_flag = 1;
         }
         else{
-            CANdata_flag = 0;
+            CANerror_flag = 0;
         }
 
-        if(CANerror_flag ==1 ){
-            write_CAN_error();
+        if(millis - test_cycle_timer > CYCLE_TIME){
+            test_cycle_timer = millis;
+            testcycle1++;
+            testcycle2++;
+           if(testcycle1 > 5) testcycle1=0;
+           if(testcycle2 > 5) testcycle2=0;
+
+
         }
 
         // check for change in button state
-        if(cycleStates[LEFT] != CYCLE_L & millis - bounceTimer[LEFT] > BOUNCE_TIME) {
+       // if(cycleStates[LEFT] != CYCLE_L & millis - bounceTimer[LEFT] > BOUNCE_TIME) {
+       if(cycleStates[LEFT] != testcycle1 & millis - bounceTimer[LEFT] > BOUNCE_TIME) {
             // save new state
-            cycleStates[LEFT] = CYCLE_L;
-           
+           // cycleStates[LEFT] = CYCLE_L;
+             cycleStates[LEFT] = testcycle1;
+
             bounceTimer[LEFT] = millis;
             // only change display if button is low
             if(!cycleStates[LEFT]) {
@@ -300,20 +300,22 @@ void main(void) {
                     displayStates[LEFT] = 0;
                 // put the appropriate text on the displays and
                 // get the current time for timing logic
-                if(CANdata_flag != 1&& CANerror_flag != 1){
+                if(CANerror_flag != 1){
                     updateText(LEFT, displayStates);
                 }
                 holdText[LEFT] = TRUE;
                 blinkTimer[LEFT] = holdTimer[LEFT] = millis;
             }
         }
-        if(cycleStates[RIGHT] != CYCLE_R & millis - bounceTimer[RIGHT] > BOUNCE_TIME) {
-             cycleStates[RIGHT] = CYCLE_R;
-             bounceTimer[RIGHT] = millis;
+        //if(cycleStates[RIGHT] != CYCLE_R & millis - bounceTimer[RIGHT] > BOUNCE_TIME) {
+        if(cycleStates[RIGHT] != testcycle2 & millis - bounceTimer[RIGHT] > BOUNCE_TIME) {
+            //cycleStates[RIGHT] = CYCLE_R;
+             cycleStates[RIGHT] =testcycle2;
+            bounceTimer[RIGHT] = millis;
             if(!cycleStates[RIGHT]) {
                 if(++displayStates[RIGHT] == NUM_CHAN)
                     displayStates[RIGHT] = 0;
-                if(CANdata_flag != 1&& CANerror_flag != 1)
+                if(CANerror_flag != 1)
                     updateText(RIGHT, displayStates);
                 holdText[RIGHT] = TRUE;
                 blinkTimer[RIGHT] = holdTimer[RIGHT] = millis;
@@ -321,7 +323,7 @@ void main(void) {
         }
 
         // update left and right displays with text or numerical data
-        if(CANdata_flag != 1&& CANerror_flag != 1) {
+        if(CANerror_flag != 1) {
             updateDisp(LEFT);
             updateDisp(RIGHT);
            // write_num(chan[OIL_T], d_place_arr[OIL_T],RIGHT);
@@ -443,35 +445,15 @@ void write_gear(unsigned char gear) {
 }
 
 /*
- *  void write_CAN_data_error(void)
+ *  void write_CANerror(void)
  *
- *  Description: Writes error if the can is not receiving messages
+ *  Description:
  *  Input(s): none
  *  Return Value(s): none
  *  Side Effects: none
  */
-void write_CAN_data_error(void) {
+void write_CANerror(void) {
 
-    // force No DAtA messaged on displays
-    driver_write(DIG2, text_arr[NODATA1][0]);
-    driver_write(DIG1, text_arr[NODATA1][1]);
-    driver_write(DIG0, text_arr[NODATA1][2]);
-    driver_write(DIG3, text_arr[NODATA2][0]);
-    driver_write(DIG4, text_arr[NODATA2][1]);
-    driver_write(DIG5, text_arr[NODATA2][2]);
-
-    return;
-}
-
-/*
- *  void write_CAN_data_error(void)
- *
- *  Description: Writes error if can receives can error message
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: none
- */
-void write_CAN_error(void){
     // force CANERR messaged on displays
     driver_write(DIG2, text_arr[CANERR1][0]);
     driver_write(DIG1, text_arr[CANERR1][1]);

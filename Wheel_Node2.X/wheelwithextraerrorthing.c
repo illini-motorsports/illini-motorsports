@@ -273,6 +273,8 @@ void main(void) {
     TERM_LAT = FALSE;
 
     while(1) {
+
+        
      
         //Check that can is sending messages
         if(millis - CANint_tmr > CAN_RECIEVE_MAX)
