@@ -164,219 +164,147 @@ void init_oscillator(void) {
  */
 void init_unused_pins(void) {
 
-    // first configure to outputs
+    // first configure to outputs then
+    // set the pin low
 #ifndef GP_A0
     TRISAbits.TRISA0 = OUTPUT;
-#endif
-#ifndef GP_A1
-    TRISAbits.TRISA1 = OUTPUT;
-#endif
-#ifndef GP_A2
-    TRISAbits.TRISA2 = OUTPUT;
-#endif
-#ifndef GP_A3
-    TRISAbits.TRISA3 = OUTPUT;
-#endif
-#ifndef GP_A5
-    TRISAbits.TRISA5 = OUTPUT;
-#endif
-#ifndef GP_A6
-    TRISAbits.TRISA6 = OUTPUT;
-#endif
-#ifndef GP_A7
-    TRISAbits.TRISA7 = OUTPUT;
-#endif
-
-#ifndef GP_B0
-    TRISBbits.TRISB0 = OUTPUT;
-#endif
-#ifndef GP_B1
-    TRISBbits.TRISB1 = OUTPUT;
-#endif
-#ifndef GP_B2
-    TRISBbits.TRISB2 = OUTPUT;
-#endif
-#ifndef GP_B3
-    TRISBbits.TRISB3 = OUTPUT;
-#endif
-#ifndef GP_B4
-    TRISBbits.TRISB4 = OUTPUT;
-#endif
-#ifndef GP_B5
-    TRISBbits.TRISB5 = OUTPUT;
-#endif
-#ifndef GP_B6
-    TRISBbits.TRISB6 = OUTPUT;
-#endif
-#ifndef GP_B7
-    TRISBbits.TRISB7 = OUTPUT;
-#endif
-
-#ifndef GP_C0
-    TRISCbits.TRISC0 = OUTPUT;
-#endif
-#ifndef GP_C1
-    TRISCbits.TRISC1 = OUTPUT;
-#endif
-#ifndef GP_C2
-    TRISCbits.TRISC2 = OUTPUT;
-#endif
-#ifndef GP_C3
-    TRISCbits.TRISC3 = OUTPUT;
-#endif
-#ifndef GP_C4
-    TRISCbits.TRISC4 = OUTPUT;
-#endif
-#ifndef GP_C5
-    TRISCbits.TRISC5 = OUTPUT;
-#endif
-#ifndef GP_C6
-    TRISCbits.TRISC6 = OUTPUT;
-#endif
-#ifndef GP_C7
-    TRISCbits.TRISC7 = OUTPUT;
-#endif
-
-#ifndef GP_D0
-    TRISDbits.TRISD0 = OUTPUT;
-#endif
-#ifndef GP_D1
-    TRISDbits.TRISD1 = OUTPUT;
-#endif
-#ifndef GP_D2
-    TRISDbits.TRISD2 = OUTPUT;
-#endif
-#ifndef GP_D3
-    TRISDbits.TRISD3 = OUTPUT;
-#endif
-#ifndef GP_D4
-    TRISDbits.TRISD4 = OUTPUT;
-#endif
-#ifndef GP_D5
-    TRISDbits.TRISD5 = OUTPUT;
-#endif
-#ifndef GP_D6
-    TRISDbits.TRISD6 = OUTPUT;
-#endif
-#ifndef GP_D7
-    TRISDbits.TRISD7 = OUTPUT;
-#endif
-
-#ifndef GP_E0
-    TRISEbits.TRISE0 = OUTPUT;
-#endif
-#ifndef GP_E1
-    TRISEbits.TRISE1 = OUTPUT;
-#endif
-#ifndef GP_E2
-    TRISEbits.TRISE2 = OUTPUT;
-#endif
-
-    // then set pins low
-#ifndef GP_A0
     LATAbits.LATA0 = 0;
 #endif
 #ifndef GP_A1
+    TRISAbits.TRISA1 = OUTPUT;
     LATAbits.LATA1 = 0;
 #endif
 #ifndef GP_A2
+    TRISAbits.TRISA2 = OUTPUT;
     LATAbits.LATA2 = 0;
 #endif
 #ifndef GP_A3
+    TRISAbits.TRISA3 = OUTPUT;
     LATAbits.LATA3 = 0;
 #endif
 #ifndef GP_A5
+    TRISAbits.TRISA5 = OUTPUT;
     LATAbits.LATA5 = 0;
 #endif
 #ifndef GP_A6
+    TRISAbits.TRISA6 = OUTPUT;
     LATAbits.LATA6 = 0;
 #endif
 #ifndef GP_A7
+    TRISAbits.TRISA7 = OUTPUT;
     LATAbits.LATA7 = 0;
 #endif
 
 #ifndef GP_B0
+    TRISBbits.TRISB0 = OUTPUT;
     LATBbits.LATB0 = 0;
 #endif
 #ifndef GP_B1
+    TRISBbits.TRISB1 = OUTPUT;
     LATBbits.LATB1 = 0;
 #endif
 #ifndef GP_B2
+    TRISBbits.TRISB2 = OUTPUT;
     LATBbits.LATB2 = 0;
 #endif
 #ifndef GP_B3
+    TRISBbits.TRISB3 = OUTPUT;
     LATBbits.LATB3 = 0;
 #endif
 #ifndef GP_B4
+    TRISBbits.TRISB4 = OUTPUT;
     LATBbits.LATB4 = 0;
 #endif
 #ifndef GP_B5
+    TRISBbits.TRISB5 = OUTPUT;
     LATBbits.LATB5 = 0;
 #endif
 #ifndef GP_B6
+    TRISBbits.TRISB6 = OUTPUT;
     LATBbits.LATB6 = 0;
 #endif
 #ifndef GP_B7
+    TRISBbits.TRISB7 = OUTPUT;
     LATBbits.LATB7 = 0;
 #endif
 
 #ifndef GP_C0
+    TRISCbits.TRISC0 = OUTPUT;
     LATCbits.LATC0 = 0;
 #endif
 #ifndef GP_C1
+    TRISCbits.TRISC1 = OUTPUT;
     LATCbits.LATC1 = 0;
 #endif
 #ifndef GP_C2
+    TRISCbits.TRISC2 = OUTPUT;
     LATCbits.LATC2 = 0;
 #endif
 #ifndef GP_C3
+    TRISCbits.TRISC3 = OUTPUT;
     LATCbits.LATC3 = 0;
 #endif
 #ifndef GP_C4
+    TRISCbits.TRISC4 = OUTPUT;
     LATCbits.LATC4 = 0;
 #endif
 #ifndef GP_C5
+    TRISCbits.TRISC5 = OUTPUT;
     LATCbits.LATC5 = 0;
 #endif
 #ifndef GP_C6
+    TRISCbits.TRISC6 = OUTPUT;
     LATCbits.LATC6 = 0;
 #endif
 #ifndef GP_C7
+    TRISCbits.TRISC7 = OUTPUT;
     LATCbits.LATC7 = 0;
 #endif
 
 #ifndef GP_D0
+    TRISDbits.TRISD0 = OUTPUT;
     LATDbits.LATD0 = 0;
 #endif
 #ifndef GP_D1
+    TRISDbits.TRISD1 = OUTPUT;
     LATDbits.LATD1 = 0;
 #endif
 #ifndef GP_D2
+    TRISDbits.TRISD2 = OUTPUT;
     LATDbits.LATD2 = 0;
 #endif
 #ifndef GP_D3
+    TRISDbits.TRISD3 = OUTPUT;
     LATDbits.LATD3 = 0;
 #endif
 #ifndef GP_D4
+    TRISDbits.TRISD4 = OUTPUT;
     LATDbits.LATD4 = 0;
 #endif
 #ifndef GP_D5
+    TRISDbits.TRISD5 = OUTPUT;
     LATDbits.LATD5 = 0;
 #endif
 #ifndef GP_D6
+    TRISDbits.TRISD6 = OUTPUT;
     LATDbits.LATD6 = 0;
 #endif
 #ifndef GP_D7
+    TRISDbits.TRISD7 = OUTPUT;
     LATDbits.LATD7 = 0;
 #endif
 
 #ifndef GP_E0
+    TRISEbits.TRISE0 = OUTPUT;
     LATEbits.LATE0 = 0;
 #endif
 #ifndef GP_E1
+    TRISEbits.TRISE1 = OUTPUT;
     LATEbits.LATE1 = 0;
 #endif
 #ifndef GP_E2
+    TRISEbits.TRISE2 = OUTPUT;
     LATEbits.LATE2 = 0;
 #endif
+
 }
