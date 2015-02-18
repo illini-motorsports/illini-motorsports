@@ -57,15 +57,12 @@
 #define ENGINE_TEMP_CRIT 1150   // 115.0 C
 #define OIL_TEMP_CRIT 1800      // 180.0 C
 
-// Warning error conditions
-#define VOLTAGE_WARN 1250       // 12.5 V
-#define ENGINE_TEMP_WARN 1000   // 100.0 C
-#define OIL_TEMP_WARN 1650      // 165.0 C
-
 // Thresholds
 #define RPM_ON_THRESHOLD 600    // 600 rpm
 #define RPM_THRESHOLD_H 4000    // 4,000 rpm
 #define RPM_THRESHOLD_L 1000    // 1,000 rpm
+#define FAN_THRESHOLD_H 900     // 90.0
+#define FAN_THRESHOLD_L 840     // 84.0
 
 // Indices for arrays
 #define ECU_val     0

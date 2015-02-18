@@ -14,7 +14,6 @@
 #include "FSAE.h"
 #include "PDM.h"
 
-//TODO: Set CRIT and WARN values appropriately
 //TODO: Replace (FAN_SW || AUTO_FAN || OVER_TEMP) with (FAN_PORT)?
 
 /*
@@ -95,12 +94,12 @@
 static volatile unsigned long millis; // Holds timer0 rollover count
 
 // Car data variables
-static volatile unsigned int FAN_SW; // Holds state of fan switch on steering wheel
+static volatile unsigned char FAN_SW; // Holds state of fan switch on steering wheel
 static volatile signed int engine_temp, oil_temp, oil_press, rpm, voltage;
 
 // Millisecond value for when each variable was last updated
 static volatile unsigned long FAN_SW_tmr, engine_temp_tmr, oil_temp_tmr,
-oil_press_tmr, rpm_tmr, voltage_tmr;
+oil_press_tmr, rpm_tmr, voltage_tmr, CAN_recv_tmr;
 
 // ECAN variables
 static unsigned long id; // Holds CAN msgID
@@ -177,6 +176,8 @@ void high_isr(void) {
         // Get data from receive buffer
         ECANReceiveMessage(&id, data, &dataLen, &flags);
 
+        CAN_recv_tmr = millis;
+
         switch(id) {
             case ENGINE_TEMP_ID: // VOLTAGE_ID
                 ((unsigned char*) &engine_temp)[0] = data[ENGINE_TEMP_BYTE + 1];
@@ -219,7 +220,7 @@ void main(void) {
 
     unsigned char ON = 0;
     unsigned char PRIME = 1;
-    unsigned char UNDER_VOLTAGE, OVER_TEMP = 0;
+    unsigned char OVER_TEMP = 0;
 
     unsigned char i = 0;
 
@@ -228,7 +229,6 @@ void main(void) {
 
     unsigned long PRIME_tmr = 0;
     unsigned long CAN_send_tmr = 0;
-    unsigned long CAN_recv_tmr = 0;
 
 #ifdef MAX_START
     unsigned long START_tmr = 0;
@@ -273,6 +273,7 @@ void main(void) {
     oil_press_tmr = 0;
     rpm_tmr = 0;
     voltage_tmr = 0;
+    CAN_recv_tmr = 0;
 
     /*
      * Peripheral Initialization
@@ -287,11 +288,10 @@ void main(void) {
     // Turn on and configure the A/D converter module
     init_ADC();
 
-    ANCON0 = 0b11111111; // AN0 - 9 are analog
+    ANCON0 = 0b11111011; // AN0, AN1, and AN3 - 9 are analog
     ANCON1 = 0b00000011; // rest are digital
     TRISAbits.TRISA0 = INPUT; // AN0
     TRISAbits.TRISA1 = INPUT; // AN1
-    TRISAbits.TRISA2 = INPUT; // AN2
     TRISAbits.TRISA3 = INPUT; // AN3
     TRISAbits.TRISA5 = INPUT; // AN4
     TRISEbits.TRISE0 = INPUT; // AN5
@@ -338,7 +338,7 @@ void main(void) {
     PCB_LAT = PWR_ON;
 
     TRISCbits.TRISC5 = OUTPUT; // Relay output
-    TERM_LAT = PWR_OFF; // Not terminating
+    TERM_LAT = PWR_ON; // Not terminating
 
     ECANInitialize(); // Setup ECAN
 
@@ -352,20 +352,25 @@ void main(void) {
 
     while(1) {
         // Check if car's engine is on
+        CLI();
         ON = rpm > RPM_ON_THRESHOLD;
+        STI();
 
         // Determine how long the fuel pump should be left on
-        if(!ON_SW_PORT) {
+        CLI;
+        if(ON_SW_PORT) {
             PRIME = 1;
         } else if(millis - PRIME_tmr > PRIME_WAIT && FUEL_PORT) {
             PRIME = 0;
         }
+        STI();
 
 #ifdef CRIT_KILL
         /*
          * If the voltage is critically low, wait for a short amount of time to
          * see if it returns to a safe value. If it doesn't, kill the car.
          */
+        CLI();
         if(voltage_tmr > 0 && voltage < VOLTAGE_CRIT) {
             if(!voltage_crit_pending) {
                 // Only set the timer if this is the first time the error was observed
@@ -374,11 +379,15 @@ void main(void) {
             voltage_crit_pending = 1;
 
             if(millis - voltage_crit_tmr > CRIT_WAIT_VOLTAGE) {
+                AUX_LAT = PWR_OFF;
+                PCB_LAT = PWR_OFF;
+                ECU_LAT = PWR_OFF;
                 killCar();
             }
         } else {
             voltage_crit_pending = 0;
         }
+        STI();
 
         /*
          * If the oil pressure is critically low, wait for a short amount of
@@ -386,6 +395,7 @@ void main(void) {
          *
          * Note: the critical value for oil pressure depends on engine rpm
          */
+        CLI();
         if(oil_press_tmr > 0 && rpm_tmr > 0 && (
                 (rpm > RPM_THRESHOLD_H && oil_press < OIL_PRESS_CRIT_H) ||
                 (rpm > RPM_THRESHOLD_L && oil_press < OIL_PRESS_CRIT_L))) {
@@ -401,11 +411,13 @@ void main(void) {
         } else {
             oil_press_crit_pending = 0;
         }
+        STI();
 
         /*
          * If the engine temperature is critically low, wait for a short amount
          * of time to see if it returns to a safe value. If it doesn't, kill the car
          */
+        CLI();
         if(engine_temp_tmr > 0 && engine_temp > ENGINE_TEMP_CRIT) {
             if(!engine_temp_crit_pending) {
                 // Only set the timer if this is the first time the error was observed
@@ -419,11 +431,13 @@ void main(void) {
         } else {
             engine_temp_crit_pending = 0;
         }
+        STI();
 
         /*
          * If the oil temperature is critically low, wait for a short amount of
          * time to see if it returns to a safe value. If it doesn't, kill the car
          */
+        CLI();
         if(oil_temp_tmr > 0 && oil_temp > OIL_TEMP_CRIT) {
             if(!oil_temp_crit_pending) {
                 // Only set the timer if this is the first time the error was observed
@@ -437,14 +451,19 @@ void main(void) {
         } else {
             oil_temp_crit_pending = 0;
         }
+        STI();
 #endif
 
-        // Determine if the battery voltage is too low
-        UNDER_VOLTAGE = (voltage_tmr > 0 && voltage > VOLTAGE_WARN);
-
-        // Determine if the engine or oil is too hot
-        OVER_TEMP = (engine_temp_tmr > 0 && engine_temp > ENGINE_TEMP_WARN) ||
-                (oil_temp_tmr > 0 && oil_temp_tmr > OIL_TEMP_WARN);
+        // Engine temperature triggered fan control
+        CLI();
+        if(OVER_TEMP) {
+            if(engine_temp < FAN_THRESHOLD_L)
+                OVER_TEMP = 0;
+        } else {
+            if(engine_temp > FAN_THRESHOLD_H)
+                OVER_TEMP = 1;
+        }
+        STI();
 
         /*
          * Toggle inductive loads.
@@ -455,7 +474,7 @@ void main(void) {
          * Only power on or power off a load if it is not already on or off
          * respectively, even if the conditions match.
          */
-
+        CLI();
         if(BASIC_CONTROL && (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
                 millis - engine_temp_tmr > BASIC_CONTROL_WAIT ||
                 millis - voltage_tmr > BASIC_CONTROL_WAIT ||
@@ -471,7 +490,7 @@ void main(void) {
              * depend on CAN.
              */
 
-            if(ON_SW_PORT) {
+            if(!ON_SW_PORT) {
                 // FUEL
                 if(!FUEL_PORT) {
                     FUEL_P_LAT = PWR_ON;
@@ -515,62 +534,64 @@ void main(void) {
              */
 
             // FUEL
-            if((ON_SW_PORT && PRIME) || ON || START_PORT) {
+            if((!ON_SW_PORT && PRIME) || ON || (START_PORT && !ON_SW_PORT)) {
                 if(!FUEL_PORT) {
                     FUEL_P_LAT = PWR_ON;
                     FUEL_LAT = PWR_ON;
                     FUEL_peak_tmr = millis;
                     PRIME_tmr = millis;
                 }
-            } else if(!ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
+            } else if(ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
                 if(FUEL_PORT) {
                     FUEL_LAT = PWR_OFF;
                 }
             }
 
             // WATER
-            if((FAN_SW || OVER_TEMP || ON) && !UNDER_VOLTAGE && !START_PORT) {
+            if((FAN_SW || OVER_TEMP || ON) && !START_PORT) {
                 if(!WATER_PORT) {
                     WATER_P_LAT = PWR_ON;
                     WATER_LAT = PWR_ON;
                     WATER_peak_tmr = millis;
                 }
-            } else if((!ON && !FAN_SW && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
+            } else if((!ON && !FAN_SW && !OVER_TEMP) || START_PORT) {
                 if(WATER_PORT) {
                     WATER_LAT = PWR_OFF;
                 }
             }
 
             // FAN
-            if((FAN_SW || OVER_TEMP) && !UNDER_VOLTAGE && !START_PORT) {
+            if((FAN_SW || OVER_TEMP) && !START_PORT) {
                 if(!FAN_PORT) {
                     FAN_P_LAT = PWR_ON;
                     FAN_LAT = PWR_ON;
                     FAN_peak_tmr = millis;
                 }
-            } else if((!FAN_SW && !OVER_TEMP) || UNDER_VOLTAGE || START_PORT) {
+            } else if((!FAN_SW && !OVER_TEMP) || START_PORT) {
                 if(FAN_PORT) {
                     FAN_LAT = PWR_OFF;
                 }
             }
         }
+        STI();
 
         /*
          * Note: Because there is no "cooldown" timer, if the start switch
          * remains in the on position the MAX_START code will not prevent
          * cranking longer than START_WAIT milliseconds.
          */
+        CLI();
 #ifdef MAX_START
         // START
-        if(START_SW_PORT && (millis - START_tmr < START_WAIT)) {
+        if(!START_SW_PORT && (millis - START_tmr < START_WAIT)) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
                 START_peak_tmr = millis;
                 START_tmr = millis;
             }
-        } else if(!START_SW_PORT || (millis - START_tmr >= START_WAIT)) {
-            if(!START_SW_PORT) {
+        } else if(START_SW_PORT || (millis - START_tmr >= START_WAIT)) {
+            if(START_SW_PORT) {
                 // Reset START_tmr if the start switch is in the off position
                 START_tmr = millis;
             }
@@ -579,25 +600,26 @@ void main(void) {
             }
         }
 #else
-        if(START_SW_PORT) {
+        if(!START_SW_PORT) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
                 START_peak_tmr = millis;
             }
-        } else if(!START_SW_PORT) {
+        } else if(START_SW_PORT) {
             if(START_PORT) {
                 START_LAT = PWR_OFF;
             }
         }
 #endif
+        STI();
 
         /*
          * Check peak control timers.
          *
          * If enough time has passed then change the current limit to steady state.
          */
-
+        CLI();
         // ECU
         if(millis - ECU_peak_tmr > ECU_PEAK_WAIT && ECU_P_PORT) {
             ECU_P_LAT = PWR_OFF;
@@ -622,6 +644,7 @@ void main(void) {
         if(millis - FAN_peak_tmr > FAN_PEAK_WAIT && FAN_P_PORT) {
             FAN_P_LAT = PWR_OFF;
         }
+        STI();
 
         // Sample the current of the loads
         for(i = 0; i < NUM_LOADS + 2; i++) {
@@ -660,6 +683,7 @@ void main(void) {
         }
 
         // Send out the current data
+        CLI();
         if(millis - CAN_send_tmr > CAN_PERIOD) {
             CAN_send_tmr = millis;
             ECANSendMessage(PDM_ID, (unsigned char *) current, 8,
@@ -669,6 +693,7 @@ void main(void) {
             ECANSendMessage(PDM_ID + 2, ((unsigned char *) current) + 16, 2,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
+        STI();
     }
 }
 
