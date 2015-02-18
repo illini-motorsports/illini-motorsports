@@ -53,37 +53,32 @@
 #define RANGE_8 3686
 #define RANGE_HIGH 4096
 
-#define CAN_ERR         0
-#define DATA_ERR        1
-#define RANGE_ERR       2
-
-#define IN_RANGE        0
-#define OUT_OF_RANGE    1
-#define HIGH            2
-#define LOW             3
-
 // timing
 #define HOLD_TIME       2000
 #define BLINK_TIME      200
 #define REFRESH_TIME    150
 #define BOUNCE_TIME     100
 #define CAN_PER         200
-#define CAN_RECIEVE_MAX  2000
+#define CAN_DATA_MAX    2000
+#define CAN_ERR_MAX     3000
+#define WARN_TIME       5000
 
 //data reading limits
 //TODO
-#define RPM_MAX         14000
-#define RPM_MIN             0
-#define OIL_P_MAX       696969
-#define OIL_P_MIN       00000
-#define OIL_T_MAX       500
-#define OIL_T_MIN       00000
-#define ENGINE_T_MAX    500
-#define ENGINE_T_MIN    00000
-#define VOLTAGE_MAX     696969
-#define VOLTAGE_MIN     00000
-#define SPEED_MAX       696969
-#define SPEED_MIN       00000
+#define RPM_MAX         15000
+#define RPM_MIN         0
+#define OIL_P_MAX       100
+#define OIL_P_MIN       0
+#define OIL_T_MAX       300
+#define OIL_T_WARN      180
+#define OIL_T_MIN       0
+#define ENGINE_T_MAX    200
+#define ENGINE_T_WARN   115
+#define ENGINE_T_MIN    0
+#define VOLTAGE_MAX     15
+#define VOLTAGE_MIN     115
+#define SPEED_MAX       150
+#define SPEED_MIN       0
 
 // data channel indicies
 #define OIL_T       0
@@ -147,7 +142,12 @@
 #define CHAR_c          0b00001101
 #define CHAR_C          0b01001110
 #define CHAR_N          0b01110110
-#define CHAR_r          0b00000101   
+#define CHAR_r          0b00000101
+#define CHAR_h          0b00110101
+#define CHAR_H          0b00110111
+#define CHAR_o          0b00011101
+#define CHAR_I          0b00000110
+#define CHAR_L          0b00001110
 
 // display mode
 #define TEST            0x01
