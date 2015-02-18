@@ -357,7 +357,7 @@ void main(void) {
         STI();
 
         // Determine how long the fuel pump should be left on
-        CLI;
+        CLI();
         if(ON_SW_PORT) {
             PRIME = 1;
         } else if(millis - PRIME_tmr > PRIME_WAIT && FUEL_PORT) {
