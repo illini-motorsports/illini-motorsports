@@ -22,7 +22,6 @@
 #define MCHP_C18
 #define CRIT_KILL
 #define MAX_START
-#define BASIC_CONTROL 1
 
 /*
  * Magic Numbers

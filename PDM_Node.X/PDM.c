@@ -475,12 +475,12 @@ void main(void) {
          * respectively, even if the conditions match.
          */
         CLI();
-        if(BASIC_CONTROL && (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
+        if(millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
                 millis - engine_temp_tmr > BASIC_CONTROL_WAIT ||
                 millis - voltage_tmr > BASIC_CONTROL_WAIT ||
                 millis - oil_temp_tmr > BASIC_CONTROL_WAIT ||
                 millis - oil_press_tmr > BASIC_CONTROL_WAIT ||
-                millis - rpm_tmr > BASIC_CONTROL_WAIT)) {
+                millis - rpm_tmr > BASIC_CONTROL_WAIT) {
             /**
              * Perform basic load control.
              *
@@ -722,8 +722,12 @@ void killCar() {
     FAN_LAT = PWR_OFF;
     START_LAT = PWR_OFF;
 
-    // Do nothing until the ON switch is turned off.
-    while(ON_SW_PORT);
+    // If low voltage killed the car don't allow a restart
+    if(voltage < VOLTAGE_CRIT)
+        while(1);
+
+    // Do nothing until the on switch is turned off
+    while(!ON_SW_PORT);
 
     // Perform a MCLR reset of the device.
     _asm RESET _endasm
