@@ -102,15 +102,16 @@ static volatile unsigned int buffer_b_len;
 static volatile unsigned char swap;
 static volatile unsigned char written;
 static volatile unsigned char buffer_a_full;
+static volatile unsigned char num_read; // 0 -> 7
+static volatile unsigned char msg_num; // 0 -> 3
 
-volatile static unsigned int timestamp[MSGS_READ]; // holds CCP2 timestamps
-volatile static unsigned int timestamp_2[MSGS_READ]; // holds CCP2 timestamps
+volatile static BUFFER_TUPLE buffer_tuple;
+
+static volatile unsigned int timestamp[MSGS_READ]; // holds CCP2 timestamps
+static volatile unsigned int timestamp_2[MSGS_READ]; // holds CCP2 timestamps
 
 static volatile signed int rpm; // Engine RPM
 static unsigned int seconds; // Timer1 rollover count
-
-//volatile static MAIN Main; // struct that holds bits used for flags and other stuff
-//volatile static BUFF_HOLDER Buff; // struct used for holding the buffer pointers
 
 #ifdef DEBUGGING
 static unsigned int dropped; // keep track of number of dropped messages
@@ -157,11 +158,11 @@ void low_isr(void) {
         PIR5bits.FIFOWMIF = 0;
 
         // Sometimes a FIFO interrupt is triggered before 4 messeages have arrived; da fuk?
-        if(Main.NumRead != MSGS_READ) {
+        if(num_read < MSGS_READ) {
             return;
         }
 
-        Main.NumRead = 0;
+        num_read = 0;
 
         CLI(); // Begin critical section
         if(swap) {
@@ -239,11 +240,12 @@ void high_isr(void) {
          * Read CAN capture register and place in timestamp array keeping track
          * of how many are in the array
          */
-        stamp[Main.MsgNum] = CCPR2H * 256 + CCPR2L; // ReadCapture2();
-        stamp_2[Main.MsgNum++] = seconds;
+        stamp[msg_num] = CCPR2H * 256 + CCPR2L; // ReadCapture2();
+        stamp_2[msg_num] = seconds;
+        msg_num = msg_num == 3 ? 0 : msg_num + 1;
 
         // Check if four messages have come in so far
-        if(Main.MsgNum == 0) {
+        if(msg_num = 0) {
             // swap the data byte by byte
             for(k = 0; k < MSGS_READ; k++) {
                 temp = stamp[k];
@@ -254,7 +256,7 @@ void high_isr(void) {
                 stamp_2[k] = timestamp_2[k];
                 timestamp_2[k] = temp;
             }
-            Main.NumRead = MSGS_READ;
+            num_read = MSGS_READ;
         }
     }
 }
@@ -265,15 +267,11 @@ void main(void) {
      * Variable Declarations
      */
 
-    //BUFF_HOLDER* Buff_p = &Buff; // pointer to buffer stuct
-    FSFILE* pointer; // Pointer to open file
+    FSFILE* outfile; // Pointer to open file
     char fname[13] = "0000.txt"; // Holds name of file
     const char write = 'w'; // For opening file (must use variable for passing value in PIC18 when not using pgm function)
     SearchRec rec; // Holds search parameters and found file info
-    const unsigned char attributes // holds search parameters
-            = ATTR_ARCHIVE
-            | ATTR_READ_ONLY
-            | ATTR_HIDDEN;
+    const unsigned char attributes = ATTR_ARCHIVE | ATTR_READ_ONLY | ATTR_HIDDEN;
 #ifdef DEBUGGING
     int count = 0;
 #endif
@@ -288,17 +286,18 @@ void main(void) {
      * Initialize MDD I/O variables but don't allow data collection yet since
      * file creation can take a while and buffers will fill up immediately.
      */
-    Buff.BufferA = WriteBufferA;
-    Buff.BufferB = WriteBufferB;
+    buffer_tuple.left = WriteBufferA;
+    buffer_tuple.right = WriteBufferB;
     buffer_a_len = MEDIA_SECTOR_SIZE;
     buffer_b_len = MEDIA_SECTOR_SIZE;
     swap = 0;
     buffer_a_full = 1;
+    written = 0;
 
-    Main.MsgNum = 0; // holds index for CCP2 values
+    msg_num = 0; // Holds index for CCP2 values
+    num_read = 0;
 
     rpm = 0;
-
     seconds = 0;
 
     /*
@@ -371,8 +370,8 @@ void main(void) {
             }
 
             // Create csv data file
-            pointer = FSfopen(fname, &write);
-            if(pointer == NULL) {
+            outfile = FSfopen(fname, &write);
+            if(outfile == NULL) {
                 abort();
             }
 
@@ -386,13 +385,13 @@ void main(void) {
             dropped = 0;
 #endif
 
-            // logging loop
+            // Logging loop
             while(1) {
                 // write buffer A to file
                 CLI; // begin critical section
                 if(buffer_a_full) {
                     STI(); // end critical section
-                    if(FSfwrite(Buff_p, pointer, (MAIN*) &Main) != BUFFER_SIZE) {
+                    if(FSfwrite(&buffer_tuple, outfile, &swap, &buffer_a_full) != BUFFER_SIZE) {
                         abort();
                     }
 #ifdef DEBUGGING
@@ -411,7 +410,7 @@ void main(void) {
                     STI(); // end critical section
 
                     // Close csv data file
-                    if(FSfclose(pointer)) {
+                    if(FSfclose(outfile)) {
                         abort();
                     }
 
@@ -422,7 +421,7 @@ void main(void) {
                     buffer_b_len = BUFFER_SIZE;
                     swap = 0;
                     buffer_a_full = 1;
-                    rpm = 0;
+                    //rpm = 0;
 
                     STI(); // end critical section
 
@@ -497,8 +496,8 @@ void read_CAN_buffers(void) {
         if(dlc > 0) {
 
             // Message ID
-            msg[0] = (unsigned char*) (&id)[0];
-            msg[1] = (unsigned char*) (&id)[1];
+            msg[0] = ((unsigned char*) (&id))[0];
+            msg[1] = ((unsigned char*) (&id))[1];
 
             // CAN Data
             for(j = 0; j < dlc; j++) {
@@ -537,11 +536,11 @@ void append_write_buffer(static const unsigned char* temp, static unsigned char 
     static unsigned char offset;
     static unsigned char holder;
 
-    Main.Written = FALSE;
+    written = 0;
     offset = 0;
 
-    // message is dropped
-    if(applen > (2 * BUFF_SIZE - (Main.BufferALen + Main.BufferBLen))) {
+    // Message is dropped
+    if(applen > (2 * BUFFER_SIZE - (buffer_a_len + buffer_b_len))) {
 #ifdef DEBUGGING
         dropped++;
 #endif
@@ -549,104 +548,89 @@ void append_write_buffer(static const unsigned char* temp, static unsigned char 
     }
 
     // try writing to buffer A first
-    if(!Main.BufferAFull) {
+    if(!buffer_a_full) {
         // room for all of data to write
-        if(BUFF_SIZE - Main.BufferALen > applen) {
-            Main.Written = TRUE;
+        if(BUFFER_SIZE - buffer_a_len > applen) {
+            written = 1;
         }// not enough room for all the data
-        else if(BUFF_SIZE - Main.BufferALen < applen) {
-            Main.BufferAFull = TRUE;
+        else if(BUFFER_SIZE - buffer_a_len < applen) {
+            buffer_a_full = 1;
             // recalculate writing parameters for partial write
-            offset = applen - (BUFF_SIZE - Main.BufferALen);
+            offset = applen - (BUFFER_SIZE - buffer_a_len);
         }// exactly enough room for the data
         else {
-            Main.BufferAFull = TRUE;
-            Main.Written = TRUE;
+            buffer_a_full = 1;
+            written = 1;
         }
         // add message to buffer
-        buff_cat(Buff.BufferA, temp, &(Main.BufferALen), applen - offset, 0);
+        buff_cat(buffer_tuple.left, temp, &buffer_a_len, applen - offset, 0);
     }
 
     // write to buffer B if couldn't write any or all data to buffer A
-    if(!Main.Written) {
+    if(!written) {
         // only use offset if there has been a partial write to buffer A
         if(offset != 0) {
             holder = applen;
             applen = offset;
             offset = holder - offset;
         }
-        // add message to buffer
-        buff_cat(Buff.BufferB, temp, &(Main.BufferBLen), applen, offset);
+        // Add message to buffer
+        buff_cat(buffer_tuple.right, temp, &buffer_b_len, applen, offset);
     }
 }
 
 /*
- *  void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
- *              static unsigned int *bufflen, static const unsigned char applen,
- *              static const unsigned char offset)
+ * void buff_cat(unsigned char *WriteBuffer, const unsigned char *writeData,
+ *              unsigned int *bufflen, const unsigned char applen,
+ *              const unsigned char offset)
  *
- *  Description: This function will append data to the user buffers byte by byte.
- *  Input(s):   WriteBuffer - pointer to the buffer we will write to
- *              writeData - pointer to the data array we will write
- *              bufflen - pointer to the variable holding the buffer length of the buffer we are writing to
- *              applen - the length of the data to be written
- *              offset - the index offset for the data to write
- *  Return Value(s): none
- *  Side Effects: This will modify BufferA & BufferB.
+ * Description: This function will append data to the user buffers byte by byte.
+ * Input(s):   WriteBuffer - pointer to the buffer we will write to
+ *             writeData - pointer to the data array we will write
+ *             bufflen - pointer to the variable holding the buffer length of the buffer we are writing to
+ *             applen - the length of the data to be written
+ *             offset - the index offset for the data to write
+ * Return Value(s): none
+ * Side Effects: This will modify BufferA & BufferB.
  */
-void buff_cat(static unsigned char *WriteBuffer, static const unsigned char *writeData,
-        static unsigned int *bufflen, static const unsigned char applen,
-        static const unsigned char offset) {
+void buff_cat(unsigned char* WriteBuffer, const unsigned char* writeData,
+        unsigned int* bufflen, const unsigned char applen,
+        const unsigned char offset) {
+    unsigned char i;
 
-    static unsigned char i;
-
-    // increment through the data bytes sending them to the write buffer
+    // Increment through the data bytes sending them to the write buffer
     for(i = 0; i < applen; i++) {
         WriteBuffer[*bufflen + i] = writeData[i + offset];
     }
 
-    // increment the data length count for the writing buffer
+    // Increment the data length count for the writing buffer
     *bufflen += (unsigned int) applen;
-
-    return;
 }
 
 /*
- *  void swap_len(void)
+ * void swap_len(void)
  *
- *  Description: Swaps the buffer length members of Main.
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify Main.
+ * Description: Swaps the buffer length members of Main.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will affect buffer_a_len and buffer_b_len.
  */
 void swap_len(void) {
-
-    static unsigned int temp;
-    temp = Main.BufferALen;
-
-    // swap lengths
-    Main.BufferALen = Main.BufferBLen;
-    Main.BufferBLen = temp;
-
-    return;
+    unsigned int temp = buffer_a_len;
+    buffer_a_len = buffer_b_len;
+    buffer_b_len = temp;
 }
 
 /*
- *  void swap_buff(void)
+ * void swap_buff(void)
  *
- *  Description: Swaps the buffer pointer members of Buff.
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify Buff.
+ * Description: Swaps the buffer pointer members of Buff.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will modify Buff.
  */
 void swap_buff(void) {
-
-    static unsigned char *temp;
-    temp = Buff.BufferA;
-
-    // swap pointers
-    Buff.BufferA = Buff.BufferB;
-    Buff.BufferB = temp;
-
-    return;
+    unsigned char* temp = buffer_tuple.left;
+    buffer_tuple.left = buffer_tuple.right;
+    buffer_tuple.right = temp;
 }

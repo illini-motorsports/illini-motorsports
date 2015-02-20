@@ -6540,11 +6540,11 @@ int FSattrib (FSFILE * file, unsigned char attributes)
 //#define STOCK
 
 #ifdef ALLOW_WRITES
-size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
-{
+size_t FSfwrite(BUFFER_TUPLE* buffers, FSFILE *stream, unsigned char* swap, 
+        unsigned char* buffer_a_full) {
 #ifdef STOCK
     DWORD       count = 512;
-    BYTE   *    src = (BYTE *) pointers->BufferA;
+    unsigned char*       src = (unsigned char*) buffers->left;
 #else
     BYTE        count = 1;
 #endif
@@ -6555,7 +6555,7 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
     DWORD       seek, filesize;
 #ifndef STOCK
     WORD        writeCount = 0;
-    BYTE *temp;
+    unsigned char* temp;
 #endif
 
 
@@ -6650,9 +6650,9 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
             stream->size = filesize;
 
             CLI(); // begin critical section
-            // swap buffers to effectively pass off the data to be written
-            temp = pointers->BufferA;
-            pointers->BufferA = dsk->buffer;
+            // Swap buffers to effectively pass off the data to be written
+            temp = buffers->left;
+            buffers->left = dsk->buffer;
             dsk->buffer = temp;
             count = 0;
             STI(); // end critical section
@@ -6666,8 +6666,8 @@ size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags)
 
             CLI(); // begin critical section
             // reset the buffer
-            flags->Swap = TRUE;
-            flags->BufferAFull = FALSE;
+            *swap = 1;
+            *buffer_a_full = 0;
             STI(); // end critical section
 
             if (gNeedDataWrite)

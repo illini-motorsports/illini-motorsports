@@ -1005,7 +1005,8 @@ int wFSremove (const unsigned short int * fileName);
     None.
   *********************************************************************************/
 
-size_t FSfwrite(BUFF_HOLDER *pointers, FSFILE *stream, MAIN *flags);
+size_t FSfwrite(BUFFER_TUPLE* buffers, FSFILE* stream, unsigned char* swap,
+        unsigned char* buffer_a_full);
 
 #ifdef ALLOW_DIRS
 
