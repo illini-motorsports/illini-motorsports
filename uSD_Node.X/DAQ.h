@@ -20,7 +20,7 @@
  */
 
 //#define INTERNAL
-//#define DEBUGGING
+#define DEBUGGING
 #define DEBUG_LEN 1000
 
 /*

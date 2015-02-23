@@ -209,7 +209,7 @@ void low_isr(void) {
  * Description: This interrupt will service all high priority interrupts which includes
  *              timer 1 rollover and the capture 2 module.
  * Input(s): none
- * Reaturn Value(s): none
+ * Return Value(s): none
  * Side Effects: This will modify TMR1H, TMR1L, PIR1 & PIR3. Also seconds,
  *               stamp, stamp_2, time_stamp, time_stamp_2 & Main variables will be written to.
  */
@@ -245,7 +245,7 @@ void high_isr(void) {
         msg_num = msg_num == 3 ? 0 : msg_num + 1;
 
         // Check if four messages have come in so far
-        if(msg_num = 0) {
+        if(msg_num == 0) {
             // swap the data byte by byte
             for(k = 0; k < MSGS_READ; k++) {
                 temp = stamp[k];
@@ -515,8 +515,6 @@ void read_CAN_buffers(void) {
         }
     }
 }
-
-// EDIT UP TO HERE (KIND OF)
 
 /*
  * void append_write_buffer(static const unsigned char * temp,
