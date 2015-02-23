@@ -212,7 +212,7 @@ void high_isr(void) {
 }
 
 void main(void) {
-    // init_unused_pins(); // There are no unused pins!!! :)
+    init_unused_pins();
 
     /*
      * Variable Declarations and Initialization
