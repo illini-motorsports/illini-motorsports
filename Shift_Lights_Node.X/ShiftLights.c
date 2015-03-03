@@ -10,6 +10,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "timers.h"
 #include "ECAN.h"
 #include "FSAE.h"
@@ -379,59 +380,71 @@ bool healthyEngineTemp(){
     return true;
 }
 
+double isEngineOverHeating(){
+    if(engineTemp > ET_SHORTSHIFT_THRESHOLD)
+        return 0.75;
+    else
+        return 1.0;
+}
+
 /*
  *
  */
-void sleep(int seconds, int milliAmount){
-    //int start = millis;
-    //while(millis - start < seconds*milliAmount){}
-    Delay10KTCYx(50);
+void sleep(int milliAmount){
+    Delay10KTCYx(milliAmount);
 }
-/*void sleep(int milliSeconds){
-    int startTime = millis, continuingTime = millis;
-    while(continuingTime - startTime < milliSeconds){
 
-    }
-}*/
+/* code; 1= error looking, 0= normal looping
+ * RETURN: false - you looped through and the state has NOT changed.
+ *         true - you looped through and the state has changed.
+ */
+bool checkHealthWhileCodeDelays(int milliseconds, int code){
+    int startTime = millis, endTime, difference;
+    do{
+        if(code == 0 && healthyStatus() == false)
+            return true;
+        else if(code == 1 && healthyStatus() == true)
+            return true;
+
+        endTime = millis;
+
+        difference = abs(endTime - startTime);
+
+    }while(difference <= milliseconds);
+
+    return false;
+}
 
 /* FUNCTION:
  *
  */
-void blink_all(int numOfTimes, unsigned char color){
+void blink_all(int numOfTimes, unsigned char color, char code){
     int i, d;
+    bool delay_result;
     for(i = 0; i < numOfTimes; i++){
         for(d = 1; d <= 3; d++){
             if(d % 2 == 0)
                 set_all(color);
             else
                 set_all(NONE);
-            sleep(1,100);
+            
+            delay_result = checkHealthWhileCodeDelays(50, code);
+            if(delay_result){
+                set_all(NONE);
+                return;
+            }
         }
     }
-
-    /*int count = 0, full = 1;
-    while(count < numOfTimes){
-        full = 1;
-        while(full <= 3){ //full blink
-            if(full % 2 == 0){ //check if i is even or odd. This will cause a blinking action
-                set_all(color);
-            }else{
-                set_all(NONE);
-            }
-            sleep(1, 100);
-            full++;
-        }
-        count++;
-    }*/
 }
+
 /* FUNCTION:
  *
  */
-void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes){
+void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes, char code){
     int count = 0, full = 1;
-    while(count < numOfTimes){
-        full = 1;
-        while(full <= 3){ //full blink
+    bool delay_result;
+    for(count = 0; count < numOfTimes; count++){
+        for(full = 1; full <= 3; full++){
             if(count % 2 == 0){ //check if i is even or odd. This will cause a blinking action
                 multi_led_color(ledSet1, color1, size1);
                 multi_led_color(ledSet2, NONE, size2);
@@ -439,10 +452,14 @@ void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2
                 multi_led_color(ledSet1, NONE, size1);
                 multi_led_color(ledSet2, color2, size2);
             }
-            sleep(1,100);
-            full++;
+
+            delay_result = checkHealthWhileCodeDelays(50, code);
+            if(delay_result == true){
+                multi_led_color(ledSet1, NONE, size1);
+                multi_led_color(ledSet2, NONE, size2);
+                return;
+            }
         }
-        count++;
     }
     //end alternating blink
     multi_led_color(ledSet1, NONE, size1);
@@ -471,6 +488,7 @@ bool healthyStatus(){
         return false;
     return true;
 }
+
 /* FUNCTION:
  *
  */
@@ -483,30 +501,31 @@ void display() {
             errorDisplay(0);
         else if(checkRPM())
             //Normal RPM display
-            RPMDisplayer(stdColor);
+            RPMDisplayer(stdColor,0);
     }
 }
+
 /* FUNCTION:
  *
  */
 void errorDisplay(int error){
+    int ledSet1[] = {0,2,4};
+    int ledSet2[] = {1,3};
     switch(error){
         case 0:
             //General Error
             while(true){
-                int ledSet1[] = {0,2,4};
-                int ledSet2[] = {1,3};
-                while(checkRPM() && !healthyStatus())
-                    RPMDisplayer(errColor);
-                if(healthyStatus())
+                if(checkRPM() && !healthyStatus()){
+                    RPMDisplayer(errColor, 1);
+                }else if(healthyStatus())
                     return;
                 else
-                    alternate_blink(ledSet1, 3, RED_BLUE, ledSet2, 2, GREEN_BLUE, 2); //blink twice then check to see if error still exists
+                    alternate_blink(ledSet1, 3, RED_BLUE, ledSet2, 2, GREEN_BLUE, 2,1); //blink twice then check to see if error still exists
             }
         case 1:
             //No interrupts occuring at all
             while(!recievingInterrupts()){
-                blink_all(2,RED);
+                blink_all(2,RED,1);
             }
             break;
         default:
@@ -516,19 +535,20 @@ void errorDisplay(int error){
 /* FUNCTION:
  *
  */
-void RPMDisplayer(char color){
+void RPMDisplayer(char color, int code){
     //Sets certain lights to NONE or REV_COLOR based on rpm value.
-    if(rpm >= REV_RANGE_LIMIT) {
-        blink_all(1,GREEN);
-    }else if(rpm >= REV_RANGE_5) {
+    int value = isEngineOverHeating();
+    if(rpm >= (REV_RANGE_LIMIT / value)) {
+        blink_all(1,GREEN,code);
+    }else if(rpm >= (REV_RANGE_5 / value)) {
         set_lights_with_color(5, color);
-    }else if(rpm >= REV_RANGE_4) {
+    }else if(rpm >= (REV_RANGE_4 / value)) {
         set_lights_with_color(4, color);
-    }else if(rpm >= REV_RANGE_3) {
+    }else if(rpm >= (REV_RANGE_3 / value)) {
         set_lights_with_color(3, color);
-    }else if(rpm >= REV_RANGE_2) {
+    }else if(rpm >= (REV_RANGE_2 / value)) {
         set_lights_with_color(2, color);
-    }else if(rpm >= REV_RANGE_1) {
+    }else if(rpm >= (REV_RANGE_1 / value)) {
         set_lights_with_color(1, color);
     }else{
         set_all(NONE);
@@ -565,7 +585,7 @@ void startup(long currentTime){
             multi_led_color(temp,GREEN, 2);
         }else if(millis - currentTime < BLINK_TIME * 7){
             //Blink twice
-            blink_all(3, GREEN);
+            blink_all(3, GREEN,0);
         }else{
             set_all(NONE);
             break;

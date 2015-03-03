@@ -88,6 +88,7 @@
 #define OP_THRESHOLD_H  250
 #define OT_THRESHOLD    2100
 #define ET_THRESHOLD    1150
+#define ET_SHORTSHIFT_THRESHOLD 1040
 #define RPM_THRESHOLD_H 4000
 #define RPM_THRESHOLD_L 1000
 #define VOLT_THRESHOLD  1250
@@ -97,6 +98,7 @@
 typedef char bool;
 #define false   0
 #define true    1
+#define abs(x) ((x) > 0 ? (x) : -(x))
 
 /*
  * Method Headers
@@ -110,20 +112,22 @@ void startup(long currentTime);
 void excess(int type);
 int length(int array[]);
 void multi_led_color(int led[], unsigned char color, int size);
-bool healthyStatus();
-bool recievingInterrupts();
+bool healthyStatus(void);
+bool recievingInterrupts(void);
 bool healthyEngineTemp();
 bool healthyOilTemp();
 bool healthyOilPressure();
 bool healthyBatteryVolts();
 bool lastAccessWithinMsgInterval(int i);
-void blink_all(int numOfTimes, unsigned char color);
-void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes);
+void blink_all(int numOfTimes, unsigned char color, char code);
+void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes, char code);
 void display();
 void errorDisplay(int error);
 void set_lights_with_color(unsigned char max,unsigned char color);
-void RPMDisplayer(char color);
+void RPMDisplayer(char color, int code);
 bool checkRPM();
-void sleep(int seconds, int milliAmount);
+void sleep(int milliAmount);
+bool checkHealthWhileCodeDelays(int milliseconds, int code);
+double isEngineOverHeating(void);
 
 #endif
