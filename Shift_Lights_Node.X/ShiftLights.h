@@ -71,6 +71,7 @@
 #define RED_BLUE   RED | BLUE
 #define GREEN_BLUE GREEN | BLUE
 #define RGB        RED | GREEN | BLUE
+#define WHITE       RGB
 
 // Rev range
 #define REV_RANGE_1     8000
@@ -79,6 +80,8 @@
 #define REV_RANGE_4     11000
 #define REV_RANGE_5     11500
 #define REV_RANGE_LIMIT 12500
+
+#define SHORT_SHIFT_OFFSET 500
 
 // Custom color choices
 #define REV_COLOR       BLUE
@@ -93,7 +96,12 @@
 #define RPM_THRESHOLD_L 1000
 #define VOLT_THRESHOLD  1250
 
-#define BLINK_TIME      200
+#define BLINK_TIME      150
+
+#define STDREVCOLOR BLUE
+#define ERRREVCOLOR WHITE
+#define STDBLINKCOLOR GREEN
+#define ERRBLINKCOLOR  WHITE
 
 typedef char bool;
 #define false   0
@@ -103,31 +111,14 @@ typedef char bool;
 /*
  * Method Headers
  */
-
+void high_vector(void);
 void high_isr(void);
 void set_led_to_color(unsigned char led, unsigned char color);
-void set_all(unsigned char color);
-void set_lights(unsigned char max);
+void set_lights(unsigned char max, unsigned char color);
+void RPMDisplayer();
+void BLINKDisplayer(char color);
+bool motecError();
 void startup(long currentTime);
-void excess(int type);
-int length(int array[]);
-void multi_led_color(int led[], unsigned char color, int size);
-bool healthyStatus(void);
-bool recievingInterrupts(void);
-bool healthyEngineTemp();
-bool healthyOilTemp();
-bool healthyOilPressure();
-bool healthyBatteryVolts();
-bool lastAccessWithinMsgInterval(int i);
-void blink_all(int numOfTimes, unsigned char color, char code);
-void alternate_blink(int ledSet1[], int size1, unsigned char color1, int ledSet2[], int size2, unsigned char color2, int numOfTimes, char code);
-void display();
-void errorDisplay(int error);
-void set_lights_with_color(unsigned char max,unsigned char color);
-void RPMDisplayer(char color, int code);
-bool checkRPM();
-void sleep(int milliAmount);
-bool checkHealthWhileCodeDelays(int milliseconds, int code);
-double isEngineOverHeating(void);
+void arrayOfColors();
 
 #endif
