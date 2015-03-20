@@ -212,7 +212,6 @@ void high_isr(void) {
 }
 
 void main(void) {
-    init_unused_pins();
 
     /*
      * Variable Declarations and Initialization
@@ -278,6 +277,8 @@ void main(void) {
     /*
      * Peripheral Initialization
      */
+
+    init_unused_pins();
 
     // Can use internal or external
     init_oscillator();
