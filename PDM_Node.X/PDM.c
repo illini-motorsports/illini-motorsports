@@ -124,14 +124,40 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
 // gives milliamps
 // 10000 / ((8800 / 1000) * 100 * (5 / 2^12))
 // gives centiamps (for starter)
+//
+//Fan
+//peak - 500
+//900
+//
+//Water
+//peak - 500
+//900
+//
+//Fuel
+//peak - 500
+//900
+//
+//ECU
+//peak - 500
+//1500
+//
+//Aux
+//1500
+//
+//PCB
+//1500
+//
+//Starter
+//peak - 500
+//1800
 static const unsigned long current_ratio[NUM_LOADS] = {
-    2633 /*ECU*/, 2633 /*FUEL*/, 2633 /*Water*/, 9309 /*Starter0*/,
-    2633 /*Fan*/, 4388 /*PCB*/, 4388 /*AUX*/
+    2318 /*ECU*/, 2633 /*FUEL*/, 2633 /*Water*/, 16756 /*Starter0*/,
+    2633 /*Fan*/, 5266 /*PCB*/, 5266 /*AUX*/
 };
 
 static const unsigned long current_peak_ratio[NUM_LOADS] = {
-    877 /*ECU*/, 877 /*FUEL*/, 877 /*Water*/, 2792 /*Starter0*/,
-    877 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
+    579 /*ECU*/, 936 /*FUEL*/, 936 /*Water*/, 4654 /*Starter0*/,
+    936 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
 };
 
 /*
@@ -327,8 +353,8 @@ void main(void) {
     START_P_LAT = PWR_OFF;
 
     // Turn on ECU
-    ECU_LAT = PWR_ON;
     ECU_P_LAT = PWR_ON;
+    ECU_LAT = PWR_ON;
     ECU_peak_tmr = millis;
 
     TRISCbits.TRISC2 = OUTPUT; // AUX MOSFET input
