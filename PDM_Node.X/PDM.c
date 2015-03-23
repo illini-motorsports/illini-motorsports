@@ -122,7 +122,7 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
 // (numerator of ratio) / { [(MOSFET current ratio on fb pin) / (resistance on fb pin)] * 1/(order of magnitude of result) * [(voltage range) / (max value of A/D converter)] }
 // 10000 / ((2800 / 900) * 1000 * (5 / 2^12))
 // gives milliamps
-// 10000 / ((8800 / 1000) * 100 * (5 / 2^12))
+// 10000 / ((8800 / 1300) * 100 * (5 / 2^12))
 // gives centiamps (for starter)
 //
 //Fan
@@ -149,14 +149,14 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
 //
 //Starter
 //peak - 500
-//1800
+//1300
 static const unsigned long current_ratio[NUM_LOADS] = {
-    2318 /*ECU*/, 2633 /*FUEL*/, 2633 /*Water*/, 16756 /*Starter0*/,
+    2318 /*ECU*/, 2633 /*FUEL*/, 2633 /*Water*/, 12101 /*Starter0*/,
     2633 /*Fan*/, 5266 /*PCB*/, 5266 /*AUX*/
 };
 
 static const unsigned long current_peak_ratio[NUM_LOADS] = {
-    579 /*ECU*/, 936 /*FUEL*/, 936 /*Water*/, 4654 /*Starter0*/,
+    579 /*ECU*/, 936 /*FUEL*/, 936 /*Water*/, 3361 /*Starter0*/,
     936 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
 };
 
@@ -352,11 +352,6 @@ void main(void) {
     START_LAT = PWR_OFF;
     START_P_LAT = PWR_OFF;
 
-    // Turn on ECU
-    ECU_P_LAT = PWR_ON;
-    ECU_LAT = PWR_ON;
-    ECU_peak_tmr = millis;
-
     TRISCbits.TRISC2 = OUTPUT; // AUX MOSFET input
     TRISCbits.TRISC4 = OUTPUT; // PCB MOSFET input
 
@@ -372,6 +367,11 @@ void main(void) {
     // Interrupts setup
     RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
     STI();
+
+    // Turn on ECU
+    ECU_P_LAT = PWR_ON;
+    ECU_LAT = PWR_ON;
+    ECU_peak_tmr = millis;
 
     /*
      * Main Loop

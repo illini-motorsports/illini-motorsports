@@ -43,7 +43,7 @@
 #define CRIT_WAIT_TEMP 5000
 
 // Peak current wait times (ms)
-#define ECU_PEAK_WAIT 500
+#define ECU_PEAK_WAIT 100
 #define FUEL_PEAK_WAIT 500
 #define WATER_PEAK_WAIT 500
 #define START_PEAK_WAIT 500
