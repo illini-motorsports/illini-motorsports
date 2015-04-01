@@ -33,7 +33,7 @@
 
 // Timing (ms)
 #define PRIME_WAIT 500
-#define CAN_PERIOD 500
+#define CAN_PERIOD 50
 #define START_WAIT 4000
 #define BASIC_CONTROL_WAIT 1000
 
@@ -71,6 +71,7 @@
 #define FAN_val     4
 #define PCB_val     5
 #define AUX_val     6
+#define LOAD_STATES 7
 #define START_val_2 7
 #define START_val_3 8
 

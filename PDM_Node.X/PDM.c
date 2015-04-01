@@ -105,7 +105,7 @@ oil_press_tmr, rpm_tmr, voltage_tmr, CAN_recv_tmr;
 static unsigned long id; // Holds CAN msgID
 static unsigned char data[8]; // Holds CAN data bytes
 static unsigned char dataLen; // Holds number of CAN data bytes
-static ECAN_RX_MSG_FLAGS flags; // Holds information about recieved message
+static ECAN_RX_MSG_FLAGS flags; // Holds information about received message
 
 static const unsigned char ch_num[NUM_LOADS + 2] = {
     ECU_ch, FUEL_ch, WATER_ch, START_ch, FAN_ch, PCB_ch,
@@ -122,20 +122,20 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
 // (numerator of ratio) / { [(MOSFET current ratio on fb pin) / (resistance on fb pin)] * 1/(order of magnitude of result) * [(voltage range) / (max value of A/D converter)] }
 // 10000 / ((2800 / 900) * 1000 * (5 / 2^12))
 // gives milliamps
-// 10000 / ((8800 / 1300) * 100 * (5 / 2^12))
+// 10000 / ((8800 / 1100) * 100 * (5 / 2^12))
 // gives centiamps (for starter)
 //
 //Fan
-//peak - 500
-//900
+//peak - 600
+//700
 //
 //Water
 //peak - 500
-//900
+//1100
 //
 //Fuel
-//peak - 500
-//900
+//peak - 800
+//600
 //
 //ECU
 //peak - 500
@@ -149,15 +149,15 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
 //
 //Starter
 //peak - 500
-//1300
+//1100
 static const unsigned long current_ratio[NUM_LOADS] = {
-    2318 /*ECU*/, 2633 /*FUEL*/, 2633 /*Water*/, 12101 /*Starter0*/,
-    2633 /*Fan*/, 5266 /*PCB*/, 5266 /*AUX*/
+    2318 /*ECU*/, 1755 /*FUEL*/, 3218 /*Water*/, 10240 /*Starter0*/,
+    2048 /*Fan*/, 5266 /*PCB*/, 5266 /*AUX*/
 };
 
 static const unsigned long current_peak_ratio[NUM_LOADS] = {
-    579 /*ECU*/, 936 /*FUEL*/, 936 /*Water*/, 3361 /*Starter0*/,
-    936 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
+    579 /*ECU*/, 1003 /*FUEL*/, 1005 /*Water*/, 3200 /*Starter0*/,
+    945 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
 };
 
 /*
@@ -178,8 +178,8 @@ void high_vector(void) {
  *  Description: This interrupt will service all high priority interrupts. This
  *               section should be as short as possible.
  *  Input(s): none
- *  Reaturn Value(s): none
- *  Side Effects: This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
+ *  Return Value(s): none
+ *  Side Effects: This will modify INTCON, TMR0L & PIR5. Also it modifies the ECAN
  *                global variables along with the millis, oil_temp, water_temp,
  *                oil_press, rpm, voltage, and FAN_SW variables as well as
  *                each variable's respective timer.
@@ -190,11 +190,11 @@ void high_isr(void) {
     // Check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
         INTCONbits.TMR0IF = 0;
-        TMR0L = TMR0_RELOAD; // Load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
+        TMR0L = TMR0_RELOAD; // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
 
-    // Check for recieved CAN message
+    // Check for received CAN message
     if(PIR5bits.RXB1IF) {
         // Reset the flag
         PIR5bits.RXB1IF = 0;
@@ -277,6 +277,8 @@ void main(void) {
     unsigned char oil_temp_crit_pending = 0;
 #endif
 
+    unsigned char load_states[NUM_LOADS];
+
     // Clear error count and peak timers for all loads
     for(i = 0; i < NUM_LOADS + 2; i++) {
         current[i] = 0;
@@ -357,7 +359,9 @@ void main(void) {
 
     // Turn on non-inductive loads
     AUX_LAT = PWR_ON;
+    load_states[AUX_val] = 1;
     PCB_LAT = PWR_ON;
+    load_states[PCB_val] = 1;
 
     TRISCbits.TRISC5 = OUTPUT; // Relay output
     TERM_LAT = PWR_ON; // Not terminating
@@ -371,6 +375,7 @@ void main(void) {
     // Turn on ECU
     ECU_P_LAT = PWR_ON;
     ECU_LAT = PWR_ON;
+    load_states[ECU_val] = 1;
     ECU_peak_tmr = millis;
 
     /*
@@ -522,6 +527,7 @@ void main(void) {
                 if(!FUEL_PORT) {
                     FUEL_P_LAT = PWR_ON;
                     FUEL_LAT = PWR_ON;
+                    load_states[FUEL_val] = 1;
                     FUEL_peak_tmr = millis;
                     PRIME_tmr = millis;
                 }
@@ -530,6 +536,7 @@ void main(void) {
                 if(!WATER_PORT) {
                     WATER_P_LAT = PWR_ON;
                     WATER_LAT = PWR_ON;
+                    load_states[WATER_val] = 1;
                     WATER_peak_tmr = millis;
                 }
 
@@ -537,22 +544,26 @@ void main(void) {
                 if(!FAN_PORT) {
                     FAN_P_LAT = PWR_ON;
                     FAN_LAT = PWR_ON;
+                    load_states[FAN_val] = 1;
                     FAN_peak_tmr = millis;
                 }
             } else {
                 // FUEL
                 if(FUEL_PORT) {
                     FUEL_LAT = PWR_OFF;
+                    load_states[FUEL_val] = 0;
                 }
 
                 // WATER
                 if(WATER_PORT) {
                     WATER_LAT = PWR_OFF;
+                    load_states[WATER_val] = 0;
                 }
 
                 // FAN
                 if(FAN_PORT) {
                     FAN_LAT = PWR_OFF;
+                    load_states[FAN_val] = 0;
                 }
             }
         } else {
@@ -565,12 +576,14 @@ void main(void) {
                 if(!FUEL_PORT) {
                     FUEL_P_LAT = PWR_ON;
                     FUEL_LAT = PWR_ON;
+                    load_states[FUEL_val] = 1;
                     FUEL_peak_tmr = millis;
                     PRIME_tmr = millis;
                 }
             } else if(ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
                 if(FUEL_PORT) {
                     FUEL_LAT = PWR_OFF;
+                    load_states[FUEL_val] = 0;
                 }
             }
 
@@ -580,10 +593,12 @@ void main(void) {
                     WATER_P_LAT = PWR_ON;
                     WATER_LAT = PWR_ON;
                     WATER_peak_tmr = millis;
+                    load_states[WATER_val] = 1;
                 }
             } else if((!ON && !FAN_SW && !OVER_TEMP) || START_PORT) {
                 if(WATER_PORT) {
                     WATER_LAT = PWR_OFF;
+                    load_states[WATER_val] = 0;
                 }
             }
 
@@ -593,10 +608,12 @@ void main(void) {
                     FAN_P_LAT = PWR_ON;
                     FAN_LAT = PWR_ON;
                     FAN_peak_tmr = millis;
+                    load_states[FAN_val] = 1;
                 }
             } else if((!FAN_SW && !OVER_TEMP) || START_PORT) {
                 if(FAN_PORT) {
                     FAN_LAT = PWR_OFF;
+                    load_states[FAN_val] = 0;
                 }
             }
         }
@@ -614,6 +631,7 @@ void main(void) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
+                load_states[START_val] = 1;
                 START_peak_tmr = millis;
                 START_tmr = millis;
             }
@@ -624,6 +642,7 @@ void main(void) {
             }
             if(START_PORT) {
                 START_LAT = PWR_OFF;
+                load_states[START_val] = 0;
             }
         }
 #else
@@ -631,11 +650,13 @@ void main(void) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
+                load_states[START_val] = 1;
                 START_peak_tmr = millis;
             }
         } else if(START_SW_PORT) {
             if(START_PORT) {
                 START_LAT = PWR_OFF;
+                load_states[START_val] = 0;
             }
         }
 #endif
@@ -649,7 +670,7 @@ void main(void) {
         CLI();
         // ECU
         if(millis - ECU_peak_tmr > ECU_PEAK_WAIT && ECU_P_PORT) {
-            ECU_P_LAT = PWR_OFF;
+        //    ECU_P_LAT = PWR_OFF;
         }
 
         // FUEL
@@ -717,7 +738,7 @@ void main(void) {
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
             ECANSendMessage(PDM_ID + 1, ((unsigned char *) current) + 8, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-            ECANSendMessage(PDM_ID + 2, ((unsigned char *) current) + 16, 2,
+            ECANSendMessage(PDM_ID + 2, load_states, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
         STI();
@@ -764,7 +785,7 @@ void killCar() {
  *  void sample(int *data, const unsigned char index, const unsigned char ch)
  *
  *  Description: Function to read the analog voltage of a pin and then put the value into the
- *               data array that will be transmited over CAN.
+ *               data array that will be transmitted over CAN.
  *  Input(s): data - pointer to array of data bytes
  *            ch - which pin to sample
  *            index - where to write the data in the passed array

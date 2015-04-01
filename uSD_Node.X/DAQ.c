@@ -145,7 +145,7 @@ void interrupt_at_low_vector(void) {
  *              data at all times even when the uSD card is being written to in the main
  *              loop.
  * Input(s): none
- * Reaturn Value(s): none
+ * Return Value(s): none
  * Side Effects: This will modify PIR5, B0CON, B1CON, B2CON, B3CON, B4CON, B5CON,
  *               COMSTAT, RXB0CON & RXB1CON. This will also modify the flags in Main
  */
@@ -157,7 +157,7 @@ void low_isr(void) {
     if(PIR5bits.FIFOWMIF) {
         PIR5bits.FIFOWMIF = 0;
 
-        // Sometimes a FIFO interrupt is triggered before 4 messeages have arrived; da fuk?
+        // Sometimes a FIFO interrupt is triggered before 4 messages have arrived; da fuk?
         if(num_read < MSGS_READ) {
             return;
         }
@@ -183,7 +183,7 @@ void low_isr(void) {
 
     // Check for an error with the bus
     if(PIR5bits.ERRIF) {
-        // Recieve buffer overflow occured - Clear out all the buffers
+        // Receive buffer overflow occurred - Clear out all the buffers
         if(COMSTATbits.RXB1OVFL == 1) {
             PIR5bits.ERRIF = 0;
             COMSTATbits.RXB1OVFL = 0;
@@ -225,7 +225,7 @@ void high_isr(void) {
     if(PIR1bits.TMR1IF) {
         PIR1bits.TMR1IF = 0;
 
-        // Load timer value such that the most signifcant bit is set so it
+        // Load timer value such that the most significant bit is set so it
         // takes exactly one second for a 32.768kHz crystal to trigger a rollover interrupt
         TMR1H = TMR1H_RELOAD; // WriteTimer1(TMR1H_RELOAD * 256 + TMR1L_RELOAD);
         TMR1L = TMR1L_RELOAD;
@@ -472,7 +472,7 @@ void read_CAN_buffers(void) {
     unsigned char data[8]; // CAN data bytes
     unsigned char msg[14]; // Entire CAN message
 
-    ECAN_RX_MSG_FLAGS flags; // Information about recieved message
+    ECAN_RX_MSG_FLAGS flags; // Information about received message
 
     // Loop through messages in CAN buffers
     for(i = 0; i < MSGS_READ; i++) {
