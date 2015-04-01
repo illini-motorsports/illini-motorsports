@@ -100,7 +100,7 @@ static unsigned int CANint_tmr;
 static unsigned long id; // holds CAN msgID
 static unsigned char data[8]; // holds CAN data bytes
 static unsigned char dataLen; // holds number of CAN data bytes
-ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
+ECAN_RX_MSG_FLAGS flags; // holds information about received message
 
 static volatile int chan[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
 static volatile int gear;
@@ -125,7 +125,7 @@ static const unsigned char num_arr[12] = {
 };
 static const unsigned char text_arr[NUM_CHAN + 7][3] = {
     {BLANK, CHAR_O, CHAR_t}, // oil temperature
-    {BLANK, CHAR_E, CHAR_t}, // engine temmperature
+    {BLANK, CHAR_E, CHAR_t}, // engine temperature
     {CHAR_b, CHAR_A, CHAR_t}, // battery voltage
     {BLANK, CHAR_O, CHAR_P}, // oil pressure
     {CHAR_S, CHAR_P, CHAR_d}, // ground speed
@@ -148,7 +148,7 @@ static const unsigned char text_arr[NUM_CHAN + 7][3] = {
  *
  *  Description: This interrupt will service all low priority interrupts.
  *  Input(s): none
- *  Reaturn Value(s): none
+ *  Return Value(s): none
  *  Side Effects: This will modify INTCON0 & PIR5. Also it modify the ECAN variables.
  */
 #pragma code high_vector = 0x08
@@ -174,7 +174,7 @@ void high_isr(void) {
         PIR5bits.RXB1IF = 0;            // reset the flag
         DATA_TMR= millis;    //"reset" interrupt timer
         ERR_FLAGS[DATA_ERR] = 0;         //reset flag
-                                        // get data from recieve buffer
+                                        // get data from receive buffer
         ECANReceiveMessage(&id, data, &dataLen, &flags);
         //bufferData();
 
@@ -205,7 +205,7 @@ void main(void) {
      * Variable Initialization
      */
 
-    // intialize state
+    // initialize state
     cycleStates[LEFT]   = CYCLE_L;
     cycleStates[RIGHT]  = CYCLE_R;
     holdText[LEFT]      = holdText[RIGHT] = TRUE;
@@ -244,7 +244,7 @@ void main(void) {
     // SPI setup
     SSPSTATbits.CKE = 1; // SPI Clock Select, 1 = transmit on active to idle
     SSPCON1bits.CKP = 0; // Clock Polarity Select, 0 = low level is idle state
-    SSPCON1bits.SSPM = 0b1010; // Clk Frequecy (Note: FOSC = 64MHz)
+    SSPCON1bits.SSPM = 0b1010; // Clk Frequency (Note: FOSC = 64MHz)
     SSPCON1bits.SSPEN = 1; // SPI Enable, 1 enables
 
     // SPI pin I/O setup
@@ -786,7 +786,7 @@ void bufferData(void) {
  *  void checkRangeError(void)
  *
  *  Description:   This checks the values of all readings,  making sure they
- *                  are in range and settng error flag if not.
+ *                  are in range and setting error flag if not.
  *
  *  Input(s):
  *  Return Value(s):
@@ -878,8 +878,8 @@ void ADLsample(unsigned char *data, const unsigned char ADLoffset, const unsigne
  *  Side Effects: This will modify the memory that is pointed to by sample.
  */
 void modifyRotary(unsigned int * sample) {
-    // depending on the value of the sampled rotary postion
-    // we will assign a new position that matches the pysical position
+    // depending on the value of the sampled rotary position
+    // we will assign a new position that matches the physical position
     if(*sample >= RANGE_LOW && *sample < RANGE_0)
         *sample = POS_6;
     else if(*sample >= RANGE_0 && *sample < RANGE_1)
