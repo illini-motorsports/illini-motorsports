@@ -59,7 +59,7 @@
 
 #define IN_RANGE        0
 #define OUT_OF_RANGE    1
-#define HIGH            2
+#define HI            2
 #define LOW             3
 
 // timing
@@ -68,26 +68,26 @@
 #define REFRESH_TIME    150
 #define BOUNCE_TIME     100
 #define CAN_PER         200
-#define CAN_RECIEVE_MAX  2000
+#define CAN_RECIEVE_MAX  1000
 
 //data reading limits
 //TODO
-#define RPM_MAX         14000
-#define RPM_MIN             0
-#define OIL_P_MAX       696969
-#define OIL_P_MIN       00000
-#define OIL_T_MAX       500
-#define OIL_T_HI       69
-#define OIL_T_MIN       00000
-#define ENGINE_T_MAX    500
-#define ENGINE_T_HI     69
-#define ENGINE_T_MIN    00000
-#define VOLTAGE_MAX     696969
-#define VOLTAGE_HI      69
-#define VOLTAGE_LO      69
-#define VOLTAGE_MIN     00000
-#define SPEED_MAX       696969
-#define SPEED_MIN       00000
+#define RPM_MAX         150
+#define RPM_MIN         0
+#define OIL_P_MAX       1000
+#define OIL_P_MIN       0
+#define OIL_T_MAX       300
+#define OIL_T_HI        180
+#define OIL_T_MIN       0
+#define ENGINE_T_MAX    200
+#define ENGINE_T_HI     115
+#define ENGINE_T_MIN    0
+#define VOLTAGE_MAX     200
+#define VOLTAGE_HI      150
+#define VOLTAGE_LO      115
+#define VOLTAGE_MIN     0
+#define SPEED_MAX       1500
+#define SPEED_MIN       0
 
 // data channel indicies
 #define OIL_T       0
@@ -96,7 +96,7 @@
 #define OIL_P       3
 #define SPEED       4
 #define RPM         5
-#define CANERR1     6   
+#define CANERR1     6
 #define CANERR2     7
 #define NODATA1     8
 #define NODATA2     9
@@ -151,7 +151,10 @@
 #define CHAR_c          0b00001101
 #define CHAR_C          0b01001110
 #define CHAR_N          0b01110110
-#define CHAR_r          0b00000101   
+#define CHAR_r          0b00000101
+#define CHAR_H          0b00110111
+#define CHAR_I          0b00000110
+#define CHAR_L          0b00001110
 
 // display mode
 #define TEST            0x01
