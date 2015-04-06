@@ -97,7 +97,7 @@ static volatile unsigned char RADIO_SW;
 static unsigned long id; // holds CAN msgID
 static unsigned char data[8]; // holds CAN data bytes
 static unsigned char dataLen; // holds number of CAN data bytes
-static ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
+static ECAN_RX_MSG_FLAGS flags; // holds information about received message
 #endif
 
 
@@ -118,8 +118,8 @@ void high_vector(void) {
  *  Description:    This interrupt will service all high priority interrupts. This
  *                  section should be as short as possible.
  *  Input(s): none
- *  Reaturn Value(s): none
- *  Side Effects:   This will modify INTCON, TMR0L & PIR5. Also it modiflies the ECAN
+ *  Return Value(s): none
+ *  Side Effects:   This will modify INTCON, TMR0L & PIR5. Also it modifies the ECAN
  *                  global variables along with the millis, and RADIO_SW variables.
  */
 #pragma interrupt high_isr
@@ -131,12 +131,12 @@ void high_isr(void) {
     // check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
         INTCONbits.TMR0IF = 0;
-        TMR0L = TMR0_RELOAD; // load timer rgisters (0xFF (max val) - 0x7D (125) = 0x82)
+        TMR0L = TMR0_RELOAD; // load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
 
 #ifdef FRONT
-    // check for recieved CAN message
+    // check for received CAN message
     if(PIR5bits.RXB1IF) {
         // reset the flag
         PIR5bits.RXB1IF = FALSE;
@@ -190,7 +190,7 @@ void main(void) {
     unsigned long id; // holds CAN msgID
     unsigned char data_r[8]; // holds CAN data bytes
     unsigned char dataLen; // holds number of CAN data bytes
-    ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
+    ECAN_RX_MSG_FLAGS flags; // holds information about received message
     FLAGS Recieved;
     unsigned char msg[8];
     unsigned int adl_tmr;
@@ -289,10 +289,10 @@ void main(void) {
     // that's triggered by the 1 ms rollover timer
     while(1) {
 #ifdef MOTEC_RESEND
-        // poll for an acceleromter message (other messages are filtered out)
+        // poll for an accelerometer message (other messages are filtered out)
         while(!ECANReceiveMessage(&id, data_r, &dataLen, &flags));
 
-        // check which accelerometer message was recieved
+        // check which accelerometer message was received
         if(id == Y_ID && !Recieved.Y_accel) {
             // process CAN bus data and put in ADL format
             process_resend(data_r, msg, Y_BYTE, Y_OFFSET, ADL7_BYTE, INTEL);
@@ -337,7 +337,7 @@ void main(void) {
  *  void sample(unsigned char *data, const unsigned char byte, const unsigned char ch)
  *
  *  Description:    This reads the analog voltage of a pin and then puts the value into the
- *                  data array that will be transmited over CAN.
+ *                  data array that will be transmitted over CAN.
  *  Input(s):   data - pointer to array of data bytes
  *              ch - which pin to sample
  *              byte - where to write the data in the passed array
@@ -361,9 +361,9 @@ void sample(unsigned char *data, const unsigned char byte, const unsigned char c
  *
  *  Description:    This takes in incoming data and reformats it to be read by Motec
  *                  as an ADL CAN message.
- *  Input(s):   data - the data bytes from the recieved CAN message
+ *  Input(s):   data - the data bytes from the received CAN message
  *              msg - the data bytes to be transmitted
- *              byte - the location of the recieved data within the recieved message
+ *              byte - the location of the received data within the received message
  *              offset - the offset to apply to the incoming data before getting transmitted
  *              ADL_ch - the ADL channel that we want the transmitted data to placed in
  *              order - the byte order of the incoming data (either INTEL or MOTOROLA)

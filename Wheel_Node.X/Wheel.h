@@ -30,7 +30,7 @@
 #define BOTH 3
 #define NUM_CHAN 6
 
-// reading and modifyinng the rotary voltages
+// reading and modifying the rotary voltages
 #define POS_0 0
 #define POS_1 555
 #define POS_2 1111
@@ -161,7 +161,7 @@
 #define NORMAL          0x00
 
 /*
- * Pin Defintions
+ * Pin Definitions
  */
 
 // chip select

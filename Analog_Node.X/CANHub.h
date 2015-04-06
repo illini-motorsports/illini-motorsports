@@ -59,14 +59,12 @@
 #define SUS_L_BYTE 2
 #define BRAKE_F_P_BYTE 0
 #define BRAKE_R_P_BYTE 2
-#define STEER_BYTE 4
 
 // define sensor pin location
-#define SUS_R ADC_CH3
-#define SUS_L ADC_CH1
-#define BRAKE_R_P ADC_CH0
+#define BRAKE_R_P ADC_CH3
 #define BRAKE_F_P ADC_CH2
-#define STEER ADC_CH4
+#define SUS_R ADC_CH1
+#define SUS_L ADC_CH0
 
 #define RADIO_LAT_0 LATEbits.LATE0
 #define RADIO_LAT_1 LATEbits.LATE1
@@ -97,8 +95,8 @@
 #define SUS_L_BYTE 2
 
 // define sensor pin location
-#define SUS_R ADC_CH2
-#define SUS_L ADC_CH1
+#define SUS_R ADC_CH1
+#define SUS_L ADC_CH0
 
 // Motec ADL
 #define X_OFFSET 0x8000
