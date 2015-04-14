@@ -28,7 +28,7 @@
 #define LEFT 0
 #define RIGHT 1
 #define BOTH 3
-#define NUM_CHAN 6
+#define NUM_CHAN 7
 
 // reading and modifying the rotary voltages
 #define POS_0 0
@@ -96,10 +96,11 @@
 #define OIL_P       3
 #define SPEED       4
 #define RPM         5
-#define CANERR1     6
-#define CANERR2     7
-#define NODATA1     8
-#define NODATA2     9
+#define LOGGING     6
+#define CANERR1     7
+#define CANERR2     8
+#define NODATA1     9
+#define NODATA2     10
 
 // addresses for display driver
 #define NO_OP       0x00
@@ -155,6 +156,8 @@
 #define CHAR_H          0b00110111
 #define CHAR_I          0b00000110
 #define CHAR_L          0b00001110
+#define CHAR_u          0b00011100
+#define CHAR_G          0b01011111
 
 // display mode
 #define TEST            0x01

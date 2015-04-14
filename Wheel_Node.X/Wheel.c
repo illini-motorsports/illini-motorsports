@@ -78,7 +78,8 @@
 // CONFIG7L
 #pragma config EBTR0 = OFF      // Table Read Protect 00800-03FFF (Disabled)
 #pragma config EBTR1 = OFF      // Table Read Protect 04000-07FFF (Disabled)
-#pragma config EBTR2 = OFF      // Table Read Protect 08000-0BFFF (Disabled)
+#pragma config EBTR2 =
+OFF      // Table Read Protect 08000-0BFFF (Disabled)
 #pragma config EBTR3 = OFF      // Table Read Protect 0C000-0FFFF (Disabled)
 
 // CONFIG7H
@@ -102,7 +103,7 @@ static unsigned char data[8]; // holds CAN data bytes
 static unsigned char dataLen; // holds number of CAN data bytes
 ECAN_RX_MSG_FLAGS flags; // holds information about received message
 
-static volatile int chan[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
+static volatile int chan[NUM_CHAN] = {0, 0, 0, 0, 0, 0, 0};
 static volatile int gear;
 static int ERR_FLAGS[3] = {0, 0, 0};          //CAN, DATA, RANGE
 static unsigned int CAN_TMR;
@@ -123,20 +124,22 @@ static const unsigned char num_arr[12] = {
     NUM_5, NUM_6, NUM_7, NUM_8, NUM_9,
     BLANK, CHAR_N
 };
-static const unsigned char text_arr[NUM_CHAN + 7][3] = {
+static const unsigned char text_arr[NUM_CHAN + 8][3] = {
     {BLANK, CHAR_O, CHAR_t}, // oil temperature
     {BLANK, CHAR_E, CHAR_t}, // engine temperature
     {CHAR_b, CHAR_A, CHAR_t}, // battery voltage
     {BLANK, CHAR_O, CHAR_P}, // oil pressure
     {CHAR_S, CHAR_P, CHAR_d}, // ground speed
     {CHAR_t, CHAR_A, CHAR_c}, // engine RPM
+    {CHAR_L, CHAR_O, CHAR_G},
     {CHAR_E, CHAR_r, CHAR_r}, // CAN error
     {CHAR_C, CHAR_A, CHAR_N},
     {BLANK, CHAR_N, CHAR_O}, //data error
     {CHAR_d, CHAR_A, CHAR_t},
     {CHAR_H, CHAR_O, CHAR_t},  //HOt
     {BLANK, CHAR_H, CHAR_I}, //HI
-    {BLANK, CHAR_L, CHAR_O} //LO
+    {BLANK, CHAR_L, CHAR_O}, //LO
+    { CHAR_O, CHAR_u, CHAR_t} //Out
 }; // CAN error
 
 /*
@@ -531,9 +534,11 @@ void write_num(int data, unsigned char d_place, unsigned char side) {
     unsigned char num_0, num_1, num_2;
 
     // get individual digits of full number
-    num_2 = data % 10;
+    num_2  = data % 10;
     num_1 = (data % 100) / 10;
     num_0 = (data % 1000) / 100;
+
+
 
     // convert values to data bytes for display driver
     num_0 = num_arr[num_0];
@@ -641,7 +646,17 @@ void updateDisp(unsigned char side) {
             // redisplay the text
             if(blinkStates[side]) {
                 blinkStates[side] = FALSE;
-                write_num(chan[displayStates[side]], d_place_arr[displayStates[side]], side);
+                if(!side) {
+                  // display hot warning
+                  //magic numbers ;_;
+                  driver_write(DIG2, text_arr[13][0]);
+                  driver_write(DIG1, text_arr[13][1]);
+                  driver_write(DIG0, text_arr[13][2]);
+                } else {
+                  driver_write(DIG3, text_arr[13][0]);
+                  driver_write(DIG4, text_arr[13][1]);
+                  driver_write(DIG5, text_arr[13][2]);
+                }
                 blinkTimer[side] = millis;
             }                // blank the displays
             else {
@@ -776,6 +791,10 @@ void bufferData(void) {
         ((unsigned char*) &(chan[SPEED]))[1] = data[GDN_SPD_BYTE];
         ((unsigned char*) &gear)[0] = data[GEAR_BYTE + 1];
         ((unsigned char*) &gear)[1] = data[GEAR_BYTE];
+    } else if(id == LOGGING_ID) {
+        ((unsigned char*) &(chan[LOGGING]))[0] = data[LOGGING_BYTE + 1];
+        ((unsigned char*) &(chan[LOGGING]))[1] = data[LOGGING_BYTE];
+
     }
 
     return;
@@ -840,7 +859,7 @@ void checkRangeError(void) {
         } else{
             RANGE_FLAGS[SPEED] = IN_RANGE;
         }
-    }
+    } 
     return;
 }
 
