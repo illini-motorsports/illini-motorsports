@@ -11,6 +11,9 @@
 #ifndef CAN_H
 #define CAN_H
 
+#define NO_DATA_WAIT    1000
+#define NO_CAN_WAIT     1000
+
 #define BEACON_ID       0xE5L
 #define MOTEC_ID        0x200L
 #define RPM_ID          0x200L
