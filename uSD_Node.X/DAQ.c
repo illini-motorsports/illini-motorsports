@@ -107,8 +107,10 @@ static volatile unsigned char msg_num; // 0 -> 3
 
 volatile static BUFFER_TUPLE buffer_tuple;
 
-static volatile unsigned int timestamp[MSGS_READ]; // holds CCP2 timestamps
-static volatile unsigned int timestamp_2[MSGS_READ]; // holds CCP2 timestamps
+static volatile unsigned int timestamp[MSGS_READ];      // holds CCP2 timestamps
+static volatile unsigned int timestamp_2[MSGS_READ];    // holds CCP2 timestamps
+static volatile unsigned int millis;                    // holds timer0 rollover count
+static volatile unsigned int data_tmr;
 
 static volatile signed int rpm; // Engine RPM
 static unsigned int seconds; // Timer1 rollover count
@@ -163,6 +165,7 @@ void low_isr(void) {
         }
 
         num_read = 0;
+        data_tmr = millis;
 
         CLI(); // Begin critical section
         if(swap) {
@@ -221,6 +224,13 @@ void high_isr(void) {
     unsigned int stamp[MSGS_READ];
     unsigned int stamp_2[MSGS_READ];
 
+    // check for timer0 rollover indicating a millisecond has passed
+    if(INTCONbits.TMR0IF) {
+        INTCONbits.TMR0IF = 0;
+        TMR0L = TMR0_RELOAD;        // load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
+        millis++;
+    }
+
     // Check for timer1 rollover
     if(PIR1bits.TMR1IF) {
         PIR1bits.TMR1IF = 0;
@@ -267,6 +277,7 @@ void main(void) {
      * Variable Declarations
      */
 
+    unsigned char no_data;
     FSFILE* outfile; // Pointer to open file
     char fname[13] = "0000.txt"; // Holds name of file
     const char write = 'w'; // For opening file (must use variable for passing value in PIC18 when not using pgm function)
@@ -314,11 +325,12 @@ void main(void) {
 
 #ifdef LOGGING_0
     TRISCbits.TRISC6 = OUTPUT; // programmable termination
-    TERM_LAT = FALSE;
+    TERM_LAT = TRUE;
 #endif
 
-    // Setup seconds interrupt
+    // Setup seconds and millis interrupt
     init_timer1();
+    init_timer0();
 
     // Turn on and configure capture module
     OpenCapture2(CAP_EVERY_FALL_EDGE & CAPTURE_INT_ON);
@@ -338,12 +350,18 @@ void main(void) {
 
     while(1) {
 
+        // check for recent data
+        if(millis - data_tmr > NO_DATA_WAIT)
+            no_data = 1;
+        else
+            no_data = 0;
+
         // Check if we want to start data logging
-#ifdef DEBUGGING
-        if(count == 0 && !PIR5bits.ERRIF) {
-#else
         CLI(); // begin critical section
-        if(rpm > RPM_THRESH && !PIR5bits.ERRIF) {
+#ifdef DEBUGGING
+        if(count == 0 && !no_data) {
+#else
+        if(rpm > RPM_THRESH && !no_data) {
 #endif
             STI(); // end critical section
 
@@ -363,7 +381,7 @@ void main(void) {
                 // Change file name and retest
                 if(fname[3] == '9') {
                     fname[3] = '0'; // Reset first number
-                    fname[2]++; // Incement other number
+                    fname[2]++; // Increment other number
                 } else {
                     fname[3]++; // Increment file number
                 }
@@ -400,12 +418,18 @@ void main(void) {
                 }
                 STI(); // end critical section
 
+                // check for recent data
+                if(millis - data_tmr > NO_DATA_WAIT)
+                    no_data = 1;
+                else
+                    no_data = 0;
+
                 CLI(); // begin critical section
                 // check if we should stop logging
 #ifdef DEBUGGING
-                if(count == DEBUG_LEN || PIR5bits.ERRIF) {
+                if(count == DEBUG_LEN || no_data) {
 #else
-                if(rpm < RPM_THRESH || PIR5bits.ERRIF) {
+                if(rpm < RPM_THRESH || no_data) {
 #endif
                     STI(); // end critical section
 
