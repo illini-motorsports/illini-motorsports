@@ -572,7 +572,7 @@ void main(void) {
              */
 
             // FUEL
-            if((!ON_SW_PORT && PRIME) || ON || (START_PORT && !ON_SW_PORT)) {
+            if(!ON_SW_PORT && (PRIME || ON || START_PORT)) {
                 if(!FUEL_PORT) {
                     FUEL_P_LAT = PWR_ON;
                     FUEL_LAT = PWR_ON;
