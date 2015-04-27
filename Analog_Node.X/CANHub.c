@@ -171,7 +171,6 @@ void high_isr(void) {
         // sample the sensors
         sample(data, BRAKE_R_P_BYTE, BRAKE_R_P);
         sample(data, BRAKE_F_P_BYTE, BRAKE_F_P);
-        sample(data, STEER_BYTE, STEER);
     #endif
         // send the sampled values out on CAN
         ECANSendMessage(SLOW_ID, data, SLOW_NUM * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_2);
