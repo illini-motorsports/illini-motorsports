@@ -78,8 +78,7 @@
 // CONFIG7L
 #pragma config EBTR0 = OFF      // Table Read Protect 00800-03FFF (Disabled)
 #pragma config EBTR1 = OFF      // Table Read Protect 04000-07FFF (Disabled)
-#pragma config EBTR2 =
-OFF      // Table Read Protect 08000-0BFFF (Disabled)
+#pragma config EBTR2 = OFF      // Table Read Protect 08000-0BFFF (Disabled)
 #pragma config EBTR3 = OFF      // Table Read Protect 0C000-0FFFF (Disabled)
 
 // CONFIG7H
