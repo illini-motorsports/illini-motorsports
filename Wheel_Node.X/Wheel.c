@@ -115,7 +115,7 @@ static const unsigned char d_place_arr[NUM_CHAN] = {
     0, // engine temperature
     2, // battery voltage
     2, // oil pressure
-    2, // ground speed
+    0, // ground speed
     0 // engine RPM
 };
 static const unsigned char num_arr[12] = {
@@ -276,7 +276,7 @@ void main(void) {
     STI();
 
     TRISCbits.TRISC6 = OUTPUT; // programmable termination
-    TERM_LAT = FALSE;
+    TERM_LAT = TRUE;
 
     while(1) {
 
@@ -790,6 +790,7 @@ void bufferData(void) {
         ((unsigned char*) &(chan[SPEED]))[1] = data[GDN_SPD_BYTE];
         ((unsigned char*) &gear)[0] = data[GEAR_BYTE + 1];
         ((unsigned char*) &gear)[1] = data[GEAR_BYTE];
+        chan[SPEED] = chan[SPEED]/10;
     } else if(id == LOGGING_ID) {
         ((unsigned char*) &(chan[LOGGING]))[0] = data[LOGGING_BYTE + 1];
         ((unsigned char*) &(chan[LOGGING]))[1] = data[LOGGING_BYTE];
@@ -813,19 +814,19 @@ void bufferData(void) {
 void checkRangeError(void) {
 
     if(id == MOTEC_ID) {
-        if(chan[RPM] > RPM_MAX || chan[RPM] < RPM_MIN){
+        if(chan[RPM] >= RPM_MAX || chan[RPM] < RPM_MIN){
             RANGE_FLAGS[RPM] = OUT_OF_RANGE;
         } else{
             RANGE_FLAGS[RPM] = IN_RANGE;
         }
 
-        if(chan[OIL_P] > OIL_P_MAX || chan[OIL_P] < OIL_P_MIN){
+        if(chan[OIL_P] >= OIL_P_MAX || chan[OIL_P] < OIL_P_MIN){
             RANGE_FLAGS[OIL_P] = OUT_OF_RANGE;
         } else{
             RANGE_FLAGS[OIL_P] = IN_RANGE;
         }
 
-        if(chan[OIL_T] > OIL_T_MAX || chan[OIL_T] < OIL_T_MIN){
+        if(chan[OIL_T] >= OIL_T_MAX || chan[OIL_T] < OIL_T_MIN){
             RANGE_FLAGS[OIL_T] = OUT_OF_RANGE;
         } else if(chan[OIL_T] > OIL_T_HI){
             RANGE_FLAGS[OIL_T] = HI;
@@ -834,7 +835,7 @@ void checkRangeError(void) {
         }
 
     } else if(id == MOTEC_ID + 1) {
-        if(chan[VOLTAGE] > VOLTAGE_MAX || chan[VOLTAGE] < VOLTAGE_MIN){
+        if(chan[VOLTAGE] >= VOLTAGE_MAX || chan[VOLTAGE] < VOLTAGE_MIN){
             RANGE_FLAGS[VOLTAGE] = OUT_OF_RANGE;
         } else if(chan[VOLTAGE] > VOLTAGE_HI){
             RANGE_FLAGS[VOLTAGE] = HI;
@@ -844,7 +845,7 @@ void checkRangeError(void) {
             RANGE_FLAGS[VOLTAGE] = IN_RANGE;
         }
 
-        if(chan[ENGINE_T] > ENGINE_T_MAX || chan[ENGINE_T] < ENGINE_T_MIN){
+        if(chan[ENGINE_T] >= ENGINE_T_MAX || chan[ENGINE_T] < ENGINE_T_MIN){
             RANGE_FLAGS[ENGINE_T] = OUT_OF_RANGE;
         } else if(chan[ENGINE_T] > ENGINE_T_HI){
             RANGE_FLAGS[ENGINE_T] = HI;
@@ -853,7 +854,7 @@ void checkRangeError(void) {
         }
 
     } else if(id == MOTEC_ID + 4) {
-        if(chan[SPEED] > SPEED_MAX || chan[SPEED] < SPEED_MIN){
+        if(chan[SPEED] >= SPEED_MAX || chan[SPEED] < SPEED_MIN){
             RANGE_FLAGS[SPEED] = OUT_OF_RANGE;
         } else{
             RANGE_FLAGS[SPEED] = IN_RANGE;
