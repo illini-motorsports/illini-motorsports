@@ -89,25 +89,20 @@
           2) Fixed the LoadMBR() function to scan all of the MBR entries and return success on the first
              supported drive or fail after the 4 table entries.
 *******************************************************************************
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
-*******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-//
-// 02/14/13 - removed MDD_InitIO calls
-// 02/21/13 - added a buffer full flag parameter to pass to the FSfwrite function
-// 03/03/13 - redid buffer full flag clearing. Now a swap flag is set to indicate that
-//          the secondary buffer B pointer can be swapped with the main buffer A pointer.
-//          also added DAQ.h
-// 03/06/13 - redid data buffer handling so that it is not a byte by byte transfer
-//          and instead a pointer swap. return to normal code is possible via a
-//          a define above the function.
-// 03/08/13 - got rid of some unnecesary parameters being passed to FSfwrite so
-//          now it is hardcoded to deal with only 512 Bytes writes
-//
-
+  02/14/13 - removed MDD_InitIO calls
+  02/21/13 - added a buffer full flag parameter to pass to the FSfwrite function
+  03/03/13 - redid buffer full flag clearing. Now a swap flag is set to indicate that
+           the secondary buffer B pointer can be swapped with the main buffer A pointer.
+           also added DAQ.h
+  03/06/13 - redid data buffer handling so that it is not a byte by byte transfer
+           and instead a pointer swap. return to normal code is possible via a
+           a define above the function.
+  03/08/13 - got rid of some unnecesary parameters being passed to FSfwrite so
+           now it is hardcoded to deal with only 512 Bytes writes
 *******************************************************************************/
-
 
 #include "p18F46K80.h"
 #include "FSIO.h"
@@ -147,6 +142,7 @@
         #error Please select only one timestamp clocking mode in FSconfig.h
     #endif
 #endif
+
 /*****************************************************************************/
 /*                         Global Variables                                  */
 /*****************************************************************************/

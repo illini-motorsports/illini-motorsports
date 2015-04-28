@@ -103,29 +103,27 @@ static volatile unsigned char swap;
 static volatile unsigned char written;
 static volatile unsigned char buffer_a_full;
 static volatile unsigned char num_read; // 0 -> 7
-static volatile unsigned char msg_num; // 0 -> 3
+static volatile unsigned char msg_num; // 0 -> 3 - Holds index for CCP2 values
 
-volatile static BUFFER_TUPLE buffer_tuple;
+static volatile BUFFER_TUPLE buffer_tuple;
 
 static volatile unsigned int timestamp[MSGS_READ]; // Holds CCP2 timestamps
 static volatile unsigned int timestamp_2[MSGS_READ]; // Holds CCP2 timestamps
 
 static volatile signed int rpm; // Engine RPM
-static unsigned int seconds; // Timer1 rollover count
+static volatile unsigned int seconds; // Timer1 rollover count
 
 /*
  * Interrupts
  */
 
 #pragma code high_vector = 0x08
-
 void high_vector(void) {
     _asm goto high_isr _endasm
 }
 #pragma code
 
 #pragma code low_vector = 0x18
-
 void interrupt_at_low_vector(void) {
     _asm goto low_isr _endasm
 }
@@ -221,8 +219,10 @@ void high_isr(void) {
         /*
          * Load timer value such that the most significant bit is set so it
          * takes exactly one second for a 32.768kHz crystal to trigger a rollover interrupt
+         *
+         * WriteTimer1(TMR1H_RELOAD * 256 + TMR1L_RELOAD);
          */
-        TMR1H = TMR1H_RELOAD; // WriteTimer1(TMR1H_RELOAD * 256 + TMR1L_RELOAD);
+        TMR1H = TMR1H_RELOAD;
         TMR1L = TMR1L_RELOAD;
         seconds++;
     }
@@ -234,8 +234,10 @@ void high_isr(void) {
         /*
          * Read CAN capture register and place in timestamp array keeping track
          * of how many are in the array
+         *
+         * ReadCapture2();
          */
-        stamp[msg_num] = CCPR2H * 256 + CCPR2L; // ReadCapture2();
+        stamp[msg_num] = CCPR2H * 256 + CCPR2L;
         stamp_2[msg_num] = seconds;
         msg_num = msg_num == 3 ? 0 : msg_num + 1;
 
@@ -286,7 +288,7 @@ void main(void) {
     buffer_a_full = 1;
     written = 0;
 
-    msg_num = 0; // Holds index for CCP2 values
+    msg_num = 0;
     num_read = 0;
 
     rpm = 0;
@@ -329,13 +331,12 @@ void main(void) {
      */
 
     while(1) {
-
         // Check if we want to start data logging
         //CLI(); // begin critical section
         if(rpm > RPM_THRESH) {
             //STI(); // end critical section
 
-            while(!MDD_MediaDetect()); // wait for card presence
+            while(!MDD_MediaDetect()); // Wait for card presence
 
             // File name loop
             while(1) {
@@ -373,7 +374,7 @@ void main(void) {
 
             // Logging loop
             while(1) {
-                // write buffer A to file
+                // Write buffer A to file
                 //CLI; // begin critical section
                 if(buffer_a_full) {
                     //STI(); // end critical section
@@ -395,7 +396,7 @@ void main(void) {
 
                     //CLI(); // Begin critical section
 
-                    // stop collecting data in the buffers
+                    // Stop collecting data in the buffers
                     buffer_a_len = BUFFER_SIZE;
                     buffer_b_len = BUFFER_SIZE;
                     swap = 0;
@@ -405,7 +406,6 @@ void main(void) {
 
                     break;
                 }
-
                 //STI(); // end critical section
             }
         }
@@ -515,28 +515,26 @@ void append_write_buffer(const unsigned char* temp, unsigned char applen) {
 
     // Message is dropped
     if(applen > (2 * BUFFER_SIZE - (buffer_a_len + buffer_b_len))) {
-#ifdef DEBUGGING
-        dropped++;
-#endif
         return;
     }
 
     // Try writing to buffer A first
     if(!buffer_a_full) {
-        // room for all of data to write
+        // Room for all of data to write
         if(BUFFER_SIZE - buffer_a_len > applen) {
             written = 1;
-        }// not enough room for all the data
+        } // Not enough room for all the data
         else if(BUFFER_SIZE - buffer_a_len < applen) {
             buffer_a_full = 1;
-            // recalculate writing parameters for partial write
+            // Recalculate writing parameters for partial write
             offset = applen - (BUFFER_SIZE - buffer_a_len);
-        }// exactly enough room for the data
+        } // Exactly enough room for the data
         else {
             buffer_a_full = 1;
             written = 1;
         }
-        // add message to buffer
+
+        // Add message to buffer
         buff_cat(buffer_tuple.left, temp, &buffer_a_len, applen - offset, 0);
     }
 

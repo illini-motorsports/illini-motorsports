@@ -97,10 +97,10 @@ void init_timer0(void) {
  *  Side Effects: This will modify T1CON, IPR1, TMR1L, TMR1H, PIE1 & PIR1.
  */
 void init_timer1(void) {
-    // turn on and configure the TIMER1 oscillator
+    // Turn on and configure the TIMER1 oscillator
     OpenTimer1(T1_16BIT_RW & T1_SOURCE_PINOSC & T1_PS_1_1 & T1_OSC1EN_ON & T1_SYNC_EXT_ON, 0x00);
-    WriteTimer1(TMR1_RELOAD); // load timer registers
-    IPR1bits.TMR1IP = 1; // high priority
+    WriteTimer1(TMR1_RELOAD); // Load timer registers
+    IPR1bits.TMR1IP = 1; // High priority
 }
 
 /*
@@ -143,13 +143,13 @@ void init_oscillator(void) {
     OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
 
     // OSCCCON
-    OSCCONbits.SCS1 = 0; // select configuration chosen oscillator
+    OSCCONbits.SCS1 = 0; // Select configuration chosen oscillator
     OSCCONbits.SCS0 = 0; // SCS = 00
 
     // OSCCON2
     OSCCON2bits.MFIOSEL = 0;
 
-    while(!OSCCONbits.OSTS); // wait for stable external clock
+    while(!OSCCONbits.OSTS); // Wait for stable external clock
 #endif
 }
 
@@ -163,9 +163,7 @@ void init_oscillator(void) {
  *          TRISE, LATA, LATB, LATC, LATD & LATE.
  */
 void init_unused_pins(void) {
-
-    // first configure to outputs then
-    // set the pin low
+    // First configure to outputs then set the pin low
 #ifndef GP_A0
     TRISAbits.TRISA0 = OUTPUT;
     LATAbits.LATA0 = 0;
@@ -306,5 +304,4 @@ void init_unused_pins(void) {
     TRISEbits.TRISE2 = OUTPUT;
     LATEbits.LATE2 = 0;
 #endif
-
 }

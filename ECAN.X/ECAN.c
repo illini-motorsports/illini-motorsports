@@ -35,18 +35,14 @@
  * Nilesh R.            7/22/03 Improved.
  * Nilesh R.            1/8/04  Renamed
  ******************************************************************************
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
-*******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-
-// 02/14/13 - corrected CIOCON configuration
-// 02/15/13 - corrected number of buffers define issue with mode 0
-//          - changed all PIR3 defines to PIR5
-//          - changed COMSTAT_FIFOEMPTY to COMSTAT_NOT_FIFOEMPTY
-// 11/28/13 - added BIE5 configuration to ECANInitialize()
-//
-
+  02/14/13 - corrected CIOCON configuration
+  02/15/13 - corrected number of buffers define issue with mode 0
+           - changed all PIR3 defines to PIR5
+           - changed COMSTAT_FIFOEMPTY to COMSTAT_NOT_FIFOEMPTY
+  11/28/13 - added BIE5 configuration to ECANInitialize()
 *******************************************************************************/
 
 #include "ECAN.h"
