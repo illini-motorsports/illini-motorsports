@@ -59,7 +59,7 @@
 
 #define IN_RANGE        0
 #define OUT_OF_RANGE    1
-#define HI            2
+#define HI              2
 #define LOW             3
 
 // timing
@@ -158,6 +158,7 @@
 #define CHAR_L          0b00001110
 #define CHAR_u          0b00011100
 #define CHAR_G          0b01011111
+#define CHAR_o          0b00011101
 
 // display mode
 #define TEST            0x01

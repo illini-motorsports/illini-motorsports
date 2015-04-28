@@ -78,8 +78,7 @@
 // CONFIG7L
 #pragma config EBTR0 = OFF      // Table Read Protect 00800-03FFF (Disabled)
 #pragma config EBTR1 = OFF      // Table Read Protect 04000-07FFF (Disabled)
-#pragma config EBTR2 =
-OFF      // Table Read Protect 08000-0BFFF (Disabled)
+#pragma config EBTR2 = OFF      // Table Read Protect 08000-0BFFF (Disabled)
 #pragma config EBTR3 = OFF      // Table Read Protect 0C000-0FFFF (Disabled)
 
 // CONFIG7H
@@ -139,7 +138,7 @@ static const unsigned char text_arr[NUM_CHAN + 8][3] = {
     {CHAR_H, CHAR_O, CHAR_t},  //HOt
     {BLANK, CHAR_H, CHAR_I}, //HI
     {BLANK, CHAR_L, CHAR_O}, //LO
-    { CHAR_O, CHAR_u, CHAR_t} //Out
+    { CHAR_o, CHAR_u, CHAR_t} //Out
 }; // CAN error
 
 /*
@@ -265,6 +264,7 @@ void main(void) {
     driver_write(DECODE, NO_DECODE); // Decoding disabled
 
     // set displays to display zero
+   
     write_gear(0);
     write_num(0, 2, LEFT);
     write_num(0, 2, RIGHT);
@@ -435,11 +435,10 @@ void driver_write(unsigned char addr, unsigned char data) {
 void write_gear(unsigned char gear) {
 
     // convert gear value to data to be sent to display driver
-    if(gear != 7)
+    if(gear < 7 && gear >= 0)
         gear = num_arr[gear];
-    else
+    else 
         gear = num_arr[11];
-
     // write the gear position
     driver_write(DIG6, gear);
 
@@ -647,15 +646,15 @@ void updateDisp(unsigned char side) {
             if(blinkStates[side]) {
                 blinkStates[side] = FALSE;
                 if(!side) {
-                  // display hot warning
+                  // display out of range
                   //magic numbers ;_;
-                  driver_write(DIG2, text_arr[13][0]);
-                  driver_write(DIG1, text_arr[13][1]);
-                  driver_write(DIG0, text_arr[13][2]);
+                  driver_write(DIG2, text_arr[14][0]);
+                  driver_write(DIG1, text_arr[14][1]);
+                  driver_write(DIG0, text_arr[14][2]);
                 } else {
-                  driver_write(DIG3, text_arr[13][0]);
-                  driver_write(DIG4, text_arr[13][1]);
-                  driver_write(DIG5, text_arr[13][2]);
+                  driver_write(DIG3, text_arr[14][0]);
+                  driver_write(DIG4, text_arr[14][1]);
+                  driver_write(DIG5, text_arr[14][2]);
                 }
                 blinkTimer[side] = millis;
             }                // blank the displays
@@ -684,20 +683,6 @@ void updateDisp(unsigned char side) {
                         if(!side) {
                           // display hot warning
                           //magic numbers ;_;
-                          driver_write(DIG2, text_arr[10][0]);
-                          driver_write(DIG1, text_arr[10][1]);
-                          driver_write(DIG0, text_arr[10][2]);
-                        } else {
-                          driver_write(DIG3, text_arr[10][0]);
-                          driver_write(DIG4, text_arr[10][1]);
-                          driver_write(DIG5, text_arr[10][2]);
-                        }
-                    }
-                    //hi
-                    else if(displayStates[side] == VOLTAGE){
-                        if(!side) {
-                          // display HI warning
-                          //magic numbers ;_;
                           driver_write(DIG2, text_arr[11][0]);
                           driver_write(DIG1, text_arr[11][1]);
                           driver_write(DIG0, text_arr[11][2]);
@@ -705,6 +690,20 @@ void updateDisp(unsigned char side) {
                           driver_write(DIG3, text_arr[11][0]);
                           driver_write(DIG4, text_arr[11][1]);
                           driver_write(DIG5, text_arr[11][2]);
+                        }
+                    }
+                    //hi
+                    else if(displayStates[side] == VOLTAGE){
+                        if(!side) {
+                          // display HI warning
+                          //magic numbers ;_;
+                          driver_write(DIG2, text_arr[12][0]);
+                          driver_write(DIG1, text_arr[12][1]);
+                          driver_write(DIG0, text_arr[12][2]);
+                        } else {
+                          driver_write(DIG3, text_arr[12][0]);
+                          driver_write(DIG4, text_arr[12][1]);
+                          driver_write(DIG5, text_arr[12][2]);
                         }
                     }
                 }
@@ -736,13 +735,13 @@ void updateDisp(unsigned char side) {
                       if(!side) {
                         // display LO warning
                         //magic numbers ;_;
-                        driver_write(DIG2, text_arr[12][0]);
-                        driver_write(DIG1, text_arr[12][1]);
-                        driver_write(DIG0, text_arr[12][2]);
+                        driver_write(DIG2, text_arr[13][0]);
+                        driver_write(DIG1, text_arr[13][1]);
+                        driver_write(DIG0, text_arr[13][2]);
                       } else {
-                        driver_write(DIG3, text_arr[12][0]);
-                        driver_write(DIG4, text_arr[12][1]);
-                        driver_write(DIG5, text_arr[12][2]);
+                        driver_write(DIG3, text_arr[13][0]);
+                        driver_write(DIG4, text_arr[13][1]);
+                        driver_write(DIG5, text_arr[13][2]);
                       }
                 }
                 blinkTimer[side] = millis;
