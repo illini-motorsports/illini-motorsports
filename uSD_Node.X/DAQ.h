@@ -20,8 +20,6 @@
  */
 
 //#define INTERNAL
-#define DEBUGGING
-#define DEBUG_LEN 1000
 
 /*
  * Magic Numbers
@@ -51,7 +49,7 @@ void high_isr(void);
 void abort(void);
 void read_CAN_buffers(void);
 
-void append_write_buffer(static const unsigned char * temp, static unsigned char applen);
+void append_write_buffer(const unsigned char * temp, unsigned char applen);
 void buff_cat(unsigned char *WriteBuffer, const unsigned char *writeData,
         unsigned int *bufflen, const unsigned char applen,
         const unsigned char offset);

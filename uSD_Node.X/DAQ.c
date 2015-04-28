@@ -107,15 +107,11 @@ static volatile unsigned char msg_num; // 0 -> 3
 
 volatile static BUFFER_TUPLE buffer_tuple;
 
-static volatile unsigned int timestamp[MSGS_READ]; // holds CCP2 timestamps
-static volatile unsigned int timestamp_2[MSGS_READ]; // holds CCP2 timestamps
+static volatile unsigned int timestamp[MSGS_READ]; // Holds CCP2 timestamps
+static volatile unsigned int timestamp_2[MSGS_READ]; // Holds CCP2 timestamps
 
 static volatile signed int rpm; // Engine RPM
 static unsigned int seconds; // Timer1 rollover count
-
-#ifdef DEBUGGING
-static unsigned int dropped; // keep track of number of dropped messages
-#endif
 
 /*
  * Interrupts
@@ -164,7 +160,7 @@ void low_isr(void) {
 
         num_read = 0;
 
-        CLI(); // Begin critical section
+        //CLI(); // Begin critical section
         if(swap) {
             buffer_a_len = 0; // Reset buffer A length
             swap = 0; // Clear swap flag
@@ -175,7 +171,7 @@ void low_isr(void) {
                 swap_buff();
             }
         }
-        STI(); // End critical section
+        //STI(); // End critical section
 
         // Process data in CAN FIFO
         read_CAN_buffers();
@@ -196,9 +192,6 @@ void low_isr(void) {
             B5CONbits.RXFUL = 0;
             RXB0CONbits.RXFUL = 0;
             RXB1CONbits.RXFUL = 0;
-#ifdef DEBUGGING
-            dropped++;
-#endif
         }
     }
 }
@@ -225,8 +218,10 @@ void high_isr(void) {
     if(PIR1bits.TMR1IF) {
         PIR1bits.TMR1IF = 0;
 
-        // Load timer value such that the most significant bit is set so it
-        // takes exactly one second for a 32.768kHz crystal to trigger a rollover interrupt
+        /*
+         * Load timer value such that the most significant bit is set so it
+         * takes exactly one second for a 32.768kHz crystal to trigger a rollover interrupt
+         */
         TMR1H = TMR1H_RELOAD; // WriteTimer1(TMR1H_RELOAD * 256 + TMR1L_RELOAD);
         TMR1L = TMR1L_RELOAD;
         seconds++;
@@ -246,7 +241,7 @@ void high_isr(void) {
 
         // Check if four messages have come in so far
         if(msg_num == 0) {
-            // swap the data byte by byte
+            // Swap the data byte by byte
             for(k = 0; k < MSGS_READ; k++) {
                 temp = stamp[k];
                 stamp[k] = timestamp[k];
@@ -272,9 +267,6 @@ void main(void) {
     const char write = 'w'; // For opening file (must use variable for passing value in PIC18 when not using pgm function)
     SearchRec rec; // Holds search parameters and found file info
     const unsigned char attributes = ATTR_ARCHIVE | ATTR_READ_ONLY | ATTR_HIDDEN;
-#ifdef DEBUGGING
-    int count = 0;
-#endif
 
     init_unused_pins();
 
@@ -339,23 +331,20 @@ void main(void) {
     while(1) {
 
         // Check if we want to start data logging
-#ifdef DEBUGGING
-        if(count == 0 && !PIR5bits.ERRIF) {
-#else
-        CLI(); // begin critical section
-        if(rpm > RPM_THRESH && !PIR5bits.ERRIF) {
-#endif
-            STI(); // end critical section
+        //CLI(); // begin critical section
+        if(rpm > RPM_THRESH) {
+            //STI(); // end critical section
 
             while(!MDD_MediaDetect()); // wait for card presence
 
             // File name loop
             while(1) {
-                // look for file with proposed name
+                // Look for file with proposed name
                 if(FindFirst(fname, attributes, &rec)) {
                     if(FSerror() == CE_FILE_NOT_FOUND) {
                         break; // Exit loop, file name is unique
                     } else {
+                        //TODO: Handle this error gracefully.
                         abort();
                     }
                 }
@@ -376,64 +365,52 @@ void main(void) {
             }
 
             // Setup buffers and flags to begin data collection
-            CLI(); // begin critical section
+            //CLI(); // begin critical section
             buffer_a_len = 0;
             buffer_b_len = 0;
             buffer_a_full = 0;
-            STI(); // end critical section
-#ifdef DEBUGGING
-            dropped = 0;
-#endif
+            //STI(); // end critical section
 
             // Logging loop
             while(1) {
                 // write buffer A to file
-                CLI; // begin critical section
+                //CLI; // begin critical section
                 if(buffer_a_full) {
-                    STI(); // end critical section
+                    //STI(); // end critical section
                     if(FSfwrite(&buffer_tuple, outfile, &swap, &buffer_a_full) != BUFFER_SIZE) {
                         abort();
                     }
-#ifdef DEBUGGING
-                    count++;
-#endif
                 }
-                STI(); // end critical section
+                //STI(); // end critical section
 
-                CLI(); // begin critical section
-                // check if we should stop logging
-#ifdef DEBUGGING
-                if(count == DEBUG_LEN || PIR5bits.ERRIF) {
-#else
-                if(rpm < RPM_THRESH || PIR5bits.ERRIF) {
-#endif
-                    STI(); // end critical section
+                //CLI(); // begin critical section
+                // Check if we should stop logging
+                if(rpm < RPM_THRESH) {
+                    //STI(); // end critical section
 
                     // Close csv data file
                     if(FSfclose(outfile)) {
                         abort();
                     }
 
-                    CLI(); // Begin critical section
+                    //CLI(); // Begin critical section
 
                     // stop collecting data in the buffers
                     buffer_a_len = BUFFER_SIZE;
                     buffer_b_len = BUFFER_SIZE;
                     swap = 0;
                     buffer_a_full = 1;
-                    //rpm = 0;
 
-                    STI(); // end critical section
+                    //STI(); // end critical section
 
                     break;
                 }
 
-                STI(); // end critical section
-            }// logging loop
-        }// data acq start control
-
-        STI(); // end critical section
-    }// data acq loop
+                //STI(); // end critical section
+            }
+        }
+        //STI(); // end critical section
+    }
 }
 
 /*
@@ -477,6 +454,7 @@ void read_CAN_buffers(void) {
     // Loop through messages in CAN buffers
     for(i = 0; i < MSGS_READ; i++) {
         id = 0; // Clear ID in case ECANReceiveMessage() fails silently
+        dlc = 0; // Clear DLC in case ECANReceiveMessage() feails silently
 
         ECANReceiveMessage(&id, data, &dlc, &flags);
 
@@ -529,13 +507,11 @@ void read_CAN_buffers(void) {
  * Return Value(s): none
  * Side Effects: This will modify Main.
  */
-void append_write_buffer(static const unsigned char* temp, static unsigned char applen) {
-
-    static unsigned char offset;
-    static unsigned char holder;
+void append_write_buffer(const unsigned char* temp, unsigned char applen) {
+    unsigned char offset = 0;
+    unsigned char holder = 0;
 
     written = 0;
-    offset = 0;
 
     // Message is dropped
     if(applen > (2 * BUFFER_SIZE - (buffer_a_len + buffer_b_len))) {
@@ -545,7 +521,7 @@ void append_write_buffer(static const unsigned char* temp, static unsigned char 
         return;
     }
 
-    // try writing to buffer A first
+    // Try writing to buffer A first
     if(!buffer_a_full) {
         // room for all of data to write
         if(BUFFER_SIZE - buffer_a_len > applen) {
@@ -564,9 +540,9 @@ void append_write_buffer(static const unsigned char* temp, static unsigned char 
         buff_cat(buffer_tuple.left, temp, &buffer_a_len, applen - offset, 0);
     }
 
-    // write to buffer B if couldn't write any or all data to buffer A
+    // Write to buffer B if couldn't write any or all data to buffer A
     if(!written) {
-        // only use offset if there has been a partial write to buffer A
+        // Only use offset if there has been a partial write to buffer A
         if(offset != 0) {
             holder = applen;
             applen = offset;
