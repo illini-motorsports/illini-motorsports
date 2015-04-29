@@ -112,6 +112,8 @@ static volatile unsigned int timestamp_2[MSGS_READ]; // Holds CCP2 timestamps
 
 static volatile signed int rpm; // Engine RPM
 static volatile unsigned int seconds; // Timer1 rollover count
+static volatile unsigned long millis; // Timer0 rollover count
+static volatile unsigned long rpm_tmr; // Last update time of rpm
 
 /*
  * Interrupts
@@ -212,6 +214,13 @@ void high_isr(void) {
     unsigned int stamp[MSGS_READ];
     unsigned int stamp_2[MSGS_READ];
 
+    // Check for timer0 rollover indicating a millisecond has passed
+    if(INTCONbits.TMR0IF) {
+        INTCONbits.TMR0IF = 0;
+        TMR0L = TMR0_RELOAD; // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
+        millis++;
+    }
+
     // Check for timer1 rollover
     if(PIR1bits.TMR1IF) {
         PIR1bits.TMR1IF = 0;
@@ -270,11 +279,13 @@ void main(void) {
     const unsigned char attributes = ATTR_ARCHIVE | ATTR_READ_ONLY | ATTR_HIDDEN;
 
     char fname[9] = "0000.txt"; // Holds name of file
-    char fname_num[5] = "0000"; // Hold number name of file
-    int fnum = 0; // Holds number of filename
-
-    unsigned int CAN_send_tmr = 0;
+    unsigned int fnum = 0; // Holds number of filename
+    unsigned int temp = 0;
     unsigned char filename_msg[2];
+    unsigned int fnum_max = 9999;
+    unsigned int fnum_min = 0;
+
+    unsigned long CAN_send_tmr = 0;
 
     init_unused_pins();
 
@@ -299,6 +310,8 @@ void main(void) {
 
     rpm = 0;
     seconds = 0;
+    millis = 0;
+    rpm_tmr = 0;
 
     /*
      * Peripheral Initialization
@@ -317,6 +330,9 @@ void main(void) {
     TERM_LAT = FALSE;
 #endif
 
+    // Setup milliseconds interrupt
+    init_timer0();
+
     // Setup seconds interrupt
     init_timer1();
 
@@ -327,6 +343,36 @@ void main(void) {
     while(!MDD_MediaDetect()); // Wait for card presence
     while(!FSInit()); // Setup file system library
     ECANInitialize(); // Setup ECAN module
+
+    // Run binary search to find the largest filename
+    while(fnum_max >= fnum_min) {
+        fnum = (fnum_max + fnum_min) / 2;
+
+        temp = fnum;
+        fname[3] = (fnum % 10) + 0x30;
+        fnum /= 10;
+        fname[2] = (fnum % 10) + 0x30;
+        fnum /= 10;
+        fname[1] = (fnum % 10) + 0x30;
+        fnum /= 10;
+        fname[0] = (fnum % 10) + 0x30;
+        fnum = temp;
+
+        // Look for file with proposed name
+        if(FindFirst(fname, attributes, &rec)) {
+            if(FSerror() == CE_FILE_NOT_FOUND) {
+                // Filename is uniquie
+                fnum_max = fnum - 1;
+                continue;
+            } else {
+                //TODO: Handle this error gracefully.
+                abort();
+            }
+        }
+
+        // Filename is not unique
+        fnum_min = fnum + 1;
+    }
 
     // Configure interrupts
     RCONbits.IPEN = 1; // Interrupt Priority Enable (1 enables)
@@ -339,13 +385,33 @@ void main(void) {
     while(1) {
         // Check if we want to start data logging
         //CLI(); // begin critical section
-        if(rpm > RPM_THRESH) {
+        if(millis - rpm_tmr < RPM_WAIT && rpm > RPM_THRESH) {
             //STI(); // end critical section
 
             while(!MDD_MediaDetect()); // Wait for card presence
 
-            // File name loop
+            // Run filename loop again (should only run once) to get the next available filename
             while(1) {
+                if(fnum > 9999) {
+                    /**
+                     * We have reached the 10000th logfile. In practice, this
+                     * will almost never happen.
+                     *
+                     * TODO: Handle this error gracefully.
+                     */
+                    abort();
+                }
+
+                temp = fnum;
+                fname[3] = (fnum % 10) + 0x30;
+                fnum /= 10;
+                fname[2] = (fnum % 10) + 0x30;
+                fnum /= 10;
+                fname[1] = (fnum % 10) + 0x30;
+                fnum /= 10;
+                fname[0] = (fnum % 10) + 0x30;
+                fnum = temp;
+
                 // Look for file with proposed name
                 if(FindFirst(fname, attributes, &rec)) {
                     if(FSerror() == CE_FILE_NOT_FOUND) {
@@ -356,13 +422,7 @@ void main(void) {
                     }
                 }
 
-                // Change file name and retest
-                if(fname[3] == '9') {
-                    fname[3] = '0'; // Reset first number
-                    fname[2]++; // Incement other number
-                } else {
-                    fname[3]++; // Increment file number
-                }
+                fnum++;
             }
 
             // Create csv data file
@@ -390,10 +450,10 @@ void main(void) {
                 }
                 //STI(); // end critical section
 
-                //CLI(); // begin critical section
+                CLI(); // begin critical section
                 // Check if we should stop logging
-                if(rpm < RPM_THRESH) {
-                    //STI(); // end critical section
+                if(rpm < RPM_THRESH || millis - rpm_tmr > RPM_WAIT) {
+                    STI(); // end critical section
 
                     // Close csv data file
                     if(FSfclose(outfile)) {
@@ -412,31 +472,23 @@ void main(void) {
 
                     break;
                 }
+                STI(); // end critical section
 
                 // Send filename on CAN
-                if(seconds - CAN_send_tmr >= CAN_PERIOD) {
-                    CAN_send_tmr = seconds;
-
-                    fname_num[0] = fname[0];
-                    fname_num[1] = fname[1];
-                    fname_num[2] = fname[2];
-                    fname_num[3] = fname[3];
-                    fname_num[4] = 0x00;
-
-                    fnum = atoi(fname_num);
+                if(millis - CAN_send_tmr > CAN_PERIOD) {
+                    CAN_send_tmr = millis;
 
                     filename_msg[0] = ((unsigned char*) &fnum)[0];
                     filename_msg[1] = ((unsigned char*) &fnum)[1];
                     ECANSendMessage(LOGGING_ID, filename_msg, 2,
                             ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
                 }
-                //STI(); // end critical section
             }
         }
 
         // Send "-1" as filename on CAN
-        if(seconds - CAN_send_tmr >= CAN_PERIOD) {
-            CAN_send_tmr = seconds;
+        if(millis - CAN_send_tmr > CAN_PERIOD) {
+            CAN_send_tmr = millis;
             filename_msg[0] = 0xFF;
             filename_msg[1] = 0xFF;
             ECANSendMessage(LOGGING_ID, filename_msg, 2,
@@ -494,6 +546,7 @@ void read_CAN_buffers(void) {
         if(id == RPM_ID) {
             ((unsigned char*) &rpm)[0] = data[RPM_BYTE + 1];
             ((unsigned char*) &rpm)[1] = data[RPM_BYTE];
+            rpm_tmr = millis;
         }
 
         if(id == BEACON_ID) {
