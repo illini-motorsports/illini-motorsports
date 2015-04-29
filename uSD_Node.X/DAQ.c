@@ -265,10 +265,16 @@ void main(void) {
      */
 
     FSFILE* outfile; // Pointer to open file
-    char fname[13] = "0000.txt"; // Holds name of file
     const char write = 'w'; // For opening file (must use variable for passing value in PIC18 when not using pgm function)
     SearchRec rec; // Holds search parameters and found file info
     const unsigned char attributes = ATTR_ARCHIVE | ATTR_READ_ONLY | ATTR_HIDDEN;
+
+    char fname[9] = "0000.txt"; // Holds name of file
+    char fname_num[5] = "0000"; // Hold number name of file
+    int fnum = 0; // Holds number of filename
+
+    unsigned int CAN_send_tmr = 0;
+    unsigned char filename_msg[2];
 
     init_unused_pins();
 
@@ -406,8 +412,35 @@ void main(void) {
 
                     break;
                 }
+
+                // Send filename on CAN
+                if(seconds - CAN_send_tmr >= CAN_PERIOD) {
+                    CAN_send_tmr = seconds;
+
+                    fname_num[0] = fname[0];
+                    fname_num[1] = fname[1];
+                    fname_num[2] = fname[2];
+                    fname_num[3] = fname[3];
+                    fname_num[4] = 0x00;
+
+                    fnum = atoi(fname_num);
+
+                    filename_msg[0] = ((unsigned char*) &fnum)[0];
+                    filename_msg[1] = ((unsigned char*) &fnum)[1];
+                    ECANSendMessage(LOGGING_ID, filename_msg, 2,
+                            ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+                }
                 //STI(); // end critical section
             }
+        }
+
+        // Send "-1" as filename on CAN
+        if(seconds - CAN_send_tmr >= CAN_PERIOD) {
+            CAN_send_tmr = seconds;
+            filename_msg[0] = 0xFF;
+            filename_msg[1] = 0xFF;
+            ECANSendMessage(LOGGING_ID, filename_msg, 2,
+                    ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
         //STI(); // end critical section
     }

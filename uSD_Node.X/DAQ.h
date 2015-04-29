@@ -28,6 +28,7 @@
 #define BUFFER_SIZE MEDIA_SECTOR_SIZE
 #define MSGS_READ 4
 #define RPM_THRESH 600 // RPM threshold for engine to be considered on
+#define CAN_PERIOD 1 // Send log filename every second
 
 /*
  * Pin Defintions
