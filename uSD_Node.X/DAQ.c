@@ -105,6 +105,8 @@ static volatile unsigned char buffer_a_full;
 static volatile unsigned char num_read; // 0 -> 7
 static volatile unsigned char msg_num; // 0 -> 3 - Holds index for CCP2 values
 
+static volatile unsigned char can_err;
+
 static volatile BUFFER_TUPLE buffer_tuple;
 
 static volatile unsigned int timestamp[MSGS_READ]; // Holds CCP2 timestamps
@@ -152,6 +154,7 @@ void low_isr(void) {
     // Service FIFO RX buffers
     if(PIR5bits.FIFOWMIF) {
         PIR5bits.FIFOWMIF = 0;
+        can_err = 0;
 
         // Sometimes a FIFO interrupt is triggered before 4 messages have arrived; da fuk?
         if(num_read < MSGS_READ) {
@@ -182,8 +185,10 @@ void low_isr(void) {
     // Check for an error with the bus
     if(PIR5bits.ERRIF) {
         // Receive buffer overflow occurred - Clear out all the buffers
-        if(COMSTATbits.RXB1OVFL == 1) {
+        if(COMSTATbits.RXB1OVFL) {
             PIR5bits.ERRIF = 0;
+            can_err = 1;
+
             COMSTATbits.RXB1OVFL = 0;
             PIR5bits.FIFOWMIF = 0;
             B0CONbits.RXFUL = 0;
@@ -195,6 +200,55 @@ void low_isr(void) {
             RXB0CONbits.RXFUL = 0;
             RXB1CONbits.RXFUL = 0;
         }
+
+        // Receive buffer overflow occurred - Clear out all the buffers
+        if(COMSTATbits.RXB0OVFL) {
+            PIR5bits.ERRIF = 0;
+            can_err = 1;
+
+            COMSTATbits.RXB0OVFL = 0;
+            PIR5bits.FIFOWMIF = 0;
+            B0CONbits.RXFUL = 0;
+            B1CONbits.RXFUL = 0;
+            B2CONbits.RXFUL = 0;
+            B3CONbits.RXFUL = 0;
+            B4CONbits.RXFUL = 0;
+            B5CONbits.RXFUL = 0;
+            RXB0CONbits.RXFUL = 0;
+            RXB1CONbits.RXFUL = 0;
+        }
+
+        // Transmit bus-off state (<255 errors)
+        if(COMSTATbits.TXBO) {
+            PIR5bits.ERRIF = 0;
+            can_err = 1;
+        }
+
+        // Transmit bus passive (<127 errors)
+        if(COMSTATbits.TXBP) {
+            PIR5bits.ERRIF = 0;
+            can_err = 1;
+        }
+
+        // Receive bus passive (<127 errors)
+        if(COMSTATbits.RXBP) {
+            PIR5bits.ERRIF = 0;
+            can_err = 1;
+        }
+
+        /*
+        // Transmit bus warning (<95 errors)
+        if(COMSTATbits.TXWARN) {
+            PIR5bits.ERRIF = 0;
+            can_err = 1;
+        }
+
+        // Receive bus warning (<95 errors)
+        if(COMSTATbits.RXWARN) {
+            PIR5bits.ERRIF = 0;
+            can_err = 1;
+        }
+         */
     }
 }
 
@@ -307,6 +361,8 @@ void main(void) {
     buffer_a_full = 1;
     written = 0;
 
+    can_err = 0;
+
     msg_num = 0;
     num_read = 0;
 
@@ -387,7 +443,7 @@ void main(void) {
     while(1) {
         // Check if we want to start data logging
         CLI(); // Begin critical section
-        if(millis - rpm_tmr < RPM_WAIT && rpm > RPM_THRESH) {
+        if(!can_err && millis - rpm_tmr < RPM_WAIT && rpm > RPM_THRESH) {
             STI(); // End critical section
 
             while(!MDD_MediaDetect()); // Wait for card presence
@@ -455,7 +511,7 @@ void main(void) {
 
                 CLI(); // Begin critical section
                 // Check if we should stop logging
-                if(rpm < RPM_THRESH || millis - rpm_tmr > RPM_WAIT) {
+                if(can_err || rpm < RPM_THRESH || millis - rpm_tmr > RPM_WAIT) {
                     STI(); // End critical section
 
                     // Close csv data file
