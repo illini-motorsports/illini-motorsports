@@ -160,7 +160,7 @@ void low_isr(void) {
 
         num_read = 0;
 
-        //CLI(); // Begin critical section
+        CLI(); // Begin critical section
         if(swap) {
             buffer_a_len = 0; // Reset buffer A length
             swap = 0; // Clear swap flag
@@ -171,10 +171,12 @@ void low_isr(void) {
                 swap_buff();
             }
         }
-        //STI(); // End critical section
+        STI(); // End critical section
 
+        CLI(); // Begin critical section
         // Process data in CAN FIFO
         read_CAN_buffers();
+        STI(); // End critical section
     }
 
     // Check for an error with the bus
@@ -344,6 +346,10 @@ void main(void) {
     while(!FSInit()); // Setup file system library
     ECANInitialize(); // Setup ECAN module
 
+    // Configure interrupts
+    RCONbits.IPEN = 1; // Interrupt Priority Enable (1 enables)
+    STI();
+
     // Run binary search to find the largest filename
     while(fnum_max >= fnum_min) {
         fnum = (fnum_max + fnum_min) / 2;
@@ -374,19 +380,15 @@ void main(void) {
         fnum_min = fnum + 1;
     }
 
-    // Configure interrupts
-    RCONbits.IPEN = 1; // Interrupt Priority Enable (1 enables)
-    STI();
-
     /*
      * Main Loop
      */
 
     while(1) {
         // Check if we want to start data logging
-        //CLI(); // begin critical section
+        CLI(); // Begin critical section
         if(millis - rpm_tmr < RPM_WAIT && rpm > RPM_THRESH) {
-            //STI(); // end critical section
+            STI(); // End critical section
 
             while(!MDD_MediaDetect()); // Wait for card presence
 
@@ -432,47 +434,46 @@ void main(void) {
             }
 
             // Setup buffers and flags to begin data collection
-            //CLI(); // begin critical section
+            CLI(); // Begin critical section
             buffer_a_len = 0;
             buffer_b_len = 0;
             buffer_a_full = 0;
-            //STI(); // end critical section
+            STI(); // End critical section
 
             // Logging loop
             while(1) {
                 // Write buffer A to file
-                //CLI; // begin critical section
+                CLI(); // Begin critical section
                 if(buffer_a_full) {
-                    //STI(); // end critical section
+                    STI(); // End critical section
                     if(FSfwrite(&buffer_tuple, outfile, &swap, &buffer_a_full) != BUFFER_SIZE) {
+                        //TODO: Handle this more gracefully
                         abort();
                     }
                 }
-                //STI(); // end critical section
+                STI(); // End critical section
 
-                CLI(); // begin critical section
+                CLI(); // Begin critical section
                 // Check if we should stop logging
                 if(rpm < RPM_THRESH || millis - rpm_tmr > RPM_WAIT) {
-                    STI(); // end critical section
+                    STI(); // End critical section
 
                     // Close csv data file
                     if(FSfclose(outfile)) {
                         abort();
                     }
 
-                    //CLI(); // Begin critical section
-
+                    CLI(); // Begin critical section
                     // Stop collecting data in the buffers
                     buffer_a_len = BUFFER_SIZE;
                     buffer_b_len = BUFFER_SIZE;
                     swap = 0;
                     buffer_a_full = 1;
-
-                    //STI(); // end critical section
+                    STI(); // End critical section
 
                     break;
                 }
-                STI(); // end critical section
+                STI(); // End critical section
 
                 // Send filename on CAN
                 if(millis - CAN_send_tmr > CAN_PERIOD) {
@@ -485,6 +486,7 @@ void main(void) {
                 }
             }
         }
+        STI(); // End critical section
 
         // Send "-1" as filename on CAN
         if(millis - CAN_send_tmr > CAN_PERIOD) {
@@ -494,7 +496,6 @@ void main(void) {
             ECANSendMessage(LOGGING_ID, filename_msg, 2,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
-        //STI(); // end critical section
     }
 }
 
