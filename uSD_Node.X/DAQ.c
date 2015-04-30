@@ -184,71 +184,30 @@ void low_isr(void) {
 
     // Check for an error with the bus
     if(PIR5bits.ERRIF) {
-        // Receive buffer overflow occurred - Clear out all the buffers
-        if(COMSTATbits.RXB1OVFL) {
-            PIR5bits.ERRIF = 0;
-            can_err = 1;
+        PIR5bits.ERRIF = 0;
 
-            COMSTATbits.RXB1OVFL = 0;
-            PIR5bits.FIFOWMIF = 0;
-            B0CONbits.RXFUL = 0;
-            B1CONbits.RXFUL = 0;
-            B2CONbits.RXFUL = 0;
-            B3CONbits.RXFUL = 0;
-            B4CONbits.RXFUL = 0;
-            B5CONbits.RXFUL = 0;
-            RXB0CONbits.RXFUL = 0;
-            RXB1CONbits.RXFUL = 0;
-        }
-
-        // Receive buffer overflow occurred - Clear out all the buffers
-        if(COMSTATbits.RXB0OVFL) {
-            PIR5bits.ERRIF = 0;
-            can_err = 1;
-
+        // Receive buffer overflow occurred
+        if(COMSTATbits.RXB0OVFL || COMSTATbits.RXB1OVFL) {
+            //Clear out all the buffers
             COMSTATbits.RXB0OVFL = 0;
+            COMSTATbits.RXB1OVFL = 0;
+
             PIR5bits.FIFOWMIF = 0;
+
+            RXB0CONbits.RXFUL = 0;
+            RXB1CONbits.RXFUL = 0;
             B0CONbits.RXFUL = 0;
             B1CONbits.RXFUL = 0;
             B2CONbits.RXFUL = 0;
             B3CONbits.RXFUL = 0;
             B4CONbits.RXFUL = 0;
             B5CONbits.RXFUL = 0;
-            RXB0CONbits.RXFUL = 0;
-            RXB1CONbits.RXFUL = 0;
         }
 
         // Transmit bus-off state (<255 errors)
         if(COMSTATbits.TXBO) {
-            PIR5bits.ERRIF = 0;
             can_err = 1;
         }
-
-        // Transmit bus passive (<127 errors)
-        if(COMSTATbits.TXBP) {
-            PIR5bits.ERRIF = 0;
-            can_err = 1;
-        }
-
-        // Receive bus passive (<127 errors)
-        if(COMSTATbits.RXBP) {
-            PIR5bits.ERRIF = 0;
-            can_err = 1;
-        }
-
-        /*
-        // Transmit bus warning (<95 errors)
-        if(COMSTATbits.TXWARN) {
-            PIR5bits.ERRIF = 0;
-            can_err = 1;
-        }
-
-        // Receive bus warning (<95 errors)
-        if(COMSTATbits.RXWARN) {
-            PIR5bits.ERRIF = 0;
-            can_err = 1;
-        }
-         */
     }
 }
 
@@ -402,8 +361,12 @@ void main(void) {
     while(!FSInit()); // Setup file system library
     ECANInitialize(); // Setup ECAN module
 
+    ECANCONbits.FIFOWM = 0; // FIFO High Water Mark (Will cause FIFO interrupt when four receive buffers remain)
+
     // Configure interrupts
     RCONbits.IPEN = 1; // Interrupt Priority Enable (1 enables)
+    PIE5bits.ERRIE = 1; // Enable CAN bus error interrupt
+    PIE5bits.FIFOWMIE = 1; // Enables CAN FIFO high watermark interrupt
     STI();
 
     // Run binary search to find the largest filename
@@ -531,27 +494,34 @@ void main(void) {
                 }
                 STI(); // End critical section
 
+                CLI(); // Begin critical section
                 // Send filename on CAN
                 if(millis - CAN_send_tmr > CAN_PERIOD) {
                     CAN_send_tmr = millis;
+                    STI(); // End critical section
 
                     filename_msg[0] = ((unsigned char*) &fnum)[0];
                     filename_msg[1] = ((unsigned char*) &fnum)[1];
                     ECANSendMessage(LOGGING_ID, filename_msg, 2,
                             ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
                 }
+                STI(); // End critical section
             }
         }
         STI(); // End critical section
 
+        CLI(); // Begin critical section
         // Send "-1" as filename on CAN
         if(millis - CAN_send_tmr > CAN_PERIOD) {
             CAN_send_tmr = millis;
+            STI(); // End critical section
+
             filename_msg[0] = 0xFF;
             filename_msg[1] = 0xFF;
             ECANSendMessage(LOGGING_ID, filename_msg, 2,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
+        STI(); // End critical section
     }
 }
 
