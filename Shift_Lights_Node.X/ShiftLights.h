@@ -108,6 +108,14 @@ typedef char bool;
 #define true    1
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
+#define engineTempLow   1000
+#define engineTempMed   1050
+#define engineTempHigh  1150
+
+#define oilTempLow      1600
+#define oilTempMed      1700
+#define oilTempHigh     1800
+
 /*
  * Method Headers
  */
@@ -120,5 +128,6 @@ void BLINKDisplayer(char color);
 bool motecError();
 void startup(long currentTime);
 void arrayOfColors();
+void simulateDataPush();
 
 #endif
