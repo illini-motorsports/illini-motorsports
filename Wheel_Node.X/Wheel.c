@@ -107,16 +107,17 @@ static volatile int gear;
 static int ERR_FLAGS[3] = {0, 0, 0};          //CAN, DATA, RANGE
 static unsigned int CAN_TMR;
 static unsigned int DATA_TMR;
-static unsigned int RANGE_TMRS[2]  ={0, 0};
-static int RANGE_FLAGS[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
+static unsigned int RANGE_TMRS[2] ={0, 0};
+static int RANGE_FLAGS[NUM_CHAN] = {0, 0, 0, 0, 0, 0, 0};
 
-static const unsigned char d_place_arr[NUM_CHAN] = {
+static unsigned char d_place_arr[NUM_CHAN] = {
     0, // oil temperature
     0, // engine temperature
     2, // battery voltage
     2, // oil pressure
     0, // ground speed
-    0 // engine RPM
+    0, // engine RPM
+    0  //logging
 };
 static const unsigned char num_arr[12] = {
     NUM_0, NUM_1, NUM_2, NUM_3, NUM_4,
@@ -224,7 +225,7 @@ void main(void) {
     ERR_FLAGS[CAN_ERR]  = 0;
     ERR_FLAGS[RANGE_ERR]= 0;
 
-    displayStates[LEFT] = OIL_T;
+    displayStates[LEFT] = LOGGING;
     displayStates[RIGHT] = ENGINE_T;
 
     /*
@@ -638,6 +639,7 @@ void updateDisp(unsigned char side) {
       if(millis - refreshTime[side] > REFRESH_TIME) {
               refreshTime[side] = millis;
                 write_num(chan[displayStates[side]], d_place_arr[displayStates[side]], side);
+                
       }
     }
     else if (RANGE_FLAGS[displayStates[side]] == OUT_OF_RANGE) {
@@ -777,7 +779,6 @@ void bufferData(void) {
         ((unsigned char*) &(chan[OIL_T]))[1] = data[OIL_TEMP_BYTE];
         chan[RPM] = chan[RPM] / 100;
         chan[OIL_T] = chan[OIL_T] / 10;
-
     } else if(id == MOTEC_ID + 1) {
         ((unsigned char*) &(chan[VOLTAGE]))[0] = data[VOLTAGE_BYTE + 1];
         ((unsigned char*) &(chan[VOLTAGE]))[1] = data[VOLTAGE_BYTE];
@@ -792,9 +793,12 @@ void bufferData(void) {
         ((unsigned char*) &gear)[1] = data[GEAR_BYTE];
         chan[SPEED] = chan[SPEED]/10;
     } else if(id == LOGGING_ID) {
-        ((unsigned char*) &(chan[LOGGING]))[0] = data[LOGGING_BYTE + 1];
-        ((unsigned char*) &(chan[LOGGING]))[1] = data[LOGGING_BYTE];
-
+        ((unsigned char*) &(chan[LOGGING]))[0] = data[LOGGING_BYTE];
+        ((unsigned char*) &(chan[LOGGING]))[1] = data[LOGGING_BYTE+1];
+        if(chan[LOGGING] > 999)
+            d_place_arr[LOGGING] = 3;
+        else
+            d_place_arr[LOGGING] = 0;
     }
 
     return;

@@ -242,16 +242,16 @@
 #define ECAN_RXF3_MASK_VAL ECAN_RXM0
 //
 // RXF4 Filter Enable/Disable
-#define ECAN_RXF4_MODE_VAL ECAN_RXFn_DISABLE
+#define ECAN_RXF4_MODE_VAL ECAN_RXFn_ENABLE
 //
 // RXF4 Filter Type
 #define ECAN_RXF4_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF4 Value
-#define ECAN_RXF4_VAL 0x0L
+#define ECAN_RXF4_VAL 0x2AAL
 //
 // RXF4 Buffer Link
-#define ECAN_RXF4_BUFFER_VAL RXB0
+#define ECAN_RXF4_BUFFER_VAL RXB1
 //
 // RXF4 Mask Link
 #define ECAN_RXF4_MASK_VAL ECAN_RXM0

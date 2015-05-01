@@ -15,8 +15,8 @@
 #define MOTEC_ID        0x200L
 #define RPM_ID          0x200L
 #define VOLTAGE_ID      0x201L
-#define ENGINE_TEMP_ID  0x201
-#define LOGGING_ID		0X2AAL
+#define ENGINE_TEMP_ID  0x201L
+#define LOGGING_ID      0x2AAL
 #define OIL_TEMP_ID     0x200L
 #define OIL_PRESS_ID    0x200L
 #define FAN_SW_ID       0x500L
@@ -32,7 +32,7 @@
 #define VOLTAGE_BYTE        6
 #define GDN_SPD_BYTE        0
 #define FAN_SW_BYTE         4
-#define LOGGING_BYTE		0
+#define LOGGING_BYTE	    0
 
 #define ADL1_BYTE 2
 #define ADL2_BYTE 4
