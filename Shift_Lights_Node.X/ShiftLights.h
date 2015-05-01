@@ -112,13 +112,13 @@ typedef char bool;
 #define true    1
 #define abs(x) ((x) > 0 ? (x) : -(x))
 
-#define engineTempLow   1000
-#define engineTempMed   1050
-#define engineTempHigh  1150
+#define ENGINE_TEMP_LOW   1000
+#define ENGINE_TEMP_MED   1050
+#define ENGINE_TEMP_HIGH  1150
 
-#define oilTempLow      1600
-#define oilTempMed      1700
-#define oilTempHigh     1800
+#define OIL_TEMP_LOW      1600
+#define OIL_TEMP_MED      1700
+#define OIL_TEMP_HIGH     1800
 
 /*
  * Method Headers

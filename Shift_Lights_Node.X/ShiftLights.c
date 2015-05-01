@@ -188,24 +188,24 @@ void high_isr(void) {
         }
 
         //Configuation of status flags
-        if(engineTemp <= engineTempLow){
+        if(engineTemp <= ENGINE_TEMP_LOW){
             white_blink_et = 0;
             all_white_et = 0;
-        }else if(engineTemp <= engineTempMed && engineTemp > engineTempLow)
+        }else if(engineTemp <= ENGINE_TEMP_MED && engineTemp > ENGINE_TEMP_LOW)
             all_white_et = 0;
-        else if(engineTemp <= engineTempHigh && engineTemp > engineTempMed)
+        else if(engineTemp <= ENGINE_TEMP_HIGH && engineTemp > ENGINE_TEMP_MED)
             white_blink_et = 1;
-        else if(engineTemp > engineTempHigh)
+        else if(engineTemp > ENGINE_TEMP_HIGH)
             all_white_et = 1;
 
-        if(oilTemp <= oilTempLow){
+        if(oilTemp <= OIL_TEMP_LOW){
             white_blink_ot = 0;
             all_white_ot = 0;
-        }else if(oilTemp <= oilTempMed && oilTemp > oilTempLow)
+        }else if(oilTemp <= OIL_TEMP_MED && oilTemp > OIL_TEMP_LOW)
             all_white_ot = 0;
-        else if(oilTemp <= oilTempHigh && oilTemp > oilTempMed)
+        else if(oilTemp <= OIL_TEMP_HIGH && oilTemp > OIL_TEMP_MED)
             white_blink_ot = 1;
-        else if(oilTemp > oilTempHigh)
+        else if(oilTemp > OIL_TEMP_HIGH)
             all_white_ot = 1;
     }
 }
@@ -508,11 +508,11 @@ void simulateDataPush(){
     else
         rpm -= 5;
 
-    if(rpm > REV_RANGE_LIMIT * 2)
+    if(rpm > REV_RANGE_LIMIT + (REV_RANGE_LIMIT >> 2))
         climb = 0;
 
     //Configuation of status flags
-    if(engineTemp <= 1000){
+    /*if(engineTemp <= 1000){
         white_blink_et = 0;
         all_white_et = 0;
     }else if(engineTemp <= 1050 && engineTemp > 1000)
@@ -530,5 +530,26 @@ void simulateDataPush(){
       else if(oilTemp <= 1800 && oilTemp > 1700)
         white_blink_ot = 1;
       else if(oilTemp > 1800)
+        all_white_ot = 1;*/
+
+    //Configuation of status flags
+    if(engineTemp <= ENGINE_TEMP_LOW){
+        white_blink_et = 0;
+        all_white_et = 0;
+    }else if(engineTemp <= ENGINE_TEMP_MED && engineTemp > ENGINE_TEMP_LOW)
+        all_white_et = 0;
+     else if(engineTemp <= ENGINE_TEMP_HIGH && engineTemp > ENGINE_TEMP_MED)
+        white_blink_et = 1;
+     else if(engineTemp > ENGINE_TEMP_HIGH)
+        all_white_et = 1;
+
+    if(oilTemp <= OIL_TEMP_LOW){
+        white_blink_ot = 0;
+        all_white_ot = 0;
+    }else if(oilTemp <= OIL_TEMP_MED && oilTemp > OIL_TEMP_LOW)
+        all_white_ot = 0;
+     else if(oilTemp <= OIL_TEMP_HIGH && oilTemp > OIL_TEMP_MED)
+        white_blink_ot = 1;
+     else if(oilTemp > OIL_TEMP_HIGH)
         all_white_ot = 1;
 }
