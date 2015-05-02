@@ -61,16 +61,12 @@
              syncronization problems.
 
 *******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-//
-// 10/24/12 - removed everything that uses SD_CD and SD_WE for microSD compatibility
-//
-// 11/14/12 - removed function that polls the SD_CD pin and the calls to it
-//          - cleaned up pre-processor stuff for better readability
-//
-//
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
+  10/24/12 - removed everything that uses SD_CD and SD_WE for microSD compatibility
+  11/14/12 - removed function that polls the SD_CD pin and the calls to it
+           - cleaned up pre-processor stuff for better readability
 *******************************************************************************/
 
 #include "p18F46K80.h"
@@ -115,9 +111,6 @@ static ASYNC_IO ioInfo; //Declared global context, for fast/code efficient acces
     {cmdSD_SEND_OP_COND,        0xFF,   R7,     NODATA}, //Actual response is R3, but has same number of bytes as R7.
     {cmdSET_WR_BLK_ERASE_COUNT, 0xFF,   R1,     NODATA}
 };
-
-
-
 
 /******************************************************************************
  * Prototypes

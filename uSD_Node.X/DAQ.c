@@ -103,35 +103,31 @@ static volatile unsigned char swap;
 static volatile unsigned char written;
 static volatile unsigned char buffer_a_full;
 static volatile unsigned char num_read; // 0 -> 7
-static volatile unsigned char msg_num; // 0 -> 3
+static volatile unsigned char msg_num; // 0 -> 3 - Holds index for CCP2 values
 
-volatile static BUFFER_TUPLE buffer_tuple;
+static volatile unsigned char can_err;
 
-static volatile unsigned int timestamp[MSGS_READ];      // holds CCP2 timestamps
-static volatile unsigned int timestamp_2[MSGS_READ];    // holds CCP2 timestamps
-static volatile unsigned int millis;                    // holds timer0 rollover count
-static volatile unsigned int data_tmr;
+static volatile BUFFER_TUPLE buffer_tuple;
+
+static volatile unsigned int timestamp[MSGS_READ]; // Holds CCP2 timestamps
+static volatile unsigned int timestamp_2[MSGS_READ]; // Holds CCP2 timestamps
 
 static volatile signed int rpm; // Engine RPM
-static unsigned int seconds; // Timer1 rollover count
-
-#ifdef DEBUGGING
-static unsigned int dropped; // keep track of number of dropped messages
-#endif
+static volatile unsigned int seconds; // Timer1 rollover count
+static volatile unsigned long millis; // Timer0 rollover count
+static volatile unsigned long rpm_tmr; // Last update time of rpm
 
 /*
  * Interrupts
  */
 
 #pragma code high_vector = 0x08
-
 void high_vector(void) {
     _asm goto high_isr _endasm
 }
 #pragma code
 
 #pragma code low_vector = 0x18
-
 void interrupt_at_low_vector(void) {
     _asm goto low_isr _endasm
 }
@@ -158,6 +154,7 @@ void low_isr(void) {
     // Service FIFO RX buffers
     if(PIR5bits.FIFOWMIF) {
         PIR5bits.FIFOWMIF = 0;
+        can_err = 0;
 
         // Sometimes a FIFO interrupt is triggered before 4 messages have arrived; da fuk?
         if(num_read < MSGS_READ) {
@@ -165,7 +162,6 @@ void low_isr(void) {
         }
 
         num_read = 0;
-        data_tmr = millis;
 
         CLI(); // Begin critical section
         if(swap) {
@@ -180,28 +176,37 @@ void low_isr(void) {
         }
         STI(); // End critical section
 
+        CLI(); // Begin critical section
         // Process data in CAN FIFO
         read_CAN_buffers();
+        STI(); // End critical section
     }
 
     // Check for an error with the bus
     if(PIR5bits.ERRIF) {
-        // Receive buffer overflow occurred - Clear out all the buffers
-        if(COMSTATbits.RXB1OVFL == 1) {
-            PIR5bits.ERRIF = 0;
+        PIR5bits.ERRIF = 0;
+
+        // Receive buffer overflow occurred
+        if(COMSTATbits.RXB0OVFL || COMSTATbits.RXB1OVFL) {
+            //Clear out all the buffers
+            COMSTATbits.RXB0OVFL = 0;
             COMSTATbits.RXB1OVFL = 0;
+
             PIR5bits.FIFOWMIF = 0;
+
+            RXB0CONbits.RXFUL = 0;
+            RXB1CONbits.RXFUL = 0;
             B0CONbits.RXFUL = 0;
             B1CONbits.RXFUL = 0;
             B2CONbits.RXFUL = 0;
             B3CONbits.RXFUL = 0;
             B4CONbits.RXFUL = 0;
             B5CONbits.RXFUL = 0;
-            RXB0CONbits.RXFUL = 0;
-            RXB1CONbits.RXFUL = 0;
-#ifdef DEBUGGING
-            dropped++;
-#endif
+        }
+
+        // Transmit bus-off state (<255 errors)
+        if(COMSTATbits.TXBO) {
+            can_err = 1;
         }
     }
 }
@@ -224,10 +229,10 @@ void high_isr(void) {
     unsigned int stamp[MSGS_READ];
     unsigned int stamp_2[MSGS_READ];
 
-    // check for timer0 rollover indicating a millisecond has passed
+    // Check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
         INTCONbits.TMR0IF = 0;
-        TMR0L = TMR0_RELOAD;        // load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
+        TMR0L = TMR0_RELOAD; // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
 
@@ -235,9 +240,13 @@ void high_isr(void) {
     if(PIR1bits.TMR1IF) {
         PIR1bits.TMR1IF = 0;
 
-        // Load timer value such that the most significant bit is set so it
-        // takes exactly one second for a 32.768kHz crystal to trigger a rollover interrupt
-        TMR1H = TMR1H_RELOAD; // WriteTimer1(TMR1H_RELOAD * 256 + TMR1L_RELOAD);
+        /*
+         * Load timer value such that the most significant bit is set so it
+         * takes exactly one second for a 32.768kHz crystal to trigger a rollover interrupt
+         *
+         * WriteTimer1(TMR1H_RELOAD * 256 + TMR1L_RELOAD);
+         */
+        TMR1H = TMR1H_RELOAD;
         TMR1L = TMR1L_RELOAD;
         seconds++;
     }
@@ -249,14 +258,16 @@ void high_isr(void) {
         /*
          * Read CAN capture register and place in timestamp array keeping track
          * of how many are in the array
+         *
+         * ReadCapture2();
          */
-        stamp[msg_num] = CCPR2H * 256 + CCPR2L; // ReadCapture2();
+        stamp[msg_num] = CCPR2H * 256 + CCPR2L;
         stamp_2[msg_num] = seconds;
         msg_num = msg_num == 3 ? 0 : msg_num + 1;
 
         // Check if four messages have come in so far
         if(msg_num == 0) {
-            // swap the data byte by byte
+            // Swap the data byte by byte
             for(k = 0; k < MSGS_READ; k++) {
                 temp = stamp[k];
                 stamp[k] = timestamp[k];
@@ -277,15 +288,19 @@ void main(void) {
      * Variable Declarations
      */
 
-    unsigned char no_data;
     FSFILE* outfile; // Pointer to open file
-    char fname[13] = "0000.txt"; // Holds name of file
     const char write = 'w'; // For opening file (must use variable for passing value in PIC18 when not using pgm function)
     SearchRec rec; // Holds search parameters and found file info
     const unsigned char attributes = ATTR_ARCHIVE | ATTR_READ_ONLY | ATTR_HIDDEN;
-#ifdef DEBUGGING
-    int count = 0;
-#endif
+
+    char fname[9] = "0000.txt"; // Holds name of file
+    unsigned int fnum = 0; // Holds number of filename
+    unsigned int temp = 0;
+    unsigned char filename_msg[2];
+    unsigned int fnum_max = 9999;
+    unsigned int fnum_min = 0;
+
+    unsigned long CAN_send_tmr = 0;
 
     init_unused_pins();
 
@@ -305,11 +320,15 @@ void main(void) {
     buffer_a_full = 1;
     written = 0;
 
-    msg_num = 0; // Holds index for CCP2 values
+    can_err = 0;
+
+    msg_num = 0;
     num_read = 0;
 
     rpm = 0;
     seconds = 0;
+    millis = 0;
+    rpm_tmr = 0;
 
     /*
      * Peripheral Initialization
@@ -325,12 +344,14 @@ void main(void) {
 
 #ifdef LOGGING_0
     TRISCbits.TRISC6 = OUTPUT; // programmable termination
-    TERM_LAT = TRUE;
+    TERM_LAT = FALSE;
 #endif
 
-    // Setup seconds and millis interrupt
-    init_timer1();
+    // Setup milliseconds interrupt
     init_timer0();
+
+    // Setup seconds interrupt
+    init_timer1();
 
     // Turn on and configure capture module
     OpenCapture2(CAP_EVERY_FALL_EDGE & CAPTURE_INT_ON);
@@ -340,51 +361,89 @@ void main(void) {
     while(!FSInit()); // Setup file system library
     ECANInitialize(); // Setup ECAN module
 
+    ECANCONbits.FIFOWM = 0; // FIFO High Water Mark (Will cause FIFO interrupt when four receive buffers remain)
+
     // Configure interrupts
     RCONbits.IPEN = 1; // Interrupt Priority Enable (1 enables)
+    PIE5bits.ERRIE = 1; // Enable CAN bus error interrupt
+    PIE5bits.FIFOWMIE = 1; // Enables CAN FIFO high watermark interrupt
     STI();
+
+    // Run binary search to find the largest filename
+    while(fnum_max >= fnum_min) {
+        fnum = (fnum_max + fnum_min) / 2;
+
+        temp = fnum;
+        fname[3] = (fnum % 10) + 0x30;
+        fnum /= 10;
+        fname[2] = (fnum % 10) + 0x30;
+        fnum /= 10;
+        fname[1] = (fnum % 10) + 0x30;
+        fnum /= 10;
+        fname[0] = (fnum % 10) + 0x30;
+        fnum = temp;
+
+        // Look for file with proposed name
+        if(FindFirst(fname, attributes, &rec)) {
+            if(FSerror() == CE_FILE_NOT_FOUND) {
+                // Filename is uniquie
+                fnum_max = fnum - 1;
+                continue;
+            } else {
+                //TODO: Handle this error gracefully.
+                abort();
+            }
+        }
+
+        // Filename is not unique
+        fnum_min = fnum + 1;
+    }
 
     /*
      * Main Loop
      */
 
     while(1) {
-
-        // check for recent data
-        if(millis - data_tmr > NO_DATA_WAIT)
-            no_data = 1;
-        else
-            no_data = 0;
-
         // Check if we want to start data logging
-        CLI(); // begin critical section
-#ifdef DEBUGGING
-        if(count == 0 && !no_data) {
-#else
-        if(rpm > RPM_THRESH && !no_data) {
-#endif
-            STI(); // end critical section
+        CLI(); // Begin critical section
+        if(!can_err && millis - rpm_tmr < RPM_WAIT && rpm > RPM_THRESH) {
+            STI(); // End critical section
 
-            while(!MDD_MediaDetect()); // wait for card presence
+            while(!MDD_MediaDetect()); // Wait for card presence
 
-            // File name loop
+            // Run filename loop again (should only run once) to get the next available filename
             while(1) {
-                // look for file with proposed name
+                if(fnum > 9999) {
+                    /**
+                     * We have reached the 10000th logfile. In practice, this
+                     * will almost never happen.
+                     *
+                     * TODO: Handle this error gracefully.
+                     */
+                    abort();
+                }
+
+                temp = fnum;
+                fname[3] = (fnum % 10) + 0x30;
+                fnum /= 10;
+                fname[2] = (fnum % 10) + 0x30;
+                fnum /= 10;
+                fname[1] = (fnum % 10) + 0x30;
+                fnum /= 10;
+                fname[0] = (fnum % 10) + 0x30;
+                fnum = temp;
+
+                // Look for file with proposed name
                 if(FindFirst(fname, attributes, &rec)) {
                     if(FSerror() == CE_FILE_NOT_FOUND) {
                         break; // Exit loop, file name is unique
                     } else {
+                        //TODO: Handle this error gracefully.
                         abort();
                     }
                 }
 
-                // Change file name and retest
-                if(fname[3] == '9') {
-                    fname[3] = '0'; // Reset first number
-                    fname[2]++; // Increment other number
-                } else {
-                    fname[3]++; // Increment file number
-                }
+                fnum++;
             }
 
             // Create csv data file
@@ -394,44 +453,29 @@ void main(void) {
             }
 
             // Setup buffers and flags to begin data collection
-            CLI(); // begin critical section
+            CLI(); // Begin critical section
             buffer_a_len = 0;
             buffer_b_len = 0;
             buffer_a_full = 0;
-            STI(); // end critical section
-#ifdef DEBUGGING
-            dropped = 0;
-#endif
+            STI(); // End critical section
 
             // Logging loop
             while(1) {
-                // write buffer A to file
-                CLI; // begin critical section
+                // Write buffer A to file
+                CLI(); // Begin critical section
                 if(buffer_a_full) {
-                    STI(); // end critical section
+                    STI(); // End critical section
                     if(FSfwrite(&buffer_tuple, outfile, &swap, &buffer_a_full) != BUFFER_SIZE) {
+                        //TODO: Handle this more gracefully
                         abort();
                     }
-#ifdef DEBUGGING
-                    count++;
-#endif
                 }
-                STI(); // end critical section
+                STI(); // End critical section
 
-                // check for recent data
-                if(millis - data_tmr > NO_DATA_WAIT)
-                    no_data = 1;
-                else
-                    no_data = 0;
-
-                CLI(); // begin critical section
-                // check if we should stop logging
-#ifdef DEBUGGING
-                if(count == DEBUG_LEN || no_data) {
-#else
-                if(rpm < RPM_THRESH || no_data) {
-#endif
-                    STI(); // end critical section
+                CLI(); // Begin critical section
+                // Check if we should stop logging
+                if(can_err || rpm < RPM_THRESH || millis - rpm_tmr > RPM_WAIT) {
+                    STI(); // End critical section
 
                     // Close csv data file
                     if(FSfclose(outfile)) {
@@ -439,25 +483,46 @@ void main(void) {
                     }
 
                     CLI(); // Begin critical section
-
-                    // stop collecting data in the buffers
+                    // Stop collecting data in the buffers
                     buffer_a_len = BUFFER_SIZE;
                     buffer_b_len = BUFFER_SIZE;
                     swap = 0;
                     buffer_a_full = 1;
-                    //rpm = 0;
-
-                    STI(); // end critical section
+                    STI(); // End critical section
 
                     break;
                 }
+                STI(); // End critical section
 
-                STI(); // end critical section
-            }// logging loop
-        }// data acq start control
+                CLI(); // Begin critical section
+                // Send filename on CAN
+                if(millis - CAN_send_tmr > CAN_PERIOD) {
+                    CAN_send_tmr = millis;
+                    STI(); // End critical section
 
-        STI(); // end critical section
-    }// data acq loop
+                    filename_msg[0] = ((unsigned char*) &fnum)[0];
+                    filename_msg[1] = ((unsigned char*) &fnum)[1];
+                    ECANSendMessage(LOGGING_ID, filename_msg, 2,
+                            ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+                }
+                STI(); // End critical section
+            }
+        }
+        STI(); // End critical section
+
+        CLI(); // Begin critical section
+        // Send "-1" as filename on CAN
+        if(millis - CAN_send_tmr > CAN_PERIOD) {
+            CAN_send_tmr = millis;
+            STI(); // End critical section
+
+            filename_msg[0] = 0xFF;
+            filename_msg[1] = 0xFF;
+            ECANSendMessage(LOGGING_ID, filename_msg, 2,
+                    ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
+        }
+        STI(); // End critical section
+    }
 }
 
 /*
@@ -501,12 +566,14 @@ void read_CAN_buffers(void) {
     // Loop through messages in CAN buffers
     for(i = 0; i < MSGS_READ; i++) {
         id = 0; // Clear ID in case ECANReceiveMessage() fails silently
+        dlc = 0; // Clear DLC in case ECANReceiveMessage() feails silently
 
         ECANReceiveMessage(&id, data, &dlc, &flags);
 
         if(id == RPM_ID) {
             ((unsigned char*) &rpm)[0] = data[RPM_BYTE + 1];
             ((unsigned char*) &rpm)[1] = data[RPM_BYTE];
+            rpm_tmr = millis;
         }
 
         if(id == BEACON_ID) {
@@ -553,44 +620,40 @@ void read_CAN_buffers(void) {
  * Return Value(s): none
  * Side Effects: This will modify Main.
  */
-void append_write_buffer(static const unsigned char* temp, static unsigned char applen) {
-
-    static unsigned char offset;
-    static unsigned char holder;
+void append_write_buffer(const unsigned char* temp, unsigned char applen) {
+    unsigned char offset = 0;
+    unsigned char holder = 0;
 
     written = 0;
-    offset = 0;
 
     // Message is dropped
     if(applen > (2 * BUFFER_SIZE - (buffer_a_len + buffer_b_len))) {
-#ifdef DEBUGGING
-        dropped++;
-#endif
         return;
     }
 
-    // try writing to buffer A first
+    // Try writing to buffer A first
     if(!buffer_a_full) {
-        // room for all of data to write
+        // Room for all of data to write
         if(BUFFER_SIZE - buffer_a_len > applen) {
             written = 1;
-        }// not enough room for all the data
+        } // Not enough room for all the data
         else if(BUFFER_SIZE - buffer_a_len < applen) {
             buffer_a_full = 1;
-            // recalculate writing parameters for partial write
+            // Recalculate writing parameters for partial write
             offset = applen - (BUFFER_SIZE - buffer_a_len);
-        }// exactly enough room for the data
+        } // Exactly enough room for the data
         else {
             buffer_a_full = 1;
             written = 1;
         }
-        // add message to buffer
+
+        // Add message to buffer
         buff_cat(buffer_tuple.left, temp, &buffer_a_len, applen - offset, 0);
     }
 
-    // write to buffer B if couldn't write any or all data to buffer A
+    // Write to buffer B if couldn't write any or all data to buffer A
     if(!written) {
-        // only use offset if there has been a partial write to buffer A
+        // Only use offset if there has been a partial write to buffer A
         if(offset != 0) {
             holder = applen;
             applen = offset;

@@ -107,16 +107,17 @@ static volatile int gear;
 static int ERR_FLAGS[3] = {0, 0, 0};          //CAN, DATA, RANGE
 static unsigned int CAN_TMR;
 static unsigned int DATA_TMR;
-static unsigned int RANGE_TMRS[2]  ={0, 0};
-static int RANGE_FLAGS[NUM_CHAN] = {0, 0, 0, 0, 0, 0};
+static unsigned int RANGE_TMRS[2] ={0, 0};
+static int RANGE_FLAGS[NUM_CHAN] = {0, 0, 0, 0, 0, 0, 0};
 
-static const unsigned char d_place_arr[NUM_CHAN] = {
+static unsigned char d_place_arr[NUM_CHAN] = {
     0, // oil temperature
     0, // engine temperature
     2, // battery voltage
     2, // oil pressure
-    2, // ground speed
-    0 // engine RPM
+    0, // ground speed
+    0, // engine RPM
+    0  //logging
 };
 static const unsigned char num_arr[12] = {
     NUM_0, NUM_1, NUM_2, NUM_3, NUM_4,
@@ -138,7 +139,7 @@ static const unsigned char text_arr[NUM_CHAN + 8][3] = {
     {CHAR_H, CHAR_O, CHAR_t},  //HOt
     {BLANK, CHAR_H, CHAR_I}, //HI
     {BLANK, CHAR_L, CHAR_O}, //LO
-    { CHAR_O, CHAR_u, CHAR_t} //Out
+    { CHAR_o, CHAR_u, CHAR_t} //Out
 }; // CAN error
 
 /*
@@ -224,7 +225,7 @@ void main(void) {
     ERR_FLAGS[CAN_ERR]  = 0;
     ERR_FLAGS[RANGE_ERR]= 0;
 
-    displayStates[LEFT] = OIL_T;
+    displayStates[LEFT] = LOGGING;
     displayStates[RIGHT] = ENGINE_T;
 
     /*
@@ -264,6 +265,7 @@ void main(void) {
     driver_write(DECODE, NO_DECODE); // Decoding disabled
 
     // set displays to display zero
+   
     write_gear(0);
     write_num(0, 2, LEFT);
     write_num(0, 2, RIGHT);
@@ -275,7 +277,7 @@ void main(void) {
     STI();
 
     TRISCbits.TRISC6 = OUTPUT; // programmable termination
-    TERM_LAT = FALSE;
+    TERM_LAT = TRUE;
 
     while(1) {
 
@@ -434,11 +436,10 @@ void driver_write(unsigned char addr, unsigned char data) {
 void write_gear(unsigned char gear) {
 
     // convert gear value to data to be sent to display driver
-    if(gear != 7)
+    if(gear < 7 && gear >= 0)
         gear = num_arr[gear];
-    else
+    else 
         gear = num_arr[11];
-
     // write the gear position
     driver_write(DIG6, gear);
 
@@ -638,6 +639,7 @@ void updateDisp(unsigned char side) {
       if(millis - refreshTime[side] > REFRESH_TIME) {
               refreshTime[side] = millis;
                 write_num(chan[displayStates[side]], d_place_arr[displayStates[side]], side);
+                
       }
     }
     else if (RANGE_FLAGS[displayStates[side]] == OUT_OF_RANGE) {
@@ -646,15 +648,15 @@ void updateDisp(unsigned char side) {
             if(blinkStates[side]) {
                 blinkStates[side] = FALSE;
                 if(!side) {
-                  // display hot warning
+                  // display out of range
                   //magic numbers ;_;
-                  driver_write(DIG2, text_arr[13][0]);
-                  driver_write(DIG1, text_arr[13][1]);
-                  driver_write(DIG0, text_arr[13][2]);
+                  driver_write(DIG2, text_arr[14][0]);
+                  driver_write(DIG1, text_arr[14][1]);
+                  driver_write(DIG0, text_arr[14][2]);
                 } else {
-                  driver_write(DIG3, text_arr[13][0]);
-                  driver_write(DIG4, text_arr[13][1]);
-                  driver_write(DIG5, text_arr[13][2]);
+                  driver_write(DIG3, text_arr[14][0]);
+                  driver_write(DIG4, text_arr[14][1]);
+                  driver_write(DIG5, text_arr[14][2]);
                 }
                 blinkTimer[side] = millis;
             }                // blank the displays
@@ -683,20 +685,6 @@ void updateDisp(unsigned char side) {
                         if(!side) {
                           // display hot warning
                           //magic numbers ;_;
-                          driver_write(DIG2, text_arr[10][0]);
-                          driver_write(DIG1, text_arr[10][1]);
-                          driver_write(DIG0, text_arr[10][2]);
-                        } else {
-                          driver_write(DIG3, text_arr[10][0]);
-                          driver_write(DIG4, text_arr[10][1]);
-                          driver_write(DIG5, text_arr[10][2]);
-                        }
-                    }
-                    //hi
-                    else if(displayStates[side] == VOLTAGE){
-                        if(!side) {
-                          // display HI warning
-                          //magic numbers ;_;
                           driver_write(DIG2, text_arr[11][0]);
                           driver_write(DIG1, text_arr[11][1]);
                           driver_write(DIG0, text_arr[11][2]);
@@ -704,6 +692,20 @@ void updateDisp(unsigned char side) {
                           driver_write(DIG3, text_arr[11][0]);
                           driver_write(DIG4, text_arr[11][1]);
                           driver_write(DIG5, text_arr[11][2]);
+                        }
+                    }
+                    //hi
+                    else if(displayStates[side] == VOLTAGE){
+                        if(!side) {
+                          // display HI warning
+                          //magic numbers ;_;
+                          driver_write(DIG2, text_arr[12][0]);
+                          driver_write(DIG1, text_arr[12][1]);
+                          driver_write(DIG0, text_arr[12][2]);
+                        } else {
+                          driver_write(DIG3, text_arr[12][0]);
+                          driver_write(DIG4, text_arr[12][1]);
+                          driver_write(DIG5, text_arr[12][2]);
                         }
                     }
                 }
@@ -735,13 +737,13 @@ void updateDisp(unsigned char side) {
                       if(!side) {
                         // display LO warning
                         //magic numbers ;_;
-                        driver_write(DIG2, text_arr[12][0]);
-                        driver_write(DIG1, text_arr[12][1]);
-                        driver_write(DIG0, text_arr[12][2]);
+                        driver_write(DIG2, text_arr[13][0]);
+                        driver_write(DIG1, text_arr[13][1]);
+                        driver_write(DIG0, text_arr[13][2]);
                       } else {
-                        driver_write(DIG3, text_arr[12][0]);
-                        driver_write(DIG4, text_arr[12][1]);
-                        driver_write(DIG5, text_arr[12][2]);
+                        driver_write(DIG3, text_arr[13][0]);
+                        driver_write(DIG4, text_arr[13][1]);
+                        driver_write(DIG5, text_arr[13][2]);
                       }
                 }
                 blinkTimer[side] = millis;
@@ -777,7 +779,6 @@ void bufferData(void) {
         ((unsigned char*) &(chan[OIL_T]))[1] = data[OIL_TEMP_BYTE];
         chan[RPM] = chan[RPM] / 100;
         chan[OIL_T] = chan[OIL_T] / 10;
-
     } else if(id == MOTEC_ID + 1) {
         ((unsigned char*) &(chan[VOLTAGE]))[0] = data[VOLTAGE_BYTE + 1];
         ((unsigned char*) &(chan[VOLTAGE]))[1] = data[VOLTAGE_BYTE];
@@ -790,10 +791,14 @@ void bufferData(void) {
         ((unsigned char*) &(chan[SPEED]))[1] = data[GDN_SPD_BYTE];
         ((unsigned char*) &gear)[0] = data[GEAR_BYTE + 1];
         ((unsigned char*) &gear)[1] = data[GEAR_BYTE];
+        chan[SPEED] = chan[SPEED]/10;
     } else if(id == LOGGING_ID) {
-        ((unsigned char*) &(chan[LOGGING]))[0] = data[LOGGING_BYTE + 1];
-        ((unsigned char*) &(chan[LOGGING]))[1] = data[LOGGING_BYTE];
-
+        ((unsigned char*) &(chan[LOGGING]))[0] = data[LOGGING_BYTE];
+        ((unsigned char*) &(chan[LOGGING]))[1] = data[LOGGING_BYTE+1];
+        if(chan[LOGGING] > 999)
+            d_place_arr[LOGGING] = 3;
+        else
+            d_place_arr[LOGGING] = 0;
     }
 
     return;
@@ -813,19 +818,19 @@ void bufferData(void) {
 void checkRangeError(void) {
 
     if(id == MOTEC_ID) {
-        if(chan[RPM] > RPM_MAX || chan[RPM] < RPM_MIN){
+        if(chan[RPM] >= RPM_MAX || chan[RPM] < RPM_MIN){
             RANGE_FLAGS[RPM] = OUT_OF_RANGE;
         } else{
             RANGE_FLAGS[RPM] = IN_RANGE;
         }
 
-        if(chan[OIL_P] > OIL_P_MAX || chan[OIL_P] < OIL_P_MIN){
+        if(chan[OIL_P] >= OIL_P_MAX || chan[OIL_P] < OIL_P_MIN){
             RANGE_FLAGS[OIL_P] = OUT_OF_RANGE;
         } else{
             RANGE_FLAGS[OIL_P] = IN_RANGE;
         }
 
-        if(chan[OIL_T] > OIL_T_MAX || chan[OIL_T] < OIL_T_MIN){
+        if(chan[OIL_T] >= OIL_T_MAX || chan[OIL_T] < OIL_T_MIN){
             RANGE_FLAGS[OIL_T] = OUT_OF_RANGE;
         } else if(chan[OIL_T] > OIL_T_HI){
             RANGE_FLAGS[OIL_T] = HI;
@@ -834,7 +839,7 @@ void checkRangeError(void) {
         }
 
     } else if(id == MOTEC_ID + 1) {
-        if(chan[VOLTAGE] > VOLTAGE_MAX || chan[VOLTAGE] < VOLTAGE_MIN){
+        if(chan[VOLTAGE] >= VOLTAGE_MAX || chan[VOLTAGE] < VOLTAGE_MIN){
             RANGE_FLAGS[VOLTAGE] = OUT_OF_RANGE;
         } else if(chan[VOLTAGE] > VOLTAGE_HI){
             RANGE_FLAGS[VOLTAGE] = HI;
@@ -844,7 +849,7 @@ void checkRangeError(void) {
             RANGE_FLAGS[VOLTAGE] = IN_RANGE;
         }
 
-        if(chan[ENGINE_T] > ENGINE_T_MAX || chan[ENGINE_T] < ENGINE_T_MIN){
+        if(chan[ENGINE_T] >= ENGINE_T_MAX || chan[ENGINE_T] < ENGINE_T_MIN){
             RANGE_FLAGS[ENGINE_T] = OUT_OF_RANGE;
         } else if(chan[ENGINE_T] > ENGINE_T_HI){
             RANGE_FLAGS[ENGINE_T] = HI;
@@ -853,7 +858,7 @@ void checkRangeError(void) {
         }
 
     } else if(id == MOTEC_ID + 4) {
-        if(chan[SPEED] > SPEED_MAX || chan[SPEED] < SPEED_MIN){
+        if(chan[SPEED] >= SPEED_MAX || chan[SPEED] < SPEED_MIN){
             RANGE_FLAGS[SPEED] = OUT_OF_RANGE;
         } else{
             RANGE_FLAGS[SPEED] = IN_RANGE;

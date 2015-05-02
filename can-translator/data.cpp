@@ -153,6 +153,7 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
 
   int iter = 0;
   int progressCounter = 0;
+  static int badMsgCounter = 0;
   bool badMsgFound = false;
   while(iter + 14 < length) {
 
@@ -195,7 +196,11 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
       writeLine();
     } else {
       if(!badMsgFound) {
-        emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+        if(++badMsgCounter < 6) {
+            emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+        } else if(badMsgCounter == 7) {
+            emit error(QString("Invalid msgId maxed out."));
+        }
       }
       badMsgFound = true;
       iter += 2;

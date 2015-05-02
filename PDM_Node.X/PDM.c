@@ -670,7 +670,7 @@ void main(void) {
         CLI();
         // ECU
         if(millis - ECU_peak_tmr > ECU_PEAK_WAIT && ECU_P_PORT) {
-        //    ECU_P_LAT = PWR_OFF;
+            ECU_P_LAT = PWR_OFF;
         }
 
         // FUEL
@@ -771,8 +771,9 @@ void killCar() {
     START_LAT = PWR_OFF;
 
     // If low voltage killed the car don't allow a restart
-    if(voltage < VOLTAGE_CRIT)
+    if(voltage < VOLTAGE_CRIT) {
         while(1);
+    }
 
     // Do nothing until the on switch is turned off
     while(!ON_SW_PORT);

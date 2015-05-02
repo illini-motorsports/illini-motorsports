@@ -30,14 +30,11 @@
  * IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL OR
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
-*******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-//
-// 11/14/12 - removed prototype for media detect function
-//
-//
+ ******************************************************************************
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
+  11/14/12 - removed prototype for media detect function
 *******************************************************************************/
 
 #ifndef SDMMC_H

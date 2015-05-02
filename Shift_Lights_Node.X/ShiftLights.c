@@ -107,13 +107,22 @@ volatile signed int rpm = 0;
 volatile signed int oilTemp = 0;
 volatile signed int engineTemp = 0;
 
+char motecErrFlag = 0;
+
 volatile signed long lastInterrupt = -1; //variable used to give last time interrupt occured for the main information.
 
-volatile signed long rpmLastAccess = -1, oilLastAccess = -1, engineLastAccess = -1;
+volatile signed long rpmLastAccess = -1, oilLastAccess = -1,
+                        engineLastAccess = -1;
 
 volatile unsigned long recieveMsgInterval = 500; //milliseconds?
 volatile unsigned long capturedTimeForBlink = 0;
-volatile unsigned char white_blink_et = 0, all_white_et = 0, white_blink_ot = 0, all_white_ot = 0;
+volatile unsigned long motecErrTime = 0;
+volatile unsigned char white_blink_et = 0, all_white_et = 0, 
+                        white_blink_ot = 0, all_white_ot = 0;
+volatile signed long long can_grabbed_time;
+volatile signed long long motec_grabbed_time;
+
+char timeout[2] = {0, 0};
 
 
 // ECAN variables
@@ -179,24 +188,24 @@ void high_isr(void) {
         }
 
         //Configuation of status flags
-        if(engineTemp <= 1000){
+        if(engineTemp <= ENGINE_TEMP_LOW){
             white_blink_et = 0;
             all_white_et = 0;
-        }else if(engineTemp <= 1050 && engineTemp > 1000)
+        }else if(engineTemp <= ENGINE_TEMP_MED && engineTemp > ENGINE_TEMP_LOW)
             all_white_et = 0;
-        else if(engineTemp <= 1150 && engineTemp > 1050)
+        else if(engineTemp <= ENGINE_TEMP_HIGH && engineTemp > ENGINE_TEMP_MED)
             white_blink_et = 1;
-        else if(engineTemp > 1150)
+        else if(engineTemp > ENGINE_TEMP_HIGH)
             all_white_et = 1;
 
-        if(oilTemp <= 1600){
+        if(oilTemp <= OIL_TEMP_LOW){
             white_blink_ot = 0;
             all_white_ot = 0;
-        }else if(oilTemp <= 1700 && oilTemp > 1600)
+        }else if(oilTemp <= OIL_TEMP_MED && oilTemp > OIL_TEMP_LOW)
             all_white_ot = 0;
-        else if(oilTemp <= 1800 && oilTemp > 1700)
+        else if(oilTemp <= OIL_TEMP_HIGH && oilTemp > OIL_TEMP_MED)
             white_blink_ot = 1;
-        else if(oilTemp > 1800)
+        else if(oilTemp > OIL_TEMP_HIGH)
             all_white_ot = 1;
     }
 }
@@ -280,14 +289,7 @@ void BLINKDisplayer(char color){
         set_lights(0,NONE);
     }
 }
-bool motecError(){
-    if(lastInterrupt != -1
-       && rpmLastAccess != -1
-       && millis - lastInterrupt <= recieveMsgInterval
-       && millis - rpmLastAccess <= recieveMsgInterval)
-        return false;
-    return true;
-}
+
 /* FUNCTION: Gives a pretty startup animation. Just makin' things look pretty here.
  *
  * ***\KEEP THIS FUNCTION.\***
@@ -327,7 +329,7 @@ void startup(long currentTime){
     }
 }
 void arrayOfColors(){
-    //Not for use for formal use
+    //Not for formal use. just viewing.
     int x = millis;
     set_lights(5, 0b001);
     while(millis - x <= BLINK_TIME * 10){}
@@ -422,11 +424,132 @@ void main(void) {
         startup(millis); //nice startup animation
 
         //arrayOfColors();
-
         while(true){
-            if(motecError())
+            /*if(millis < 100000)
+            simulateDataPush();
+            if(motecError()){
+                if(motecErrFlag == 0){
+                    motecErrFlag = 1;
+                    motecErrTime = millis;
+                }
+            }else
+                motecErrFlag = 0;
+
+            if((motecErrFlag == 1 && abs(motecErrTime - millis) > 10000)){
                 BLINKDisplayer(ERRBLINKCOLOR);
-            else
+                motecErrFlag = 1;
+            }else{
                 RPMDisplayer();
+            }*/
+            //arrayOfColors();
+            simulateDataPush();
+            if(motecError() || canError()){
+                BLINKDisplayer(ERRBLINKCOLOR);
+            }else{
+                RPMDisplayer();
+            }
         }
+}
+
+bool canError(){
+    //everything is all good, no can error
+    if(lastInterrupt != -1 && abs((signed long long)millis - lastInterrupt) <= CAN_RECIEVE_MAX && !COMSTATbits.TXBO){
+        timeout[CAN_ERR] = 0;
+    }else if(timeout[CAN_ERR]){
+        if(abs((signed long long)millis - can_grabbed_time) >= CAN_RECIEVE_MAX)
+            return true;
+    }else{
+        timeout[CAN_ERR] = 1;
+        can_grabbed_time = (signed long long)millis;
+    }
+    return false;
+}
+
+bool motecError(){
+    if(rpmLastAccess != -1 && abs(millis - rpmLastAccess) <= recieveMsgInterval &&
+       engineLastAccess != -1 && abs(millis - engineLastAccess) <= recieveMsgInterval &&
+       oilLastAccess != -1 && abs(millis - oilLastAccess) <= recieveMsgInterval){
+        //Entering here means you are recieving oil temp, rpm, and engine temp in a timely manner
+        timeout[MOTEC_ERR] = 0;
+    }else if(timeout[MOTEC_ERR]){
+        if(abs((signed long long)millis - motec_grabbed_time) >= MOTEC_RECIEVE_MAX)
+            return true;
+    }else{
+        timeout[MOTEC_ERR] = 1;
+        motec_grabbed_time = (signed long long)millis;
+    }
+    return false;
+}
+
+char climb = 1;
+void simulateDataPush(){
+    Delay10KTCYx(1);
+    millis++;
+
+    lastInterrupt = millis;
+    rpmLastAccess = millis;
+    engineLastAccess = millis;
+    oilLastAccess = millis;
+
+    engineTemp = 50;
+    oilTemp = 50;
+
+    /*if(millis > 10000)
+        engineTemp = 2000;
+    else
+        engineTemp = 50;*/
+
+    if(rpm == 0){
+        climb = 1;
+    }
+    
+    if(climb)
+        rpm += 5;
+    else
+        rpm -= 5;
+
+    if(rpm > REV_RANGE_LIMIT + (REV_RANGE_LIMIT >> 2))
+        climb = 0;
+
+    //Configuation of status flags
+    /*if(engineTemp <= 1000){
+        white_blink_et = 0;
+        all_white_et = 0;
+    }else if(engineTemp <= 1050 && engineTemp > 1000)
+        all_white_et = 0;
+     else if(engineTemp <= 1150 && engineTemp > 1050)
+        white_blink_et = 1;
+     else if(engineTemp > 1150)
+        all_white_et = 1;
+
+     if(oilTemp <= 1600){
+        white_blink_ot = 0;
+        all_white_ot = 0;
+     }else if(oilTemp <= 1700 && oilTemp > 1600)
+        all_white_ot = 0;
+      else if(oilTemp <= 1800 && oilTemp > 1700)
+        white_blink_ot = 1;
+      else if(oilTemp > 1800)
+        all_white_ot = 1;*/
+
+    //Configuation of status flags
+    if(engineTemp <= ENGINE_TEMP_LOW){
+        white_blink_et = 0;
+        all_white_et = 0;
+    }else if(engineTemp <= ENGINE_TEMP_MED && engineTemp > ENGINE_TEMP_LOW)
+        all_white_et = 0;
+     else if(engineTemp <= ENGINE_TEMP_HIGH && engineTemp > ENGINE_TEMP_MED)
+        white_blink_et = 1;
+     else if(engineTemp > ENGINE_TEMP_HIGH)
+        all_white_et = 1;
+
+    if(oilTemp <= OIL_TEMP_LOW){
+        white_blink_ot = 0;
+        all_white_ot = 0;
+    }else if(oilTemp <= OIL_TEMP_MED && oilTemp > OIL_TEMP_LOW)
+        all_white_ot = 0;
+     else if(oilTemp <= OIL_TEMP_HIGH && oilTemp > OIL_TEMP_MED)
+        white_blink_ot = 1;
+     else if(oilTemp > OIL_TEMP_HIGH)
+        all_white_ot = 1;
 }

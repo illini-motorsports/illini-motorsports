@@ -32,18 +32,16 @@
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
 *******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-//
-// 10/22/12 - removed other extra physical layers, confirmed location of data and FAT buffer,
-//          - and removed the format function along with dynamic file allocation
-//
-// 10/24/12 - added MEDIA_SOFT_DETECT define
-//
-// 11/14/12 - set maximum number of files open for static allocation
-//          - and turned off dynamic allocation along with directories
-//
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
+ 10/22/12 - removed other extra physical layers, confirmed location of data and FAT buffer,
+          - and removed the format function along with dynamic file allocation
+
+ 10/24/12 - added MEDIA_SOFT_DETECT define
+
+ 11/14/12 - set maximum number of files open for static allocation
+          - and turned off dynamic allocation along with directories
 *******************************************************************************/
 
 #include "HardwareProfile.h"

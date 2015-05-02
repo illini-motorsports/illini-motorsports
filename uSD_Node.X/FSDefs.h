@@ -31,16 +31,11 @@
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
 *******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-//
-// 11/23/12 - cleaned up pre-processor stuff for better readability
-//
-//
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
+  11/23/12 - cleaned up pre-processor stuff for better readability
 *******************************************************************************/
-
-
 
 #ifndef  _FSDEF__H
 #define  _FSDEF__H

@@ -32,15 +32,13 @@
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
 *******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-//
-// 11/14/12 - cleaned up pre-processor stuff for better readability
-// 02/13/13 - added define for write protect state function thingy
-// 03/04/13 - added include for DAQ.h
-// 03/07/13 - added new variables that get passed to FSfwrite
-//
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
+  11/14/12 - cleaned up pre-processor stuff for better readability
+  02/13/13 - added define for write protect state function thingy
+  03/04/13 - added include for DAQ.h
+  03/07/13 - added new variables that get passed to FSfwrite
 *******************************************************************************/
 
 #ifndef  FS_DOT_H

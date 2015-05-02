@@ -96,7 +96,11 @@
 #define RPM_THRESHOLD_L 1000
 #define VOLT_THRESHOLD  1250
 
-#define BLINK_TIME      150
+#define BLINK_TIME          150
+#define CAN_RECIEVE_MAX     1000
+#define MOTEC_RECIEVE_MAX   1000
+#define CAN_ERR             0 //for array
+#define MOTEC_ERR           1 //for array
 
 #define STDREVCOLOR BLUE
 #define ERRREVCOLOR WHITE
@@ -107,6 +111,14 @@ typedef char bool;
 #define false   0
 #define true    1
 #define abs(x) ((x) > 0 ? (x) : -(x))
+
+#define ENGINE_TEMP_LOW   1000
+#define ENGINE_TEMP_MED   1050
+#define ENGINE_TEMP_HIGH  1150
+
+#define OIL_TEMP_LOW      1600
+#define OIL_TEMP_MED      1700
+#define OIL_TEMP_HIGH     1800
 
 /*
  * Method Headers
@@ -120,5 +132,7 @@ void BLINKDisplayer(char color);
 bool motecError();
 void startup(long currentTime);
 void arrayOfColors();
+void simulateDataPush();
+bool canError();
 
 #endif

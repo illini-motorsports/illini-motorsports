@@ -20,8 +20,6 @@
  */
 
 //#define INTERNAL
-#define DEBUGGING
-#define DEBUG_LEN 1000
 
 /*
  * Magic Numbers
@@ -30,6 +28,8 @@
 #define BUFFER_SIZE MEDIA_SECTOR_SIZE
 #define MSGS_READ 4
 #define RPM_THRESH 600 // RPM threshold for engine to be considered on
+#define CAN_PERIOD 500 // Send log filename every 500ms
+#define RPM_WAIT 1000 // Wait 1000ms before closing file
 
 /*
  * Pin Defintions
@@ -51,7 +51,7 @@ void high_isr(void);
 void abort(void);
 void read_CAN_buffers(void);
 
-void append_write_buffer(static const unsigned char * temp, static unsigned char applen);
+void append_write_buffer(const unsigned char * temp, unsigned char applen);
 void buff_cat(unsigned char *WriteBuffer, const unsigned char *writeData,
         unsigned int *bufflen, const unsigned char applen,
         const unsigned char offset);

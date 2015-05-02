@@ -29,7 +29,7 @@
  * IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL OR
  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
  *
-/******************************************************************************
+ ******************************************************************************
  Change History:
   Rev            Description
   ----           -----------------------
@@ -37,19 +37,13 @@
                  dsPIC33E & PIC24E microcontrollers.
                  Added macro "SPI_INTERRUPT_FLAG_ASM" for PIC18F
                  microcontrollers to support SD card SPI driver.
-
 *******************************************************************************
-    USER REVISON HISTORY
-    note: modified to work with just PIC18F46K80
-//
-// 10/22/12 - removed extra macros for other platfroms and confirmed/set I/O pins and registers
-//
-// 10/30/12 - removed uart2 header include line
-//
-// 10/31/12 - changed SPICLOCKPORT and SPICLOCKLAT defines to match pinouts in Eagle
-//
-//
+  USER REVISON HISTORY
+  Note: modified to work with just PIC18F46K80
 
+  10/22/12 - removed extra macros for other platfroms and confirmed/set I/O pins and registers
+  10/30/12 - removed uart2 header include line
+  10/31/12 - changed SPICLOCKPORT and SPICLOCKLAT defines to match pinouts in Eagle
 *******************************************************************************/
 
 #ifndef _HARDWAREPROFILE_H_
