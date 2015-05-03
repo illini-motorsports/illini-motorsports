@@ -442,7 +442,7 @@ void main(void) {
                 RPMDisplayer();
             }*/
             //arrayOfColors();
-            simulateDataPush();
+            //simulateDataPush();
             if(motecError() || canError()){
                 BLINKDisplayer(ERRBLINKCOLOR);
             }else{
