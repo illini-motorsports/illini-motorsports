@@ -38,7 +38,7 @@
 #define BASIC_CONTROL_WAIT 1000
 
 // Critical kill wait timers (ms)
-#define CRIT_WAIT_VOLTAGE 2000
+#define CRIT_WAIT_VOLTAGE 5000
 #define CRIT_WAIT_OIL_PRESS 500
 #define CRIT_WAIT_TEMP 5000
 

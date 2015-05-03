@@ -126,8 +126,8 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
 // gives centiamps (for starter)
 //
 //Fan
-//peak - 600
-//700
+//peak - 500
+//1100
 //
 //Water
 //peak - 500
@@ -152,12 +152,12 @@ static const unsigned char ch_num[NUM_LOADS + 2] = {
 //1100
 static const unsigned long current_ratio[NUM_LOADS] = {
     2318 /*ECU*/, 1755 /*FUEL*/, 3218 /*Water*/, 10240 /*Starter0*/,
-    2048 /*Fan*/, 5266 /*PCB*/, 5266 /*AUX*/
+    1700 /*Fan*/, 5266 /*PCB*/, 5266 /*AUX*/
 };
 
 static const unsigned long current_peak_ratio[NUM_LOADS] = {
     579 /*ECU*/, 1003 /*FUEL*/, 1005 /*Water*/, 3200 /*Starter0*/,
-    945 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
+    530 /*Fan*/, 0 /*PCB*/, 0 /*AUX*/
 };
 
 /*
