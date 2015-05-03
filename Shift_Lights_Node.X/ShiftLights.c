@@ -106,22 +106,16 @@ volatile unsigned long millis = 0; // Holds timer0 rollover count.
 volatile signed int rpm = 0;
 volatile signed int oilTemp = 0;
 volatile signed int engineTemp = 0;
-
-char motecErrFlag = 0;
-
-volatile signed long lastInterrupt = -1; //variable used to give last time interrupt occured for the main information.
-
-volatile signed long rpmLastAccess = -1, oilLastAccess = -1,
-                        engineLastAccess = -1;
-
-volatile unsigned long recieveMsgInterval = 500; //milliseconds?
+volatile unsigned long lastInterrupt = 0; //variable used to give last time interrupt occured for the main information.
+volatile unsigned long rpmLastAccess = 0, oilLastAccess = 0,
+                        engineLastAccess = 0;
+volatile unsigned long recieveMsgInterval = 500; //milliseconds
 volatile unsigned long capturedTimeForBlink = 0;
 volatile unsigned long motecErrTime = 0;
 volatile unsigned char white_blink_et = 0, all_white_et = 0, 
                         white_blink_ot = 0, all_white_ot = 0;
 volatile signed long long can_grabbed_time;
 volatile signed long long motec_grabbed_time;
-
 char timeout[2] = {0, 0};
 
 
@@ -328,31 +322,6 @@ void startup(long currentTime){
         }
     }
 }
-void arrayOfColors(){
-    //Not for formal use. just viewing.
-    int x = millis;
-    set_lights(5, 0b001);
-    while(millis - x <= BLINK_TIME * 10){}
-    x = millis;
-    set_lights(5, 0b010);
-    while(millis - x <= BLINK_TIME * 10){}
-    x = millis;
-    set_lights(5, 0b011);
-    while(millis - x <= BLINK_TIME * 10){}
-    x = millis;
-    set_lights(5, 0b100);
-    while(millis - x <= BLINK_TIME * 10){}
-    x = millis;
-    set_lights(5, 0b101);
-    while(millis - x <= BLINK_TIME * 10){}
-    x = millis;
-    set_lights(5, 0b110);
-    while(millis - x <= BLINK_TIME * 10){}
-    x = millis;
-    set_lights(5, 0b111);
-    while(millis - x <= BLINK_TIME * 10){}
-    x = millis;
-}
 /*
  * Main Loop
  */
@@ -422,27 +391,8 @@ void main(void) {
 
         //Begin startup animation and RPM display
         startup(millis); //nice startup animation
-
-        //arrayOfColors();
         while(true){
-            /*if(millis < 100000)
-            simulateDataPush();
-            if(motecError()){
-                if(motecErrFlag == 0){
-                    motecErrFlag = 1;
-                    motecErrTime = millis;
-                }
-            }else
-                motecErrFlag = 0;
-
-            if((motecErrFlag == 1 && abs(motecErrTime - millis) > 10000)){
-                BLINKDisplayer(ERRBLINKCOLOR);
-                motecErrFlag = 1;
-            }else{
-                RPMDisplayer();
-            }*/
-            //arrayOfColors();
-            simulateDataPush();
+            //simulateDataPush();
             if(motecError() || canError()){
                 BLINKDisplayer(ERRBLINKCOLOR);
             }else{
@@ -453,7 +403,7 @@ void main(void) {
 
 bool canError(){
     //everything is all good, no can error
-    if(lastInterrupt != -1 && abs((signed long long)millis - lastInterrupt) <= CAN_RECIEVE_MAX && !COMSTATbits.TXBO){
+    if(abs((signed long long)millis - (signed long long)lastInterrupt) <= CAN_RECIEVE_MAX && !COMSTATbits.TXBO){
         timeout[CAN_ERR] = 0;
     }else if(timeout[CAN_ERR]){
         if(abs((signed long long)millis - can_grabbed_time) >= CAN_RECIEVE_MAX)
@@ -466,9 +416,9 @@ bool canError(){
 }
 
 bool motecError(){
-    if(rpmLastAccess != -1 && abs(millis - rpmLastAccess) <= recieveMsgInterval &&
-       engineLastAccess != -1 && abs(millis - engineLastAccess) <= recieveMsgInterval &&
-       oilLastAccess != -1 && abs(millis - oilLastAccess) <= recieveMsgInterval){
+    if(abs((signed long long)millis - (signed long long)rpmLastAccess) <= recieveMsgInterval &&
+       abs((signed long long)millis - (signed long long)engineLastAccess) <= recieveMsgInterval &&
+       abs((signed long long)millis - (signed long long)oilLastAccess) <= recieveMsgInterval){
         //Entering here means you are recieving oil temp, rpm, and engine temp in a timely manner
         timeout[MOTEC_ERR] = 0;
     }else if(timeout[MOTEC_ERR]){
@@ -493,11 +443,6 @@ void simulateDataPush(){
 
     engineTemp = 50;
     oilTemp = 50;
-
-    /*if(millis > 10000)
-        engineTemp = 2000;
-    else
-        engineTemp = 50;*/
 
     if(rpm == 0){
         climb = 1;
@@ -552,4 +497,29 @@ void simulateDataPush(){
         white_blink_ot = 1;
      else if(oilTemp > OIL_TEMP_HIGH)
         all_white_ot = 1;
+}
+void arrayOfColors(){
+    //Not for formal use. just viewing.
+    int x = millis;
+    set_lights(5, 0b001);
+    while(millis - x <= BLINK_TIME * 10){}
+    x = millis;
+    set_lights(5, 0b010);
+    while(millis - x <= BLINK_TIME * 10){}
+    x = millis;
+    set_lights(5, 0b011);
+    while(millis - x <= BLINK_TIME * 10){}
+    x = millis;
+    set_lights(5, 0b100);
+    while(millis - x <= BLINK_TIME * 10){}
+    x = millis;
+    set_lights(5, 0b101);
+    while(millis - x <= BLINK_TIME * 10){}
+    x = millis;
+    set_lights(5, 0b110);
+    while(millis - x <= BLINK_TIME * 10){}
+    x = millis;
+    set_lights(5, 0b111);
+    while(millis - x <= BLINK_TIME * 10){}
+    x = millis;
 }

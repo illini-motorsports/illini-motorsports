@@ -107,6 +107,8 @@ static unsigned char data[8]; // Holds CAN data bytes
 static unsigned char dataLen; // Holds number of CAN data bytes
 static ECAN_RX_MSG_FLAGS flags; // Holds information about received message
 
+unsigned char load_states[NUM_LOADS];
+
 static const unsigned char ch_num[NUM_LOADS + 2] = {
     ECU_ch, FUEL_ch, WATER_ch, START_ch, FAN_ch, PCB_ch,
     AUX_ch, START_ch_2, START_ch_3
@@ -277,7 +279,6 @@ void main(void) {
     unsigned char oil_temp_crit_pending = 0;
 #endif
 
-    unsigned char load_states[NUM_LOADS];
 
     // Clear error count and peak timers for all loads
     for(i = 0; i < NUM_LOADS + 2; i++) {
@@ -347,12 +348,19 @@ void main(void) {
     // Turn off some inductive loads
     FUEL_LAT = PWR_OFF;
     FUEL_P_LAT = PWR_OFF;
+    load_states[FUEL_val] = 0;
+
     FAN_LAT = PWR_OFF;
     FAN_P_LAT = PWR_OFF;
+    load_states[FAN_val] = 0;
+
     WATER_LAT = PWR_OFF;
     WATER_P_LAT = PWR_OFF;
+    load_states[WATER_val] = 0;
+
     START_LAT = PWR_OFF;
     START_P_LAT = PWR_OFF;
+    load_states[START_val] = 0;
 
     TRISCbits.TRISC2 = OUTPUT; // AUX MOSFET input
     TRISCbits.TRISC4 = OUTPUT; // PCB MOSFET input
@@ -412,8 +420,11 @@ void main(void) {
 
             if(millis - voltage_crit_tmr > CRIT_WAIT_VOLTAGE) {
                 AUX_LAT = PWR_OFF;
+                load_states[AUX_val] = 0;
                 PCB_LAT = PWR_OFF;
+                load_states[PCB_val] = 0;
                 ECU_LAT = PWR_OFF;
+                load_states[ECU_val] = 0;
                 killCar();
             }
         } else {
@@ -766,9 +777,13 @@ void killCar() {
 
     // Shut off all inductive loads
     FUEL_LAT = PWR_OFF;
+    load_states[FUEL_val] = 0;
     WATER_LAT = PWR_OFF;
+    load_states[WATER_val] = 0;
     FAN_LAT = PWR_OFF;
+    load_states[FAN_val] = 0;
     START_LAT = PWR_OFF;
+    load_states[START_val] = 0;
 
     // If low voltage killed the car don't allow a restart
     if(voltage < VOLTAGE_CRIT) {
