@@ -19,7 +19,7 @@
 #include "delays.h"
 
 //TODO: What to do if millis isn't updating.
-//TODO: What to do if rmp isn't updating.
+//TODO: What to do if RPM isn't updating.
 //TODO: Add "animations". (Scrolling, expanding, alternating, etc.)
 //TODO: Add AMERICA sequence. Make it look 'murican.
 //TODO: Optimize everything.
@@ -106,7 +106,7 @@ volatile unsigned long millis = 0; // Holds timer0 rollover count.
 volatile signed int rpm = 0;
 volatile signed int oilTemp = 0;
 volatile signed int engineTemp = 0;
-volatile unsigned long lastInterrupt = 0; //variable used to give last time interrupt occured for the main information.
+volatile unsigned long lastInterrupt = 0; //variable used to give last time interrupt occurred for the main information.
 volatile unsigned long rpmLastAccess = 0, oilLastAccess = 0,
                         engineLastAccess = 0;
 volatile unsigned long recieveMsgInterval = 500; //milliseconds
@@ -123,7 +123,7 @@ char timeout[2] = {0, 0};
 unsigned long id; // holds CAN msgID
 BYTE data[8]; // holds CAN data bytes
 BYTE dataLen; // holds number of CAN data bytes
-ECAN_RX_MSG_FLAGS flags; // holds information about recieved message
+ECAN_RX_MSG_FLAGS flags; // holds information about received message
 
 /*
  * Interrupts
@@ -153,13 +153,13 @@ void high_isr(void) {
         WriteTimer0(0x85); // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
     }
-    // Check for recieved CAN message.
+    // Check for received CAN message.
     if(PIR5bits.RXB1IF) {
         lastInterrupt = millis;
 
         PIR5bits.RXB1IF = FALSE; // Reset the flag.
 
-        // Get data from recieve buffer.
+        // Get data from receive buffer.
         ECANReceiveMessage(&id, data, &dataLen, &flags);
 
         if(id == RPM_ID) {
@@ -181,7 +181,7 @@ void high_isr(void) {
             ((BYTE*) & oilTemp)[1] = data[OIL_TEMP_BYTE];
         }
 
-        //Configuation of status flags
+        // Configuration of status flags
         if(engineTemp <= ENGINE_TEMP_LOW){
             white_blink_et = 0;
             all_white_et = 0;
@@ -338,10 +338,7 @@ void main(void) {
         ANCON1 = 0x00;                      // Default all pins to digital
 
         // Turn on and configure the TIMER1 oscillator
-        OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-        WriteTimer0(0x82);                  // Load timer register
-        millis = 0;                         // Clear milliseconds count
-        INTCONbits.TMR0IE = 1;              // Turn on timer0 interupts
+        init_timer0();
 
         TRISCbits.TRISC6 = OUTPUT;          // programmable termination
         TERM_LAT = FALSE;
@@ -419,7 +416,7 @@ bool motecError(){
     if(abs((signed long long)millis - (signed long long)rpmLastAccess) <= recieveMsgInterval &&
        abs((signed long long)millis - (signed long long)engineLastAccess) <= recieveMsgInterval &&
        abs((signed long long)millis - (signed long long)oilLastAccess) <= recieveMsgInterval){
-        //Entering here means you are recieving oil temp, rpm, and engine temp in a timely manner
+        //Entering here means you are receiving oil temp, rpm, and engine temp in a timely manner
         timeout[MOTEC_ERR] = 0;
     }else if(timeout[MOTEC_ERR]){
         if(abs((signed long long)millis - motec_grabbed_time) >= MOTEC_RECIEVE_MAX)

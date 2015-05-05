@@ -772,8 +772,6 @@ void main(void) {
  *               ON switch. All maskable interrupts will be disabled.
  */
 void killCar() {
-    // Disable interrupts
-    CLI();
 
     // Shut off all inductive loads
     FUEL_LAT = PWR_OFF;
@@ -784,11 +782,6 @@ void killCar() {
     load_states[FAN_val] = 0;
     START_LAT = PWR_OFF;
     load_states[START_val] = 0;
-
-    // If low voltage killed the car don't allow a restart
-    if(voltage < VOLTAGE_CRIT) {
-        while(1);
-    }
 
     // Do nothing until the on switch is turned off
     while(!ON_SW_PORT);
