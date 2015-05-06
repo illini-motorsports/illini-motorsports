@@ -257,9 +257,7 @@ void main(void) {
     unsigned long PRIME_tmr = 0;
     unsigned long CAN_send_tmr = 0;
 
-#ifdef MAX_START
     unsigned long START_tmr = 0;
-#endif
 
     unsigned long ECU_peak_tmr = 0;
     unsigned long FUEL_peak_tmr = 0;
@@ -508,7 +506,7 @@ void main(void) {
         }
         STI();
 
-        /*
+        /**
          * Toggle inductive loads.
          *
          * When turning on a load, turn on the peak latch as well and set the
@@ -636,7 +634,6 @@ void main(void) {
          * cranking longer than START_WAIT milliseconds.
          */
         CLI();
-#ifdef MAX_START
         // START
         if(!START_SW_PORT && (millis - START_tmr < START_WAIT)) {
             if(!START_PORT) {
@@ -656,21 +653,6 @@ void main(void) {
                 load_states[START_val] = 0;
             }
         }
-#else
-        if(!START_SW_PORT) {
-            if(!START_PORT) {
-                START_P_LAT = PWR_ON;
-                START_LAT = PWR_ON;
-                load_states[START_val] = 1;
-                START_peak_tmr = millis;
-            }
-        } else if(START_SW_PORT) {
-            if(START_PORT) {
-                START_LAT = PWR_OFF;
-                load_states[START_val] = 0;
-            }
-        }
-#endif
         STI();
 
         /*
@@ -772,7 +754,6 @@ void main(void) {
  *               ON switch. All maskable interrupts will be disabled.
  */
 void killCar() {
-
     // Shut off all inductive loads
     FUEL_LAT = PWR_OFF;
     load_states[FUEL_val] = 0;
