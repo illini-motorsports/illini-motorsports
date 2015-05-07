@@ -28,9 +28,9 @@
 
 // CONFIG1H
 #ifdef INTERNAL
-    #pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
+#pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
 #else
-    #pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+#pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -109,8 +109,11 @@ static volatile unsigned char can_err;
 
 static volatile BUFFER_TUPLE buffer_tuple;
 
-static volatile unsigned int timestamp[MSGS_READ]; // Holds CCP2 timestamps
-static volatile unsigned int timestamp_2[MSGS_READ]; // Holds CCP2 timestamps
+// timestamp variables
+static unsigned int stamp_reg[MSGS_READ];
+static unsigned int stamp_sec[MSGS_READ];
+static volatile unsigned int curr_stamp_reg[MSGS_READ];
+static volatile unsigned int curr_stamp_sec[MSGS_READ];
 
 static volatile signed int rpm; // Engine RPM
 static volatile unsigned int seconds; // Timer1 rollover count
@@ -122,12 +125,14 @@ static volatile unsigned long rpm_tmr; // Last update time of rpm
  */
 
 #pragma code high_vector = 0x08
+
 void high_vector(void) {
     _asm goto high_isr _endasm
 }
 #pragma code
 
 #pragma code low_vector = 0x18
+
 void interrupt_at_low_vector(void) {
     _asm goto low_isr _endasm
 }
@@ -163,7 +168,6 @@ void low_isr(void) {
 
         num_read = 0;
 
-        CLI(); // Begin critical section
         if(swap) {
             buffer_a_len = 0; // Reset buffer A length
             swap = 0; // Clear swap flag
@@ -174,12 +178,9 @@ void low_isr(void) {
                 swap_buff();
             }
         }
-        STI(); // End critical section
 
-        CLI(); // Begin critical section
         // Process data in CAN FIFO
         read_CAN_buffers();
-        STI(); // End critical section
     }
 
     // Check for an error with the bus
@@ -191,9 +192,6 @@ void low_isr(void) {
             //Clear out all the buffers
             COMSTATbits.RXB0OVFL = 0;
             COMSTATbits.RXB1OVFL = 0;
-
-            PIR5bits.FIFOWMIF = 0;
-
             RXB0CONbits.RXFUL = 0;
             RXB1CONbits.RXFUL = 0;
             B0CONbits.RXFUL = 0;
@@ -224,10 +222,8 @@ void low_isr(void) {
 #pragma interrupt high_isr
 
 void high_isr(void) {
-    unsigned int temp = 0;
+    unsigned int temp;
     unsigned char k = 0;
-    unsigned int stamp[MSGS_READ];
-    unsigned int stamp_2[MSGS_READ];
 
     // Check for timer0 rollover indicating a millisecond has passed
     if(INTCONbits.TMR0IF) {
@@ -261,22 +257,23 @@ void high_isr(void) {
          *
          * ReadCapture2();
          */
-        stamp[msg_num] = CCPR2H * 256 + CCPR2L;
-        stamp_2[msg_num] = seconds;
+        stamp_reg[msg_num] = CCPR2H * 256 + CCPR2L;
+        stamp_sec[msg_num] = seconds;
         msg_num = msg_num == 3 ? 0 : msg_num + 1;
 
         // Check if four messages have come in so far
         if(msg_num == 0) {
-            // Swap the data byte by byte
+            // swap the data byte by byte
             for(k = 0; k < MSGS_READ; k++) {
-                temp = stamp[k];
-                stamp[k] = timestamp[k];
-                timestamp[k] = temp;
+                temp = curr_stamp_reg[k];
+                curr_stamp_reg[k] = stamp_reg[k];
+                stamp_reg[k] = temp;
 
-                temp = stamp_2[k];
-                stamp_2[k] = timestamp_2[k];
-                timestamp_2[k] = temp;
+                temp = curr_stamp_sec[k];
+                curr_stamp_sec[k] = stamp_sec[k];
+                stamp_sec[k] = temp;
             }
+
             num_read = MSGS_READ;
         }
     }
@@ -386,7 +383,7 @@ void main(void) {
         // Look for file with proposed name
         if(FindFirst(fname, attributes, &rec)) {
             if(FSerror() == CE_FILE_NOT_FOUND) {
-                // Filename is uniquie
+                // Filename is unique
                 fnum_max = fnum - 1;
                 continue;
             } else {
@@ -500,8 +497,8 @@ void main(void) {
                     CAN_send_tmr = millis;
                     STI(); // End critical section
 
-                    filename_msg[0] = ((unsigned char*) &fnum)[0];
-                    filename_msg[1] = ((unsigned char*) &fnum)[1];
+                    filename_msg[0] = ((unsigned char*)&fnum)[0];
+                    filename_msg[1] = ((unsigned char*)&fnum)[1];
                     ECANSendMessage(LOGGING_ID, filename_msg, 2,
                             ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
                 }
@@ -554,7 +551,7 @@ void abort(void) {
  * Side Effects: This will modify rpm. Also it clears the ECAN receive buffers.
  */
 void read_CAN_buffers(void) {
-    unsigned char i,j;
+    unsigned char i, j;
 
     unsigned long id; // CAN msgID
     unsigned char dlc; // Number of CAN data bytes
@@ -566,13 +563,13 @@ void read_CAN_buffers(void) {
     // Loop through messages in CAN buffers
     for(i = 0; i < MSGS_READ; i++) {
         id = 0; // Clear ID in case ECANReceiveMessage() fails silently
-        dlc = 0; // Clear DLC in case ECANReceiveMessage() feails silently
+        dlc = 0; // Clear DLC in case ECANReceiveMessage() fails silently
 
         ECANReceiveMessage(&id, data, &dlc, &flags);
 
         if(id == RPM_ID) {
-            ((unsigned char*) &rpm)[0] = data[RPM_BYTE + 1];
-            ((unsigned char*) &rpm)[1] = data[RPM_BYTE];
+            ((unsigned char*)&rpm)[0] = data[RPM_BYTE + 1];
+            ((unsigned char*)&rpm)[1] = data[RPM_BYTE];
             rpm_tmr = millis;
         }
 
@@ -587,8 +584,8 @@ void read_CAN_buffers(void) {
         if(dlc > 0) {
 
             // Message ID
-            msg[0] = ((unsigned char*) (&id))[0];
-            msg[1] = ((unsigned char*) (&id))[1];
+            msg[0] = ((unsigned char*)(&id))[0];
+            msg[1] = ((unsigned char*)(&id))[1];
 
             // CAN Data
             for(j = 0; j < dlc; j++) {
@@ -596,10 +593,10 @@ void read_CAN_buffers(void) {
             }
 
             // Timestamp
-            msg[2 + dlc + 0] = ((unsigned char*) timestamp)[0 + (i*2)];
-            msg[2 + dlc + 1] = ((unsigned char*) timestamp)[1 + (i*2)];
-            msg[2 + dlc + 2] = ((unsigned char*) timestamp_2)[0 + (i*2)];
-            msg[2 + dlc + 3] = ((unsigned char*) timestamp_2)[1 + (i*2)];
+            msg[2 + dlc + 0] = ((unsigned char*)curr_stamp_reg)[0 + (i * 2)];
+            msg[2 + dlc + 1] = ((unsigned char*)curr_stamp_reg)[1 + (i * 2)];
+            msg[2 + dlc + 2] = ((unsigned char*)curr_stamp_sec)[0 + (i * 2)];
+            msg[2 + dlc + 3] = ((unsigned char*)curr_stamp_sec)[1 + (i * 2)];
 
             // Write msg to a buffer
             append_write_buffer(msg, dlc + 6);
@@ -636,12 +633,12 @@ void append_write_buffer(const unsigned char* temp, unsigned char applen) {
         // Room for all of data to write
         if(BUFFER_SIZE - buffer_a_len > applen) {
             written = 1;
-        } // Not enough room for all the data
+        }// Not enough room for all the data
         else if(BUFFER_SIZE - buffer_a_len < applen) {
             buffer_a_full = 1;
             // Recalculate writing parameters for partial write
             offset = applen - (BUFFER_SIZE - buffer_a_len);
-        } // Exactly enough room for the data
+        }// Exactly enough room for the data
         else {
             buffer_a_full = 1;
             written = 1;
@@ -689,7 +686,7 @@ void buff_cat(unsigned char* WriteBuffer, const unsigned char* writeData,
     }
 
     // Increment the data length count for the writing buffer
-    *bufflen += (unsigned int) applen;
+    *bufflen += (unsigned int)applen;
 }
 
 /*
