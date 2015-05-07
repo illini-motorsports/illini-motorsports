@@ -20,6 +20,7 @@
 
 //#define INTERNAL
 //#define DEBUGGING
+//#define PADDLES
 
 /*
  * Magic Numbers

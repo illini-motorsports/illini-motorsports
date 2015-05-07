@@ -28,9 +28,9 @@
 
 // CONFIG1H
 #ifdef INTERNAL
-    #pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
+#pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
 #else
-    #pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+#pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -208,25 +208,25 @@ void high_isr(void) {
 
         switch(id) {
             case ENGINE_TEMP_ID: // VOLTAGE_ID
-                ((unsigned char*) &engine_temp)[0] = data[ENGINE_TEMP_BYTE + 1];
-                ((unsigned char*) &engine_temp)[1] = data[ENGINE_TEMP_BYTE];
+                ((unsigned char*)&engine_temp)[0] = data[ENGINE_TEMP_BYTE + 1];
+                ((unsigned char*)&engine_temp)[1] = data[ENGINE_TEMP_BYTE];
                 engine_temp_tmr = millis;
 
-                ((unsigned char*) &voltage)[0] = data[VOLTAGE_BYTE + 1];
-                ((unsigned char*) &voltage)[1] = data[VOLTAGE_BYTE];
+                ((unsigned char*)&voltage)[0] = data[VOLTAGE_BYTE + 1];
+                ((unsigned char*)&voltage)[1] = data[VOLTAGE_BYTE];
                 voltage_tmr = millis;
                 break;
             case OIL_TEMP_ID: // OIL_PRESS_ID, RPM_ID
-                ((unsigned char*) &oil_temp)[0] = data[OIL_TEMP_BYTE + 1];
-                ((unsigned char*) &oil_temp)[1] = data[OIL_TEMP_BYTE];
+                ((unsigned char*)&oil_temp)[0] = data[OIL_TEMP_BYTE + 1];
+                ((unsigned char*)&oil_temp)[1] = data[OIL_TEMP_BYTE];
                 oil_temp_tmr = millis;
 
-                ((unsigned char*) &oil_press)[0] = data[OIL_PRESS_BYTE + 1];
-                ((unsigned char*) &oil_press)[1] = data[OIL_PRESS_BYTE];
+                ((unsigned char*)&oil_press)[0] = data[OIL_PRESS_BYTE + 1];
+                ((unsigned char*)&oil_press)[1] = data[OIL_PRESS_BYTE];
                 oil_press_tmr = millis;
 
-                ((unsigned char*) &rpm)[0] = data[RPM_BYTE + 1];
-                ((unsigned char*) &rpm)[1] = data[RPM_BYTE];
+                ((unsigned char*)&rpm)[0] = data[RPM_BYTE + 1];
+                ((unsigned char*)&rpm)[1] = data[RPM_BYTE];
                 rpm_tmr = millis;
                 break;
             case FAN_SW_ID:
@@ -276,7 +276,6 @@ void main(void) {
     unsigned char engine_temp_crit_pending = 0;
     unsigned char oil_temp_crit_pending = 0;
 #endif
-
 
     // Clear error count and peak timers for all loads
     for(i = 0; i < NUM_LOADS + 2; i++) {
@@ -689,7 +688,7 @@ void main(void) {
 
         // Sample the current of the loads
         for(i = 0; i < NUM_LOADS + 2; i++) {
-            sample((int *) current, i, ch_num[i]);
+            sample((int *)current, i, ch_num[i]);
         }
 
         // Put total current value of starter in one location
@@ -727,9 +726,9 @@ void main(void) {
         CLI();
         if(millis - CAN_send_tmr > CAN_PERIOD) {
             CAN_send_tmr = millis;
-            ECANSendMessage(PDM_ID, (unsigned char *) current, 8,
+            ECANSendMessage(PDM_ID, (unsigned char *)current, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-            ECANSendMessage(PDM_ID + 1, ((unsigned char *) current) + 8, 8,
+            ECANSendMessage(PDM_ID + 1, ((unsigned char *)current) + 8, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
             ECANSendMessage(PDM_ID + 2, load_states, 8,
                     ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);

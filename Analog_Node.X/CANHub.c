@@ -26,9 +26,9 @@
 
 // CONFIG1H
 #ifdef INTERNAL
-    #pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
+#pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
 #else
-    #pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+#pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -167,11 +167,11 @@ void high_isr(void) {
     // low frequency sampled sensors
     if(!(millis % SLOW_SAMPLE)) {
 
-    #ifdef FRONT
+#ifdef FRONT
         // sample the sensors
         sample(data, BRAKE_R_P_BYTE, BRAKE_R_P);
         sample(data, BRAKE_F_P_BYTE, BRAKE_F_P);
-    #endif
+#endif
         // send the sampled values out on CAN
         ECANSendMessage(SLOW_ID, data, SLOW_NUM * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_2);
     }
@@ -350,7 +350,7 @@ void sample(unsigned char *data, const unsigned char byte, const unsigned char c
     while(BusyADC()); // wait for complete conversion
 
     // put result in data array in accordance with specified byte location
-    ((unsigned int *) data)[byte / 2] = (unsigned int) ReadADC();
+    ((unsigned int *)data)[byte / 2] = (unsigned int)ReadADC();
 
     return;
 }
@@ -378,14 +378,14 @@ void process_resend(const unsigned char *data, unsigned char *msg,
     // check which byte order we are dealing with
     if(order == INTEL) {
         // LSB byte comes first
-        ((int *) msg)[ADL_ch / 2] = data[byte + 1] * 256 + data[byte] - offset;
+        ((int *)msg)[ADL_ch / 2] = data[byte + 1] * 256 + data[byte] - offset;
         // swap bytes to get into Motorola order
         temp = msg[ADL_ch];
         msg[ADL_ch] = msg[ADL_ch + 1];
         msg[ADL_ch + 1] = temp;
     } else {
         // MSB byte comes first
-        ((int *) msg)[ADL_ch / 2] = data[byte + 1] + data[byte] * 256 - offset;
+        ((int *)msg)[ADL_ch / 2] = data[byte + 1] + data[byte] * 256 - offset;
         // swap bytes to get into Motorola order
         temp = msg[ADL_ch];
         msg[ADL_ch] = msg[ADL_ch + 1];
