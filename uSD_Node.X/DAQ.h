@@ -1,4 +1,4 @@
-/*
+/**
  * Data Node Main File Header
  *
  * File Name:       DAQ.h
@@ -15,29 +15,29 @@
 #include "GenericTypeDefs.h"
 #include "FSconfig.h"
 
-/*
+/**
  * Code Control
  */
 
 //#define INTERNAL
 
-/*
+/**
  * Magic Numbers
  */
 
 #define BUFFER_SIZE MEDIA_SECTOR_SIZE
 #define MSGS_READ 4
 #define RPM_THRESH 600 // RPM threshold for engine to be considered on
-#define CAN_PERIOD 500 // Send log filename every 500ms
+#define CAN_PERIOD 250 // Send log filename every 250ms
 #define RPM_WAIT 1000 // Wait 1000ms before closing file
 
-/*
+/**
  * Pin Defintions
  */
 
 #define TERM_LAT    LATCbits.LATC6
 
-/*
+/**
  * Typedefs
  */
 

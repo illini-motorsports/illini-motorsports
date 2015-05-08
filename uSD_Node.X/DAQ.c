@@ -1,4 +1,4 @@
-/*
+/**
  * DAQ Node Main File
  *
  * File Name:       DAQ.c
@@ -16,7 +16,7 @@
 #include "capture.h"
 #include "FSIO.h"
 
-/*
+/**
  *  PIC18F46K80 Configuration Bits
  */
 
@@ -86,7 +86,7 @@
 // CONFIG7H
 #pragma config EBTRB = OFF      // Table Read Protect Boot (Disabled)
 
-/*
+/**
  * Global Variables
  */
 
@@ -109,7 +109,7 @@ static volatile unsigned char can_err;
 
 static volatile BUFFER_TUPLE buffer_tuple;
 
-// timestamp variables
+// Timestamp variables
 static unsigned int stamp_reg[MSGS_READ];
 static unsigned int stamp_sec[MSGS_READ];
 static volatile unsigned int curr_stamp_reg[MSGS_READ];
@@ -120,25 +120,23 @@ static volatile unsigned int seconds; // Timer1 rollover count
 static volatile unsigned long millis; // Timer0 rollover count
 static volatile unsigned long rpm_tmr; // Last update time of rpm
 
-/*
+/**
  * Interrupts
  */
 
 #pragma code high_vector = 0x08
-
 void high_vector(void) {
     _asm goto high_isr _endasm
 }
 #pragma code
 
 #pragma code low_vector = 0x18
-
 void interrupt_at_low_vector(void) {
     _asm goto low_isr _endasm
 }
 #pragma code
 
-/*
+/**
  * void low_isr(void)
  *
  * Description: This interrupt will service all low priority interrupts. This includes
@@ -209,7 +207,7 @@ void low_isr(void) {
     }
 }
 
-/*
+/**
  * void high_isr(void)
  *
  * Description: This interrupt will service all high priority interrupts which includes
@@ -222,7 +220,6 @@ void low_isr(void) {
 #pragma interrupt high_isr
 
 void high_isr(void) {
-    unsigned int temp;
     unsigned char k = 0;
 
     // Check for timer0 rollover indicating a millisecond has passed
@@ -236,7 +233,7 @@ void high_isr(void) {
     if(PIR1bits.TMR1IF) {
         PIR1bits.TMR1IF = 0;
 
-        /*
+        /**
          * Load timer value such that the most significant bit is set so it
          * takes exactly one second for a 32.768kHz crystal to trigger a rollover interrupt
          *
@@ -251,7 +248,7 @@ void high_isr(void) {
     if(PIR3bits.CCP2IF) {
         PIR3bits.CCP2IF = 0;
 
-        /*
+        /**
          * Read CAN capture register and place in timestamp array keeping track
          * of how many are in the array
          *
@@ -263,15 +260,9 @@ void high_isr(void) {
 
         // Check if four messages have come in so far
         if(msg_num == 0) {
-            // swap the data byte by byte
             for(k = 0; k < MSGS_READ; k++) {
-                temp = curr_stamp_reg[k];
                 curr_stamp_reg[k] = stamp_reg[k];
-                stamp_reg[k] = temp;
-
-                temp = curr_stamp_sec[k];
                 curr_stamp_sec[k] = stamp_sec[k];
-                stamp_sec[k] = temp;
             }
 
             num_read = MSGS_READ;
@@ -281,7 +272,7 @@ void high_isr(void) {
 
 void main(void) {
 
-    /*
+    /**
      * Variable Declarations
      */
 
@@ -301,11 +292,11 @@ void main(void) {
 
     init_unused_pins();
 
-    /*
+    /**
      * Variable Initialization
      */
 
-    /*
+    /**
      * Initialize MDD I/O variables but don't allow data collection yet since
      * file creation can take a while and buffers will fill up immediately.
      */
@@ -327,7 +318,7 @@ void main(void) {
     millis = 0;
     rpm_tmr = 0;
 
-    /*
+    /**
      * Peripheral Initialization
      */
 
@@ -340,7 +331,7 @@ void main(void) {
     SD_CS = 1; // Card deselected
 
 #ifdef LOGGING_0
-    TRISCbits.TRISC6 = OUTPUT; // programmable termination
+    TRISCbits.TRISC6 = OUTPUT; // Programmable termination
     TERM_LAT = FALSE;
 #endif
 
@@ -370,6 +361,10 @@ void main(void) {
     while(fnum_max >= fnum_min) {
         fnum = (fnum_max + fnum_min) / 2;
 
+        if(fnum <= 0) {
+            break;
+        }
+
         temp = fnum;
         fname[3] = (fnum % 10) + 0x30;
         fnum /= 10;
@@ -384,7 +379,7 @@ void main(void) {
         if(FindFirst(fname, attributes, &rec)) {
             if(FSerror() == CE_FILE_NOT_FOUND) {
                 // Filename is unique
-                fnum_max = fnum - 1;
+                fnum_max = fnum == 0 ? 0 : fnum - 1;
                 continue;
             } else {
                 //TODO: Handle this error gracefully.
@@ -396,7 +391,7 @@ void main(void) {
         fnum_min = fnum + 1;
     }
 
-    /*
+    /**
      * Main Loop
      */
 
@@ -522,11 +517,11 @@ void main(void) {
     }
 }
 
-/*
+/**
  *  Local Functions
  */
 
-/*
+/**
  * void abort(void)
  *
  * Description: This function will be called when a serious error is encountered
@@ -540,7 +535,7 @@ void abort(void) {
     while(1); // To infinity and beyond
 }
 
-/*
+/**
  * void read_CAN_buffers(void)
  *
  * Description: This function will read messages from the ECAN buffers and package
@@ -593,10 +588,10 @@ void read_CAN_buffers(void) {
             }
 
             // Timestamp
-            msg[2 + dlc + 0] = ((unsigned char*)curr_stamp_reg)[0 + (i * 2)];
-            msg[2 + dlc + 1] = ((unsigned char*)curr_stamp_reg)[1 + (i * 2)];
-            msg[2 + dlc + 2] = ((unsigned char*)curr_stamp_sec)[0 + (i * 2)];
-            msg[2 + dlc + 3] = ((unsigned char*)curr_stamp_sec)[1 + (i * 2)];
+            msg[2 + dlc + 0] = ((unsigned char*) curr_stamp_reg)[0 + (i * 2)];
+            msg[2 + dlc + 1] = ((unsigned char*) curr_stamp_reg)[1 + (i * 2)];
+            msg[2 + dlc + 2] = ((unsigned char*) curr_stamp_sec)[0 + (i * 2)];
+            msg[2 + dlc + 3] = ((unsigned char*) curr_stamp_sec)[1 + (i * 2)];
 
             // Write msg to a buffer
             append_write_buffer(msg, dlc + 6);
@@ -604,7 +599,7 @@ void read_CAN_buffers(void) {
     }
 }
 
-/*
+/**
  * void append_write_buffer(static const unsigned char * temp,
  *                              static unsigned char applen)
  *
@@ -661,7 +656,7 @@ void append_write_buffer(const unsigned char* temp, unsigned char applen) {
     }
 }
 
-/*
+/**
  * void buff_cat(unsigned char *WriteBuffer, const unsigned char *writeData,
  *              unsigned int *bufflen, const unsigned char applen,
  *              const unsigned char offset)
@@ -689,7 +684,7 @@ void buff_cat(unsigned char* WriteBuffer, const unsigned char* writeData,
     *bufflen += (unsigned int)applen;
 }
 
-/*
+/**
  * void swap_len(void)
  *
  * Description: Swaps the buffer length members of Main.
@@ -703,7 +698,7 @@ void swap_len(void) {
     buffer_b_len = temp;
 }
 
-/*
+/**
  * void swap_buff(void)
  *
  * Description: Swaps the buffer pointer members of Buff.
