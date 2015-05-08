@@ -46,7 +46,7 @@
 #define FUEL_PEAK_WAIT 500
 #define WATER_PEAK_WAIT 500
 #define START_PEAK_WAIT 500
-#define FAN_PEAK_WAIT 500
+#define FAN_PEAK_WAIT 1000
 
 // Critical error conditions
 #define VOLTAGE_CRIT 1100       // 11.0 V

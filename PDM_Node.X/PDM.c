@@ -541,7 +541,7 @@ void main(void) {
                 }
 
                 // WATER
-                if(!WATER_PORT) {
+                if(!WATER_PORT && !START_PORT) {
                     WATER_P_LAT = PWR_ON;
                     WATER_LAT = PWR_ON;
                     load_states[WATER_val] = 1;
@@ -549,7 +549,7 @@ void main(void) {
                 }
 
                 // FAN
-                if(!FAN_PORT) {
+                if(!FAN_PORT && !START_PORT) {
                     FAN_P_LAT = PWR_ON;
                     FAN_LAT = PWR_ON;
                     load_states[FAN_val] = 1;
@@ -637,6 +637,7 @@ void main(void) {
         if(!START_SW_PORT && (millis - START_tmr < START_WAIT)) {
             if(!START_PORT) {
                 START_P_LAT = PWR_ON;
+                ECU_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
                 load_states[START_val] = 1;
                 START_peak_tmr = millis;
@@ -649,6 +650,7 @@ void main(void) {
             }
             if(START_PORT) {
                 START_LAT = PWR_OFF;
+                ECU_P_LAT = PWR_OFF;
                 load_states[START_val] = 0;
             }
         }
