@@ -369,7 +369,7 @@ void main(void) {
     load_states[PCB_val] = 1;
 
     TRISCbits.TRISC5 = OUTPUT; // Relay output
-    TERM_LAT = PWR_ON; // Not terminating
+    TERM_LAT = PWR_OFF; // Not terminating
 
     ECANInitialize(); // Setup ECAN
 
@@ -540,20 +540,37 @@ void main(void) {
                     PRIME_tmr = millis;
                 }
 
-                // WATER
-                if(!WATER_PORT && !START_PORT) {
-                    WATER_P_LAT = PWR_ON;
-                    WATER_LAT = PWR_ON;
-                    load_states[WATER_val] = 1;
-                    WATER_peak_tmr = millis;
-                }
+                /**
+                 * If START is on, disable WATER and FAN. Otherwise, enable them.
+                 */
+                if(START_PORT) {
+                    // Disable WATER due to START
+                    if(WATER_PORT) {
+                        WATER_LAT = PWR_OFF;
+                        load_states[WATER_val] = 0;
+                    }
 
-                // FAN
-                if(!FAN_PORT && !START_PORT) {
-                    FAN_P_LAT = PWR_ON;
-                    FAN_LAT = PWR_ON;
-                    load_states[FAN_val] = 1;
-                    FAN_peak_tmr = millis;
+                    // Disable FAN due to START
+                    if(FAN_PORT) {
+                        FAN_LAT = PWR_OFF;
+                        load_states[FAN_val] = 0;
+                    }
+                } else {
+                    // WATER
+                    if(!WATER_PORT) {
+                        WATER_P_LAT = PWR_ON;
+                        WATER_LAT = PWR_ON;
+                        load_states[WATER_val] = 1;
+                        WATER_peak_tmr = millis;
+                    }
+
+                    // FAN
+                    if(!FAN_PORT) {
+                        FAN_P_LAT = PWR_ON;
+                        FAN_LAT = PWR_ON;
+                        load_states[FAN_val] = 1;
+                        FAN_peak_tmr = millis;
+                    }
                 }
             } else {
                 // FUEL
@@ -563,13 +580,13 @@ void main(void) {
                 }
 
                 // WATER
-                if(WATER_PORT) {
+                if(WATER_PORT || START_PORT) {
                     WATER_LAT = PWR_OFF;
                     load_states[WATER_val] = 0;
                 }
 
                 // FAN
-                if(FAN_PORT) {
+                if(FAN_PORT || START_PORT) {
                     FAN_LAT = PWR_OFF;
                     load_states[FAN_val] = 0;
                 }
