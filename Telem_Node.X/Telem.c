@@ -159,7 +159,7 @@ void main(void) {
     millis = 0; // Clear milliseconds count
 
     TRISCbits.TRISC6 = OUTPUT; // Programmable termination
-    TERM_LAT = TRUE; // Terminating
+    TERM_LAT = 0; // Not terminating
 
     init_unused_pins();
 

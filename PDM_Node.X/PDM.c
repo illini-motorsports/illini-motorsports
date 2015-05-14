@@ -369,7 +369,7 @@ void main(void) {
     load_states[PCB_val] = 1;
 
     TRISCbits.TRISC5 = OUTPUT; // Relay output
-    TERM_LAT = PWR_OFF; // Not terminating
+    TERM_LAT = PWR_ON; // Terminating
 
     ECANInitialize(); // Setup ECAN
 

@@ -332,7 +332,7 @@ void main(void) {
 
 #ifdef LOGGING_0
     TRISCbits.TRISC6 = OUTPUT; // Programmable termination
-    TERM_LAT = FALSE;
+    TERM_LAT = FALSE; // Not terminatig
 #endif
 
     // Setup milliseconds interrupt
