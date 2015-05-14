@@ -184,8 +184,6 @@ void high_isr(void) {
         // checks range and sets flags
         checkRangeError();
     }
-
-    return;
 }
 
 void main(void) {
@@ -194,7 +192,7 @@ void main(void) {
      * Variable Declarations
      */
 
-    unsigned char radio_sw[2], drs_over_sw[2], fan_over_sw[2], fuel_map_sw[2];
+    unsigned char radio_sw[2], ack_sw[2], fan_over_sw[2], water_over_sw[2];
 #ifdef PADDLES
     unsigned char paddle_l_sw[2], paddle_r_sw[2];
 #endif   
@@ -275,7 +273,7 @@ void main(void) {
     STI();
 
     TRISCbits.TRISC6 = OUTPUT; // programmable termination
-    TERM_LAT = FALSE;
+    TERM_LAT = FALSE; // Not terminating
 
     while(1) {
 
@@ -348,24 +346,29 @@ void main(void) {
         } else
             *(int *)paddle_r_sw = 0;
 #endif
-        // DRS override switch
-        if(DRS_OVER) {
-            drs_over_sw[0] = 0x13;
-            drs_over_sw[1] = 0x88;
-        } else
-            *(int *)drs_over_sw = 0;
-        // fan override switch
+        // Acknowledge button
+        if(ACK) {
+            ack_sw[0] = 0x13;
+            ack_sw[1] = 0x88;
+        } else {
+            *(int *)ack_sw = 0;
+        }
+
+        // Fan override switch
         if(FAN_OVER) {
             fan_over_sw[0] = 0x13;
             fan_over_sw[1] = 0x88;
-        } else
+        } else {
             *(int *)fan_over_sw = 0;
-        // fuel map switch
-        if(FUEL_MAP) {
-            fuel_map_sw[0] = 0x13;
-            fuel_map_sw[1] = 0x88;
-        } else
-            *(int *)fuel_map_sw = 0;
+        }
+
+        // Water override switch
+        if(WATER_OVER) {
+            water_over_sw[0] = 0x13;
+            water_over_sw[1] = 0x88;
+        } else {
+            *(int *)water_over_sw = 0;
+        }
 
         if(millis - CAN_tmr > CAN_PER) {
             CAN_tmr = millis;
@@ -376,8 +379,8 @@ void main(void) {
             ADLmsg[ADL1_BYTE + 1] = radio_sw[1];
             ADLmsg[ADL2_BYTE] = fan_over_sw[0];
             ADLmsg[ADL2_BYTE + 1] = fan_over_sw[1];
-            ADLmsg[ADL3_BYTE] = fuel_map_sw[0];
-            ADLmsg[ADL3_BYTE + 1] = fuel_map_sw[1];
+            ADLmsg[ADL3_BYTE] = water_over_sw[0];
+            ADLmsg[ADL3_BYTE + 1] = water_over_sw[1];
             ECANSendMessage(ADL_ID, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
 
             // send out first three rotary encoders
@@ -389,8 +392,6 @@ void main(void) {
             ECANSendMessage(ADL_ID, ADLmsg, 8, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
         }
     } // end main loop
-
-    return;
 }
 
 /*
@@ -416,8 +417,6 @@ void driver_write(unsigned char addr, unsigned char data) {
     WriteSPI(data);
     // deselect the device
     CS = 1;
-
-    return;
 }
 
 /*
@@ -438,8 +437,6 @@ void write_gear(unsigned char gear) {
         gear = num_arr[11];
     // write the gear position
     driver_write(DIG6, gear);
-
-    return;
 }
 
 /*
@@ -459,8 +456,6 @@ void write_DATA_error(void) {
     driver_write(DIG3, text_arr[NODATA2][0]);
     driver_write(DIG4, text_arr[NODATA2][1]);
     driver_write(DIG5, text_arr[NODATA2][2]);
-
-    return;
 }
 
 /*
@@ -480,8 +475,6 @@ void write_CAN_error(void) {
     driver_write(DIG3, text_arr[CANERR2][0]);
     driver_write(DIG4, text_arr[CANERR2][1]);
     driver_write(DIG5, text_arr[CANERR2][2]);
-
-    return;
 }
 
 /*
@@ -512,8 +505,6 @@ void blank_display(unsigned char side) {
             driver_write(i, BLANK);
         }
     }
-
-    return;
 }
 
 /*
@@ -561,8 +552,6 @@ void write_num(int data, unsigned char d_place, unsigned char side) {
         driver_write(DIG4, num_1);
         driver_write(DIG5, num_2);
     }
-
-    return;
 }
 
 /*
@@ -587,7 +576,6 @@ void updateText(unsigned char side, unsigned char *state) {
         driver_write(DIG4, text_arr[state[side]][1]);
         driver_write(DIG5, text_arr[state[side]][2]);
     }
-    return;
 }
 
 /*
@@ -739,7 +727,6 @@ void updateDisp(unsigned char side) {
             }
         }
     }
-    return;
 }
 
 /*
@@ -783,8 +770,6 @@ void bufferData(void) {
         else
             d_place_arr[LOGGING] = 0;
     }
-
-    return;
 }
 
 /*
@@ -846,7 +831,6 @@ void checkRangeError(void) {
             RANGE_FLAGS[SPEED] = IN_RANGE;
         }
     }
-    return;
 }
 
 /*
@@ -869,8 +853,6 @@ void ADLsample(unsigned char *data, const unsigned char ADLoffset, const unsigne
     modifyRotary(&temp);
     data[ADLoffset] = ((unsigned char *)&temp)[1];
     data[ADLoffset + 1] = ((unsigned char *)&temp)[0];
-
-    return;
 }
 
 /*
@@ -905,5 +887,4 @@ void modifyRotary(unsigned int * sample) {
         *sample = POS_9;
     else if(*sample >= RANGE_8 && *sample <= RANGE_HIGH)
         *sample = POS_8;
-    return;
 }

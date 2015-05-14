@@ -35,6 +35,7 @@
 #define VOLTAGE_BYTE        6
 #define GDN_SPD_BYTE        0
 #define FAN_SW_BYTE         4
+#define WATER_SW_BYTE       6
 #define LOGGING_BYTE		0
 
 #define ADL1_BYTE 2

@@ -94,11 +94,11 @@
 static volatile unsigned long millis; // Holds timer0 rollover count
 
 // Car data variables
-static volatile unsigned char FAN_SW; // Holds state of fan switch on steering wheel
+static volatile unsigned char FAN_SW, WATER_SW; // Holds state of switches on the steering wheel
 static volatile signed int engine_temp, oil_temp, oil_press, rpm, voltage;
 
 // Millisecond value for when each variable was last updated
-static volatile unsigned long FAN_SW_tmr, engine_temp_tmr, oil_temp_tmr,
+static volatile unsigned long FAN_SW_tmr, WATER_SW_tmr, engine_temp_tmr, oil_temp_tmr,
 oil_press_tmr, rpm_tmr, voltage_tmr, CAN_recv_tmr;
 
 // ECAN variables
@@ -233,6 +233,9 @@ void high_isr(void) {
                 if(data[0] == FAN_SW_ADL_ID) {
                     FAN_SW = data[FAN_SW_BYTE];
                     FAN_SW_tmr = millis;
+
+                    WATER_SW = data[WATER_SW_BYTE];
+                    WATER_SW_tmr = millis;
                 }
                 break;
         }
@@ -286,6 +289,7 @@ void main(void) {
     millis = 0;
 
     FAN_SW = 0;
+    WATER_SW = 0;
     engine_temp = 0;
     oil_temp = 0;
     oil_press = 0;
@@ -293,6 +297,7 @@ void main(void) {
     voltage = 0;
 
     FAN_SW_tmr = 0;
+    WATER_SW_tmr = 0;
     engine_temp_tmr = 0;
     oil_temp_tmr = 0;
     oil_press_tmr = 0;
@@ -613,14 +618,14 @@ void main(void) {
             }
 
             // WATER
-            if((FAN_SW || OVER_TEMP || ON) && !START_PORT) {
+            if((WATER_SW || FAN_SW || OVER_TEMP || ON) && !START_PORT) {
                 if(!WATER_PORT) {
                     WATER_P_LAT = PWR_ON;
                     WATER_LAT = PWR_ON;
                     WATER_peak_tmr = millis;
                     load_states[WATER_val] = 1;
                 }
-            } else if((!ON && !FAN_SW && !OVER_TEMP) || START_PORT) {
+            } else if((!ON && !WATER_SW && !FAN_SW && !OVER_TEMP) || START_PORT) {
                 if(WATER_PORT) {
                     WATER_LAT = PWR_OFF;
                     load_states[WATER_val] = 0;

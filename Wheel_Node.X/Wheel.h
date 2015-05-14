@@ -173,12 +173,12 @@
 #define CS LATDbits.LATD3
 
 // setup switch inputs
-#define CYCLE_R PORTEbits.RE1
-#define CYCLE_L PORTEbits.RE2
-#define FUEL_MAP PORTDbits.RD6
+#define CYCLE_L PORTEbits.RE1
+#define CYCLE_R PORTEbits.RE2
+#define WATER_OVER PORTDbits.RD6
 #define FAN_OVER PORTDbits.RD5
 #define RADIO PORTBbits.RB4
-#define DRS_OVER PORTBbits.RB5
+#define ACK PORTBbits.RB5
 
 // set analog inputs
 #define LAUNCH_ROT ADC_CH5
