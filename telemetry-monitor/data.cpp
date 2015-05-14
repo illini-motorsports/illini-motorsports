@@ -57,13 +57,14 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
     static vector<int> channelAddr;
     static std::map<unsigned char, unsigned int> channelData;
 
-    channelAddr.resize(6);
+    channelAddr.resize(7);
     channelAddr[0] = OT;
     channelAddr[1] = ET;
     channelAddr[2] = VOLT;
     channelAddr[3] = OP;
     channelAddr[4] = SPD;
     channelAddr[5] = RPM;
+    channelAddr[6] = LAMD;
 
     read_Data.append(serialPort.readAll());
 
@@ -83,6 +84,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
             channelData[OP] = (theMsg[6] * 0x0100) + theMsg[7];
             channelData[SPD] = (theMsg[8] * 0x0100) + theMsg[9];
             channelData[RPM] = (theMsg[10] * 0x0100) + theMsg[11];
+            channelData[LAMD] = (theMsg[12] * 0x0100) + theMsg[13];
 
             display.errorMessage(false);
 
@@ -91,7 +93,7 @@ void AppData::readData(QSerialPort & serialPort, AppDisplay & display) {
             display.updateMessageCounter(messageCount);
 
             // Clean up now that we're done
-            read_Data.remove(0, 4 + 12);
+            read_Data.remove(0, 4 + 14);
             theMsg.clear();
 
             for(unsigned int i = 0; i < channelAddr.size(); i++) {

@@ -93,8 +93,8 @@
 
 static volatile unsigned long millis = 0; // Holds timer0 rollover count
 
-static unsigned char msg[4 + 12]; // 4-Header, 12-Msg bytes
-static unsigned char chan_data[12];
+static unsigned char msg[4 + 14]; // 4-Header, 12-Msg bytes
+static unsigned char chan_data[14];
 
 // ECAN variables
 static unsigned long id; // Holds CAN msgID
@@ -152,7 +152,7 @@ void main(void) {
      */
 
     int index;
-    for(index = 0; index < 12; index++) {
+    for(index = 0; index < 14; index++) {
         chan_data[index] = 0;
     }
 
@@ -228,7 +228,7 @@ void send_msg() {
     msg[3] = 0x83;
 
     // Add data now
-    for(i = 0; i < 12; i++) {
+    for(i = 0; i < 14; i++) {
         msg[i + 4] = chan_data[i];
     }
 
@@ -238,7 +238,7 @@ void send_msg() {
      * 4 - Header
      * 12 - Msg bytes
      */
-    send(4 + 12);
+    send(4 + 14);
 }
 
 /**
@@ -281,6 +281,8 @@ void bufferData() {
         chan_data[VOLTAGE + 1] = data[VOLTAGE_BYTE + 1];
         chan_data[ENGINE_T] = data[ENGINE_T_BYTE];
         chan_data[ENGINE_T + 1] = data[ENGINE_T_BYTE + 1];
+        chan_data[LAMBDA] = data[LAMBDA_BYTE];
+        chan_data[LAMBDA + 1] = data[LAMBDA_BYTE + 1];
     } else if(id == MOTEC_ID + 4) {
         chan_data[SPEED] = data[GDN_SPD_BYTE];
         chan_data[SPEED + 1] = data[GDN_SPD_BYTE + 1];

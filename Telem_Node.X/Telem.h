@@ -18,6 +18,7 @@
 #define OIL_P       6
 #define SPEED       8
 #define RPM         10
+#define LAMBDA      12
 
 #define DATA_PER    10
 
@@ -27,6 +28,7 @@
 #define VOLTAGE_BYTE    6
 #define OIL_P_BYTE      4
 #define RPM_BYTE        0
+#define LAMBDA_BYTE     2
 
 #define TERM_LAT    LATCbits.LATC6
 

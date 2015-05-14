@@ -62,6 +62,7 @@ inline map<unsigned char, message> init_map() {
   can_map.insert(make_pair(0x66, message(0x66, "RPM", "rpm", 1.0, 0, 15000, -1, 13600)));
   can_map.insert(make_pair(0x33, message(0x33, "Voltage", "V", 0.01, 9, 16, 9, 15)));
   can_map.insert(make_pair(0x55, message(0x55, "Speed", "MPH", 0.1, 0, 100, -1, 85)));
+  can_map.insert(make_pair(0x77, message(0x77, "Lambda", "La", .001, 0, 10, .1, 7)));
   return can_map;
 }
 
@@ -78,7 +79,7 @@ inline map<unsigned char, message> init_map() {
  * location on the right side, metric_indices[5] = 0x02.
  */
 static const unsigned char metric_ids[NUM_METRICS * 2] = {0x11, 0x22,
-  0x33, 0x44, 0x55, 0x66, 0x11, 0x22};
+  0x33, 0x44, 0x55, 0x66, 0x77, 0x22};
 
 /*
  * Similiar to above, but for the bars on the bottom of the screen.

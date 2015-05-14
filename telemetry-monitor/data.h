@@ -27,6 +27,7 @@ using std::vector;
 #define OP      0x44
 #define SPD     0x55
 #define RPM     0x66
+#define LAMD    0x77
 
 #define DATA    0x01
 #define ADDR    0x02
