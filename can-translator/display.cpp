@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-10-25
+ * @date Modified: 2015-05-31
  */
 #include "display.h"
 
@@ -36,7 +36,7 @@ AppDisplay::AppDisplay() : QWidget() {
   QFont font_header("Helvetica", 20, QFont::Bold);
   QFont font_subheader("Helvetica", 15);
   QFont font_message("Helvetica", 15, QFont::Black);
-  QFont font_channel("Helvetica", 11);
+  QFont font_channel("Helvetica", 9);
 
   lbl_header.setText("Illini Motorsports CAN Translator - 2015");
   lbl_header.setFont(font_header);
@@ -115,7 +115,8 @@ AppDisplay::AppDisplay() : QWidget() {
     for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
       Channel chn = *chnIt;
       QTableWidgetItem* item = new QTableWidgetItem("     " + chn.title + "<" + chn.units + ">" + " isS: " + (chn.isSigned ? "T" : "F") +
-          " S: " + QString::number(chn.scalar) + " O: " + QString::number(chn.offset));
+          " S: " + QString::number(chn.scalar) + " O: " + QString::number(chn.offset) +
+          " Min: " + QString::number(chn.min) + " Max: " + QString::number(chn.max));
       item->setFlags(Qt::NoItemFlags);
       item->setFont(font_channel);
       table.setItem(i, 3 + j, item);

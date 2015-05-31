@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2015-05-30
+ * @date Modified: 2015-05-31
  */
 #include "data.h"
 
@@ -172,6 +172,7 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
 
       int j = 0;
       vector<double> values;
+      bool badChnFound = false;
       for(int i = 0; i < msg.channels.size(); i++) {
         Channel chn = msg.channels[i];
 
@@ -186,10 +187,23 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
               buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
             value = (double) data;
           }
+
           values.push_back((value - chn.offset) * chn.scalar);
+
+          // Check to see if the calculated value is out of range.
+          if(values[j] < chn.min || values[j] > chn.max) {
+            badChnFound = true;
+          }
+
           j++;
         }
         iter += 2;
+      }
+
+      if(badChnFound) {
+        // Skip this message and don't write to the file.
+        iter += 4;
+        continue;
       }
 
       double upper = buffer[iter + 3] << 8 | buffer[iter + 2];
@@ -201,11 +215,10 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
        * We were experiencing problems with corrupt messages (or messages not understood by the
        * translator interpreted as being corrupt) screwing up the natural, increasing order of
        * timestamps in the logfile. This would cause the conversion to darab format to fail. This
-       * if statemnt checks to make sure the newly calculated timestamp is greater than or equal to
-       * the most recent timestamp, and also within a small range of time.
+       * if statement checks to make sure the newly calculated timestamp within a small range of
+       * time in either direction.
        */
-      if(timestamp >= latestValues[0][0] &&
-          (latestValues[0][0] == 0.0 || timestamp - latestValues[0][0] <= 10.0)) {
+      if(latestValues[0][0] == 0.0 || abs(timestamp - latestValues[0][0]) <= 1.0) {
         latestValues[0][0] = timestamp;
         for(int i = 0; i < j; i++) {
           latestValues[messageIndices[msg.id]][i] = values[i];

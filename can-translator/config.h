@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-22
+ * @date Modified: 2015-05-31
  */
 #ifndef CONFIG_H
 #define CONFIG_H
@@ -31,6 +31,8 @@ struct Channel {
   double scalar;
   double offset;
   QString units;
+  double min;
+  double max;
 
   Channel() {
     pos = 0;
@@ -39,6 +41,8 @@ struct Channel {
     scalar = 0.0;
     offset = 0.0;
     units = "";
+    min = 0.0;
+    max = 65535.0;
   }
 
   bool valid() {

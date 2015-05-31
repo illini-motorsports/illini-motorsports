@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-07-22
+ * @date Modified: 2015-05-31
  */
 #include "config.h"
 
@@ -104,7 +104,7 @@ Message AppConfig::getMessage(QString line) {
 Channel AppConfig::getChannel(int pos, QString section) {
   QStringList chnDef = section.split(",", QString::SkipEmptyParts);
 
-  if(chnDef.size() != 5) {
+  if(chnDef.size() != 7) {
     emit error("Invalid channel definition.");
     return Channel();
   }
@@ -143,6 +143,18 @@ Channel AppConfig::getChannel(int pos, QString section) {
   chn.units = chnDef[4];
   if(chn.units.length() > 4) {
     emit error(QString("Units length too long for channel with title: %1").arg(chn.title));
+    return Channel();
+  }
+
+  chn.min = chnDef[5].toDouble(&successful);
+  if(!successful) {
+    emit error(QString("Invalid min for channel with title: %1").arg(chn.title));
+    return Channel();
+  }
+
+  chn.max = chnDef[6].toDouble(&successful);
+  if(!successful) {
+    emit error(QString("Invalid max for channel with title: %1").arg(chn.title));
     return Channel();
   }
 
