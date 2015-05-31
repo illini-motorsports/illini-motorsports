@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-10-18
+ * @date Modified: 2015-05-30
  */
 #include "data.h"
 
@@ -154,6 +154,7 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
   int iter = 0;
   int progressCounter = 0;
   static int badMsgCounter = 0;
+  static int badTimeCounter = 0;
   bool badMsgFound = false;
   while(iter + 14 < length) {
 
@@ -170,19 +171,22 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
       vector<bool> msgEnabled = this->enabled[msg.id];
 
       int j = 0;
+      vector<double> values;
       for(int i = 0; i < msg.channels.size(); i++) {
         Channel chn = msg.channels[i];
 
         if(msgEnabled[i]) {
           double value;
           if(chn.isSigned) {
-            signed int data = msg.isBigEndian ? buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
+            signed int data = msg.isBigEndian ?
+              buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
             value = (double) data;
           } else {
-            unsigned int data = msg.isBigEndian ? buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
+            unsigned int data = msg.isBigEndian ?
+              buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
             value = (double) data;
           }
-          latestValues[messageIndices[msg.id]][j] = (value - chn.offset) * chn.scalar;
+          values.push_back((value - chn.offset) * chn.scalar);
           j++;
         }
         iter += 2;
@@ -190,16 +194,37 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
 
       double upper = buffer[iter + 3] << 8 | buffer[iter + 2];
       double lower = ((double) (buffer[iter + 1] << 8 | buffer[iter])) / 0x8000;
-      latestValues[0][0] = (double) (upper + lower - 1.0);
+      double timestamp = upper + lower - 1.0;
       iter += 4;
 
-      writeLine();
+      /**
+       * We were experiencing problems with corrupt messages (or messages not understood by the
+       * translator interpreted as being corrupt) screwing up the natural, increasing order of
+       * timestamps in the logfile. This would cause the conversion to darab format to fail. This
+       * if statemnt checks to make sure the newly calculated timestamp is greater than or equal to
+       * the most recent timestamp, and also within a small range of time.
+       */
+      if(timestamp >= latestValues[0][0] &&
+          (latestValues[0][0] == 0.0 || timestamp - latestValues[0][0] <= 10.0)) {
+        latestValues[0][0] = timestamp;
+        for(int i = 0; i < j; i++) {
+          latestValues[messageIndices[msg.id]][i] = values[i];
+        }
+        writeLine();
+      } else {
+        if(++badTimeCounter < 6) {
+          emit error(QString("Invalid timestamp: %1. Previous: %2.")
+              .arg(timestamp).arg(latestValues[0][0]));
+        } else if(badTimeCounter == 7) {
+          emit error(QString("Invalid timestamp maxed out."));
+        }
+      }
     } else {
       if(!badMsgFound) {
         if(++badMsgCounter < 6) {
-            emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+          emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
         } else if(badMsgCounter == 7) {
-            emit error(QString("Invalid msgId maxed out."));
+          emit error(QString("Invalid msgId maxed out."));
         }
       }
       badMsgFound = true;
