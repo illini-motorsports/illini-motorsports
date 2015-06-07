@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2015-05-31
+ * @date Modified: 2015-06-07
  */
 #include "display.h"
 
@@ -19,6 +19,10 @@ void ComputeThread::run() {
   finish(true);
 }
 
+void CoalesceComputeThread::run() {
+  finish(this->data->coalesceLogfiles(this->filenames));
+}
+
 AppDisplay::AppDisplay() : QWidget() {
   this->successful = false;
   this->resize(WIDTH, HEIGHT);
@@ -30,6 +34,7 @@ AppDisplay::AppDisplay() : QWidget() {
   connect(&config, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
 
   computeThread.data = &data;
+  coalesceComputeThread.data = &data;
 
   layout.addLayout(&layout_headers);
 
@@ -49,7 +54,7 @@ AppDisplay::AppDisplay() : QWidget() {
   lbl_subheader.setAlignment(Qt::AlignCenter);
   layout_headers.addWidget(&lbl_subheader, 1);
 
-  lbl_keymaps.setText("[c] Convert Custom File     [v] Convert Vector File     [a] Select All     [n] Select None     [q] Quit");
+  lbl_keymaps.setText("[c] Convert Custom File     [v] Convert Vector File     [s] Coalesce Converted Logfiles     [a] Select All     [n] Select None     [q] Quit");
   lbl_keymaps.setFont(font_subheader);
   lbl_keymaps.setAlignment(Qt::AlignCenter);
   layout_headers.addWidget(&lbl_keymaps, 1);
@@ -59,6 +64,9 @@ AppDisplay::AppDisplay() : QWidget() {
 
   btn_read_vector.setText("Select Vector File to Convert");
   layout_reads.addWidget(&btn_read_vector, 1);
+
+  btn_coalesce.setText("Coalesce Converted Logfiles");
+  layout_reads.addWidget(&btn_coalesce, 1);
 
   layout.addLayout(&layout_reads);
 
@@ -149,10 +157,13 @@ AppDisplay::AppDisplay() : QWidget() {
   layout.addWidget(&table, 1);
 
   connect(&computeThread, SIGNAL(finish(bool)), this, SLOT(convertFinish(bool)));
+  connect(&coalesceComputeThread, SIGNAL(finish(bool)), this, SLOT(coalesceFinish(bool)));
+
   connect(&btn_select_all, SIGNAL(clicked()), this, SLOT(selectAll()));
   connect(&btn_select_none, SIGNAL(clicked()), this, SLOT(selectNone()));
   connect(&btn_read_custom, SIGNAL(clicked()), this, SLOT(readDataCustom()));
   connect(&btn_read_vector, SIGNAL(clicked()), this, SLOT(readDataVector()));
+  connect(&btn_coalesce, SIGNAL(clicked()), this, SLOT(coalesceLogfiles()));
 }
 
 map<unsigned short, vector<bool> > AppDisplay::getEnabled() {
@@ -216,9 +227,32 @@ void AppDisplay::readDataVector() {
   readData(true);
 }
 
+void AppDisplay::coalesceLogfiles() {
+  btn_read_custom.setEnabled(false);
+  btn_read_vector.setEnabled(false);
+  btn_coalesce.setEnabled(false);
+  btn_select_all.setEnabled(false);
+  btn_select_none.setEnabled(false);
+  enableBoxes(false);
+
+  QFileDialog dialog(this);
+  dialog.setDirectory(".");
+  dialog.setNameFilter("*.out.txt");
+  dialog.setFileMode(QFileDialog::ExistingFiles);
+  if(dialog.exec()) {
+    coalesceComputeThread.filenames = dialog.selectedFiles();
+    coalesceComputeThread.start();
+  } else {
+    QMessageBox::critical(this, "File Dialog Error",
+        "A team of highly trained monkeys has been dispatched to help you.");
+    coalesceFinish(false);
+  }
+}
+
 void AppDisplay::readData(bool isVectorFile) {
   btn_read_custom.setEnabled(false);
   btn_read_vector.setEnabled(false);
+  btn_coalesce.setEnabled(false);
   btn_select_all.setEnabled(false);
   btn_select_none.setEnabled(false);
   enableBoxes(false);
@@ -236,6 +270,7 @@ void AppDisplay::readData(bool isVectorFile) {
   } else {
     QMessageBox::critical(this, "File Dialog Error",
         "A team of highly trained monkeys has been dispatched to help you.");
+    convertFinish(false);
   }
 }
 
@@ -254,6 +289,21 @@ void AppDisplay::convertFinish(bool success) {
 
   btn_read_custom.setEnabled(true);
   btn_read_vector.setEnabled(true);
+  btn_coalesce.setEnabled(true);
+  btn_select_all.setEnabled(true);
+  btn_select_none.setEnabled(true);
+  enableBoxes(true);
+}
+
+void AppDisplay::coalesceFinish(bool success) {
+  if(success) {
+    QMessageBox::information(this, "Coalesce Completed!",
+        "Output file is stored in the same directory as the input files.");
+  }
+
+  btn_read_custom.setEnabled(true);
+  btn_read_vector.setEnabled(true);
+  btn_coalesce.setEnabled(true);
   btn_select_all.setEnabled(true);
   btn_select_none.setEnabled(true);
   enableBoxes(true);
@@ -276,6 +326,11 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
   // Opens file conversion dialog for vector data files.
   if(e->text() == "v") {
     btn_read_vector.click();
+  }
+
+  // Opens converted logfile dialog.
+  if(e->text() == "s") {
+    btn_coalesce.click();
   }
 
   // Selects all channel checkboxes.

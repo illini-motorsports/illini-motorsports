@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2014-10-25
+ * @date Modified: 2015-06-07
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -47,6 +47,42 @@ class ComputeThread : public QThread {
 
     /**
      * A list of names of files to convert.
+     */
+    QStringList filenames;
+
+    /**
+     * Pointer to the instance of the data class used for the computation.
+     */
+    AppData* data;
+
+  signals:
+
+    /**
+     * Signal to be executed upon finishing the computation.
+     *
+     * @param success Whether the conversion was successful.
+     */
+    void finish(bool success);
+
+  private:
+
+    /**
+     * Starts the thread's main computation.
+     */
+    void run();
+};
+
+/**
+ * Class with handles multithreading of the coalesce process so that we
+ * don't lock up the GUI thread while coalescing logfiles.
+ */
+class CoalesceComputeThread : public QThread {
+  Q_OBJECT
+
+  public:
+
+    /**
+     * A list of logfiles to coalesce.
      */
     QStringList filenames;
 
@@ -117,11 +153,24 @@ class AppDisplay : public QWidget {
     void readDataVector();
 
     /**
+     * Calls the cooresponding coalesceLogfiles() function in the data
+     * class when btn_coalesce is pressed.
+     */
+    void coalesceLogfiles();
+
+    /**
      * Called when the thread has fininshed the conversion process.
      *
      * @param success Whether the conversion was successful.
      */
     void convertFinish(bool success);
+
+    /**
+     * Called when the coalesce thread has finished.
+     *
+     * @param success Whether the coalesce was successful.
+     */
+    void coalesceFinish(bool success);
 
     /**
      * Scans the grid of checkboxes to see which channels the user wants
@@ -196,12 +245,14 @@ class AppDisplay : public QWidget {
 
     QPushButton btn_read_custom;
     QPushButton btn_read_vector;
+    QPushButton btn_coalesce;
     QPushButton btn_select_all;
     QPushButton btn_select_none;
 
     QProgressBar bar_convert;
 
     ComputeThread computeThread;
+    CoalesceComputeThread coalesceComputeThread;
 };
 
 #endif // APP_DISPLAY_H

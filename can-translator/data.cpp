@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2015-05-31
+ * @date Modified: 2015-06-07
  */
 #include "data.h"
 
@@ -72,6 +72,79 @@ bool AppData::readDataVector() {
   }
   emit error("Problem with input file. Try again or try another file.");
   return false;
+}
+
+bool AppData::coalesceLogfiles(QStringList filenames) {
+  filenames.sort();
+
+  QStringList info = filenames.at(0).split("/");
+  QString firstFileNum = info.at(info.size() - 1).split(".").at(0);
+
+  QString lastFileName = filenames.at(filenames.size() - 1);
+  info = lastFileName.split("/");
+  QString lastFileNum = info.at(info.size() - 1).split(".").at(0);
+
+  QString directory = lastFileName.left(lastFileName.lastIndexOf('/') + 1);
+
+  QString outFilename = QString("%1coalesce-%2-%3.txt").arg(directory)
+    .arg(firstFileNum).arg(lastFileNum);
+  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::trunc);
+
+  if(outFile && outFile.good()) {
+    QString header;
+    QFile firstFile(filenames.at(0));
+    if(firstFile.open(QIODevice::ReadOnly)) {
+      QTextStream inputStream(&firstFile);
+      header = inputStream.readLine();
+      QString adjHeader = QString("%1  %2  %3").arg(header.section("  ", 0, 0)).arg("Logfile [file]")
+        .arg(header.section("  ", 1));
+      outFile << adjHeader.toLocal8Bit().data() << '\n';
+      firstFile.close();
+    }
+
+    double latestTimestamp = -LOGFILE_COALESCE_SEPARATION;
+
+    for(int i = 0; i < filenames.size(); i++) {
+      emit progress((((double) i) / filenames.size()) * 100.0);
+
+      info = filenames.at(i).split("/");
+      QString logNum = info.at(info.size() - 1).split(".").at(0);
+
+      QFile inputFile(filenames.at(i));
+      if(inputFile.open(QIODevice::ReadOnly)) {
+        QTextStream inputStream(&inputFile);
+
+        if(QString::compare(header, inputStream.readLine())) {
+          emit error("Header mismatch. All logfiles must have the same headers.");
+          outFile.close();
+          return false;
+        }
+
+        QString firstLine = inputStream.readLine();
+        double firstTimestamp = firstLine.section(" ", 0, 0).toDouble();
+        firstLine = "0.0 " + firstLine.section(" ", 1);
+        outFile << firstLine.toLocal8Bit().data() << '\n';
+
+        latestTimestamp += LOGFILE_COALESCE_SEPARATION;
+        double timestampOffset = latestTimestamp;
+
+        while(!inputStream.atEnd()) {
+          QString line = inputStream.readLine();
+          double timestamp = line.section(" ", 0, 0).toDouble();
+          latestTimestamp  = timestamp - firstTimestamp + timestampOffset;
+          line = QString("%1 %2 %3").arg(latestTimestamp).arg(logNum).arg(line.section(" ", 1));
+          outFile << line.toLocal8Bit().data() << '\n';
+        }
+      }
+    }
+    emit progress(100.0);
+  } else {
+    emit error("Problem opening output file.");
+    return false;
+  }
+
+  outFile.close();
+  return true;
 }
 
 bool AppData::writeAxis() {

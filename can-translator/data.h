@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-07-12
- * @date Modified: 2014-10-18
+ * @date Modified: 2015-06-07
  */
 #ifndef DATA_H
 #define DATA_H
@@ -22,6 +22,8 @@ using std::vector;
 using std::ifstream;
 using std::ofstream;
 
+#define LOGFILE_COALESCE_SEPARATION 30.0
+
 /**
  * Class which handles the scanning of CAN messages from config.txt.
  */
@@ -38,6 +40,18 @@ class AppData : public QObject {
      * @returns Whether the read was successful.
      */
     bool readData(bool isVectorFile);
+
+    /**
+     * Combines multiple logfiles into a single coalesced logfile. This function
+     * will also add a column in the data for the logfile name, in order to be
+     * able to determine which logfile a certain section of data is from. In
+     * addition, the function makes the timestamps relative to each other so that
+     * Darab shows the files in the correct strictly increasing order.
+     *
+     * @param filenames The list of logfile names to coalesce.
+     * @returns Whether the coalesce was successful.
+     */
+    bool coalesceLogfiles(QStringList filenames);
 
     /**
      * Prints all the channels to the output file.

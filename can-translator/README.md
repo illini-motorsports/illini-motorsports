@@ -4,6 +4,7 @@
 ## Changelog
 | Release | Changes |
 | --- | --- |
+| ![1.2.0](http://img.shields.io/badge/v-1.2.0-green.svg?style=flat) | Add coalesce logfiles feature. |
 | ![1.1.0](http://img.shields.io/badge/v-1.1.0-green.svg?style=flat) | Add support for Vector log files. |
 | ![1.0.0](http://img.shields.io/badge/v-1.0.0-green.svg?style=flat) | Initial release of can-translator. |
 | ![0.2.0](http://img.shields.io/badge/v-0.2.0-yellow.svg?style=flat) | Working version of data converter. |
