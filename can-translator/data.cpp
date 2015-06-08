@@ -120,9 +120,14 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
           return false;
         }
 
+        if(inputStream.atEnd()) {
+            continue;
+        }
+
         QString firstLine = inputStream.readLine();
         double firstTimestamp = firstLine.section(" ", 0, 0).toDouble();
-        firstLine = "0.0 " + firstLine.section(" ", 1);
+
+        firstLine = QString("0.0 %1 %2").arg(logNum).arg(firstLine.section(" ", 1));
         outFile << firstLine.toLocal8Bit().data() << '\n';
 
         latestTimestamp += LOGFILE_COALESCE_SEPARATION;
