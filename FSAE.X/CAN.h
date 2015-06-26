@@ -1,7 +1,6 @@
-/*
- * Formula SAE CAN Defines
+/**
+ * FSAE Library CAN Defines
  *
- * File Name:   CAN.h
  * Processor:   PIC18F46K80
  * Compiler:    Microchip C18
  * Author:      George Schwieters
@@ -19,7 +18,7 @@
 #define RPM_ID          0x200L
 #define VOLTAGE_ID      0x201L
 #define ENGINE_TEMP_ID  0x201
-#define LOGGING_ID		0X2AAL
+#define LOGGING_ID      0X2AAL
 #define OIL_TEMP_ID     0x200L
 #define OIL_PRESS_ID    0x200L
 #define FAN_SW_ID       0x500L
@@ -36,7 +35,7 @@
 #define GDN_SPD_BYTE        0
 #define FAN_SW_BYTE         4
 #define WATER_SW_BYTE       6
-#define LOGGING_BYTE		0
+#define LOGGING_BYTE        0
 
 #define ADL1_BYTE 2
 #define ADL2_BYTE 4

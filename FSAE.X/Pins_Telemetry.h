@@ -1,5 +1,5 @@
 /**
- * Pins_PDM Header
+ * Pins_Telemetry Header
  *
  * Processor:   PIC18F46K80
  * Complier:    Microchip C18
@@ -12,7 +12,7 @@
 
 #define GP_A0
 #define GP_A1
-//#define GP_A2
+#define GP_A2
 #define GP_A3
 #define GP_A5
 #define GP_A6
@@ -30,7 +30,7 @@
 #define GP_C0
 #define GP_C1
 #define GP_C2
-//#define GP_C3
+#define GP_C3
 #define GP_C4
 #define GP_C5
 #define GP_C6

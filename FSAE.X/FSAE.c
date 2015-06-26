@@ -1,10 +1,8 @@
-/*
- * Formula SAE Library Source File
+/**
+ * FSAE Library
  *
- * File Name:   FSAE.c
  * Processor:   PIC18F46K80
  * Compiler:    Microchip C18
- * Version:     1.00
  * Author:      George Schwieters
  * Created:     2014-2015
  */
@@ -13,72 +11,63 @@
 #include "timers.h"
 #include "adc.h"
 
-#ifdef LOGGING_0
-    #include "Pins_logging_0.h"
-#elif LOGGING_1
-    #include "Pins_logging_1.h"
-#elif HUB
-    #include "Pins_analog_hub.h"
-#elif THERMO
-    #include "Pins_thermo.h"
-#elif SHIFT
-    #include "Pins_shift_lights.h"
+#ifdef LOGGING
+    #include "Pins_Logger.h"
+#elif ANALOGHUB
+    #include "Pins_AnalogHub.h"
+#elif SHIFTLIGHTS
+    #include "Pins_ShiftLights.h"
 #elif WHEEL
-    #include "Pins_wheel.h"
+    #include "Pins_Wheel.h"
 #elif PDM
     #include "Pins_PDM.h"
-#elif TELEM
-    #include "Pins_telem.h"
+#elif TELEMETRY
+    #include "Pins_Telemetry.h"
 #endif
 
-/*
- *  void CLI(void)
+/**
+ * This function will disable all maskable interrupts.
  *
- *  Description: This function will disable all maskable interrupts
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify INTCON.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will modify INTCON.
  */
 void CLI(void) {
     INTCONbits.GIE = 0; // Global Interrupt Enable (1 enables)
     INTCONbits.PEIE = 0; // Peripheral Interrupt Enable (1 enables)
 }
 
-/*
- *  void STI(void)
+/**
+ * This function will enable all maskable interrupts.
  *
- *  Description: This function enable all maskable interrutps
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify INTCON.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will modify INTCON.
  */
 void STI(void) {
     INTCONbits.GIE = 1; // Global Interrupt Enable (1 enables)
     INTCONbits.PEIE = 1; // Peripheral Interrupt Enable (1 enables)
 }
 
-/*
- *  void init_ADC(void)
+/**
+ * This function will initialize the analog to digital converter.
  *
- *  Description:    This function will initialize the analog to digital
- *                  converter.
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify ADCON0, ADCON1 & ADCON2.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will modify ADCON0, ADCON1 & ADCON2.
  */
 void init_ADC(void) {
     OpenADC(ADC_FOSC_64 & ADC_RIGHT_JUST & ADC_4_TAD, ADC_CH0 & ADC_INT_OFF,
             ADC_REF_VDD_VDD & ADC_REF_VDD_VSS & ADC_NEG_CH0);
 }
 
-/*
- *  void init_timer0(void)
+/**
+ * This function will initialize Timer0 to take in the system clock and
+ * interrupt once every millisecond.
  *
- *  Description:  This function will initialize Timer0 to take in the system clock
- *          and interrupt once every millisecond
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify INTCON2, INTCON, TMR0L & T0CON.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will modify INTCON2, INTCON, TMR0L & T0CON.
  */
 void init_timer0(void) {
     // Turn on and configure the TIMER1 oscillator
@@ -87,14 +76,13 @@ void init_timer0(void) {
     INTCON2bits.TMR0IP = 1; // high priority
 }
 
-/*
- *  void init_timer1(void)
+/**
+ * This function will initialize Timer1 to take in an external 32kHz cystal and
+ * interrupt every second.
  *
- *  Description:  This function will initialize Timer1 to take in an external 32kHz
- *          cystal and interrupt every second.
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify T1CON, IPR1, TMR1L, TMR1H, PIE1 & PIR1.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will modify T1CON, IPR1, TMR1L, TMR1H, PIE1 & PIR1.
  */
 void init_timer1(void) {
     // Turn on and configure the TIMER1 oscillator
@@ -103,13 +91,12 @@ void init_timer1(void) {
     IPR1bits.TMR1IP = 1; // High priority
 }
 
-/*
- *  void init_oscillator(void)
+/**
+ * This function will configure the oscillator.
  *
- *  Description: This function will configure the oscillator
- *  Input(s): none
- *  Return Value(s): none
- *  Side Effects: This will modify OSCTUNE, OSCCON & OSCCON2.
+ * Input(s): none
+ * Return Value(s): none
+ * Side Effects: This will modify OSCTUNE, OSCCON & OSCCON2.
  */
 void init_oscillator(void) {
 
@@ -153,14 +140,12 @@ void init_oscillator(void) {
 #endif
 }
 
-/*
- *  void init_unused_pins(void)
- *
- *  Description: This function will drive unused pins to logic low
- *  Input(s): none
- *  Reaturn Value(s): none
- *  Side Effects: This will modify TRISA, TRISB, TRISC, TRISD,
- *          TRISE, LATA, LATB, LATC, LATD & LATE.
+/**
+ * This function will drive unused pins to logic low.
+ * Input(s): none
+ * Reaturn Value(s): none
+ * Side Effects: This will modify TRISA, TRISB, TRISC, TRISD, TRISE, LATA,
+ *     LATB, LATC, LATD & LATE.
  */
 void init_unused_pins(void) {
     // First configure to outputs then set the pin low

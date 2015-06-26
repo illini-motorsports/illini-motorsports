@@ -1,7 +1,6 @@
-/*
- * Wheel Node Main File Header
+/**
+ * Wheel Header
  *
- * File Name:       Wheel.h
  * Processor:       PIC18F46K80
  * Compiler:        Microchip C18
  * Author:          George Schwieters

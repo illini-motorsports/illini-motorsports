@@ -1,7 +1,6 @@
-/*
- * Formula SAE Library Header File
+/**
+ * FSAE Library Header
  *
- * File Name:   FSAE.h
  * Processor:   PIC18F46K80
  * Compiler:    Microchip C18
  * Author:      George Schwieters
@@ -11,16 +10,20 @@
 #ifndef FSAE_H
 #define FSAE_H
 
-/*
- * Magic Numbers
+/**
+ * Magic numbers
  */
 
-#define INPUT   1
-#define OUTPUT  0
+#define INPUT 1
+#define OUTPUT 0
 #define TMR0_RELOAD 0x82
 #define TMR1_RELOAD 0x8000
 #define TMR1H_RELOAD 0x80
 #define TMR1L_RELOAD 0x00
+
+/**
+ * Function definitions
+ */
 
 void init_timer0(void);
 void init_timer1(void);

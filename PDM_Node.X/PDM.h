@@ -1,7 +1,6 @@
-/*
- * PDM Node Main File Header
+/**
+ * PDM Header
  *
- * File Name:       PDM.h
  * Processor:       PIC18F46K80
  * Compiler:        Microchip C18
  * Author:          George Schwieters

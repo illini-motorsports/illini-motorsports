@@ -4,7 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>PDM.h</itemPath>
+      <itemPath>ShiftLights.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -13,9 +13,9 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../ECAN.X/ECAN.c</itemPath>
-      <itemPath>PDM.c</itemPath>
+      <itemPath>ShiftLights.c</itemPath>
       <itemPath>../FSAE.X/FSAE.c</itemPath>
+      <itemPath>../ECAN.X/ECAN.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -24,7 +24,7 @@
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>../FSAE.X</Elem>
+    <Elem>.</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -79,14 +79,22 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="..\ECAN.X;..\FSAE.X"/>
+        <property key="extra-include-directories" value="../ECAN.X;../FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
-        <property key="preprocessor-macros" value="PDM"/>
-        <property key="procedural-abstraction-passes" value="0"/>
+        <property key="preprocessor-macros" value="SHIFTLIGHTS"/>
+        <property key="procedural-abstraction-passes" value="4"/>
         <property key="storage-class" value="sca"/>
         <property key="verbose" value="false"/>
         <property key="warning-level" value="2"/>
       </C18>
+      <C18-AS>
+        <property key="cross.reference.file" value=""/>
+        <property key="default.radix" value="HEX"/>
+        <property key="enable.case.sensitivity" value="true"/>
+        <property key="hex.output.format" value="INHX32"/>
+        <property key="preprocessor.macros" value=""/>
+        <property key="warning.level" value="0"/>
+      </C18-AS>
       <C18LanguageToolchain>
         <property key="extended-mode" value="false"/>
         <property key="extended-mode-mcc18" value="false"/>
@@ -98,7 +106,6 @@
       </C18LanguageToolchain>
       <PICkit3PlatformTool>
         <property key="AutoSelectMemRanges" value="auto"/>
-        <property key="Freeze Peripherals" value="true"/>
         <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
         <property key="ToolFirmwareFilePath"
                   value="Press to browse for a specific firmware version"/>

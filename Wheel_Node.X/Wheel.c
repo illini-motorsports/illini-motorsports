@@ -1,10 +1,8 @@
-/*
- * Wheel Node Main File
+/**
+ * Wheel
  *
- * File Name:       Wheel.c
  * Processor:       PIC18F46K80
  * Compiler:        Microchip C18
- * Version:         1.00
  * Author:          George Schwieters
  * Created:         2013-2014
  */
@@ -195,7 +193,7 @@ void main(void) {
     unsigned char radio_sw[2], ack_sw[2], fan_over_sw[2], water_over_sw[2];
 #ifdef PADDLES
     unsigned char paddle_l_sw[2], paddle_r_sw[2];
-#endif   
+#endif
     unsigned char ADLmsg[8];
     unsigned char cycleStates[2], intensity;
     unsigned int bounceTimer[2];

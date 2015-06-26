@@ -53,27 +53,27 @@
 
 *******************************************************************************/
 
-#ifndef ECAN_H          // To avoid duplicate inclusion
+#ifndef ECAN_H
 #define ECAN_H
 
 #include "GenericTypeDefs.h"
 
-#ifdef LOGGING
-#include "ECAN_logging_config.h"
+#ifdef LOGGER
+#include "ECAN_Logger.h"
 #elif ANALOGHUB
 #ifdef FRONT
 #include "ECAN_AnalogHub_Front.h"
 #elif REAR
 #include "ECAN_AnalogHub_Rear.h"
 #endif
-#elif SHIFT
-#include "ECAN_shift_lights_config.h"
+#elif SHIFTLIGHTS
+#include "ECAN_ShiftLights.h"
 #elif WHEEL
-#include "ECAN_wheel_config.h"
+#include "ECAN_Wheel.h"
 #elif PDM
-#include "ECAN_PDM_config.h"
-#elif TELEM
-#include "ECAN_telem_config.h"
+#include "ECAN_PDM.h"
+#elif TELEMETRY
+#include "ECAN_Telemetry.h"
 #endif
 
 #if defined(HI_TECH_C)

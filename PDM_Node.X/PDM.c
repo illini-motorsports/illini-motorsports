@@ -1,10 +1,8 @@
-/*
- * PDM Node Main File
+/**
+ * PDM
  *
- * File Name:       PDM.c
  * Processor:       PIC18F46K80
  * Compiler:        Microchip C18
- * Version:         2.00
  * Author:          George Schwieters
  * Author:          Andrew Mass
  * Created:         2013-2014
