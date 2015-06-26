@@ -60,14 +60,12 @@
 
 #ifdef LOGGING
 #include "ECAN_logging_config.h"
-#elif HUB
-#ifdef MOTEC_RESEND
-#include "ECAN_hub_config_adl.h"
-#else
-#include "ECAN_hub_config.h"
+#elif ANALOGHUB
+#ifdef FRONT
+#include "ECAN_AnalogHub_Front.h"
+#elif REAR
+#include "ECAN_AnalogHub_Rear.h"
 #endif
-#elif THERMO
-#include "ECAN_thermo_config.h"
 #elif SHIFT
 #include "ECAN_shift_lights_config.h"
 #elif WHEEL

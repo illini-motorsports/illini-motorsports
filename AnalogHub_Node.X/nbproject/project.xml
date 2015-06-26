@@ -3,8 +3,8 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>ECAN</name>
-            <creation-uuid>35b7d924-2168-46b5-ab59-a3ae175c43cd</creation-uuid>
+            <name>AnalogHub_Node</name>
+            <creation-uuid>347f5597-4198-4795-82d2-bd665dfedb23</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>

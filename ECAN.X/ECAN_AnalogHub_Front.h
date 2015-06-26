@@ -1,36 +1,15 @@
-/******************************************************************************
+/**
+ * ECAN_AnalogHub_Front Header
  *
- *              ECAN C Library Code Configuration Header
- *
- ******************************************************************************
- * FileName:        ECAN_thermo_config.h
- * Dependencies:    none
  * Processor:       PIC18F46K80
  * Complier:        Microchip C18
-
- *******************************************************************************
-    USER REVISON HISTORY
-    DO NOT use Microchip Maestro Software to regenerate this file!
-
-// 02/12/13 - set all bit timing to get 1Mbps data rate and ~80% sample point w/
-//          PLL as clock source (64MHz)
-// 02/14/13 - added ECAN_CLOCK_SOURCE_MODE define
-//          - added PIE5 IF enable defines
-//          - added interrupt priority defines
-// 03/08/13 - added filters to stop the ECAN module from recieving messages
-// 11/28/13 - added defines for individual buffer interrupts
-//
-
- *******************************************************************************/
-
+ */
 
 #ifndef ECANCONFIG_H
 #define ECANCONFIG_H
 
 #include "CAN.h"
 
-//
-//
 // ECAN Routine Mode:
 // Possible values are ECAN_LIB_MODE_FIXED, ECAN_LIB_MODE_RUN_TIME
 //   Use ECAN_LIB_MODE_FIXED if run-time selection of mode is not required.
@@ -53,7 +32,7 @@
 #define ECAN_TXB0_IF_MODE DISABLE
 #define ECAN_RXBn_IF_MODE DISABLE
 #define ECAN_FIFO_IF_MODE DISABLE
-#define ECAN_BIE_BX0 DISABLE
+#define ECAN_BIE_BX0 ENABLE
 #define ECAN_BIE_BX1 DISABLE
 #define ECAN_BIE_B0 DISABLE
 #define ECAN_BIE_B1 DISABLE
@@ -278,7 +257,7 @@
 #define ECAN_RXF6_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF6 Value
-#define ECAN_RXF6_VAL 0x0L
+#define ECAN_RXF6_VAL 0x500L
 //
 // RXF6 Buffer Link
 #define ECAN_RXF6_BUFFER_VAL RXB0
