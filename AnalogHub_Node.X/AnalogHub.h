@@ -11,9 +11,11 @@
 #define ANALOGHUB_H
 
 #include "adc.h"
+#include "FSAE.h"
+#include "ECAN.h"
 
 /**
- * Code control
+ * Code Control
  */
 
 //#define INTERNAL
@@ -21,7 +23,7 @@
 #define MCHP_C18
 
 /**
- * Magic numbers
+ * Magic Numbers
  */
 
 #define INPUT 1
@@ -37,13 +39,13 @@
 #define SLOW_SAMPLE 128
 
 /**
- * Pin definitions
+ * Pin Definitions
  */
 
 #define TERM_LAT LATCbits.LATC6
 
 /**
- * FrontHub specific definitions
+ * FrontHub Specific Definitions
  */
 #ifdef FRONT
 
@@ -77,7 +79,7 @@
 #define RADIO_SW_BYTE 2
 
 /**
- * RearHub specific definitions
+ * RearHub Specific Definitions
  */
 #elif REAR
 
@@ -110,20 +112,20 @@
 #define X_ID 0x080
 
 typedef struct {
-    unsigned X_accel : 1;
-    unsigned Y_accel : 1;
+  unsigned X_accel : 1;
+  unsigned Y_accel : 1;
 } FLAGS;
 
 #endif
 
 /**
- * Function definitions
+ * Function Definitions
  */
 
 void high_isr(void);
 void sample(unsigned char *data, const unsigned char byte, const unsigned char ch);
 void process_resend(const unsigned char *data, unsigned char *msg,
-        const unsigned char byte, const int offset, const unsigned char ADL_ch,
-        const unsigned char order);
+    const unsigned char byte, const int offset, const unsigned char ADL_ch,
+    const unsigned char order);
 
 #endif

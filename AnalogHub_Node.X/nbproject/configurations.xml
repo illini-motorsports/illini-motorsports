@@ -11,7 +11,7 @@
                    projectFiles="true">
       <itemPath>../ECAN.X/ECAN.c</itemPath>
       <itemPath>../FSAE.X/FSAE.c</itemPath>
-      <itemPath>AnalogHug.c</itemPath>
+      <itemPath>AnalogHub.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
