@@ -4,14 +4,14 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>ECAN_logging_config.h</itemPath>
       <itemPath>ECAN.h</itemPath>
-      <itemPath>ECAN_PDM_config.h</itemPath>
-      <itemPath>ECAN_wheel_config.h</itemPath>
-      <itemPath>ECAN_shift_lights_config.h</itemPath>
-      <itemPath>ECAN_telem_config.h</itemPath>
       <itemPath>ECAN_AnalogHub_Front.h</itemPath>
       <itemPath>ECAN_AnalogHub_Rear.h</itemPath>
+      <itemPath>ECAN_Logger.h</itemPath>
+      <itemPath>ECAN_PDM.h</itemPath>
+      <itemPath>ECAN_ShiftLights.h</itemPath>
+      <itemPath>ECAN_Telemetry.h</itemPath>
+      <itemPath>ECAN_Wheel.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"

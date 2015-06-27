@@ -11,7 +11,7 @@
 #define FSAE_H
 
 /**
- * Magic numbers
+ * Magic Numbers
  */
 
 #define INPUT 1
@@ -22,15 +22,15 @@
 #define TMR1L_RELOAD 0x00
 
 /**
- * Function definitions
+ * Function Definitions
  */
 
-void init_timer0(void);
-void init_timer1(void);
-void init_ADC(void);
-void init_oscillator(void);
-void init_unused_pins(void);
 void CLI(void);
 void STI(void);
+void init_ADC(void);
+void init_timer0(void);
+void init_timer1(void);
+void init_oscillator(void);
+void init_unused_pins(void);
 
 #endif
