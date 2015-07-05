@@ -1,3 +1,11 @@
+/**
+ * Logger Config
+ *
+ * Processor:   PIC32MZ2048ECM064
+ * Compiler:    Microchip XC32
+ * Author:      Andrew Mass
+ * Created:     2015-2016
+ */
 #include "Logger_config.h"
 
 // PIC32MZ2048ECM064 Configuration Bit Settings

@@ -1,7 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <xc.h>
-#include "Logger_config.h"
+/**
+ * Logger
+ *
+ * Processor:   PIC32MZ2048ECM064
+ * Compiler:    Microchip XC32
+ * Author:      Andrew Mass
+ * Created:     2015-2016
+ */
+#include "Logger.h"
 
 /**
  * Main function
@@ -24,7 +29,15 @@ void main(void) {
 
   // Main loop
   while(1) {
-    Nop();
+
+    // Keep polling until the FIFO isn't empty
+    while(C1FIFOINT0bits.RXNEMPTYIF == 1) {
+      CanRxMessageBuffer* buffer;
+      buffer = (CanRxMessageBuffer*) (PA_TO_KVA1(C1FIFOUA0));
+
+      // Signal to the CAN module that we've processed a message
+      C1FIFOCON0bits.UINC = 1;
+    }
   }
 }
 

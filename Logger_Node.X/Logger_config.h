@@ -1,3 +1,11 @@
+/**
+ * Logger Config Header
+ *
+ * Processor:   PIC32MZ2048ECM064
+ * Compiler:    Microchip XC32
+ * Author:      Andrew Mass
+ * Created:     2015-2016
+ */
 #ifndef LOGGER_CONFIG_H
 #define LOGGER_CONFIG_H
 
