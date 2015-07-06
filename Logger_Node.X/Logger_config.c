@@ -72,9 +72,9 @@
  * (16 bytes) 2 for the CAN message data and 2 for a timestamp. Note that on a
  * PIC32 an int is 1 word (4 bytes).
  *
- * Here, we allocate 128 words, enough for 32 message buffers in one FIFO.
+ * Here, we allocate 256 words, enough for 32 message buffers in two FIFOs.
  */
-unsigned int CAN_FIFO_Buffers[128];
+unsigned int CAN_FIFO_Buffers[256];
 
 // Unlock Sequence
 void unlock_config(void) {
@@ -613,6 +613,7 @@ void init_can(void) {
   /**
    * Configure CAN1 to run at 1Mpbs baud rate
    *
+   * Ntq = 10 (1 + 4 + 3 + 2)
    * Ftq = Ntq * Fbaud = 10 * 1Mbps = 10Mhz
    * BRP = (Fsys / (2 * Ftq)) - 1 = (200Mhz / 20Mhz) - 1 = 9
    */
@@ -637,16 +638,34 @@ void init_can(void) {
   C1FIFOCON0bits.TXEN = 0;        // TX/RX Buffer Selection (Receive FIFO)
   C1FIFOCON0bits.FSIZE = 0b11111; // FIFO Size bits (32 messages deep)
   C1FIFOCON0bits.DONLY = 0;       // Store Message Data Only (Full message is stored, including identifier)
-  C1FIFOINT0bits.RXHALFIE = 1;    // FIFO Half Full Interrupt Enable (Enabled)
+  C1FIFOINT0bits.RXHALFIE = 0;    // FIFO Half Full Interrupt Enable (Disabled)
   C1FIFOINT0bits.RXFULLIE = 0;    // FIFO Full Interrupt Enable (Disabled)
   C1FIFOINT0bits.RXNEMPTYIE = 0;  // FIFO Not Empty Interrupt Enable (Disabled)
   C1FIFOINT0bits.RXOVFLIE = 0;    // FIFO Overflow Interrupt Enable (Disabled)
+
+  // CAN1 FIFO 1
+  C1FIFOCON1bits.TXEN = 1;        // TX/RX Buffer Selection (Transmit FIFO)
+  C1FIFOCON1bits.FSIZE = 0b11111; // FIFO Size bits (32 messages deep)
+
+  // CAN1 Mask 0
+  C1RXF0bits.EXID = 0;    //
+  C1RXF0bits.SID = 0x200; //
+  C1RXF0bits.EID = 0;     //
+
+  C1RXM0bits.MIDE = 1;    //
+  C1RXM0bits.SID = 0x7F8; //
+
+  // CAN1 Filter 0
+  C1FLTCON0bits.FLTEN0 = 0; //
+  C1FLTCON0bits.MSEL0 = 0;  //
+  C1FLTCON0bits.FSEL0 = 0;  //
+  C1FLTCON0bits.FLTEN0 = 1; //
 
   // Set up CAN1 Interrupt
   IFS4bits.CAN1IF = 0;  // CAN1 Interrupt Flag Status (No interrupt request has occurred)
   IPC37bits.CAN1IP = 6; // CAN1 Interrupt Priority (Interrupt priority is 6)
   IPC37bits.CAN1IS = 3; // CAN1 Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC4bits.CAN1IE = 1;  // CAN1 Interrupt Enable Control (Interrupt is enabled)
+  IEC4bits.CAN1IE = 0;  // CAN1 Interrupt Enable Control (Interrupt is disabled)
 
   C1CONbits.REQOP = 0b000; // Request Operation Mode (Set Normal Operation mode)
   while(C1CONbits.OPMOD != 0b000); // Wait for the module to finish
