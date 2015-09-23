@@ -4,13 +4,13 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>PDM_Node</name>
-            <creation-uuid>96237e46-66b7-482e-9d25-b2e3944d2432</creation-uuid>
+            <creation-uuid>14ff7231-bbb8-4999-b06d-b33b3c14d0cb</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
             <header-extensions>h</header-extensions>
-            <sourceEncoding>ISO-8859-1</sourceEncoding>
             <asminc-extensions/>
+            <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
         </data>
     </configuration>

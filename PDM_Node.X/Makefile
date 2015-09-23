@@ -1,4 +1,4 @@
-# Environment 
+# Environment
 MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
@@ -29,8 +29,8 @@ help: .help-post
 .help-pre:
 .help-post: .help-impl
 
-# include project implementation makefile
+# Include project implementation makefile
 include nbproject/Makefile-impl.mk
 
-# include project make variables
+# Include project make variables
 include nbproject/Makefile-variables.mk
