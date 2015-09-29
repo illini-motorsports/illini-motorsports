@@ -493,7 +493,8 @@ void init_oscillator(void) {
   PB1DIVbits.PBDIV = 0b0000001; // Peripheral Bus 1 Clock Divisor Control (PBCLK1 is SYSCLK divided by 2)
 
   // PB2DIV
-  PB2DIVbits.ON = 0;            // Peripheral Bus 2 Output Clock Enable (Output clock is disabled)
+  PB2DIVbits.ON = 1;            // Peripheral Bus 2 Output Clock Enable (Output clock is enabled)
+  while(!PB2DIVbits.PBDIVRDY);
   PB2DIVbits.PBDIV = 0b0000001; // Peripheral Bus 2 Clock Divisor Control (PBCLK2 is SYSCLK divided by 2)
 
   // PB3DIV
@@ -511,7 +512,7 @@ void init_oscillator(void) {
   PB5DIVbits.PBDIV = 0b0000001; // Peripheral Bus 5 Clock Divisor Control (PBCLK5 is SYSCLK divided by 2)
 
   // PB7DIV
-  PB7DIVbits.ON = 1;            // Peripheral Bus 7 Output Clock Enable (Output clock is disabled)
+  PB7DIVbits.ON = 1;            // Peripheral Bus 7 Output Clock Enable (Output clock is enabled)
   while(!PB7DIVbits.PBDIVRDY);
   PB7DIVbits.PBDIV = 0b0000000; // Peripheral Bus 7 Clock Divisor Control (PBCLK7 is SYSCLK divided by 1)
 
@@ -624,6 +625,55 @@ void init_timer1(void) {
 
   // Enable TMR1
   T1CONbits.ON = 1; // Timer On (Timer is enabled)
+
+  lock_config();
+}
+
+void init_spi() {
+  unlock_config();
+
+  // Initialize SDI1/SDO1 PPS pins
+  CFGCONbits.IOLOCK = 0;
+  TRISBbits.TRISB9 = INPUT;
+  SDI1Rbits.SDI1R = 0b0101; // RPB9
+  TRISBbits.TRISB10 = OUTPUT;
+  RPB10Rbits.RPB10R = 0b0101; // SDO1
+  CFGCONbits.IOLOCK = 1;
+
+  // Disable interrupts
+  IEC3bits.SPI1EIE = 0;
+  IEC3bits.SPI1RXIE = 0;
+  IEC3bits.SPI1TXIE = 0;
+  
+  // Disable SPI1 module
+  SPI1CONbits.ON = 0;
+  
+  // Clear receive buffer
+  SPI1BUF = 0;
+  
+  // Use standard buffer mode
+  SPI1CONbits.ENHBUF = 0;
+  
+  /**
+   * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
+   * F_SCK = 100Mhz / (2 * (9 + 1))
+   * F_SCK = 5Mhz
+   */
+  
+  // Set the baud rate (see above equation)
+  SPI1BRG = 49;
+  
+  SPI1STATbits.SPIROV = 0;
+  
+  SPI1CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
+  SPI1CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
+  SPI1CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (16-bit)
+  SPI1CONbits.MODE16 = 1;  // 32/16-Bit Communication Select bits (16-bit)
+  SPI1CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
+  SPI1CONbits.CKE = 1;     // SPI Clock Edge Select bit (Serial output data changes on transition from active clock state to idle clock state)
+
+  // Enable SPI1 module
+  SPI1CONbits.ON = 1;
 
   lock_config();
 }

@@ -21,5 +21,6 @@ void init_peripheral_modules(void);
 void init_oscillator(void);
 void init_can(void);
 void init_timer1(void);
+void init_spi(void);
 
 #endif /* PDM_CONFIG_H */
