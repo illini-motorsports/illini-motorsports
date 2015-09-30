@@ -12,6 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <xc.h>
+#include <sys/types.h>
 #include "PDM_config.h"
+
+void main(void);
+void send_rheo(uint16_t msg);
 
 #endif /* PDM_H */

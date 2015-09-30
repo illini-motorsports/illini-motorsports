@@ -16,7 +16,7 @@
 #define INPUT 1
 
 void init_general(void);
-void init_unused_pins(void);
+void init_gpio_pins(void);
 void init_peripheral_modules(void);
 void init_oscillator(void);
 void init_can(void);

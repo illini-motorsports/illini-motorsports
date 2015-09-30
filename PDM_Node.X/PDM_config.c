@@ -366,8 +366,20 @@ void init_peripheral_modules(void) {
   lock_config();
 }
 
-void init_unused_pins(void) {
+void init_gpio_pins(void) {
   // Set to outputs
+  TRISAbits.TRISA0 = OUTPUT;
+  TRISAbits.TRISA1 = OUTPUT;
+  TRISAbits.TRISA2 = OUTPUT;
+  TRISAbits.TRISA3 = OUTPUT;
+  TRISAbits.TRISA4 = OUTPUT;
+  TRISAbits.TRISA5 = OUTPUT;
+  TRISAbits.TRISA6 = OUTPUT;
+  TRISAbits.TRISA7 = OUTPUT;
+  TRISAbits.TRISA9 = OUTPUT;
+  TRISAbits.TRISA10 = OUTPUT;
+  TRISAbits.TRISA14 = OUTPUT;
+  TRISAbits.TRISA15 = OUTPUT;
 
   // TRISB
   TRISBbits.TRISB0 = OUTPUT;
@@ -388,6 +400,10 @@ void init_unused_pins(void) {
   TRISBbits.TRISB15 = OUTPUT;
 
   // TRISC
+  TRISCbits.TRISC1 = OUTPUT;
+  TRISCbits.TRISC2 = OUTPUT;
+  TRISCbits.TRISC3 = OUTPUT;
+  TRISCbits.TRISC4 = OUTPUT;
   TRISCbits.TRISC12 = OUTPUT;
   TRISCbits.TRISC13 = OUTPUT;
   TRISCbits.TRISC14 = OUTPUT;
@@ -403,6 +419,10 @@ void init_unused_pins(void) {
   TRISDbits.TRISD9 = OUTPUT;
   TRISDbits.TRISD10 = OUTPUT;
   TRISDbits.TRISD11 = OUTPUT;
+  TRISDbits.TRISD12 = OUTPUT;
+  TRISDbits.TRISD13 = OUTPUT;
+  TRISDbits.TRISD14 = OUTPUT;
+  TRISDbits.TRISD15 = OUTPUT;
 
   // TRISE
   TRISEbits.TRISE0 = OUTPUT;
@@ -413,15 +433,47 @@ void init_unused_pins(void) {
   TRISEbits.TRISE5 = OUTPUT;
   TRISEbits.TRISE6 = OUTPUT;
   TRISEbits.TRISE7 = OUTPUT;
+  TRISEbits.TRISE8 = OUTPUT;
+  TRISEbits.TRISE9 = OUTPUT;
 
   // TRISF
   TRISFbits.TRISF0 = OUTPUT;
   TRISFbits.TRISF1 = OUTPUT;
+  TRISFbits.TRISF2 = OUTPUT;
   TRISFbits.TRISF3 = OUTPUT;
   TRISFbits.TRISF4 = OUTPUT;
   TRISFbits.TRISF5 = OUTPUT;
+  TRISFbits.TRISF8 = OUTPUT;
+  TRISFbits.TRISF12 = OUTPUT;
+  TRISFbits.TRISF13 = OUTPUT;
+
+  // TRISG
+  TRISGbits.TRISG0 = OUTPUT;
+  TRISGbits.TRISG1 = OUTPUT;
+  TRISGbits.TRISG6 = OUTPUT;
+  TRISGbits.TRISG7 = OUTPUT;
+  TRISGbits.TRISG8 = OUTPUT;
+  TRISGbits.TRISG9 = OUTPUT;
+  TRISGbits.TRISG12 = OUTPUT;
+  TRISGbits.TRISG13 = OUTPUT;
+  TRISGbits.TRISG14 = OUTPUT;
+  TRISGbits.TRISG15 = OUTPUT;
 
   // Drive to logic level low
+
+  // LATA
+  LATAbits.LATA0 = 0;
+  LATAbits.LATA1 = 0;
+  LATAbits.LATA2 = 0;
+  LATAbits.LATA3 = 0;
+  LATAbits.LATA4 = 0;
+  LATAbits.LATA5 = 0;
+  LATAbits.LATA6 = 0;
+  LATAbits.LATA7 = 0;
+  LATAbits.LATA9 = 0;
+  LATAbits.LATA10 = 0;
+  LATAbits.LATA14 = 0;
+  LATAbits.LATA15 = 0;
 
   // LATB
   LATBbits.LATB0 = 0;
@@ -442,6 +494,10 @@ void init_unused_pins(void) {
   LATBbits.LATB15 = 0;
 
   // LATC
+  LATCbits.LATC1 = 0;
+  LATCbits.LATC2 = 0;
+  LATCbits.LATC3 = 0;
+  LATCbits.LATC4 = 0;
   LATCbits.LATC12 = 0;
   LATCbits.LATC13 = 0;
   LATCbits.LATC14 = 0;
@@ -457,6 +513,10 @@ void init_unused_pins(void) {
   LATDbits.LATD9 = 0;
   LATDbits.LATD10 = 0;
   LATDbits.LATD11 = 0;
+  LATDbits.LATD12 = 0;
+  LATDbits.LATD13 = 0;
+  LATDbits.LATD14 = 0;
+  LATDbits.LATD15 = 0;
 
   // LATE
   LATEbits.LATE0 = 0;
@@ -467,13 +527,31 @@ void init_unused_pins(void) {
   LATEbits.LATE5 = 0;
   LATEbits.LATE6 = 0;
   LATEbits.LATE7 = 0;
+  LATEbits.LATE8 = 0;
+  LATEbits.LATE9 = 0;
 
   // LATF
   LATFbits.LATF0 = 0;
   LATFbits.LATF1 = 0;
+  LATFbits.LATF2 = 0;
   LATFbits.LATF3 = 0;
   LATFbits.LATF4 = 0;
   LATFbits.LATF5 = 0;
+  LATFbits.LATF8 = 0;
+  LATFbits.LATF12 = 0;
+  LATFbits.LATF13 = 0;
+
+  // LATG
+  LATGbits.LATG0 = 0;
+  LATGbits.LATG1 = 0;
+  LATGbits.LATG6 = 0;
+  LATGbits.LATG7 = 0;
+  LATGbits.LATG8 = 0;
+  LATGbits.LATG9 = 0;
+  LATGbits.LATG12 = 0;
+  LATGbits.LATG13 = 0;
+  LATGbits.LATG14 = 0;
+  LATGbits.LATG15 = 0;
 }
 
 void init_oscillator(void) {
@@ -519,14 +597,14 @@ void init_oscillator(void) {
   // PB8DIV
   PB8DIVbits.ON = 0;            // Peripheral Bus 8 Output Clock Enable (Output clock is disabled)
   PB8DIVbits.PBDIV = 0b0000001; // Peripheral Bus 8 Clock Divisor Control (PBCLK8 is SYSCLK divided by 2)
-   
+
   /**
    * REFO1CLK == (PBCLK1 / (2 * (RODIV + (ROTRIM / 512)))) ==
    * (100Mhz / (2 * (2 + (256/512)))) == (100Mhz / 5) == 20Mhz
    *
    * In other words, REFO1CLK is set up to output at (SYSCLK / 10).
    */
-  
+
   // Initialize REFCLKO1 PPS pin
   CFGCONbits.IOLOCK = 0;
   TRISFbits.TRISF0 = OUTPUT;
@@ -551,44 +629,21 @@ void init_oscillator(void) {
   REFO1CONbits.ACTIVE = 1;                // Reference Clock Request Status (Reference clock request is active)
   REFO1CONbits.ON = 1;                    // Output Enable (Reference Oscillator Module enabled)
 
-  /*
   // REF02CON
   REFO2CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
   REFO2CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-  REFO2CONbits.RODIV = 0b000000000000000; // Reference Clock Divider (Output clock is same frequency as source clock (no divider))
-  REFO2CONbits.SIDL = 1;                  // Peripheral Stop in Idle Mode (Discontinue module operation when device enters Idle mode)
   REFO2CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO2 pin)
-  REFO2CONbits.ROSEL = 0b0000;            // Reference Clock Source Select (SYSCLK)
-  REFO2CONbits.DIVSWEN = 0;               // Divider Switch Enable (Divider switch is complete)
-
-  // REF02TRIM
-  REFO2TRIMbits.ROTRIM = 0b000000000; // Reference Oscillator Trim (0/512 divisor added to RODIV value)
 
   // REF03CON
   REFO3CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
   REFO3CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-  REFO3CONbits.RODIV = 0b000000000000000; // Reference Clock Divider (Output clock is same frequency as source clock (no divider))
-  REFO3CONbits.SIDL = 1;                  // Peripheral Stop in Idle Mode (Discontinue module operation when device enters Idle mode)
   REFO3CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO3 pin)
-  REFO3CONbits.ROSEL = 0b0000;            // Reference Clock Source Select (SYSCLK)
-  REFO3CONbits.DIVSWEN = 0;               // Divider Switch Enable (Divider switch is complete)
-
-  // REF03TRIM
-  REFO3TRIMbits.ROTRIM = 0b000000000; // Reference Oscillator Trim (0/512 divisor added to RODIV value)
 
   // REF04CON
   REFO4CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
   REFO4CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-  REFO4CONbits.RODIV = 0b000000000000000; // Reference Clock Divider (Output clock is same frequency as source clock (no divider))
-  REFO4CONbits.SIDL = 1;                  // Peripheral Stop in Idle Mode (Discontinue module operation when device enters Idle mode)
   REFO4CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO4 pin)
-  REFO4CONbits.ROSEL = 0b0000;            // Reference Clock Source Select (SYSCLK)
-  REFO4CONbits.DIVSWEN = 0;               // Divider Switch Enable (Divider switch is complete)
 
-  // REF04TRIM
-  REFO4TRIMbits.ROTRIM = 0b000000000; // Reference Oscillator Trim (0/512 divisor added to RODIV value)
-   */
-  
   lock_config();
 }
 
@@ -644,27 +699,27 @@ void init_spi() {
   IEC3bits.SPI1EIE = 0;
   IEC3bits.SPI1RXIE = 0;
   IEC3bits.SPI1TXIE = 0;
-  
+
   // Disable SPI1 module
   SPI1CONbits.ON = 0;
-  
+
   // Clear receive buffer
   SPI1BUF = 0;
-  
+
   // Use standard buffer mode
   SPI1CONbits.ENHBUF = 0;
-  
+
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-   * F_SCK = 100Mhz / (2 * (9 + 1))
-   * F_SCK = 5Mhz
+   * F_SCK = 100Mhz / (2 * (4 + 1))
+   * F_SCK = 10Mhz
    */
-  
+
   // Set the baud rate (see above equation)
-  SPI1BRG = 49;
-  
+  SPI1BRG = 4;
+
   SPI1STATbits.SPIROV = 0;
-  
+
   SPI1CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
   SPI1CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
   SPI1CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (16-bit)
