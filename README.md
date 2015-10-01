@@ -20,7 +20,7 @@ At the end of a competition year, we will make a new branch off of the `master` 
 | [![DAQ-2013](http://img.shields.io/badge/DAQ-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2013) | Code from the 2012-2013 year. |
 | [![Wheel-2013](http://img.shields.io/badge/Wheel-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/Wheel-2013) | Code for the steering wheel for the 2012-2013 year. |
 | [![PostProcessing-2013](http://img.shields.io/badge/Post_Processing-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/Post_Processing-2013) | Old version of Translate_CAN for the 2012-2013 year. |
-| [![DAQ-2012](http://img.shields.io/badge/DAQ-2012-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2012) | Arduino sketches for data aquisition and the steering wheel for the 2011-2012 year. |
+| [![DAQ-2012](http://img.shields.io/badge/DAQ-2012-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2012) | Arduino sketches for data acquisition and the steering wheel for the 2011-2012 year. |
 
 ## License
 ```
