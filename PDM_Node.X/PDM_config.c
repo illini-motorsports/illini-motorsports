@@ -1,32 +1,49 @@
 /**
  * PDM Config
  *
- * Processor:   PIC32MZ2048EFM100
- * Compiler:    Microchip XC32
- * Author:      Andrew Mass
- * Created:     2015-2016
+ * Processor: PIC32MZ2048EFM100
+ * Compiler:  Microchip XC32
+ * Author:    Andrew Mass
+ * Created:   2015-2016
  */
 #include "PDM_config.h"
 
 // PIC32MZ2048EFM100 Configuration Bit Settings
 
-// DEVCFG3
-#pragma config FUSBIDIO = ON   // USB USBID Selection (Controlled by the USB Module)
-#pragma config IOL1WAY = OFF   // Peripheral Pin Select Configuration (Allow multiple reconfigurations)
-#pragma config PMDL1WAY = OFF  // Peripheral Module Disable Configuration (Allow multiple reconfiguration)
-#pragma config PGL1WAY = OFF   // Permission Group Lock One Way Configuration (Allow multiple reconfiguration)
-#pragma config FETHIO = ON     // Ethernet I/O Pin Select (Default Ethernet I/O)
-#pragma config FMIIEN = ON     // Ethernet RMII/MII Enable (MII Enabled)
-#pragma config USERID = 0xDEAD // 16-bit User Defined Value (0xDEAD)
+// DEVCP0
+#pragma config CP = 0b1 // Code Protect (Protection is disabled)
 
-// DEVCFG2
-//#pragma config UPLLEN = OFF          // (May not exist) USB PLL Enable (USB PLL is disabled)
-#pragma config UPLLFSEL = FREQ_24MHZ // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
-#pragma config FPLLODIV = 0b001      // Default System PLL Output Divisor (PLL output divided by 2)
-#pragma config FPLLMULT = MUL_50     // System PLL Multiplier (PLL Multiply by 50)
-#pragma config FPLLICLK = PLL_FRC    // System PLL Input Clock Selection (FRC is input to the System PLL)
-#pragma config FPLLRNG = 0b001       // System PLL Divided Input Clock Frequency Range (5-10Mhz)
-#pragma config FPLLIDIV = 0b000      // System PLL Input Divider (Divide by 1)
+// DEVCFG0
+#pragma config EJTAGBEN = 0b1  // EJTAG Boot Enable (Normal EJTAG functionality)
+#pragma config POSCBOOST = 0b0 // Primary Oscillator Boost Kick Start Enable (Normal start of the oscillator)
+#pragma config POSCGAIN = 0b00 // Primary Oscillator Gain Control (1x gain setting)
+#pragma config SOSCBOOST = 0b0 // Secondary Oscillator Boost Kick Start Enable (Normal start of the oscillator)
+#pragma config SOSCGAIN = 0b00 // Secondary Oscillator Gain Control (1x gain setting)
+#pragma config SMCLR = 0b1     // Soft Master Clear Enable (MCLR pin generates a normal system Reset)
+#pragma config DBGPER = 0b111  // Debug Mode CPU Access Permission (Allow CPU access to Permission Group 0,1,2 permission regions)
+#pragma config FSLEEP = 0b1    // Flash Sleep Mode (Flash is powered down when the device is in Sleep mode)
+#pragma config FECCCON = 0b11  // Dynamic Flash ECC Configuration (ECC and Dynamic ECC are disabled (ECCCON bits are writable))
+#pragma config BOOTISA = 0b1   // Boot ISA Selection (Boot code and Exception code is MIPS32)
+#pragma config TRCEN = 0b0     // Trace Enable (Trace features in the CPU are disabled)
+#pragma config ICESEL = 0b11   // ICE/ICD Comm Channel Select (Communicate on PGEC1/PGED1)
+#pragma config JTAGEN = 0b0    // JTAG Enable (JTAG is disabled)
+#pragma config DEBUG = 0b00    // Background Debugger Enable (Debugger is enabled)
+
+// DEVCFG1
+#pragma config FDMTEN = 0b0     // Deadman Timer Enable (Deadman Timer is disbled)
+#pragma config DMTCNT = 0b10111 // Deadman Timer Count Select Bits (2^31)
+#pragma config FWDTWINSZ = 0b11 // Watchdog Timer Window Size (Window size is 25%)
+#pragma config FWDTEN = 0b0     // Watchdog Timer Enable (WDT Disabled)
+#pragma config WINDIS = 0b1     // Watchdog Timer Window Mode (Watchdog Timer is in non-Window mode)
+#pragma config WDTSPGM = 0b1    // Watchdog Timer Stop During Flash Programming (WDT stops during Flash programming)
+#pragma config WDTPS = 0b10100  // Watchdog Timer Postscaler (1:1048576)
+#pragma config FCKSM = 0b11     // Clock Switching and Monitor Selection (Clock Switch Enabled, FSCM Enabled)
+#pragma config OSCIOFNC = 0b1   // CLKO Output Signal Active on the OSCO Pin (Disabled)
+#pragma config POSCMOD = 0b11   // Primary Oscillator Configuration (POSC disabled)
+#pragma config IESO = 0b0       // Internal/External Switch Over (Disabled)
+#pragma config FSOSCEN = 0b0    // Secondary Oscillator Enable (Disable SOSC)
+#pragma config DMTINTV = 0b111  // DMT Count Window Interval (Window/Interval value is 127/128 counter value)
+#pragma config FNOSC = 0b001    // Oscillator Selection Bits (SPLL)
 
 /**
  * SYSCLK == SPLL == ((FPLLICLK / FPLLIDIV) / FPLLODIV) * FPLLMULT ==
@@ -35,44 +52,35 @@
  * NOTE: FPLLIDIV seems to do absolutely nothing, no matter what it is set at.
  */
 
-// DEVCFG1
-#pragma config FDMTEN = OFF          // Deadman Timer Enable (Deadman Timer is disbled)
-#pragma config DMTCNT = 0b10111      // Deadman Timer Count Select Bits (2^31)
-#pragma config FWDTWINSZ = WINSZ_25  // Watchdog Timer Window Size (Window size is 25%)
-#pragma config FWDTEN = OFF          // Watchdog Timer Enable (WDT Disabled)
-#pragma config WINDIS = NORMAL       // Watchdog Timer Window Mode (Watchdog Timer is in non-Window mode)
-#pragma config WDTSPGM = STOP        // Watchdog Timer Stop During Flash Programming (WDT stops during Flash programming)
-#pragma config WDTPS = PS1048576     // Watchdog Timer Postscaler (1:1048576)
-#pragma config FCKSM = CSECME        // Clock Switching and Monitor Selection (Clock Switch Enabled, FSCM Enabled)
-#pragma config OSCIOFNC = ON         // CLKO Output Signal Active on the OSCO Pin (Enabled)
-#pragma config POSCMOD = 0b11        // Primary Oscillator Configuration (POSC disabled)
-#pragma config IESO = OFF            // Internal/External Switch Over (Disabled)
-#pragma config FSOSCEN = OFF         // Secondary Oscillator Enable (Disable SOSC)
-#pragma config DMTINTV = WIN_127_128 // DMT Count Window Interval (Window/Interval value is 127/128 counter value)
-#pragma config FNOSC = 0b001         // Oscillator Selection Bits (SPLL)
+// DEVCFG2
+#pragma config UPLLFSEL = 0b1      // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
+#pragma config FPLLODIV = 0b001    // Default System PLL Output Divisor (PLL output divided by 2)
+#pragma config FPLLMULT = 0b110001 // System PLL Multiplier (PLL Multiply by 50)
+#pragma config FPLLICLK = 0b1      // System PLL Input Clock Selection (FRC is input to the System PLL)
+#pragma config FPLLRNG = 0b001     // System PLL Divided Input Clock Frequency Range (5-10Mhz)
+#pragma config FPLLIDIV = 0b000    // System PLL Input Divider (Divide by 1)
 
-// DEVCFG0
-#pragma config EJTAGBEN = NORMAL      // EJTAG Boot (Normal EJTAG functionality)
-#pragma config DBGPER = ALLOW_PG2     // Debug Mode CPU Access Permission (Allow CPU access to Permission Group 2 permission regions)
-#pragma config FSLEEP = OFF           // Flash Sleep Mode (Flash is powered down when the device is in Sleep mode)
-#pragma config FECCCON = OFF_UNLOCKED // Dynamic Flash ECC Configuration (ECC and Dynamic ECC are disabled (ECCCON bits are writable))
-#pragma config BOOTISA = MIPS32       // Boot ISA Selection (Boot code and Exception code is MIPS32)
-#pragma config TRCEN = OFF            // Trace Enable (Trace features in the CPU are disabled)
-#pragma config ICESEL = ICS_PGx1      // ICE/ICD Comm Channel Select (Communicate on PGEC1/PGED1)
-#pragma config JTAGEN = OFF           // JTAG Enable (JTAG Port Enabled)
-#pragma config DEBUG = ON             // Background Debugger Enable (Debugger is disabled)
+// DEVCFG3
+#pragma config FUSBIDIO = 0b0  // USB USBID Selection (Controlled by the port function)
+#pragma config IOL1WAY = 0b0   // Peripheral Pin Select Configuration (Allow multiple reconfigurations)
+#pragma config PMDL1WAY = 0b0  // Peripheral Module Disable Configuration (Allow multiple reconfiguration)
+#pragma config PGL1WAY = 0b0   // Permission Group Lock One Way Configuration (Allow multiple reconfiguration)
+#pragma config FETHIO = 0b1    // Ethernet I/O Pin Select (Default Ethernet I/O)
+#pragma config FMIIEN = 0b1    // Ethernet RMII/MII Enable (MII Enabled)
+#pragma config USERID = 0xBEEF // 16-bit User Defined Value (0xBEEF)
 
-// DEVCP0
-#pragma config CP = OFF // Code Protect (Protection Disabled)
-
-// Unlock Sequence
+/**
+ * Unlock Sequence
+ */
 void unlock_config(void) {
   asm volatile("di"); // Disable interrupts
   SYSKEY = 0xAA996655;
   SYSKEY = 0x556699AA;
 }
 
-// Lock Sequence
+/**
+ * Lock Sequence
+ */
 void lock_config(void) {
   SYSKEY = 0xDEADBEEF;
   asm volatile("ei"); // Enable interrupts
