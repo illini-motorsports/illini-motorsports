@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <xc.h>
 #include <sys/types.h>
-#include "PDM_config.h"
+#include "FSAE_config_32.h"
 
 void main(void);
 void send_rheo(uint16_t msg);

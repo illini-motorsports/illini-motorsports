@@ -4,7 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>PDM.h</itemPath>
+      <itemPath>FSAE_config_32.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -13,7 +13,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>PDM.c</itemPath>
+      <itemPath>FSAE_config_32.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -23,7 +23,7 @@
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="default" type="2">
+    <conf name="default" type="3">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <targetDevice>PIC32MZ2048EFM100</targetDevice>
@@ -37,23 +37,6 @@
       <compileType>
         <linkerTool>
           <linkerLibItems>
-            <linkerLibProjectItem>
-              <makeArtifact PL="../FSAE_32"
-                            CT="3"
-                            CN="default"
-                            AC="true"
-                            BL="true"
-                            WD="../FSAE_32"
-                            BC="${MAKE}  -f Makefile CONF=default"
-                            DBC="${MAKE}  -f Makefile CONF=default TYPE_IMAGE=DEBUG_RUN"
-                            CC="rm -rf &quot;build/default&quot; &quot;dist/default&quot;"
-                            OP="dist/default/production/FSAE_32.a"
-                            DOP="dist/default/debug/FSAE_32.a"
-                            FL="dist/default/production/FSAE_32.a"
-                            PD="dist/default/production/FSAE_32."
-                            DD="dist/default/debug/FSAE_32.">
-              </makeArtifact>
-            </linkerLibProjectItem>
           </linkerLibItems>
         </linkerTool>
         <archiverTool>
@@ -73,6 +56,41 @@
         <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
         <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
+      <C18>
+        <property key="code-model" value="ms"/>
+        <property key="data-model" value="oa-"/>
+        <property key="default-char-unsigned" value="false"/>
+        <property key="enable-all-optimizations" value="true"/>
+        <property key="enable-int-promotion" value="false"/>
+        <property key="enable-multi-bank-stack-model" value="false"/>
+        <property key="enable-ob" value="true"/>
+        <property key="enable-od" value="true"/>
+        <property key="enable-om" value="true"/>
+        <property key="enable-on" value="true"/>
+        <property key="enable-op" value="true"/>
+        <property key="enable-opa" value="true"/>
+        <property key="enable-or" value="true"/>
+        <property key="enable-os" value="true"/>
+        <property key="enable-ot" value="true"/>
+        <property key="enable-ou" value="true"/>
+        <property key="enable-ow" value="true"/>
+        <property key="extra-include-directories" value=""/>
+        <property key="optimization-master" value="Enable all"/>
+        <property key="preprocessor-macros" value=""/>
+        <property key="procedural-abstraction-passes" value="4"/>
+        <property key="storage-class" value="sca"/>
+        <property key="verbose" value="false"/>
+        <property key="warning-level" value="2"/>
+      </C18>
+      <C18LanguageToolchain>
+        <property key="extended-mode" value="false"/>
+        <property key="extended-mode-mcc18" value="false"/>
+        <property key="extended-mode-mpasm" value="false"/>
+        <property key="extended-mode-mplink" value="false"/>
+        <property key="stack-analysis" value="false"/>
+        <property key="stack-analysis-mcc18" value="false"/>
+        <property key="stack-analysis-mplink" value="false"/>
+      </C18LanguageToolchain>
       <C32>
         <property key="additional-warnings" value="false"/>
         <property key="enable-app-io" value="false"/>
@@ -99,24 +117,6 @@
       <C32-AR>
         <property key="additional-options-chop-files" value="false"/>
       </C32-AR>
-      <C32-AS>
-        <property key="assembler-symbols" value=""/>
-        <property key="enable-symbols" value="true"/>
-        <property key="exclude-floating-point-library" value="false"/>
-        <property key="expand-macros" value="false"/>
-        <property key="extra-include-directories-for-assembler" value=""/>
-        <property key="extra-include-directories-for-preprocessor" value=""/>
-        <property key="false-conditionals" value="false"/>
-        <property key="keep-locals" value="false"/>
-        <property key="list-assembly" value="false"/>
-        <property key="list-source" value="false"/>
-        <property key="list-symbols" value="false"/>
-        <property key="oXC32asm-list-to-file" value="false"/>
-        <property key="omit-debug-dirs" value="false"/>
-        <property key="omit-forms" value="false"/>
-        <property key="preprocessor-macros" value=""/>
-        <property key="warning-level" value=""/>
-      </C32-AS>
       <C32-LD>
         <property key="additional-options-use-response-files" value="false"/>
         <property key="enable-check-sections" value="false"/>
@@ -175,7 +175,7 @@
         <property key="use-indirect-calls" value="false"/>
       </C32CPP>
       <C32Global>
-        <property key="common-include-directories" value="../FSAE_32"/>
+        <property key="common-include-directories" value=""/>
         <property key="gp-relative-option" value=""/>
         <property key="legacy-libc" value="false"/>
         <property key="relaxed-math" value="false"/>
@@ -257,13 +257,13 @@
         <property key="memories.flashdata" value="true"/>
         <property key="memories.id" value="true"/>
         <property key="memories.programmemory" value="true"/>
-        <property key="memories.programmemory.end" value="0x1d1fffff"/>
+        <property key="memories.programmemory.end" value="0xffff"/>
         <property key="memories.programmemory.partition2" value="true"/>
         <property key="memories.programmemory.partition2.end"
                   value="${memories.programmemory.partition2.end.value}"/>
         <property key="memories.programmemory.partition2.start"
                   value="${memories.programmemory.partition2.start.value}"/>
-        <property key="memories.programmemory.start" value="0x1d000000"/>
+        <property key="memories.programmemory.start" value="0x0"/>
         <property key="poweroptions.powerenable" value="false"/>
         <property key="programmertogo.imagename" value=""/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
@@ -272,8 +272,8 @@
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preserveeeprom" value="false"/>
         <property key="programoptions.preserveprogramrange" value="false"/>
-        <property key="programoptions.preserveprogramrange.end" value="0x1d1fffff"/>
-        <property key="programoptions.preserveprogramrange.start" value="0x1d000000"/>
+        <property key="programoptions.preserveprogramrange.end" value="0xffff"/>
+        <property key="programoptions.preserveprogramrange.start" value="0x0"/>
         <property key="programoptions.preserveuserid" value="false"/>
         <property key="programoptions.programcalmem" value="false"/>
         <property key="programoptions.programuserotp" value="false"/>

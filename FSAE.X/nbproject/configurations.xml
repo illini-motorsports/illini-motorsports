@@ -6,9 +6,7 @@
                    projectFiles="true">
       <itemPath>CAN.h</itemPath>
       <itemPath>FSAE.h</itemPath>
-      <itemPath>Pins_PDM.h</itemPath>
       <itemPath>Pins_AnalogHub.h</itemPath>
-      <itemPath>Pins_Logger.h</itemPath>
       <itemPath>Pins_ShiftLights.h</itemPath>
       <itemPath>Pins_Telemetry.h</itemPath>
       <itemPath>Pins_Wheel.h</itemPath>

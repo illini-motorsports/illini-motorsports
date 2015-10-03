@@ -1,12 +1,12 @@
 /**
- * PDM Config
+ * FSAE Library 32bit Config
  *
  * Processor: PIC32MZ2048EFM100
  * Compiler:  Microchip XC32
  * Author:    Andrew Mass
  * Created:   2015-2016
  */
-#include "PDM_config.h"
+#include "FSAE_config_32.h"
 
 // PIC32MZ2048EFM100 Configuration Bit Settings
 

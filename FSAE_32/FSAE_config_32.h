@@ -1,13 +1,13 @@
 /**
- * PDM Config Header
+ * FSAE Library 32bit Config Header
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
  * Author:      Andrew Mass
  * Created:     2015-2016
  */
-#ifndef PDM_CONFIG_H
-#define PDM_CONFIG_H
+#ifndef FSAE_CONFIG_32_H
+#define FSAE_CONFIG_32_H
 
 #include <xc.h>
 #include <sys/kmem.h>
@@ -23,4 +23,4 @@ void init_can(void);
 void init_timer1(void);
 void init_spi(void);
 
-#endif /* PDM_CONFIG_H */
+#endif /* FSAE_CONFIG_32_H */

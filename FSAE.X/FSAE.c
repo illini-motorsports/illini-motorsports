@@ -11,16 +11,12 @@
 #include "timers.h"
 #include "adc.h"
 
-#ifdef LOGGING
-#include "Pins_Logger.h"
-#elif ANALOGHUB
+#ifdef ANALOGHUB
 #include "Pins_AnalogHub.h"
 #elif SHIFTLIGHTS
 #include "Pins_ShiftLights.h"
 #elif WHEEL
 #include "Pins_Wheel.h"
-#elif PDM
-#include "Pins_PDM.h"
 #elif TELEMETRY
 #include "Pins_Telemetry.h"
 #endif

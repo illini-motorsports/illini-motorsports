@@ -3,17 +3,15 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>PDM_Node</name>
-            <creation-uuid>96237e46-66b7-482e-9d25-b2e3944d2432</creation-uuid>
+            <name>FSAE_32</name>
+            <creation-uuid>f7de0f41-3a09-42bd-ac2b-fd7dd66f85b9</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
             <header-extensions>h</header-extensions>
-            <sourceEncoding>ISO-8859-1</sourceEncoding>
             <asminc-extensions/>
-            <make-dep-projects>
-                <make-dep-project>../FSAE_32</make-dep-project>
-            </make-dep-projects>
+            <sourceEncoding>ISO-8859-1</sourceEncoding>
+            <make-dep-projects/>
         </data>
     </configuration>
 </project>

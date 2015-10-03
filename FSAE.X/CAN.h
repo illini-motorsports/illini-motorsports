@@ -1,18 +1,21 @@
 /**
  * FSAE Library CAN Defines
  *
- * Processor:   PIC18F46K80
- * Compiler:    Microchip C18
  * Author:      George Schwieters
  * Created:     2014-2015
  */
-
 #ifndef CAN_H
 #define CAN_H
 
+/**
+ * Timing parameters for CAN control
+ */
 #define NO_DATA_WAIT    1000
 #define NO_CAN_WAIT     1000
 
+/**
+ * CAN message IDs
+ */
 #define BEACON_ID       0xE5L
 #define MOTEC_ID        0x200L
 #define RPM_ID          0x200L
@@ -26,6 +29,9 @@
 #define ADL_ID          0x500L
 #define FAN_SW_ADL_ID   0x00
 
+/**
+ * Byte position of channels in their CAN messages
+ */
 #define RPM_BYTE            0
 #define OIL_PRESS_BYTE      4
 #define OIL_TEMP_BYTE       6
@@ -37,6 +43,9 @@
 #define WATER_SW_BYTE       6
 #define LOGGING_BYTE        0
 
+/**
+ * Byte position of ADL channels in their CAN messages
+ */
 #define ADL1_BYTE 2
 #define ADL2_BYTE 4
 #define ADL3_BYTE 6
@@ -50,4 +59,4 @@
 #define ADL11_BYTE 4
 #define ADL12_BYTE 6
 
-#endif
+#endif /* CAN_H */
