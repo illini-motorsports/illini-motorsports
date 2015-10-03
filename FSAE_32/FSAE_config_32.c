@@ -103,6 +103,7 @@ void init_general(void) {
   CFGCONbits.PMDLOCK = 1;   // Peripheral Module Disable (Peripheral module is locked. Writes to PMD registers are not allowed)
   CFGCONbits.PGLOCK = 1;    // Permission Group Lock (Permission Group registers are locked. Writes to PG registers are not allowed)
   CFGCONbits.USBSSEN = 1;   // USB Suspend Sleep Enable (USB PHY clock is shut down when Sleep mode is active)
+  CFGCONbits.IOANCPN = 0;   // I/O Analog Charge Pump Enable (Charge pump disabled)
   CFGCONbits.ECCCON = 0b10; // Flash ECC Configuration (ECC and dynamic ECC are disabled (ECCCON<1:0> bits are locked))
   CFGCONbits.JTAGEN = 0;    // JTAG Port Enable (Disable the JTAG port)
   CFGCONbits.TROEN = 0;     // Trace Output Enable (Disable trace outputs and stop trace clock)
@@ -131,11 +132,9 @@ void init_peripheral_modules(void) {
    * the appropriate PMD bit to 1 (disabled).
    */
 
-  /*
-  // ADC 1
-  AD1CON1bits.ADCEN = 0;
-  PMD1bits.AD1MD = 1;
-   */
+  // ADC
+  //TODO: ADC ON bit
+  //PMD1bits.ADCMD = 1;
 
   // Comparator Voltage Reference
   CVRCONbits.ON = 0;
@@ -282,8 +281,8 @@ void init_peripheral_modules(void) {
   PMD5bits.U6MD = 1;
 
   // SPI1
-  SPI1CONbits.ON = 0;
-  PMD5bits.SPI1MD = 1;
+  //SPI1CONbits.ON = 0;
+  //PMD5bits.SPI1MD = 1;
 
   // SPI2
   SPI2CONbits.ON = 0;
@@ -296,6 +295,14 @@ void init_peripheral_modules(void) {
   // SPI4
   SPI4CONbits.ON = 0;
   PMD5bits.SPI4MD = 1;
+
+  // SPI5
+  SPI5CONbits.ON = 0;
+  PMD5bits.SPI5MD = 1;
+
+  // SPI6
+  SPI6CONbits.ON = 0;
+  PMD5bits.SPI6MD = 1;
 
   // I2C1
   I2C1CONbits.ON = 0;
@@ -314,8 +321,8 @@ void init_peripheral_modules(void) {
   PMD5bits.I2C5MD = 1;
 
   // USB
-  //TODO: USB ON bit?
-  PMD5bits.USBMD = 1;
+  //TODO: USB ON bit
+  //PMD5bits.USBMD = 1;
 
   // CAN 1
   //C1CONbits.ON = 0;
@@ -328,6 +335,11 @@ void init_peripheral_modules(void) {
   // RTCC
   RTCCONbits.ON = 0;
   PMD6bits.RTCCMD = 1;
+
+  /**
+   * Note: Reference clock outputs are not disabled due to an error condition
+   * noted in the revision A1 errata.
+   */
 
   // Reference Clock Output 1
   //REFO1CONbits.ON = 0;
@@ -350,7 +362,7 @@ void init_peripheral_modules(void) {
   PMD6bits.PMPMD = 1;
 
   // SQI 1
-  //TODO: SQI ON bit?
+  SQI1CFGbits.SQIEN = 0;
   PMD6bits.SQI1MD = 1;
 
   // Ethernet
@@ -568,8 +580,10 @@ void init_oscillator(void) {
   // OSCCON
   OSCCONbits.FRCDIV = 0b000; // Internal Fast RC (FRC) Oscillator Clock Divider (FRC divided by 1)
   OSCCONbits.DRMEN = 0;      // Dream Mode Enable (Dream mode is disabled)
+  OSCCONbits.SLP2SPD = 0;    // Sleep 2-speed Startup Control (Use the selected clock directly)
   OSCCONbits.CLKLOCK = 0;    // Clock Selection Lock Enable (Clock and PLL selections are not locked and may be modified)
   OSCCONbits.SLPEN = 0;      // Sleep Mode Enable (Device will enter Idle mode when a WAIT instruction is executed)
+  OSCCONbits.SOSCEN = 0;      // Secondary Oscillator (SOSC) Enable (Disable Secondary Oscillator)
 
   // OSCTUN
   OSCTUNbits.TUN = 0b00000; // FRC Oscillator Tuning (Center frequency. Oscillator runs at calibrated frequency (8 MHz))
@@ -595,6 +609,7 @@ void init_oscillator(void) {
 
   // PB5DIV
   PB5DIVbits.ON = 1;            // Peripheral Bus 5 Output Clock Enable (Output clock is enabled)
+  while(!PB5DIVbits.PBDIVRDY);
   PB5DIVbits.PBDIV = 0b0000001; // Peripheral Bus 5 Clock Divisor Control (PBCLK5 is SYSCLK divided by 2)
 
   // PB7DIV
@@ -603,7 +618,8 @@ void init_oscillator(void) {
   PB7DIVbits.PBDIV = 0b0000000; // Peripheral Bus 7 Clock Divisor Control (PBCLK7 is SYSCLK divided by 1)
 
   // PB8DIV
-  PB8DIVbits.ON = 0;            // Peripheral Bus 8 Output Clock Enable (Output clock is disabled)
+  PB8DIVbits.ON = 1;            // Peripheral Bus 8 Output Clock Enable (Output clock is enabled)
+  while(!PB8DIVbits.PBDIVRDY);
   PB8DIVbits.PBDIV = 0b0000001; // Peripheral Bus 8 Clock Divisor Control (PBCLK8 is SYSCLK divided by 2)
 
   /**
@@ -634,6 +650,7 @@ void init_oscillator(void) {
   // REFO1TRIM
   REFO1TRIMbits.ROTRIM = 0b100000000;     // Reference Oscillator Trim (256/512 divisor added to RODIV value)
 
+  // Enable REFCLKO1
   REFO1CONbits.ACTIVE = 1;                // Reference Clock Request Status (Reference clock request is active)
   REFO1CONbits.ON = 1;                    // Output Enable (Reference Oscillator Module enabled)
 
