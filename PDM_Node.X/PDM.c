@@ -8,7 +8,7 @@
  */
 #include "PDM.h"
 
-static volatile int seconds = 0;
+static volatile uint32_t seconds = 0;
 static volatile uint8_t res_flag = 0;
 
 /**
@@ -19,23 +19,9 @@ void main(void) {
   init_gpio_pins(); // Set all I/O pins to low outputs
   //init_peripheral_modules(); // Disable unused peripheral modules
   init_oscillator(); // Initialize oscillator configuration bits
-  init_timer1(); // Initialize timer1
-  init_spi(); // Initialize SPI interface
-  asm volatile("ei"); // Enable interrupts
-
-  // Initialize LED output pin
-  TRISEbits.TRISE5 = OUTPUT;
-  LATEbits.LATE5 = 0;
-
-  // Initialize CS pin
-  TRISGbits.TRISG15 = OUTPUT;
-  LATGbits.LATG15 = 1; // CS deselected
-
-  // Disconnect terminal A from resistor network
-  send_rheo(0b0100000011111011); // TCON0bits.R0A = 0
-
-  // Minimum resistance
-  send_rheo(0x0000);
+  //init_timer1(); // Initialize timer1
+  //init_spi(); // Initialize SPI interface
+  //asm volatile("ei"); // Enable interrupts
 
   // Main loop
   while(1);
@@ -45,11 +31,14 @@ void main(void) {
  * TMR1 Interrupt Handler
  *
  * Fires once every second.
+ *
+ * TODO: Fix for actual PDM code.
  */
 void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(void) {
   seconds++;
   LATEbits.LATE5 = LATEbits.LATE5 ? 0 : 1; // Invert LATE5 - Toggle the LED
 
+  /*
   // Flip resistance every 3 seconds
   if(seconds % 3 == 0) {
     if(res_flag) {
@@ -62,12 +51,13 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
       res_flag = 1;
     }
   }
+   */
 
   IFS0bits.T1IF = 0; // Clear TMR1 Interrupt Flag
 }
 
 /**
- *
+ * TODO: Fix for actual PDM code
  */
 void send_rheo(uint16_t msg) {
   while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module

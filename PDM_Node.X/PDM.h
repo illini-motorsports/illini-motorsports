@@ -9,9 +9,6 @@
 #ifndef PDM_H
 #define PDM_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <xc.h>
 #include <sys/types.h>
 #include "FSAE_config_32.h"
 

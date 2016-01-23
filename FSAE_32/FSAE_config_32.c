@@ -39,7 +39,7 @@
 #pragma config WDTPS = 0b10100  // Watchdog Timer Postscaler (1:1048576)
 #pragma config FCKSM = 0b11     // Clock Switching and Monitor Selection (Clock Switch Enabled, FSCM Enabled)
 #pragma config OSCIOFNC = 0b1   // CLKO Output Signal Active on the OSCO Pin (Disabled)
-#pragma config POSCMOD = 0b11   // Primary Oscillator Configuration (POSC disabled)
+#pragma config POSCMOD = 0b00   // Primary Oscillator Configuration (EC mode selected)
 #pragma config IESO = 0b0       // Internal/External Switch Over (Disabled)
 #pragma config FSOSCEN = 0b0    // Secondary Oscillator Enable (Disable SOSC)
 #pragma config DMTINTV = 0b111  // DMT Count Window Interval (Window/Interval value is 127/128 counter value)
@@ -47,18 +47,16 @@
 
 /**
  * SYSCLK == SPLL == ((FPLLICLK / FPLLIDIV) / FPLLODIV) * FPLLMULT ==
- * ((FRC / 1) / 2) * 50 == (8Mhz / 2) * 50 == 200Mhz
- *
- * NOTE: FPLLIDIV seems to do absolutely nothing, no matter what it is set at.
+ * ((POSC / 3) / 2) * 50 == (24Mhz / 6) * 50 == 200Mhz
  */
 
 // DEVCFG2
 #pragma config UPLLFSEL = 0b1      // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
 #pragma config FPLLODIV = 0b001    // Default System PLL Output Divisor (PLL output divided by 2)
 #pragma config FPLLMULT = 0b110001 // System PLL Multiplier (PLL Multiply by 50)
-#pragma config FPLLICLK = 0b1      // System PLL Input Clock Selection (FRC is input to the System PLL)
-#pragma config FPLLRNG = 0b001     // System PLL Divided Input Clock Frequency Range (5-10Mhz)
-#pragma config FPLLIDIV = 0b000    // System PLL Input Divider (Divide by 1)
+#pragma config FPLLICLK = 0b0      // System PLL Input Clock Selection (POSC is input to the System PLL)
+#pragma config FPLLRNG = 0b010     // System PLL Divided Input Clock Frequency Range (8-16Mhz)
+#pragma config FPLLIDIV = 0b010    // System PLL Input Divider (Divide by 3)
 
 // DEVCFG3
 #pragma config FUSBIDIO = 0b0  // USB USBID Selection (Controlled by the port function)
@@ -583,7 +581,7 @@ void init_oscillator(void) {
   OSCCONbits.SLP2SPD = 0;    // Sleep 2-speed Startup Control (Use the selected clock directly)
   OSCCONbits.CLKLOCK = 0;    // Clock Selection Lock Enable (Clock and PLL selections are not locked and may be modified)
   OSCCONbits.SLPEN = 0;      // Sleep Mode Enable (Device will enter Idle mode when a WAIT instruction is executed)
-  OSCCONbits.SOSCEN = 0;      // Secondary Oscillator (SOSC) Enable (Disable Secondary Oscillator)
+  OSCCONbits.SOSCEN = 0;     // Secondary Oscillator (SOSC) Enable (Disable Secondary Oscillator)
 
   // OSCTUN
   OSCTUNbits.TUN = 0b00000; // FRC Oscillator Tuning (Center frequency. Oscillator runs at calibrated frequency (8 MHz))
@@ -630,6 +628,7 @@ void init_oscillator(void) {
    */
 
   // Initialize REFCLKO1 PPS pin
+  //TODO: Remove this, as RF0 is for !SW5
   CFGCONbits.IOLOCK = 0;
   TRISFbits.TRISF0 = OUTPUT;
   RPF0R = 0b1111; // Assign REFCLKO1 to RF0
