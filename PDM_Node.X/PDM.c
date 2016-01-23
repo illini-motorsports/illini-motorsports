@@ -21,7 +21,50 @@ void main(void) {
   init_oscillator(); // Initialize oscillator configuration bits
   //init_timer1(); // Initialize timer1
   //init_spi(); // Initialize SPI interface
-  //asm volatile("ei"); // Enable interrupts
+  init_adc(); // Initialize ADC module
+  init_termination(); // Initialize programmable CAN termination
+  init_can(); // Initialize CAN
+
+  // Set EN pins to outputs
+  EN_IGN_TRIS = OUTPUT;   
+  EN_INJ_TRIS = OUTPUT;
+  EN_FUEL_TRIS = OUTPUT;
+  EN_ECU_TRIS = OUTPUT;  
+  EN_WTR_TRIS = OUTPUT; 
+  EN_FAN_TRIS = OUTPUT; 
+  EN_AUX_TRIS = OUTPUT; 
+  EN_PDLU_TRIS = OUTPUT; 
+  EN_PDLD_TRIS = OUTPUT; 
+  EN_B5V5_TRIS = OUTPUT; 
+  EN_BVBAT_TRIS = OUTPUT; 
+  EN_STR_TRIS = OUTPUT; 
+
+  // Turn off all loads
+  EN_IGN_LAT = PWR_OFF;   
+  EN_INJ_LAT = PWR_OFF;
+  EN_FUEL_LAT = PWR_OFF;
+  EN_ECU_LAT = PWR_OFF;  
+  EN_WTR_LAT = PWR_OFF; 
+  EN_FAN_LAT = PWR_OFF; 
+  EN_AUX_LAT = PWR_OFF; 
+  EN_PDLU_LAT = PWR_OFF; 
+  EN_PDLD_LAT = PWR_OFF; 
+  EN_B5V5_LAT = PWR_OFF; 
+  EN_BVBAT_LAT = PWR_OFF; 
+  EN_STR_LAT = PWR_OFF; 
+
+  // Set TRIS registers - !CS
+  // Set all !CS signals high
+
+  // Set all rheostats to 5k
+  //TODO: Should actually set them to value stored in flash memory
+
+  // Set TRIS registers - ADC
+  // Set TRIS registers - !SW
+
+  // Turn on engine-off loads
+
+  asm volatile("ei"); // Enable interrupts
 
   // Main loop
   while(1);

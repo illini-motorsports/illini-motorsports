@@ -56,41 +56,6 @@
         <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
         <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
       </makeCustomizationType>
-      <C18>
-        <property key="code-model" value="ms"/>
-        <property key="data-model" value="oa-"/>
-        <property key="default-char-unsigned" value="false"/>
-        <property key="enable-all-optimizations" value="true"/>
-        <property key="enable-int-promotion" value="false"/>
-        <property key="enable-multi-bank-stack-model" value="false"/>
-        <property key="enable-ob" value="true"/>
-        <property key="enable-od" value="true"/>
-        <property key="enable-om" value="true"/>
-        <property key="enable-on" value="true"/>
-        <property key="enable-op" value="true"/>
-        <property key="enable-opa" value="true"/>
-        <property key="enable-or" value="true"/>
-        <property key="enable-os" value="true"/>
-        <property key="enable-ot" value="true"/>
-        <property key="enable-ou" value="true"/>
-        <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value=""/>
-        <property key="optimization-master" value="Enable all"/>
-        <property key="preprocessor-macros" value=""/>
-        <property key="procedural-abstraction-passes" value="4"/>
-        <property key="storage-class" value="sca"/>
-        <property key="verbose" value="false"/>
-        <property key="warning-level" value="2"/>
-      </C18>
-      <C18LanguageToolchain>
-        <property key="extended-mode" value="false"/>
-        <property key="extended-mode-mcc18" value="false"/>
-        <property key="extended-mode-mpasm" value="false"/>
-        <property key="extended-mode-mplink" value="false"/>
-        <property key="stack-analysis" value="false"/>
-        <property key="stack-analysis-mcc18" value="false"/>
-        <property key="stack-analysis-mplink" value="false"/>
-      </C18LanguageToolchain>
       <C32>
         <property key="additional-warnings" value="false"/>
         <property key="enable-app-io" value="false"/>

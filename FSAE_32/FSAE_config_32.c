@@ -756,3 +756,54 @@ void init_spi() {
 
   lock_config();
 }
+
+/**
+ * void init_adc(void)
+ * 
+ * Sets up the ADC module to read at least the on-chip temperature sensor and
+ * the external temperature sensor common to all PIC32-based boards.
+ */
+void init_adc(void) {
+  //TODO: Implement this function
+
+  // Set TRIS registers - TEMP
+}
+
+/**
+ * void init_termination(void)
+ *
+ * Sets up programmable CAN termination based on user defines.
+ */
+void init_termination(void) {
+  // Initialize pin
+  TERM_TRIS = OUTPUT;
+
+  // Set termination based on value defined in specific node's header
+  TERM_LAT = TERMINATING;
+}
+
+/**
+ * void init_can(void)
+ * 
+ * Sets up everything relating to CAN. This function assumes that C1RX is wired
+ * to RD3 and C1TX is wired to RD2. All PIC32 microcontrollers using this
+ * library should use that configuration.
+ */
+void init_can(void) {
+  unlock_config();
+  CFGCONbits.IOLOCK = 0; // Peripheral Pin Select Lock (Not locked)
+
+  // Set PPS pins for C1TX/C1RX
+  RPD2R = 0b1111; // RPD2 Peripheral Pin Select (C1TX)
+  C1RXR = 0b0000; // C1RX Peripheral Pin Select (RPD3)
+
+  // Set port direction for C1TX/C1RX
+  TRISDbits.TRISD2 = OUTPUT;
+  TRISDbits.TRISD3 = INPUT;
+
+  //TODO: Enable CAN and set everything up
+  C1CONbits.ON = 0; // CAN On (Disabled)
+
+  CFGCONbits.IOLOCK = 1; // Peripheral Pin Select Lock (Locked)
+  lock_config();
+}

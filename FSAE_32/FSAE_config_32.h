@@ -12,8 +12,16 @@
 #include <xc.h>
 #include <sys/kmem.h>
 
+#ifdef BUILD_PDM
+#include "../PDM_Node.X/PDM.h"
+#endif
+
 #define OUTPUT 0
 #define INPUT 1
+
+// Pin definitions for programmable termination
+#define TERM_TRIS TRISAbits.TRISA2
+#define TERM_LAT  LATAbits.LATA2
 
 void init_general(void);
 void init_gpio_pins(void);
@@ -22,5 +30,8 @@ void init_oscillator(void);
 void init_can(void);
 void init_timer1(void);
 void init_spi(void);
+void init_adc(void);
+void init_termination(void);
+void init_can(void);
 
 #endif /* FSAE_CONFIG_32_H */
