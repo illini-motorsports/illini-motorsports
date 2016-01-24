@@ -74,7 +74,53 @@
 #define EN_BVBAT_TRIS TRISAbits.TRISA15
 #define EN_STR_TRIS   TRISDbits.TRISD9
 
+// Pin definitions for !CS signal bus
+#define CS_IGN_LAT    LATEbits.LATE8
+#define CS_INJ_LAT    LATEbits.LATE9
+#define CS_FUEL_LAT   LATBbits.LATB5
+#define CS_ECU_LAT    LATBbits.LATB4
+#define CS_WTR_LAT    LATBbits.LATB3
+#define CS_FAN_LAT    LATBbits.LATB2
+#define CS_AUX_LAT    LATBbits.LATB6
+#define CS_PDLU_LAT   LATBbits.LATB7
+#define CS_PDLD_LAT   LATAbits.LATA9
+#define CS_B5V5_LAT   LATAbits.LATA10
+#define CS_BVBAT_LAT  LATBbits.LATB8
+#define CS_STR0_LAT   LATAbits.LATA1
+#define CS_STR1_LAT   LATFbits.LATF13
+#define CS_STR2_LAT   LATDbits.LATD14
+#define CS_IGN_PORT    PORTEbits.PORTE8
+#define CS_INJ_PORT    PORTEbits.PORTE9
+#define CS_FUEL_PORT   PORTBbits.PORTB5
+#define CS_ECU_PORT    PORTBbits.PORTB4
+#define CS_WTR_PORT    PORTBbits.PORTB3
+#define CS_FAN_PORT    PORTBbits.PORTB2
+#define CS_AUX_PORT    PORTBbits.PORTB6
+#define CS_PDLU_PORT   PORTBbits.PORTB7
+#define CS_PDLD_PORT   PORTAbits.PORTA9
+#define CS_B5V5_PORT   PORTAbits.PORTA10
+#define CS_BVBAT_PORT  PORTBbits.PORTB8
+#define CS_STR0_PORT   PORTAbits.PORTA1
+#define CS_STR1_PORT   PORTFbits.PORTF13
+#define CS_STR2_PORT   PORTDbits.PORTD14
+#define CS_IGN_TRIS    TRISEbits.TRISE8
+#define CS_INJ_TRIS    TRISEbits.TRISE9
+#define CS_FUEL_TRIS   TRISBbits.TRISB5
+#define CS_ECU_TRIS    TRISBbits.TRISB4
+#define CS_WTR_TRIS    TRISBbits.TRISB3
+#define CS_FAN_TRIS    TRISBbits.TRISB2
+#define CS_AUX_TRIS    TRISBbits.TRISB6
+#define CS_PDLU_TRIS   TRISBbits.TRISB7
+#define CS_PDLD_TRIS   TRISAbits.TRISA9
+#define CS_B5V5_TRIS   TRISAbits.TRISA10
+#define CS_BVBAT_TRIS  TRISBbits.TRISB8
+#define CS_STR0_TRIS   TRISAbits.TRISA1
+#define CS_STR1_TRIS   TRISFbits.TRISF13
+#define CS_STR2_TRIS   TRISDbits.TRISD14
+
+// Function definitions
 void main(void);
 void send_rheo(uint16_t msg);
+void send_all_rheo(uint16_t msg);
 
 #endif /* PDM_H */
