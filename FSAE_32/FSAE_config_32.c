@@ -68,6 +68,17 @@
 #pragma config USERID = 0xBEEF // 16-bit User Defined Value (0xBEEF)
 
 /**
+ * We have to allocate memory in RAM for the CAN1 modules's FIFOs. There can be
+ * up to 32 FIFOs, and each FIFO can contain up to 32 message buffers for a
+ * total of 1024 message buffers. Each message buffer takes up 4 words
+ * (16 bytes) 2 for the CAN message data and 2 for a timestamp. Note that on a
+ * PIC32 an int is 1 word (4 bytes).
+ *
+ * Here, we allocate 256 words, enough for 32 message buffers in two FIFOs.
+ */
+unsigned int CAN_FIFO_Buffers[256];
+
+/**
  * Unlock Sequence
  */
 void unlock_config(void) {
@@ -801,8 +812,72 @@ void init_can(void) {
   TRISDbits.TRISD2 = OUTPUT;
   TRISDbits.TRISD3 = INPUT;
 
-  //TODO: Enable CAN and set everything up
-  C1CONbits.ON = 0; // CAN On (Disabled)
+  C1CONbits.ON = 1; // CAN On (Enabled)
+
+  // C1CON
+  C1CONbits.CANCAP = 1; // CAN Message Receive Timestamp Timer Capture Enable (Enabled)
+  C1CONbits.SIDL = 0;   // CAN Stop in Idle (CAN continues operation when system enters idle mode)
+
+  /**
+   * Configure CAN1 to run at 1Mpbs baud rate
+   *
+   * Ntq = 10 (1 + 4 + 3 + 2)
+   * Ftq = Ntq * Fbaud = 10 * 1Mbps = 10Mhz
+   * BRP = (Fsys / (2 * Ftq)) - 1 = (200Mhz / 20Mhz) - 1 = 9
+   */
+
+  // C1CFG
+  //C1CFGbits.BRP = 9;      // Baud Rate Prescaler (See above equation)
+  C1CFGbits.BRP = 4;
+  C1CFGbits.SEG2PHTS = 1; // Phase Segment 2 Time Select (Freely programmable)
+  C1CFGbits.SEG2PH = 2;   // Phase Buffer Segment 2 (Length is 3 * Tq)
+  C1CFGbits.SEG1PH = 2;   // Phase Buffer Segment 1 (Length is 3 * Tq)
+  C1CFGbits.PRSEG = 2;    // Propagation Time Segment (Length is 3 * Tq)
+  C1CFGbits.SAM = 1;      // Sample of the CAN Bus Line (Bus line is sampled three times at the sample point)
+  C1CFGbits.SJW = 2;      // Synchronization Jump Width (Length is 3 * Tq)
+  C1CFGbits.WAKFIL = 0;   // CAN Bus Line Filter Enable (CAN bus line filter is not used for wake-up)
+
+  /**
+   * Set the base address of the CAN1 FIFOs as physical address of the memory
+   * that we previously allocated.
+   */
+  C1FIFOBA = KVA_TO_PA(CAN_FIFO_Buffers);
+
+  // CAN1 FIFO 0
+  C1FIFOCON0bits.TXEN = 0;        // TX/RX Buffer Selection (Receive FIFO)
+  C1FIFOCON0bits.FSIZE = 0b11111; // FIFO Size bits (32 messages deep)
+  C1FIFOCON0bits.DONLY = 0;       // Store Message Data Only (Full message is stored, including identifier)
+  C1FIFOINT0bits.RXHALFIE = 0;    // FIFO Half Full Interrupt Enable (Disabled)
+  C1FIFOINT0bits.RXFULLIE = 0;    // FIFO Full Interrupt Enable (Disabled)
+  C1FIFOINT0bits.RXNEMPTYIE = 0;  // FIFO Not Empty Interrupt Enable (Disabled)
+  C1FIFOINT0bits.RXOVFLIE = 0;    // FIFO Overflow Interrupt Enable (Disabled)
+
+  // CAN1 FIFO 1
+  C1FIFOCON1bits.TXEN = 1;        // TX/RX Buffer Selection (Transmit FIFO)
+  C1FIFOCON1bits.FSIZE = 0b11111; // FIFO Size bits (32 messages deep)
+
+  // CAN1 Mask 0
+  C1RXF0bits.EXID = 0;    //
+  C1RXF0bits.SID = 0x200; //
+  C1RXF0bits.EID = 0;     //
+
+  C1RXM0bits.MIDE = 1;    //
+  C1RXM0bits.SID = 0x7F8; //
+
+  // CAN1 Filter 0
+  C1FLTCON0bits.FLTEN0 = 0; //
+  C1FLTCON0bits.MSEL0 = 0;  //
+  C1FLTCON0bits.FSEL0 = 0;  //
+  C1FLTCON0bits.FLTEN0 = 1; //
+
+  // Set up CAN1 Interrupt
+  IFS4bits.CAN1IF = 0;  // CAN1 Interrupt Flag Status (No interrupt request has occurred)
+  IPC37bits.CAN1IP = 6; // CAN1 Interrupt Priority (Interrupt priority is 6)
+  IPC37bits.CAN1IS = 3; // CAN1 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC4bits.CAN1IE = 0;  // CAN1 Interrupt Enable Control (Interrupt is disabled)
+
+  C1CONbits.REQOP = 0b000; // Request Operation Mode (Set Normal Operation mode)
+  while(C1CONbits.OPMOD != 0b000); // Wait for the module to finish
 
   CFGCONbits.IOLOCK = 1; // Peripheral Pin Select Lock (Locked)
   lock_config();

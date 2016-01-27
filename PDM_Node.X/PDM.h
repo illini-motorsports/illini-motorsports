@@ -16,8 +16,8 @@
 #define TERMINATING 1
 
 // Defines for MOSFET control
-#define PWR_ON  0
-#define PWR_OFF 1
+#define PWR_ON  1
+#define PWR_OFF 0
 
 // Indices for arrays containing all the loads
 #define IGN_IDX   0
