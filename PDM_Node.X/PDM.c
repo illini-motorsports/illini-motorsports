@@ -9,18 +9,13 @@
 #include "PDM.h"
 
 static volatile uint32_t seconds = 0;
-static volatile uint32_t last_sent = 0;
 static volatile uint8_t res_flag = 0;
-
-CanRxMessageBuffer* receive;
-CanTxMessageBuffer* transmit;
 
 /**
  * Main function
  */
 void main(void) {
-  
-  
+
   init_general(); // Set general runtime configuration bits
   init_gpio_pins(); // Set all I/O pins to low outputs
   //init_peripheral_modules(); // Disable unused peripheral modules
@@ -102,52 +97,15 @@ void main(void) {
   // Set TRIS registers - !SW
 
   // Turn on engine-off loads
+  EN_ECU_LAT = PWR_ON;
+  EN_AUX_LAT = PWR_ON;
+  EN_B5V5_LAT = PWR_ON;
+  EN_BVBAT_LAT = PWR_ON;
 
   asm volatile("ei"); // Enable interrupts
-  
-  
 
   // Main loop
-  while(1) {
-      
-       if((seconds > last_sent) && (seconds - last_sent > 1)) {
-        last_sent = seconds;
-        
-        transmit = (CanTxMessageBuffer*) (PA_TO_KVA1(C1FIFOUA1));
-        transmit->messageWord[0] = 0;
-        transmit->messageWord[1] = 0;
-        transmit->messageWord[2] = 0;
-        transmit->messageWord[3] = 0;
-
-        transmit->CMSGSID.SID = 0x210;
-       
-        transmit->CMSGEID.DLC = 8;
-        transmit->CMSGDATA0.Byte0 = 0xAA;
-        transmit->CMSGDATA0.Byte1 = 0xBB;
-        transmit->CMSGDATA0.Byte2 = 0xCC;
-        transmit->CMSGDATA0.Byte3 = 0xDD;
-        transmit->CMSGDATA1.Byte4 = 0xEE;
-        transmit->CMSGDATA1.Byte5 = 0xFF;
-        transmit->CMSGDATA1.Byte6 = 0xBE;
-        transmit->CMSGDATA1.Byte7 = 0xEF;
-
-        C1FIFOCON1bits.UINC = 1;
-        C1FIFOCON1bits.TXREQ = 1;
-    }
-
-       
-    // Keep polling until the FIFO isn't empty
-    while(C1FIFOINT0bits.RXNEMPTYIF == 1) {
-      receive = (CanRxMessageBuffer*) (PA_TO_KVA1(C1FIFOUA0));
-      
-      if(receive->CMSGSID.SID == 0x200) {
-          receive = NULL;
-      }
-
-      // Signal to the CAN module that we've processed a message
-      C1FIFOCON0bits.UINC = 1;
-    }
-  }
+  while(1);
 }
 
 /**
@@ -161,19 +119,20 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
   seconds++;
   LATEbits.LATE5 = LATEbits.LATE5 ? 0 : 1; // Invert LATE5 - Toggle the LED
 
+  // Send test CAN message with header and current time in seconds
+  uint8_t message[8] = {0xF, 0xE, 0xD, 0xC, 0, 0, 0, 0};
+  ((uint32_t*) message)[1] = seconds;
+  CAN_send_message(0x210, 8, message);
+
   // Flip resistance every 3 seconds
   if(seconds % 3 == 0) {
     if(res_flag) {
-        
-        
-        EN_FAN_LAT = PWR_ON;
-      // Half resistance
-      send_all_rheo(0x0080);
+      EN_FAN_LAT = PWR_ON; // FAN On
+      send_all_rheo(0x0080); // Half resistance
       res_flag = 0;
     } else {
-        EN_FAN_LAT = PWR_OFF;
-      // Maximum resistance
-      send_all_rheo(0x00FF);
+      EN_FAN_LAT = PWR_OFF; // FAN Off
+      send_all_rheo(0x00FF); // Maximum resistance
       res_flag = 1;
     }
   }
@@ -183,7 +142,7 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
 
 /**
  * CAN1 Interrupt Handler
- * 
+ *
  * TODO: Fix for actual PDM code
  */
 void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL6SRS))) can_inthnd(void) {

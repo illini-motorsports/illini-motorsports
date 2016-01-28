@@ -76,7 +76,7 @@
  *
  * Here, we allocate 256 words, enough for 32 message buffers in two FIFOs.
  */
-unsigned int CAN_FIFO_Buffers[256];
+static volatile uint16_t CAN_FIFO_Buffers[256];
 
 /**
  * Unlock Sequence
@@ -631,6 +631,7 @@ void init_oscillator(void) {
   while(!PB8DIVbits.PBDIVRDY);
   PB8DIVbits.PBDIV = 0b0000001; // Peripheral Bus 8 Clock Divisor Control (PBCLK8 is SYSCLK divided by 2)
 
+#ifdef REFCLKO
   /**
    * REFO1CLK == (PBCLK1 / (2 * (RODIV + (ROTRIM / 512)))) ==
    * (100Mhz / (2 * (2 + (256/512)))) == (100Mhz / 5) == 20Mhz
@@ -639,7 +640,6 @@ void init_oscillator(void) {
    */
 
   // Initialize REFCLKO1 PPS pin
-  //TODO: Remove this, as RF0 is for !SW5
   CFGCONbits.IOLOCK = 0;
   TRISFbits.TRISF0 = OUTPUT;
   RPF0R = 0b1111; // Assign REFCLKO1 to RF0
@@ -663,6 +663,12 @@ void init_oscillator(void) {
   // Enable REFCLKO1
   REFO1CONbits.ACTIVE = 1;                // Reference Clock Request Status (Reference clock request is active)
   REFO1CONbits.ON = 1;                    // Output Enable (Reference Oscillator Module enabled)
+#else
+  // REF01CON
+  REFO1CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
+  REFO1CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
+  REFO1CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO2 pin)
+#endif
 
   // REF02CON
   REFO2CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
@@ -770,7 +776,7 @@ void init_spi() {
 
 /**
  * void init_adc(void)
- * 
+ *
  * Sets up the ADC module to read at least the on-chip temperature sensor and
  * the external temperature sensor common to all PIC32-based boards.
  */
@@ -795,7 +801,7 @@ void init_termination(void) {
 
 /**
  * void init_can(void)
- * 
+ *
  * Sets up everything relating to CAN. This function assumes that C1RX is wired
  * to RD3 and C1TX is wired to RD2. All PIC32 microcontrollers using this
  * library should use that configuration.
@@ -812,6 +818,10 @@ void init_can(void) {
   TRISDbits.TRISD2 = OUTPUT;
   TRISDbits.TRISD3 = INPUT;
 
+  // Set to configuration mode
+  C1CONbits.REQOP = 0b100; // Request Operation Mode (Set Configuration mode)
+  while(C1CONbits.OPMOD != 0b100); // Wait for the module to finish
+
   C1CONbits.ON = 1; // CAN On (Enabled)
 
   // C1CON
@@ -824,11 +834,13 @@ void init_can(void) {
    * Ntq = 10 (1 + 4 + 3 + 2)
    * Ftq = Ntq * Fbaud = 10 * 1Mbps = 10Mhz
    * BRP = (Fsys / (2 * Ftq)) - 1 = (200Mhz / 20Mhz) - 1 = 9
+   *
+   * Note: A BRP value of 9 will cause the bus to run at a rate of 500kbps. Setting BRP to 4 gives
+   * the correct rate of 1Mpbs. I'm not sure how the math on this checks out, but it works.
    */
 
   // C1CFG
-  //C1CFGbits.BRP = 9;      // Baud Rate Prescaler (See above equation)
-  C1CFGbits.BRP = 4;
+  C1CFGbits.BRP = 4;       // Baud Rate Prescaler (See above equation)
   C1CFGbits.SEG2PHTS = 1; // Phase Segment 2 Time Select (Freely programmable)
   C1CFGbits.SEG2PH = 2;   // Phase Buffer Segment 2 (Length is 3 * Tq)
   C1CFGbits.SEG1PH = 2;   // Phase Buffer Segment 1 (Length is 3 * Tq)
@@ -855,20 +867,31 @@ void init_can(void) {
   // CAN1 FIFO 1
   C1FIFOCON1bits.TXEN = 1;        // TX/RX Buffer Selection (Transmit FIFO)
   C1FIFOCON1bits.FSIZE = 0b11111; // FIFO Size bits (32 messages deep)
+  C1FIFOINT1bits.TXEMPTYIE = 0;  // FIFO TX Empty Interrupt Enable (Disabled)
+  C1FIFOINT1bits.TXHALFIE = 0;   // FIFO TX Half Full Interrupt Enable (Disabled)
+  C1FIFOINT1bits.TXNFULLIE = 0;  // FIFO TX Not Full Interrupt Enable (Disabled)
 
-  // CAN1 Mask 0
-  C1RXF0bits.EXID = 0;    //
-  C1RXF0bits.SID = 0x200; //
-  C1RXF0bits.EID = 0;     //
+  /**
+   * Here, we set up the first CAN acceptance filter to allow any messages with standard
+   * identifiers to be sent to the receive buffer (FIFO 0). All messages with extended
+   * identifiers are ignored.
+   */
 
-  C1RXM0bits.MIDE = 1;    //
-  C1RXM0bits.SID = 0x7F8; //
+  // CAN1 Acceptance Filter 0
+  C1RXF0bits.SID = 0;  // Standard Identifier bits (Must be all zeros (minus mask) to match)
+  C1RXF0bits.EXID = 0; // Extended Identifier Enable bits (Match only standard identifier)
+  C1RXF0bits.EID = 0;  // Extended Identifier bits (Must be all zeros (minus mask) to match)
 
-  // CAN1 Filter 0
-  C1FLTCON0bits.FLTEN0 = 0; //
-  C1FLTCON0bits.MSEL0 = 0;  //
-  C1FLTCON0bits.FSEL0 = 0;  //
-  C1FLTCON0bits.FLTEN0 = 1; //
+  // CAN1 Acceptance Filter Mask 0
+  C1RXM0bits.SID = 0;       // Standard Identifier bits (No bits included in filter comparison)
+  C1RXM0bits.MIDE = 1;      // Identifier Receive Mode bit (Match only message types that correspond to EXID bit in filter)
+  C1RXM0bits.EID = 0x3FFFF; // Extended Identifier bits (All bits included in filter comparison)
+
+  // CAN1 Filter 0 - Filter must be disabled before modification
+  C1FLTCON0bits.FLTEN0 = 0;       // Filter 0 Enable bit (Filter is disabled)
+  C1FLTCON0bits.MSEL0 = 0b00;     // Filter 0 Mask Select bits (Acceptance Mask 0 selected)
+  C1FLTCON0bits.FSEL0 = 0b00000;  // FIFO Selection bits (Message matching filter is stored in FIFO 0)
+  C1FLTCON0bits.FLTEN0 = 1;       // Filter 0 Enable bit (Filter is enabled)
 
   // Set up CAN1 Interrupt
   IFS4bits.CAN1IF = 0;  // CAN1 Interrupt Flag Status (No interrupt request has occurred)
