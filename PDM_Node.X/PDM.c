@@ -10,6 +10,9 @@
 
 static volatile uint32_t seconds = 0;
 static volatile uint8_t res_flag = 0;
+    
+// Car status variables reported over can from the ECU
+double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
 
 /**
  * Main function
@@ -152,14 +155,26 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL6SRS))) can_inthnd(void) 
 }
 
 /**
+ * Handler function for each received CAN message.
  * 
- * @param id
- * @param dlc
- * @param data
+ * @param msg The received CAN message
  */
 void process_CAN_msg(CAN_message msg) {
-  if(msg.id == 0x200) {
-    int i = 0;
+  switch(msg.id) {
+    case MOTEC0_ID:
+      eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) | 
+          msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
+      oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) | 
+          msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
+      oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) | 
+          msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
+      break;
+    case MOTEC1_ID:
+      eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) | 
+          msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
+      bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) | 
+          msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
+      break;
   }
 }
 

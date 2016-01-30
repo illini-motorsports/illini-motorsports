@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include "../FSAE_32/FSAE_config_32.h"
 #include "../FSAE_32/FSAE_CAN_32.h"
+#include "../FSAE.X/CAN.h"
 
 // Enable programmable termination
 #define TERMINATING 1

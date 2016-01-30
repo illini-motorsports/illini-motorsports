@@ -9,7 +9,7 @@
 #include "FSAE_CAN_32.h"
 
 /**
- * We have to allocate memory in RAM for the CAN1 modules's FIFOs. There can be
+ * We have to allocate memory in RAM for the CAN1 module's FIFOs. There can be
  * up to 32 FIFOs, and each FIFO can contain up to 32 message buffers for a
  * total of 1024 message buffers. Each message buffer takes up 4 words
  * (16 bytes) 2 for the CAN message data and 2 for a timestamp. Note that on a
@@ -17,7 +17,7 @@
  *
  * Here, we allocate 256 words, enough for 32 message buffers in two FIFOs.
  */
-static volatile uint16_t CAN_FIFO_Buffers[256];
+static volatile uint32_t CAN_FIFO_Buffers[256];
 
 /**
  * Construct and send a CAN message based on data provided by the caller.
