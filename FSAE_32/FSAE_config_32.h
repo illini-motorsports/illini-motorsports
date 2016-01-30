@@ -37,6 +37,5 @@ void init_timer1(void);
 void init_spi(void);
 void init_adc(void);
 void init_termination(void);
-void init_can(void);
 
 #endif /* FSAE_CONFIG_32_H */

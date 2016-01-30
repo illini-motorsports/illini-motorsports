@@ -14,6 +14,18 @@
 #include <sys/types.h>
 
 /**
+ * A friendly struct for storing CAN message data.
+ */
+typedef struct {
+    uint32_t id;
+    uint32_t dlc;
+    uint8_t data[8];
+} CAN_message;
+
+// Must include this after the struct to avoid compilation errors (I'm probably doing something wrong)
+#include "FSAE_config_32.h"
+
+/**
  * CanRxMessageBuffer struct
  */
 
@@ -115,6 +127,8 @@ typedef union uCanTxMessageBuffer {
 } CanTxMessageBuffer;
 
 // Function definitions
-int32_t CAN_send_message(uint16_t id, uint8_t dlc, uint8_t* data);
+int32_t CAN_send_message(uint32_t id, uint32_t dlc, uint8_t* data);
+void CAN_recv_messages(void (*handler)(CAN_message msg));
+void init_can(void);
 
 #endif /* FSAE_CAN_32_H */

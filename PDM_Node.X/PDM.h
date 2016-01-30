@@ -121,6 +121,7 @@
 
 // Function definitions
 void main(void);
+void process_CAN_msg(CAN_message msg);
 void send_rheo(uint16_t msg);
 void send_all_rheo(uint16_t msg);
 

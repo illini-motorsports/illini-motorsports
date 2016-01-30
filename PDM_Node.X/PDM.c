@@ -103,7 +103,7 @@ void main(void) {
   EN_BVBAT_LAT = PWR_ON;
 
   asm volatile("ei"); // Enable interrupts
-
+  
   // Main loop
   while(1);
 }
@@ -122,7 +122,7 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
   // Send test CAN message with header and current time in seconds
   uint8_t message[8] = {0xF, 0xE, 0xD, 0xC, 0, 0, 0, 0};
   ((uint32_t*) message)[1] = seconds;
-  CAN_send_message(0x210, 8, message);
+  CAN_send_message(0x212, 8, message);
 
   // Flip resistance every 3 seconds
   if(seconds % 3 == 0) {
@@ -136,7 +136,9 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
       res_flag = 1;
     }
   }
-
+  
+  CAN_recv_messages(process_CAN_msg);
+  
   IFS0bits.T1IF = 0; // Clear TMR1 Interrupt Flag
 }
 
@@ -147,6 +149,18 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
  */
 void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL6SRS))) can_inthnd(void) {
   IFS4bits.CAN1IF = 0;
+}
+
+/**
+ * 
+ * @param id
+ * @param dlc
+ * @param data
+ */
+void process_CAN_msg(CAN_message msg) {
+  if(msg.id == 0x200) {
+    int i = 0;
+  }
 }
 
 /**
