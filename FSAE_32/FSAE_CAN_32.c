@@ -150,10 +150,10 @@ void init_can(void) {
   C1FIFOCON0bits.TXEN = 0;        // TX/RX Buffer Selection (Receive FIFO)
   C1FIFOCON0bits.FSIZE = 0b11111; // FIFO Size bits (32 messages deep)
   C1FIFOCON0bits.DONLY = 0;       // Store Message Data Only (Full message is stored, including identifier)
-  C1FIFOINT0bits.RXHALFIE = 0;    // FIFO Half Full Interrupt Enable (Disabled)
+  C1FIFOINT0bits.RXHALFIE = 1;    // FIFO Half Full Interrupt Enable (Enabled)
   C1FIFOINT0bits.RXFULLIE = 0;    // FIFO Full Interrupt Enable (Disabled)
   C1FIFOINT0bits.RXNEMPTYIE = 0;  // FIFO Not Empty Interrupt Enable (Disabled)
-  C1FIFOINT0bits.RXOVFLIE = 0;    // FIFO Overflow Interrupt Enable (Disabled)
+  C1FIFOINT0bits.RXOVFLIE = 1;    // FIFO Overflow Interrupt Enable (Enabled)
 
   // CAN1 FIFO 1
   C1FIFOCON1bits.TXEN = 1;        // TX/RX Buffer Selection (Transmit FIFO)
@@ -188,7 +188,12 @@ void init_can(void) {
   IFS4bits.CAN1IF = 0;  // CAN1 Interrupt Flag Status (No interrupt request has occurred)
   IPC37bits.CAN1IP = 6; // CAN1 Interrupt Priority (Interrupt priority is 6)
   IPC37bits.CAN1IS = 3; // CAN1 Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC4bits.CAN1IE = 0;  // CAN1 Interrupt Enable Control (Interrupt is disabled)
+  IEC4bits.CAN1IE = 1;  // CAN1 Interrupt Enable Control (Interrupt is disabled)
+
+  C1INTbits.RBIF = 0; // Receive Buffer Interrupt Flag (Not pending)
+  C1INTbits.RBIE = 1; // Receive Buffer Interrupt Enable (Enabled)
+  C1INTbits.RBOVIF = 0; // Receive Buffer Overflow Interrupt Flag (Not pending)
+  C1INTbits.RBOVIE = 1; // Receive Buffer Overflow Interrupt Enable (Enabled)
 
   C1CONbits.REQOP = 0b000; // Request Operation Mode (Set Normal Operation mode)
   while(C1CONbits.OPMOD != 0b000); // Wait for the module to finish

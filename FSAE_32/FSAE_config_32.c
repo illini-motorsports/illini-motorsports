@@ -67,8 +67,6 @@
 #pragma config FMIIEN = 0b1    // Ethernet RMII/MII Enable (MII Enabled)
 #pragma config USERID = 0xBEEF // 16-bit User Defined Value (0xBEEF)
 
-
-
 /**
  * Unlock Sequence
  */
@@ -119,6 +117,9 @@ void init_general(void) {
   CFGPGbits.USBPG = 0;   // USB Module Permission Group (Initiator is assigned to Permission Group 0)
   CFGPGbits.DMAPG = 0;   // DMA Module Permission Group (Initiator is assigned to Permission Group 0)
   CFGPGbits.CPUPG = 0;   // CPU Permission Group (Initiator is assigned to Permission Group 0)
+
+  // INTCON
+  INTCONbits.MVEC = 1; // Multi Vector Configuration Bit (Configured for multi-vectored mode)
 
   lock_config();
 }

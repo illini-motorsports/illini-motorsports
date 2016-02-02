@@ -120,7 +120,6 @@ void main(void) {
  */
 void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(void) {
   seconds++;
-  LATEbits.LATE5 = LATEbits.LATE5 ? 0 : 1; // Invert LATE5 - Toggle the LED
 
   // Send test CAN message with header and current time in seconds
   uint8_t message[8] = {0xF, 0xE, 0xD, 0xC, 0, 0, 0, 0};
@@ -140,8 +139,6 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
     }
   }
   
-  CAN_recv_messages(process_CAN_msg);
-  
   IFS0bits.T1IF = 0; // Clear TMR1 Interrupt Flag
 }
 
@@ -151,7 +148,15 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
  * TODO: Fix for actual PDM code
  */
 void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL6SRS))) can_inthnd(void) {
-  IFS4bits.CAN1IF = 0;
+  if(C1INTbits.RBIF) {
+    CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
+  }
+
+  if(C1INTbits.RBOVIF) {
+    CAN_rx_ovf++;
+  }
+
+  IFS4bits.CAN1IF = 0; // Clear CAN1 Interrupt Flag
 }
 
 /**
