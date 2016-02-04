@@ -8,17 +8,26 @@
  */
 #include "PDM.h"
 
-static volatile uint32_t seconds = 0;
-static volatile uint8_t res_flag = 0;
-    
+// Count number of seconds and milliseconds since start of code execution
+volatile uint32_t seconds = 0;
+volatile uint32_t millis = 0;
+
 // Car status variables reported over can from the ECU
 double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
+
+// State variables determined by various sources
+uint8_t fuel_prime_flag = 0;
+uint8_t over_temp_flag = 0;
+
+// Timing interval variables
+uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
+uint32_t fuel_prime_tmr = 0;
+uint32_t str_en_tmr = 0;
 
 /**
  * Main function
  */
 void main(void) {
-
   init_general(); // Set general runtime configuration bits
   init_gpio_pins(); // Set all I/O pins to low outputs
   //init_peripheral_modules(); // Disable unused peripheral modules
@@ -109,18 +118,124 @@ void main(void) {
   send_all_rheo(0xFF);
 
   // Set TRIS registers - ADC
-  // Set TRIS registers - !SW
 
-  // Turn on engine-off loads
+  // Turn on state-independent loads
   EN_ECU_LAT = PWR_ON;
   EN_AUX_LAT = PWR_ON;
   EN_B5V5_LAT = PWR_ON;
   EN_BVBAT_LAT = PWR_ON;
 
-  asm volatile("ei"); // Enable interrupts
-  
+  STI(); // Enable interrupts
+
   // Main loop
-  while(1);
+  while(1) {
+
+    // Determine if the fuel pump should be priming
+    CLI();
+    if (ON_SW) {
+      fuel_prime_flag = 1;
+    } else if (millis - fuel_prime_tmr > FUEL_PRIME_DUR && FUEL_EN) {
+      fuel_prime_flag = 0;
+    }
+    STI();
+
+    // Determine if the car is experiencing an over-temperature condition
+    CLI();
+    if (over_temp_flag) {
+      if (eng_temp < FAN_THRESHOLD_L) {
+        over_temp_flag = 0;
+      }
+    } else {
+      if (eng_temp > FAN_THRESHOLD_H) {
+        over_temp_flag = 1;
+      }
+    }
+    STI();
+
+    /**
+     * Toggle state-dependent loads
+     *
+     * When enabling an inductive load, set the peak current limit and set the
+     * peak timer. The peak current limit will be disabled at a set time later.
+     *
+     * Only power on or power off a load if it is not already on or off, even if
+     * the conditions match.
+     */
+    CLI();
+    if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
+        millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
+        millis - motec1_recv_tmr > BASIC_CONTROL_WAIT) {
+
+      /**
+       * Perform basic load control
+       *
+       * IGN, INJ, FUEL, WTR, and FAN will turn on when the ON_SW is in the on
+       * position and turn off when the ON_SW is in the off position. Other
+       * loads will still be controlled normally as they do not depend on CAN.
+       */
+
+      if(ON_SW) {
+        //TODO: Enable IGN
+        //TODO: Enable INJ
+        //TODO: Enable FUEL
+
+        // If STR load is on, disable WATER and FAN. Otherwise, enable them.
+        if(STR_EN) {
+          //TODO: Disable WTR
+          //TODO: Disable FAN
+        } else {
+          //TODO: Enable WTR
+          //TODO: Enable FAN
+        }
+
+      } else {
+        //TODO: Disable IGN
+        //TODO: Disable INJ
+        //TODO: Disable FUEL
+        //TODO: Disable WTR
+        //TODO: Disable FAN
+      }
+    } else {
+
+      /**
+       * Perform regular load control
+       */
+
+      //TODO: Toggle IGN
+      //TODO: Toggle INJ
+      //TODO: Toggle FUEL
+      //TODO: Toggle WTR
+      //TODO: Toggle FAN
+    }
+    STI();
+
+    // STR
+    CLI();
+    if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
+      if (!STR_EN) {
+        //TODO: Enable STR
+        str_en_tmr = millis;
+      }
+    } else {
+      if (!STR_SW) {
+        // Reset str_en_tmr if the start switch is in the off position
+        str_en_tmr = millis;
+      }
+
+      if (STR_EN) {
+        //TODO: Disable STR
+      }
+    }
+    STI();
+
+    //TODO: Check peak timers
+    //TODO: Sample current data
+    //TODO: Send out current data
+    //TODO: Overcurrent detection
+    //TODO: Control PDLU/PDLD
+    //TODO: ???
+    //TODO: Profit
+  }
 }
 
 /**
@@ -132,32 +247,18 @@ void main(void) {
  */
 void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(void) {
   seconds++;
+  millis += 1000; // TODO: Actually make a milliseconds interrupt
 
   // Send test CAN message with header and current time in seconds
   uint8_t message[8] = {0xF, 0xE, 0xD, 0xC, 0, 0, 0, 0};
   ((uint32_t*) message)[1] = seconds;
   CAN_send_message(0x212, 8, message);
 
-  // Flip resistance every 3 seconds
-  if(seconds % 3 == 0) {
-    if(res_flag) {
-      EN_FAN_LAT = PWR_ON; // FAN On
-      send_all_rheo(0x0080); // Half resistance
-      res_flag = 0;
-    } else {
-      EN_FAN_LAT = PWR_OFF; // FAN Off
-      send_all_rheo(0x00FF); // Maximum resistance
-      res_flag = 1;
-    }
-  }
-  
   IFS0bits.T1IF = 0; // Clear TMR1 Interrupt Flag
 }
 
 /**
  * CAN1 Interrupt Handler
- *
- * TODO: Fix for actual PDM code
  */
 void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL6SRS))) can_inthnd(void) {
   if(C1INTbits.RBIF) {
@@ -173,24 +274,30 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL6SRS))) can_inthnd(void) 
 
 /**
  * Handler function for each received CAN message.
- * 
+ *
  * @param msg The received CAN message
  */
 void process_CAN_msg(CAN_message msg) {
+  CAN_recv_tmr = millis; // Record time of latest received CAN message
+
   switch(msg.id) {
     case MOTEC0_ID:
-      eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) | 
+      eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
           msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
-      oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) | 
+      oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
           msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
-      oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) | 
+      oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) |
           msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
+
+      motec0_recv_tmr = millis;
       break;
     case MOTEC1_ID:
-      eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) | 
+      eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) |
           msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
-      bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) | 
+      bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
           msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
+
+      motec1_recv_tmr = millis;
       break;
   }
 }

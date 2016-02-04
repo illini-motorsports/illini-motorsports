@@ -20,6 +20,7 @@
 // Code control defines
 //#define REFCLKO
 
+// TRIS Settings
 #define OUTPUT 0
 #define INPUT 1
 
@@ -37,5 +38,7 @@ void init_timer1(void);
 void init_spi(void);
 void init_adc(void);
 void init_termination(void);
+inline void CLI(void);
+inline void STI(void);
 
 #endif /* FSAE_CONFIG_32_H */

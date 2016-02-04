@@ -790,3 +790,21 @@ void init_termination(void) {
   // Set termination based on value defined in specific node's header
   TERM_LAT = TERMINATING;
 }
+
+/**
+ * inline void CLI(void)
+ *
+ * Disables all interrupts
+ */
+inline void CLI(void) {
+  asm volatile ("di");
+}
+
+/**
+ * inline void STI(void)
+ *
+ * Enables all interrupts
+ */
+inline void STI(void) {
+  asm volatile ("ei");
+}
