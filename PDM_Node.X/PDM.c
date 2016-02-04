@@ -15,6 +15,10 @@ volatile uint32_t millis = 0;
 // Car status variables reported over can from the ECU
 double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
 
+// Stores wiper values for each load
+uint16_t wiper_values[NUM_LOADS] = {0};
+uint16_t peak_wiper_values[NUM_LOADS] = {0};
+
 // State variables determined by various sources
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
@@ -113,9 +117,15 @@ void main(void) {
   // Disconnect terminal A from resistor network for all rheostats
   send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
 
-  // Set all rheostats to 5k
+  // Set all rheostats to 2.5k
   //TODO: Should actually set them to value stored in flash memory
-  send_all_rheo(0xFF);
+  int i;
+  for(i = 0; i < NUM_LOADS; i++) {
+    wiper_values[i] = 0x80;
+    peak_wiper_values[i] = 0x80;
+
+  }
+  send_all_rheo(0x80);
 
   // Set TRIS registers - ADC
 
@@ -176,24 +186,44 @@ void main(void) {
 
       if(ON_SW) {
         //TODO: Enable IGN
+        EN_IGN_LAT = PWR_ON;
+
         //TODO: Enable INJ
+        EN_INJ_LAT = PWR_ON;
+
         //TODO: Enable FUEL
+        EN_FUEL_LAT = PWR_ON;
 
         // If STR load is on, disable WATER and FAN. Otherwise, enable them.
         if(STR_EN) {
           //TODO: Disable WTR
+          EN_WTR_LAT = PWR_OFF;
+
           //TODO: Disable FAN
+          EN_FAN_LAT = PWR_OFF;
         } else {
           //TODO: Enable WTR
+          EN_WTR_LAT = PWR_ON;
+
           //TODO: Enable FAN
+          EN_FAN_LAT = PWR_ON;
         }
 
       } else {
         //TODO: Disable IGN
+        EN_IGN_LAT = PWR_OFF;
+
         //TODO: Disable INJ
+        EN_INJ_LAT = PWR_OFF;
+
         //TODO: Disable FUEL
+        EN_FUEL_LAT = PWR_OFF;
+
         //TODO: Disable WTR
+        EN_WTR_LAT = PWR_OFF;
+
         //TODO: Disable FAN
+        EN_FAN_LAT = PWR_OFF;
       }
     } else {
 
@@ -213,7 +243,10 @@ void main(void) {
     CLI();
     if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
       if (!STR_EN) {
-        //TODO: Enable STR
+        set_rheo(STR0_IDX, wiper_values[STR0_IDX]);
+        set_rheo(STR1_IDX, wiper_values[STR1_IDX]);
+        set_rheo(STR2_IDX, wiper_values[STR2_IDX]);
+        EN_STR_LAT = PWR_ON;
         str_en_tmr = millis;
       }
     } else {
@@ -223,7 +256,7 @@ void main(void) {
       }
 
       if (STR_EN) {
-        //TODO: Disable STR
+        EN_STR_LAT = PWR_OFF;
       }
     }
     STI();
@@ -250,9 +283,13 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
   millis += 1000; // TODO: Actually make a milliseconds interrupt
 
   // Send test CAN message with header and current time in seconds
+  /*
   uint8_t message[8] = {0xF, 0xE, 0xD, 0xC, 0, 0, 0, 0};
   ((uint32_t*) message)[1] = seconds;
   CAN_send_message(0x212, 8, message);
+   */
+
+  EN_B5V5_LAT = !EN_B5V5_PORT;
 
   IFS0bits.T1IF = 0; // Clear TMR1 Interrupt Flag
 }
@@ -303,14 +340,54 @@ void process_CAN_msg(CAN_message msg) {
 }
 
 /**
- * TODO: Fix for actual PDM code
+ * void set_rheo(uint8_t load_idx, uint8_t val)
+ *
+ * Sets the specified load's rheostat to the specified value
+ *
+ * @param load_idx The index of the load for which the rheostat value will be changed
+ * @param val The value to set the rheostat to
  */
-void send_rheo(uint16_t msg) {
+void set_rheo(uint8_t load_idx, uint8_t val) {
   while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  LATGbits.LATG15 = 0; // CS selected
-  SPI1BUF = msg;
+
+  // Select specific !CS signal
+  switch(load_idx) {
+    case IGN_IDX: CS_IGN_LAT = 0; break;
+    case INJ_IDX: CS_INJ_LAT = 0; break;
+    case FUEL_IDX: CS_FUEL_LAT = 0; break;
+    case ECU_IDX: CS_ECU_LAT = 0; break;
+    case WTR_IDX: CS_WTR_LAT = 0; break;
+    case FAN_IDX: CS_FAN_LAT = 0; break;
+    case AUX_IDX: CS_AUX_LAT = 0; break;
+    case PDLU_IDX: CS_PDLU_LAT = 0; break;
+    case PDLD_IDX: CS_PDLD_LAT = 0; break;
+    case B5V5_IDX: CS_B5V5_LAT = 0; break;
+    case BVBAT_IDX: CS_BVBAT_LAT = 0; break;
+    case STR0_IDX: CS_STR0_LAT = 0; break;
+    case STR1_IDX: CS_STR1_LAT = 0; break;
+    case STR2_IDX: CS_STR2_LAT = 0; break;
+  }
+
+  SPI1BUF = ((uint16_t) val);
   while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  LATGbits.LATG15 = 1; // CS deselected
+
+  // Deselect specific !CS signal
+  switch(load_idx) {
+    case IGN_IDX: CS_IGN_LAT = 1; break;
+    case INJ_IDX: CS_INJ_LAT = 1; break;
+    case FUEL_IDX: CS_FUEL_LAT = 1; break;
+    case ECU_IDX: CS_ECU_LAT = 1; break;
+    case WTR_IDX: CS_WTR_LAT = 1; break;
+    case FAN_IDX: CS_FAN_LAT = 1; break;
+    case AUX_IDX: CS_AUX_LAT = 1; break;
+    case PDLU_IDX: CS_PDLU_LAT = 1; break;
+    case PDLD_IDX: CS_PDLD_LAT = 1; break;
+    case B5V5_IDX: CS_B5V5_LAT = 1; break;
+    case BVBAT_IDX: CS_BVBAT_LAT = 1; break;
+    case STR0_IDX: CS_STR0_LAT = 1; break;
+    case STR1_IDX: CS_STR1_LAT = 1; break;
+    case STR2_IDX: CS_STR2_LAT = 1; break;
+  }
 }
 
 /**

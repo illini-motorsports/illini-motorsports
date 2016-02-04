@@ -21,6 +21,9 @@
 #define PWR_ON  1
 #define PWR_OFF 0
 
+// Define for the number of MOSFET control circuits
+#define NUM_LOADS 14
+
 // Indices for arrays containing all the loads
 #define IGN_IDX   0
 #define INJ_IDX   1
@@ -179,7 +182,7 @@
 // Function definitions
 void main(void);
 void process_CAN_msg(CAN_message msg);
-void send_rheo(uint16_t msg);
+void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 
 #endif /* PDM_H */
