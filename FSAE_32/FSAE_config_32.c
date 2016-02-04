@@ -226,8 +226,8 @@ void init_peripheral_modules(void) {
   //PMD4bits.T1MD = 1;
 
   // Timer2
-  T2CONbits.ON = 0;
-  PMD4bits.T2MD = 1;
+  //T2CONbits.ON = 0;
+  //PMD4bits.T2MD = 1;
 
   // Timer3
   T3CONbits.ON = 0;
@@ -601,7 +601,7 @@ void init_oscillator(void) {
   // PB3DIV
   PB3DIVbits.ON = 1;            // Peripheral Bus 3 Output Clock Enable (Output clock is enabled)
   while(!PB3DIVbits.PBDIVRDY);
-  PB3DIVbits.PBDIV = 0b0110010; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
+  PB3DIVbits.PBDIV = 0b0110001; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
 
   // PB4DIV
   PB4DIVbits.ON = 1;            // Peripheral Bus 4 Output Clock Enable (Output clock is enabled)
@@ -707,12 +707,53 @@ void init_timer1(void) {
 
   // Set up TMR1 Interrupt
   IFS0bits.T1IF = 0; // TMR1 Interrupt Flag Status (No interrupt request has occured)
-  IPC1bits.T1IP = 7; // TMR1 Interrupt Priority (Interrupt priority is 7)
+  IPC1bits.T1IP = 6; // TMR1 Interrupt Priority (Interrupt priority is 6)
   IPC1bits.T1IS = 3; // TMR1 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T1IE = 1; // TMR1 Interrupt Enable Control (Interrupt is enabled)
 
   // Enable TMR1
   T1CONbits.ON = 1; // Timer On (Timer is enabled)
+
+  lock_config();
+}
+
+/**
+ * void init_timer2(void)
+ *
+ * Initializes Timer 2, which is configured to generate an interrupt every 1 ms
+ */
+void init_timer2(void) {
+  unlock_config();
+
+  // Disable TMR2
+  T2CONbits.ON = 0; // Timer On (Timer is disabled)
+
+  // T2CON
+  T2CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
+  T2CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
+  T2CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
+  T2CONbits.TCKPS = 0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
+
+  // TMR2
+  TMR2 = 0; // TMR2 Count Register (0)
+
+  /**
+   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
+   * Currently, this gives a speed of 4Mhz. TMR2 uses a 1:4 prescale, meaning
+   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
+   */
+
+  // PR2
+  PR2 = 0x3E8; // PR2 Period Register (1000)
+
+  // Set up TMR2 Interrupt
+  IFS0bits.T2IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
+  IPC2bits.T2IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 7)
+  IPC2bits.T2IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T2IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+
+  // Enable TMR2
+  T2CONbits.ON = 1; // Timer On (Timer is enabled)
 
   lock_config();
 }

@@ -36,7 +36,8 @@ void main(void) {
   init_gpio_pins(); // Set all I/O pins to low outputs
   //init_peripheral_modules(); // Disable unused peripheral modules
   init_oscillator(); // Initialize oscillator configuration bits
-  init_timer1(); // Initialize timer1
+  init_timer1(); // Initialize timer1 (seconds)
+  init_timer2(); // Initialize timer2 (millis)
   init_spi(); // Initialize SPI interface
   init_adc(init_adc_pdm); // Initialize ADC module
   init_termination(); // Initialize programmable CAN termination
@@ -270,15 +271,26 @@ void main(void) {
 }
 
 /**
+ * TMR2 Interrupt Handler
+ *
+ * Fires once every millisecond.
+ */
+void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL7SRS))) timer2_inthnd(void) {
+  millis++; // Increment millis count
+
+  //TODO: Move this to it's own interrupt
+  ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+
+  IFS0bits.T2IF = 0; // Clear TMR2 Interrupt Flag
+}
+
+/**
  * TMR1 Interrupt Handler
  *
  * Fires once every second.
- *
- * TODO: Fix for actual PDM code.
  */
-void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(void) {
-  seconds++;
-  millis += 1000; // TODO: Actually make a milliseconds interrupt
+void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL6SRS))) timer1_inthnd(void) {
+  seconds++; // Increment seconds count
 
   // Send test CAN message with header and current time in seconds
   /*
@@ -287,13 +299,10 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
   CAN_send_message(0x212, 8, message);
    */
 
-  //TODO: Move this to it's own interrupt
-  ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
-
   // TODO: Also move this
   // Get battery voltage
-  uint32_t bat_volt_adc = read_adc_chn(10);
-  double bat_volt = (((double) bat_volt_adc) / 4095.0) * 3.3 * 5;
+  //uint32_t bat_volt_adc = read_adc_chn(10);
+  //double bat_volt = (((double) bat_volt_adc) / 4095.0) * 3.3 * 5;
 
   EN_B5V5_LAT = !EN_B5V5_PORT;
 
@@ -303,7 +312,7 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
 /**
  * CAN1 Interrupt Handler
  */
-void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL6SRS))) can_inthnd(void) {
+void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL5SRS))) can_inthnd(void) {
   if(C1INTbits.RBIF) {
     CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
   }

@@ -21,7 +21,7 @@ static volatile uint32_t CAN_FIFO_Buffers[256];
 
 /**
  * Construct and send a CAN message based on data provided by the caller.
- * 
+ *
  * @param id The message ID of the CAN message we are sending
  * @param dlc The number of data bytes in the message
  * @param data A Pointer to the data bytes
@@ -35,7 +35,7 @@ int32_t CAN_send_message(uint32_t id, uint32_t dlc, uint8_t* data) {
 
   // Get pointer to correct location in transmit FIFO
   CanTxMessageBuffer* transmit = (CanTxMessageBuffer*) (PA_TO_KVA1(C1FIFOUA1));
-  
+
   // Clear location in transmit FIFO
   transmit->messageWord[0] = 0;
   transmit->messageWord[1] = 0;
@@ -50,7 +50,7 @@ int32_t CAN_send_message(uint32_t id, uint32_t dlc, uint8_t* data) {
 
   // Signal to the CAN module that we have finished queuing a message
   C1FIFOCON1bits.UINC = 1;
-  
+
   // Request transmission of the message
   C1FIFOCON1bits.TXREQ = 1;
 
@@ -59,32 +59,32 @@ int32_t CAN_send_message(uint32_t id, uint32_t dlc, uint8_t* data) {
 
 /**
  * Receive and handle any available CAN messages.
- * 
+ *
  * This function calls the provided handler function once for each received
- * message. There can be anywhere from 0 to 32 available messages, so the 
+ * message. There can be anywhere from 0 to 32 available messages, so the
  * handler function can be called up to 32 times before this function will return.
- * 
+ *
  * @param handler The handler function to call with each received message
  */
 void CAN_recv_messages(void (*handler)(CAN_message msg)) {
     CanRxMessageBuffer* receive = NULL;
-    
+
     // Keep polling until the FIFO isn't empty
     while(C1FIFOINT0bits.RXNEMPTYIF == 1) {
-      
+
       // Get pointer to the next available message
       receive = (CanRxMessageBuffer*) (PA_TO_KVA1(C1FIFOUA0));
-      
+
       // Copy data from the receive FIFO into a CAN_message struct
       CAN_message msg;
       msg.id = receive->CMSGSID.SID;
       msg.dlc = receive->CMSGEID.DLC;
       ((uint32_t*) msg.data)[0] = receive->messageWord[2];
       ((uint32_t*) msg.data)[1] = receive->messageWord[3];
-      
+
       // Signal to the CAN module that we've processed a message
       C1FIFOCON0bits.UINC = 1;
-      
+
       // Call the provided handler function
       handler(msg);
     }
@@ -186,7 +186,7 @@ void init_can(void) {
 
   // Set up CAN1 Interrupt
   IFS4bits.CAN1IF = 0;  // CAN1 Interrupt Flag Status (No interrupt request has occurred)
-  IPC37bits.CAN1IP = 6; // CAN1 Interrupt Priority (Interrupt priority is 6)
+  IPC37bits.CAN1IP = 5; // CAN1 Interrupt Priority (Interrupt priority is 5)
   IPC37bits.CAN1IS = 3; // CAN1 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC4bits.CAN1IE = 1;  // CAN1 Interrupt Enable Control (Interrupt is disabled)
 
