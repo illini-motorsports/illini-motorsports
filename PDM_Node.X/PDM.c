@@ -57,6 +57,18 @@ void main(void) {
   EN_BVBAT_LAT = PWR_OFF;
   EN_STR_LAT = PWR_OFF;
 
+  // Set !SW pins to inputs
+  SW1_TRIS = INPUT;
+  SW2_TRIS = INPUT;
+  SW3_TRIS = INPUT;
+  SW4_TRIS = INPUT;
+  SW5_TRIS = INPUT;
+  SW6_TRIS = INPUT;
+  SW7_TRIS = INPUT;
+  SW8_TRIS = INPUT;
+  SW9_TRIS = INPUT;
+  KILL_TRIS = INPUT;
+
   // Set TRIS registers - !CS
   CS_IGN_TRIS = OUTPUT;
   CS_INJ_TRIS = OUTPUT;

@@ -120,6 +120,35 @@
 #define CS_STR1_TRIS   TRISFbits.TRISF13
 #define CS_STR2_TRIS   TRISDbits.TRISD14
 
+// Pin definitions for !SW signal bus
+#define SW1_PORT   PORTDbits.PORTD12
+#define SW2_PORT   PORTDbits.PORTD13
+#define SW3_PORT   PORTDbits.PORTD4
+#define SW4_PORT   PORTDbits.PORTD5
+#define SW5_PORT   PORTFbits.PORTF0
+#define SW6_PORT   PORTFbits.PORTF1
+#define SW7_PORT   PORTGbits.PORTG1
+#define SW8_PORT   PORTGbits.PORTG0
+#define SW9_PORT   PORTAbits.PORTA6
+#define KILL_PORT  PORTAbits.PORTA7
+#define SW1_TRIS   TRISDbits.TRISD12
+#define SW2_TRIS   TRISDbits.TRISD13
+#define SW3_TRIS   TRISDbits.TRISD4
+#define SW4_TRIS   TRISDbits.TRISD5
+#define SW5_TRIS   TRISFbits.TRISF0
+#define SW6_TRIS   TRISFbits.TRISF1
+#define SW7_TRIS   TRISGbits.TRISG1
+#define SW8_TRIS   TRISGbits.TRISG0
+#define SW9_TRIS   TRISAbits.TRISA6
+#define KILL_TRIS  TRISAbits.TRISA7
+
+// Switch state definitions
+#define STR_SW    (!SW1_PORT)
+#define ON_SW     (!SW2_PORT)
+#define ACT_UP_SW (!SW3_PORT)
+#define ACT_DN_SW (!SW4_PORT)
+#define KILL_SW   (!KILL_PORT)
+
 // Function definitions
 void main(void);
 void process_CAN_msg(CAN_message msg);
