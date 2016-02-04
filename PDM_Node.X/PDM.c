@@ -38,7 +38,7 @@ void main(void) {
   init_oscillator(); // Initialize oscillator configuration bits
   init_timer1(); // Initialize timer1
   init_spi(); // Initialize SPI interface
-  init_adc(); // Initialize ADC module
+  init_adc(init_adc_pdm); // Initialize ADC module
   init_termination(); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
 
@@ -126,8 +126,6 @@ void main(void) {
 
   }
   send_all_rheo(0x80);
-
-  // Set TRIS registers - ADC
 
   // Turn on state-independent loads
   EN_ECU_LAT = PWR_ON;
@@ -289,6 +287,14 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL7SRS))) timer1_inthnd(
   CAN_send_message(0x212, 8, message);
    */
 
+  //TODO: Move this to it's own interrupt
+  ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+
+  // TODO: Also move this
+  // Get battery voltage
+  uint32_t bat_volt_adc = read_adc_chn(10);
+  double bat_volt = (((double) bat_volt_adc) / 4095.0) * 3.3 * 5;
+
   EN_B5V5_LAT = !EN_B5V5_PORT;
 
   IFS0bits.T1IF = 0; // Clear TMR1 Interrupt Flag
@@ -434,4 +440,87 @@ void send_all_rheo(uint16_t msg) {
   CS_STR0_LAT = 1;
   CS_STR1_LAT = 1;
   CS_STR2_LAT = 1;
+}
+
+/**
+ * void init_adc_pdm(void)
+ *
+ * Perform additional ADC configuration specific to the PDM.
+ */
+void init_adc_pdm(void) {
+  // Configure pins as inputs
+  ADC_IGN_TRIS = INPUT;
+  ADC_INJ_TRIS = INPUT;
+  ADC_FUEL_TRIS = INPUT;
+  ADC_ECU_TRIS = INPUT;
+  ADC_WTR_TRIS = INPUT;
+  ADC_FAN_TRIS = INPUT;
+  ADC_AUX_TRIS = INPUT;
+  ADC_PDLU_TRIS = INPUT;
+  ADC_PDLD_TRIS = INPUT;
+  ADC_B5V5_TRIS = INPUT;
+  ADC_BVBAT_TRIS = INPUT;
+  ADC_STR0_TRIS = INPUT;
+  ADC_STR1_TRIS = INPUT;
+  ADC_STR2_TRIS = INPUT;
+  ADC_3V3_TRIS = INPUT;
+  ADC_5V_TRIS = INPUT;
+  ADC_5V5_TRIS = INPUT;
+  ADC_12V_TRIS = INPUT;
+  ADC_VBAT_TRIS = INPUT;
+
+  // Configure pins as analog inputs
+  ADC_IGN_ANSEL = AN_INPUT;
+  ADC_INJ_ANSEL = AN_INPUT;
+  ADC_FUEL_ANSEL = AN_INPUT;
+  ADC_ECU_ANSEL = AN_INPUT;
+  ADC_WTR_ANSEL = AN_INPUT;
+  ADC_FAN_ANSEL = AN_INPUT;
+  ADC_AUX_ANSEL = AN_INPUT;
+  ADC_PDLU_ANSEL = AN_INPUT;
+  ADC_PDLD_ANSEL = AN_INPUT;
+  ADC_B5V5_ANSEL = AN_INPUT;
+  ADC_BVBAT_ANSEL = AN_INPUT;
+  ADC_STR0_ANSEL = AN_INPUT;
+  ADC_STR1_ANSEL = AN_INPUT;
+  ADC_STR2_ANSEL = AN_INPUT;
+  ADC_3V3_ANSEL = AN_INPUT;
+  ADC_5V_ANSEL = AN_INPUT;
+  ADC_5V5_ANSEL = AN_INPUT;
+  ADC_12V_ANSEL = AN_INPUT;
+  ADC_VBAT_ANSEL = AN_INPUT;
+
+  /**
+   * Select scan trigger as trigger source for class 2 inputs
+   *
+   * Note: INJ is the only class 3 input, and it automatically selects the scan
+   * trigger as its trigger source.
+   *
+   * TODO: Registers missing, can't set the trigger source for most channels.
+   */
+  ADC_5V_TRG = SCAN_TRIGGER;
+  ADC_5V5_TRG = SCAN_TRIGGER;
+  ADC_12V_TRG = SCAN_TRIGGER;
+  ADC_VBAT_TRG = SCAN_TRIGGER;
+
+  // Include all channels as part of scan list
+  ADC_IGN_CSS = 1;
+  ADC_INJ_CSS = 1;
+  ADC_FUEL_CSS = 1;
+  ADC_ECU_CSS = 1;
+  ADC_WTR_CSS = 1;
+  ADC_FAN_CSS = 1;
+  ADC_AUX_CSS = 1;
+  ADC_PDLU_CSS = 1;
+  ADC_PDLD_CSS = 1;
+  ADC_B5V5_CSS = 1;
+  ADC_BVBAT_CSS = 1;
+  ADC_STR0_CSS = 1;
+  ADC_STR1_CSS = 1;
+  ADC_STR2_CSS = 1;
+  ADC_3V3_CSS = 1;
+  ADC_5V_CSS = 1;
+  ADC_5V5_CSS = 1;
+  ADC_12V_CSS = 1;
+  ADC_VBAT_CSS = 1;
 }

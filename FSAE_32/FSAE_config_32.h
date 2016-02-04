@@ -36,7 +36,6 @@ void init_oscillator(void);
 void init_can(void);
 void init_timer1(void);
 void init_spi(void);
-void init_adc(void);
 void init_termination(void);
 inline void CLI(void);
 inline void STI(void);

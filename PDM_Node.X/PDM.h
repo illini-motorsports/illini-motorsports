@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include "../FSAE_32/FSAE_config_32.h"
 #include "../FSAE_32/FSAE_CAN_32.h"
+#include "../FSAE_32/FSAE_adc_32.h"
 #include "../FSAE.X/CAN.h"
 
 // Enable programmable termination
@@ -145,6 +146,83 @@
 #define SW9_TRIS   TRISAbits.TRISA6
 #define KILL_TRIS  TRISAbits.TRISA7
 
+// Pin definitions for ADC signal bus
+#define ADC_IGN_TRIS    TRISGbits.TRISG15
+#define ADC_INJ_TRIS    TRISAbits.TRISA5
+#define ADC_FUEL_TRIS   TRISEbits.TRISE5
+#define ADC_ECU_TRIS    TRISEbits.TRISE6
+#define ADC_WTR_TRIS    TRISEbits.TRISE7
+#define ADC_FAN_TRIS    TRISCbits.TRISC1
+#define ADC_AUX_TRIS    TRISCbits.TRISC2
+#define ADC_PDLU_TRIS   TRISCbits.TRISC3
+#define ADC_PDLD_TRIS   TRISCbits.TRISC4
+#define ADC_B5V5_TRIS   TRISGbits.TRISG6
+#define ADC_BVBAT_TRIS  TRISGbits.TRISG7
+#define ADC_STR0_TRIS   TRISGbits.TRISG8
+#define ADC_STR1_TRIS   TRISGbits.TRISG9
+#define ADC_STR2_TRIS   TRISAbits.TRISA0
+#define ADC_3V3_TRIS    TRISFbits.TRISF12
+#define ADC_5V_TRIS     TRISBbits.TRISB12
+#define ADC_5V5_TRIS    TRISBbits.TRISB13
+#define ADC_12V_TRIS    TRISBbits.TRISB14
+#define ADC_VBAT_TRIS   TRISBbits.TRISB15
+#define ADC_IGN_ANSEL   ANSELGbits.ANSG15
+#define ADC_INJ_ANSEL   ANSELAbits.ANSA5
+#define ADC_FUEL_ANSEL  ANSELEbits.ANSE5
+#define ADC_ECU_ANSEL   ANSELEbits.ANSE6
+#define ADC_WTR_ANSEL   ANSELEbits.ANSE7
+#define ADC_FAN_ANSEL   ANSELCbits.ANSC1
+#define ADC_AUX_ANSEL   ANSELCbits.ANSC2
+#define ADC_PDLU_ANSEL  ANSELCbits.ANSC3
+#define ADC_PDLD_ANSEL  ANSELCbits.ANSC4
+#define ADC_B5V5_ANSEL  ANSELGbits.ANSG6
+#define ADC_BVBAT_ANSEL ANSELGbits.ANSG7
+#define ADC_STR0_ANSEL  ANSELGbits.ANSG8
+#define ADC_STR1_ANSEL  ANSELGbits.ANSG9
+#define ADC_STR2_ANSEL  ANSELAbits.ANSA0
+#define ADC_3V3_ANSEL   ANSELFbits.ANSF12
+#define ADC_5V_ANSEL    ANSELBbits.ANSB12
+#define ADC_5V5_ANSEL   ANSELBbits.ANSB13
+#define ADC_12V_ANSEL   ANSELBbits.ANSB14
+#define ADC_VBAT_ANSEL  ANSELBbits.ANSB15
+#define ADC_IGN_CSS     ADCCSS1bits.CSS23
+#define ADC_INJ_CSS     ADCCSS2bits.CSS34
+#define ADC_FUEL_CSS    ADCCSS1bits.CSS17
+#define ADC_ECU_CSS     ADCCSS1bits.CSS16
+#define ADC_WTR_CSS     ADCCSS1bits.CSS15
+#define ADC_FAN_CSS     ADCCSS1bits.CSS22
+#define ADC_AUX_CSS     ADCCSS1bits.CSS21
+#define ADC_PDLU_CSS    ADCCSS1bits.CSS20
+#define ADC_PDLD_CSS    ADCCSS1bits.CSS19
+#define ADC_B5V5_CSS    ADCCSS1bits.CSS14
+#define ADC_BVBAT_CSS   ADCCSS1bits.CSS13
+#define ADC_STR0_CSS    ADCCSS1bits.CSS12
+#define ADC_STR1_CSS    ADCCSS1bits.CSS11
+#define ADC_STR2_CSS    ADCCSS1bits.CSS24
+#define ADC_3V3_CSS     ADCCSS1bits.CSS31
+#define ADC_5V_CSS      ADCCSS1bits.CSS7
+#define ADC_5V5_CSS     ADCCSS1bits.CSS8
+#define ADC_12V_CSS     ADCCSS1bits.CSS9
+#define ADC_VBAT_CSS    ADCCSS1bits.CSS10
+//#define ADC_IGN_TRG     ADCTRG1bits.TRGSRC23
+//#define ADC_FUEL_TRG    ADCTRG1bits.TRGSRC17
+//#define ADC_ECU_TRG     ADCTRG1bits.TRGSRC16
+//#define ADC_WTR_TRG     ADCTRG1bits.TRGSRC15
+//#define ADC_FAN_TRG     ADCTRG1bits.TRGSRC22
+//#define ADC_AUX_TRG     ADCTRG1bits.TRGSRC21
+//#define ADC_PDLU_TRG    ADCTRG1bits.TRGSRC20
+//#define ADC_PDLD_TRG    ADCTRG1bits.TRGSRC19
+//#define ADC_B5V5_TRG    ADCTRG1bits.TRGSRC14
+//#define ADC_BVBAT_TRG   ADCTRG3bits.TRGSRC13
+//#define ADC_STR0_TRG    ADCTRG4bits.TRGSRC12
+#define ADC_STR1_TRG    ADCTRG3bits.TRGSRC11
+//#define ADC_STR2_TRG    ADCTRG1bits.TRGSRC24
+//#define ADC_3V3_TRG     ADCTRG4bits.TRGSRC31
+#define ADC_5V_TRG      ADCTRG2bits.TRGSRC7
+#define ADC_5V5_TRG     ADCTRG3bits.TRGSRC8
+#define ADC_12V_TRG     ADCTRG3bits.TRGSRC9
+#define ADC_VBAT_TRG    ADCTRG3bits.TRGSRC10
+
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)
 #define ON_SW     (!SW2_PORT)
@@ -184,5 +262,6 @@ void main(void);
 void process_CAN_msg(CAN_message msg);
 void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
+void init_adc_pdm(void);
 
 #endif /* PDM_H */

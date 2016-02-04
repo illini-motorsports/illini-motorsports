@@ -766,17 +766,6 @@ void init_spi() {
   lock_config();
 }
 
-/**
- * void init_adc(void)
- *
- * Sets up the ADC module to read at least the on-chip temperature sensor and
- * the external temperature sensor common to all PIC32-based boards.
- */
-void init_adc(void) {
-  //TODO: Implement this function
-
-  // Set TRIS registers - TEMP
-}
 
 /**
  * void init_termination(void)

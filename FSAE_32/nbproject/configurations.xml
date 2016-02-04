@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>FSAE_config_32.h</itemPath>
       <itemPath>FSAE_CAN_32.h</itemPath>
+      <itemPath>FSAE_adc_32.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -16,6 +17,7 @@
                    projectFiles="true">
       <itemPath>FSAE_config_32.c</itemPath>
       <itemPath>FSAE_CAN_32.c</itemPath>
+      <itemPath>FSAE_adc_32.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
