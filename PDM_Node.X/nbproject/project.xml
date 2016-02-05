@@ -11,9 +11,7 @@
             <header-extensions>h</header-extensions>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <asminc-extensions/>
-            <make-dep-projects>
-                <make-dep-project>../FSAE_32</make-dep-project>
-            </make-dep-projects>
+            <make-dep-projects/>
         </data>
     </configuration>
 </project>

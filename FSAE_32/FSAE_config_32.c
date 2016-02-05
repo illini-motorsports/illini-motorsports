@@ -39,7 +39,7 @@
 #pragma config WDTPS = 0b10100  // Watchdog Timer Postscaler (1:1048576)
 #pragma config FCKSM = 0b11     // Clock Switching and Monitor Selection (Clock Switch Enabled, FSCM Enabled)
 #pragma config OSCIOFNC = 0b1   // CLKO Output Signal Active on the OSCO Pin (Disabled)
-#pragma config POSCMOD = 0b11   // Primary Oscillator Configuration (POSC disabled)
+#pragma config POSCMOD = 0b00   // Primary Oscillator Configuration (EC mode selected)
 #pragma config IESO = 0b0       // Internal/External Switch Over (Disabled)
 #pragma config FSOSCEN = 0b0    // Secondary Oscillator Enable (Disable SOSC)
 #pragma config DMTINTV = 0b111  // DMT Count Window Interval (Window/Interval value is 127/128 counter value)
@@ -47,18 +47,16 @@
 
 /**
  * SYSCLK == SPLL == ((FPLLICLK / FPLLIDIV) / FPLLODIV) * FPLLMULT ==
- * ((FRC / 1) / 2) * 50 == (8Mhz / 2) * 50 == 200Mhz
- *
- * NOTE: FPLLIDIV seems to do absolutely nothing, no matter what it is set at.
+ * ((POSC / 3) / 2) * 50 == (24Mhz / 6) * 50 == 200Mhz
  */
 
 // DEVCFG2
 #pragma config UPLLFSEL = 0b1      // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
 #pragma config FPLLODIV = 0b001    // Default System PLL Output Divisor (PLL output divided by 2)
 #pragma config FPLLMULT = 0b110001 // System PLL Multiplier (PLL Multiply by 50)
-#pragma config FPLLICLK = 0b1      // System PLL Input Clock Selection (FRC is input to the System PLL)
-#pragma config FPLLRNG = 0b001     // System PLL Divided Input Clock Frequency Range (5-10Mhz)
-#pragma config FPLLIDIV = 0b000    // System PLL Input Divider (Divide by 1)
+#pragma config FPLLICLK = 0b0      // System PLL Input Clock Selection (POSC is input to the System PLL)
+#pragma config FPLLRNG = 0b010     // System PLL Divided Input Clock Frequency Range (8-16Mhz)
+#pragma config FPLLIDIV = 0b010    // System PLL Input Divider (Divide by 3)
 
 // DEVCFG3
 #pragma config FUSBIDIO = 0b0  // USB USBID Selection (Controlled by the port function)
@@ -119,6 +117,9 @@ void init_general(void) {
   CFGPGbits.USBPG = 0;   // USB Module Permission Group (Initiator is assigned to Permission Group 0)
   CFGPGbits.DMAPG = 0;   // DMA Module Permission Group (Initiator is assigned to Permission Group 0)
   CFGPGbits.CPUPG = 0;   // CPU Permission Group (Initiator is assigned to Permission Group 0)
+
+  // INTCON
+  INTCONbits.MVEC = 1; // Multi Vector Configuration Bit (Configured for multi-vectored mode)
 
   lock_config();
 }
@@ -225,8 +226,8 @@ void init_peripheral_modules(void) {
   //PMD4bits.T1MD = 1;
 
   // Timer2
-  T2CONbits.ON = 0;
-  PMD4bits.T2MD = 1;
+  //T2CONbits.ON = 0;
+  //PMD4bits.T2MD = 1;
 
   // Timer3
   T3CONbits.ON = 0;
@@ -583,7 +584,7 @@ void init_oscillator(void) {
   OSCCONbits.SLP2SPD = 0;    // Sleep 2-speed Startup Control (Use the selected clock directly)
   OSCCONbits.CLKLOCK = 0;    // Clock Selection Lock Enable (Clock and PLL selections are not locked and may be modified)
   OSCCONbits.SLPEN = 0;      // Sleep Mode Enable (Device will enter Idle mode when a WAIT instruction is executed)
-  OSCCONbits.SOSCEN = 0;      // Secondary Oscillator (SOSC) Enable (Disable Secondary Oscillator)
+  OSCCONbits.SOSCEN = 0;     // Secondary Oscillator (SOSC) Enable (Disable Secondary Oscillator)
 
   // OSCTUN
   OSCTUNbits.TUN = 0b00000; // FRC Oscillator Tuning (Center frequency. Oscillator runs at calibrated frequency (8 MHz))
@@ -600,7 +601,7 @@ void init_oscillator(void) {
   // PB3DIV
   PB3DIVbits.ON = 1;            // Peripheral Bus 3 Output Clock Enable (Output clock is enabled)
   while(!PB3DIVbits.PBDIVRDY);
-  PB3DIVbits.PBDIV = 0b0110010; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
+  PB3DIVbits.PBDIV = 0b0110001; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
 
   // PB4DIV
   PB4DIVbits.ON = 1;            // Peripheral Bus 4 Output Clock Enable (Output clock is enabled)
@@ -622,6 +623,7 @@ void init_oscillator(void) {
   while(!PB8DIVbits.PBDIVRDY);
   PB8DIVbits.PBDIV = 0b0000001; // Peripheral Bus 8 Clock Divisor Control (PBCLK8 is SYSCLK divided by 2)
 
+#ifdef REFCLKO
   /**
    * REFO1CLK == (PBCLK1 / (2 * (RODIV + (ROTRIM / 512)))) ==
    * (100Mhz / (2 * (2 + (256/512)))) == (100Mhz / 5) == 20Mhz
@@ -653,6 +655,12 @@ void init_oscillator(void) {
   // Enable REFCLKO1
   REFO1CONbits.ACTIVE = 1;                // Reference Clock Request Status (Reference clock request is active)
   REFO1CONbits.ON = 1;                    // Output Enable (Reference Oscillator Module enabled)
+#else
+  // REF01CON
+  REFO1CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
+  REFO1CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
+  REFO1CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO2 pin)
+#endif
 
   // REF02CON
   REFO2CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
@@ -699,12 +707,53 @@ void init_timer1(void) {
 
   // Set up TMR1 Interrupt
   IFS0bits.T1IF = 0; // TMR1 Interrupt Flag Status (No interrupt request has occured)
-  IPC1bits.T1IP = 7; // TMR1 Interrupt Priority (Interrupt priority is 7)
+  IPC1bits.T1IP = 6; // TMR1 Interrupt Priority (Interrupt priority is 6)
   IPC1bits.T1IS = 3; // TMR1 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T1IE = 1; // TMR1 Interrupt Enable Control (Interrupt is enabled)
 
   // Enable TMR1
   T1CONbits.ON = 1; // Timer On (Timer is enabled)
+
+  lock_config();
+}
+
+/**
+ * void init_timer2(void)
+ *
+ * Initializes Timer 2, which is configured to generate an interrupt every 1 ms
+ */
+void init_timer2(void) {
+  unlock_config();
+
+  // Disable TMR2
+  T2CONbits.ON = 0; // Timer On (Timer is disabled)
+
+  // T2CON
+  T2CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
+  T2CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
+  T2CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
+  T2CONbits.TCKPS = 0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
+
+  // TMR2
+  TMR2 = 0; // TMR2 Count Register (0)
+
+  /**
+   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
+   * Currently, this gives a speed of 4Mhz. TMR2 uses a 1:4 prescale, meaning
+   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
+   */
+
+  // PR2
+  PR2 = 0x3E8; // PR2 Period Register (1000)
+
+  // Set up TMR2 Interrupt
+  IFS0bits.T2IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
+  IPC2bits.T2IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 7)
+  IPC2bits.T2IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T2IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+
+  // Enable TMR2
+  T2CONbits.ON = 1; // Timer On (Timer is enabled)
 
   lock_config();
 }
@@ -756,4 +805,36 @@ void init_spi() {
   SPI1CONbits.ON = 1;
 
   lock_config();
+}
+
+
+/**
+ * void init_termination(void)
+ *
+ * Sets up programmable CAN termination based on user defines.
+ */
+void init_termination(void) {
+  // Initialize pin
+  TERM_TRIS = OUTPUT;
+
+  // Set termination based on value defined in specific node's header
+  TERM_LAT = TERMINATING;
+}
+
+/**
+ * inline void CLI(void)
+ *
+ * Disables all interrupts
+ */
+inline void CLI(void) {
+  asm volatile ("di");
+}
+
+/**
+ * inline void STI(void)
+ *
+ * Enables all interrupts
+ */
+inline void STI(void) {
+  asm volatile ("ei");
 }
