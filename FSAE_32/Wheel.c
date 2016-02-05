@@ -23,7 +23,7 @@ void main(void) {
   init_spi(); // Initialize SPI interface
   asm volatile("ei"); // Enable interrupts
 
-  // Initialize LED output pin
+  // Initialize LED output pink
   TRISEbits.TRISE5 = OUTPUT;
   LATEbits.LATE5 = 0;
 
