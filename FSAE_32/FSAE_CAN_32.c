@@ -27,7 +27,7 @@ static volatile uint32_t CAN_FIFO_Buffers[256];
  * @param data A Pointer to the data bytes
  * @return -1 on failure, 0 on success
  */
-int32_t CAN_send_message(uint32_t id, uint32_t dlc, uint8_t* data) {
+int32_t CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data) {
   // Only allow even DLCs that are less than or equal to 8
   if(!(dlc == 0 || dlc == 2 || dlc == 4 || dlc == 6 || dlc == 8)) {
     return -1;
@@ -43,10 +43,11 @@ int32_t CAN_send_message(uint32_t id, uint32_t dlc, uint8_t* data) {
   transmit->messageWord[3] = 0;
 
   // Copy message to send into transmit FIFO location
+  //TODO: Account for dlc's other than 8
   transmit->CMSGSID.SID = id;
   transmit->CMSGEID.DLC = dlc;
-  transmit->messageWord[2] = ((uint32_t*) data)[0]; // CMSGDATA0
-  transmit->messageWord[3] = ((uint32_t*) data)[1]; // CMSGDATA1
+  transmit->messageWord[2] = data.word0; // CMSGDATA0
+  transmit->messageWord[3] = data.word1; // CMSGDATA1
 
   // Signal to the CAN module that we have finished queuing a message
   C1FIFOCON1bits.UINC = 1;
@@ -186,7 +187,7 @@ void init_can(void) {
 
   // Set up CAN1 Interrupt
   IFS4bits.CAN1IF = 0;  // CAN1 Interrupt Flag Status (No interrupt request has occurred)
-  IPC37bits.CAN1IP = 5; // CAN1 Interrupt Priority (Interrupt priority is 5)
+  IPC37bits.CAN1IP = 4; // CAN1 Interrupt Priority (Interrupt priority is 4)
   IPC37bits.CAN1IS = 3; // CAN1 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC4bits.CAN1IE = 1;  // CAN1 Interrupt Enable Control (Interrupt is disabled)
 

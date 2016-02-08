@@ -22,6 +22,33 @@ typedef struct {
     uint8_t data[8];
 } CAN_message;
 
+/**
+ * Data type representing a CAN data buffer
+ */
+typedef union uCAN_data {
+  struct {
+    uint8_t byte0;
+    uint8_t byte1;
+    uint8_t byte2;
+    uint8_t byte3;
+    uint8_t byte4;
+    uint8_t byte5;
+    uint8_t byte6;
+    uint8_t byte7;
+  };
+  struct {
+    uint16_t halfword0;
+    uint16_t halfword1;
+    uint16_t halfword2;
+    uint16_t halfword3;
+  };
+  struct {
+    uint32_t word0;
+    uint32_t word1;
+  };
+  uint64_t doubleword;
+} CAN_data;
+
 // Must include this after the struct to avoid compilation errors (I'm probably doing something wrong)
 #include "FSAE_config_32.h"
 
@@ -131,7 +158,7 @@ static volatile uint32_t CAN_rx_ovf = 0;
 static volatile uint32_t CAN_tx_ovf = 0;
 
 // Function definitions
-int32_t CAN_send_message(uint32_t id, uint32_t dlc, uint8_t* data);
+int32_t CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data);
 void CAN_recv_messages(void (*handler)(CAN_message msg));
 void init_can(void);
 

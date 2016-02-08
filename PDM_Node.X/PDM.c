@@ -13,7 +13,7 @@ volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
 // Car status variables reported over can from the ECU
-double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
+volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
 
 // Stores wiper values for each load
 uint16_t wiper_values[NUM_LOADS] = {0};
@@ -24,9 +24,10 @@ uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
 
 // Timing interval variables
-uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
+volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
+uint32_t diag_send_tmr = 0;
 
 /**
  * Main function
@@ -121,10 +122,9 @@ void main(void) {
   // Set all rheostats to 2.5k
   //TODO: Should actually set them to value stored in flash memory
   int i;
-  for(i = 0; i < NUM_LOADS; i++) {
+  for (i = 0; i < NUM_LOADS; i++) {
     wiper_values[i] = 0x80;
     peak_wiper_values[i] = 0x80;
-
   }
   send_all_rheo(0x80);
 
@@ -137,7 +137,7 @@ void main(void) {
   STI(); // Enable interrupts
 
   // Main loop
-  while(1) {
+  while (1) {
 
     // Determine if the fuel pump should be priming
     CLI();
@@ -183,7 +183,7 @@ void main(void) {
        * loads will still be controlled normally as they do not depend on CAN.
        */
 
-      if(ON_SW) {
+      if (ON_SW) {
         //TODO: Enable IGN
         EN_IGN_LAT = PWR_ON;
 
@@ -194,7 +194,7 @@ void main(void) {
         EN_FUEL_LAT = PWR_ON;
 
         // If STR load is on, disable WATER and FAN. Otherwise, enable them.
-        if(STR_EN) {
+        if (STR_EN) {
           //TODO: Disable WTR
           EN_WTR_LAT = PWR_OFF;
 
@@ -261,27 +261,56 @@ void main(void) {
     STI();
 
     //TODO: Check peak timers
-    //TODO: Sample current data
-    //TODO: Send out current data
+
+    CLI();
+    // Send diagnostic CAN messages
+    if ((millis - diag_send_tmr) >= 1000) {
+      STI();
+
+      CAN_data data = {0};
+      data.halfword0 = (uint16_t ) seconds;
+      data.halfword1 = millis; //TODO: Change this to total current draw
+      CAN_send_message(0x211, 8, data);
+
+      diag_send_tmr = millis;
+    }
+    STI();
+
+    //TODO: Sample current/voltage data
+    //TODO: Send out current/voltage data
+    /*
+     // TODO: Also move this
+     //Get battery voltage
+     uint32_t bat_volt_adc = read_adc_chn(10);
+     double bat_volt = (((double) bat_volt_adc) / 4095.0) * 3.3 * 5;
+
+     uint8_t message2[8] = {0};
+     ((uint32_t*) message2)[0] = ((uint16_t) (bat_volt * 100.0));
+     CAN_send_message(0x212, 2, message2);
+     */
+
     //TODO: Overcurrent detection
+
     //TODO: Control PDLU/PDLD
+
     //TODO: ???
     //TODO: Profit
   }
 }
 
 /**
- * TMR2 Interrupt Handler
- *
- * Fires once every millisecond.
+ * CAN1 Interrupt Handler
  */
-void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL7SRS))) timer2_inthnd(void) {
-  millis++; // Increment millis count
+void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) {
+  if (C1INTbits.RBIF) {
+    CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
+  }
 
-  //TODO: Move this to it's own interrupt
-  ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+  if (C1INTbits.RBOVIF) {
+    CAN_rx_ovf++;
+  }
 
-  IFS0bits.T2IF = 0; // Clear TMR2 Interrupt Flag
+  IFS4CLR = _IFS4_CAN1IF_MASK; // Clear CAN1 Interrupt Flag
 }
 
 /**
@@ -289,39 +318,23 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL7SRS))) timer2_inthnd(
  *
  * Fires once every second.
  */
-void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL6SRS))) timer1_inthnd(void) {
+void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL5SRS))) timer1_inthnd(void) {
   seconds++; // Increment seconds count
-
-  // Send test CAN message with header and current time in seconds
-  /*
-  uint8_t message[8] = {0xF, 0xE, 0xD, 0xC, 0, 0, 0, 0};
-  ((uint32_t*) message)[1] = seconds;
-  CAN_send_message(0x212, 8, message);
-   */
-
-  // TODO: Also move this
-  // Get battery voltage
-  //uint32_t bat_volt_adc = read_adc_chn(10);
-  //double bat_volt = (((double) bat_volt_adc) / 4095.0) * 3.3 * 5;
-
-  EN_B5V5_LAT = !EN_B5V5_PORT;
-
-  IFS0bits.T1IF = 0; // Clear TMR1 Interrupt Flag
+  IFS0CLR = _IFS0_T1IF_MASK; // Clear TMR1 Interrupt Flag
 }
 
 /**
- * CAN1 Interrupt Handler
+ * TMR2 Interrupt Handler
+ *
+ * Fires once every millisecond.
  */
-void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL5SRS))) can_inthnd(void) {
-  if(C1INTbits.RBIF) {
-    CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
-  }
+void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
+  millis++; // Increment millis count
 
-  if(C1INTbits.RBOVIF) {
-    CAN_rx_ovf++;
-  }
+  //TODO: Move this?
+  //ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
 
-  IFS4bits.CAN1IF = 0; // Clear CAN1 Interrupt Flag
+  IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
 
 /**
@@ -332,7 +345,7 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL5SRS))) can_inthnd(void) 
 void process_CAN_msg(CAN_message msg) {
   CAN_recv_tmr = millis; // Record time of latest received CAN message
 
-  switch(msg.id) {
+  switch (msg.id) {
     case MOTEC0_ID:
       eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
           msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
@@ -363,10 +376,10 @@ void process_CAN_msg(CAN_message msg) {
  * @param val The value to set the rheostat to
  */
 void set_rheo(uint8_t load_idx, uint8_t val) {
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
+  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
 
   // Select specific !CS signal
-  switch(load_idx) {
+  switch (load_idx) {
     case IGN_IDX: CS_IGN_LAT = 0; break;
     case INJ_IDX: CS_INJ_LAT = 0; break;
     case FUEL_IDX: CS_FUEL_LAT = 0; break;
@@ -384,10 +397,10 @@ void set_rheo(uint8_t load_idx, uint8_t val) {
   }
 
   SPI1BUF = ((uint16_t) val);
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
+  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
 
   // Deselect specific !CS signal
-  switch(load_idx) {
+  switch (load_idx) {
     case IGN_IDX: CS_IGN_LAT = 1; break;
     case INJ_IDX: CS_INJ_LAT = 1; break;
     case FUEL_IDX: CS_FUEL_LAT = 1; break;
@@ -413,7 +426,7 @@ void set_rheo(uint8_t load_idx, uint8_t val) {
  * @param msg The 16-bit message to send to all rheostats
  */
 void send_all_rheo(uint16_t msg) {
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
+  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
 
   // Select all !CS signals
   CS_IGN_LAT = 0;
@@ -432,7 +445,7 @@ void send_all_rheo(uint16_t msg) {
   CS_STR2_LAT = 0;
 
   SPI1BUF = msg; // Send msg on SPI bus
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
+  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
 
   // Deselect all !CS signals
   CS_IGN_LAT = 1;
