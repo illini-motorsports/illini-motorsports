@@ -707,7 +707,7 @@ void init_timer1(void) {
 
   // Set up TMR1 Interrupt
   IFS0bits.T1IF = 0; // TMR1 Interrupt Flag Status (No interrupt request has occured)
-  IPC1bits.T1IP = 6; // TMR1 Interrupt Priority (Interrupt priority is 6)
+  IPC1bits.T1IP = 5; // TMR1 Interrupt Priority (Interrupt priority is 5)
   IPC1bits.T1IS = 3; // TMR1 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T1IE = 1; // TMR1 Interrupt Enable Control (Interrupt is enabled)
 
@@ -748,7 +748,7 @@ void init_timer2(void) {
 
   // Set up TMR2 Interrupt
   IFS0bits.T2IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
-  IPC2bits.T2IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 7)
+  IPC2bits.T2IP = 6; // TMR2 Interrupt Priority (Interrupt priority is 6)
   IPC2bits.T2IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T2IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
 
@@ -820,22 +820,4 @@ void init_termination(void) {
   // Set termination based on value defined in specific node's header
   //TERM_LAT = TERMINATING;
   //TERM_LAT = 0;
-}
-
-/**
- * inline void CLI(void)
- *
- * Disables all interrupts
- */
-inline void CLI(void) {
-  asm volatile ("di");
-}
-
-/**
- * inline void STI(void)
- *
- * Enables all interrupts
- */
-inline void STI(void) {
-  asm volatile ("ei");
 }

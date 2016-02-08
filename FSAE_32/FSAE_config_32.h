@@ -28,6 +28,9 @@
 #define TERM_TRIS TRISAbits.TRISA2
 #define TERM_LAT  LATAbits.LATA2
 
+#define CLI() asm volatile("di; ehb")
+#define STI() asm volatile("ei")
+
 // Function definitions
 void init_general(void);
 void init_gpio_pins(void);
@@ -37,7 +40,5 @@ void init_can(void);
 void init_timer1(void);
 void init_spi(void);
 void init_termination(void);
-inline void CLI(void);
-inline void STI(void);
 
 #endif /* FSAE_CONFIG_32_H */
