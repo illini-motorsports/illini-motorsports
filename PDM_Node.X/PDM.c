@@ -27,7 +27,7 @@ uint8_t over_temp_flag = 0;
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
-uint32_t diag_send_tmr, rail_volt_send_tmr = 0;
+uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr = 0;
 
 /**
  * Main function
@@ -127,6 +127,10 @@ void main(void) {
     peak_wiper_values[i] = 0x80;
   }
   send_all_rheo(0x80);
+
+  //TODO: Remove this
+  wiper_values[ECU_IDX] = 218;
+  set_rheo(ECU_IDX, 218);
 
   // Turn on state-independent loads
   EN_ECU_LAT = PWR_ON;
@@ -262,6 +266,10 @@ void main(void) {
 
     //TODO: Check peak timers
 
+    //TODO: Overcurrent detection
+
+    //TODO: Control PDLU/PDLD
+
     CLI();
     /**
      * Send diagnostic CAN messages
@@ -278,8 +286,33 @@ void main(void) {
     }
     STI();
 
-    //TODO: Sample load current data
-    //TODO: Send out load current data
+    /**
+     * Sample load current data and send results on CAN
+     */
+    CLI();
+    if(millis - load_current_send_tmr >= LOAD_CUR_SEND) {
+      STI();
+
+      uint32_t fb_volt_ign = read_adc_chn(ADC_IGN_CHN);
+      uint16_t fb_volt_ign_conv = ((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5) * 1000.0;
+
+      uint32_t fb_volt_inj = read_adc_chn(ADC_INJ_CHN);
+      uint16_t fb_volt_inj_conv = ((((double) fb_volt_inj) / 4095.0) * 3.3 * 1.5) * 1000.0;
+
+      uint32_t fb_volt_fuel = read_adc_chn(ADC_FUEL_CHN);
+      uint16_t fb_volt_fuel_conv = ((((double) fb_volt_fuel) / 4095.0) * 3.3 * 1.5) * 1000.0;
+
+      uint32_t fb_volt_ecu = read_adc_chn(ADC_ECU_CHN);
+      uint16_t fb_volt_ecu_conv = ((((double) fb_volt_ecu) / 4095.0) * 3.3 * 1.5) * 1000.0;
+
+      CAN_data load_current_data = {0};
+      load_current_data.halfword0 = fb_volt_ign_conv;
+      load_current_data.halfword1 = fb_volt_inj_conv;
+      load_current_data.halfword2 = fb_volt_fuel_conv;
+      load_current_data.halfword3 = fb_volt_ecu_conv;
+      CAN_send_message(0x304, 8, load_current_data);
+    }
+    STI();
 
     /**
      * Sample voltage rail data and send results on CAN
@@ -312,15 +345,12 @@ void main(void) {
 
       rail_voltage_data.doubleword = 0;
       rail_voltage_data.halfword0 = rail_3v3_conv;
-      CAN_send_message(0x303, 8, rail_voltage_data);
+      CAN_send_message(0x303, 2, rail_voltage_data);
 
       rail_volt_send_tmr = millis;
     }
     STI();
 
-    //TODO: Overcurrent detection
-
-    //TODO: Control PDLU/PDLD
 
     //TODO: ???
     //TODO: Profit

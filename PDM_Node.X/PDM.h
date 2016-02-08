@@ -225,6 +225,7 @@
 
 // ADC channel definitions
 #define ADC_IGN_CHN     23
+#define ADC_INJ_CHN     34
 #define ADC_FUEL_CHN    17
 #define ADC_ECU_CHN     16
 #define ADC_WTR_CHN     15
@@ -277,6 +278,7 @@
 #define BASIC_CONTROL_WAIT 1000
 #define STR_MAX_DUR        4000
 #define DIAG_MSG_SEND      1000
+#define LOAD_CUR_SEND      500
 #define RAIL_VOLT_SEND     500
 
 // Function definitions

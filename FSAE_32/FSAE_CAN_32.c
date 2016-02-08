@@ -43,11 +43,25 @@ int32_t CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data) {
   transmit->messageWord[3] = 0;
 
   // Copy message to send into transmit FIFO location
-  //TODO: Account for dlc's other than 8
   transmit->CMSGSID.SID = id;
   transmit->CMSGEID.DLC = dlc;
-  transmit->messageWord[2] = data.word0; // CMSGDATA0
-  transmit->messageWord[3] = data.word1; // CMSGDATA1
+
+  // CMSGDATA0
+  if (dlc >= 2) {
+    ((uint16_t*) &(transmit->messageWord[2]))[0] = data.halfword0;
+  }
+  if (dlc >= 4) {
+    ((uint16_t*) &(transmit->messageWord[2]))[1] = data.halfword1;
+  }
+
+  // CMSGDATA1
+  if (dlc >= 6) {
+    ((uint16_t*) &(transmit->messageWord[3]))[0] = data.halfword2;
+  }
+
+  if (dlc >= 8) {
+    ((uint16_t*) &(transmit->messageWord[3]))[1] = data.halfword3;
+  }
 
   // Signal to the CAN module that we have finished queuing a message
   C1FIFOCON1bits.UINC = 1;
