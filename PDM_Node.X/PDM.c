@@ -27,7 +27,7 @@ uint8_t over_temp_flag = 0;
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
-uint32_t diag_send_tmr = 0;
+uint32_t diag_send_tmr, rail_volt_send_tmr = 0;
 
 /**
  * Main function
@@ -263,8 +263,10 @@ void main(void) {
     //TODO: Check peak timers
 
     CLI();
-    // Send diagnostic CAN messages
-    if ((millis - diag_send_tmr) >= 1000) {
+    /**
+     * Send diagnostic CAN messages
+     */
+    if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
       STI();
 
       CAN_data data = {0};
@@ -276,18 +278,45 @@ void main(void) {
     }
     STI();
 
-    //TODO: Sample current/voltage data
-    //TODO: Send out current/voltage data
-    /*
-     // TODO: Also move this
-     //Get battery voltage
-     uint32_t bat_volt_adc = read_adc_chn(10);
-     double bat_volt = (((double) bat_volt_adc) / 4095.0) * 3.3 * 5;
+    //TODO: Sample load current data
+    //TODO: Send out load current data
 
-     uint8_t message2[8] = {0};
-     ((uint32_t*) message2)[0] = ((uint16_t) (bat_volt * 100.0));
-     CAN_send_message(0x212, 2, message2);
+    /**
+     * Sample voltage rail data and send results on CAN
      */
+    CLI();
+    if(millis - rail_volt_send_tmr >= RAIL_VOLT_SEND) {
+      STI();
+
+      uint32_t rail_vbat = read_adc_chn(ADC_VBAT_CHN);
+      uint16_t rail_vbat_conv = ((((double) rail_vbat) / 4095.0) * 3.3 * 5) * 1000.0;
+
+      uint32_t rail_12v = read_adc_chn(ADC_12V_CHN);
+      uint16_t rail_12v_conv = ((((double) rail_12v) / 4095.0) * 3.3 * 4) * 1000.0;
+
+      uint32_t rail_5v5 = read_adc_chn(ADC_5V5_CHN);
+      uint16_t rail_5v5_conv = ((((double) rail_5v5) / 4095.0) * 3.3 * 2) * 1000.0;
+
+      uint32_t rail_5v = read_adc_chn(ADC_5V_CHN);
+      uint16_t rail_5v_conv = ((((double) rail_5v) / 4095.0) * 3.3 * 2) * 1000.0;
+
+      uint32_t rail_3v3 = read_adc_chn(ADC_3V3_CHN);
+      uint16_t rail_3v3_conv = ((((double) rail_3v3) / 4095.0) * 3.3 * 2) * 1000.0;
+
+      CAN_data rail_voltage_data = {0};
+      rail_voltage_data.halfword0 = rail_vbat_conv;
+      rail_voltage_data.halfword1 = rail_12v_conv;
+      rail_voltage_data.halfword2 = rail_5v5_conv;
+      rail_voltage_data.halfword3 = rail_5v_conv;
+      CAN_send_message(0x302, 8, rail_voltage_data);
+
+      rail_voltage_data.doubleword = 0;
+      rail_voltage_data.halfword0 = rail_3v3_conv;
+      CAN_send_message(0x303, 8, rail_voltage_data);
+
+      rail_volt_send_tmr = millis;
+    }
+    STI();
 
     //TODO: Overcurrent detection
 
@@ -332,7 +361,7 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
   millis++; // Increment millis count
 
   //TODO: Move this?
-  //ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+  ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
 
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }

@@ -223,6 +223,26 @@
 #define ADC_12V_TRG     ADCTRG3bits.TRGSRC9
 #define ADC_VBAT_TRG    ADCTRG3bits.TRGSRC10
 
+// ADC channel definitions
+#define ADC_IGN_CHN     23
+#define ADC_FUEL_CHN    17
+#define ADC_ECU_CHN     16
+#define ADC_WTR_CHN     15
+#define ADC_FAN_CHN     22
+#define ADC_AUX_CHN     21
+#define ADC_PDLU_CHN    20
+#define ADC_PDLD_CHN    19
+#define ADC_B5V5_CHN    14
+#define ADC_BVBAT_CHN   13
+#define ADC_STR0_CHN    12
+#define ADC_STR1_CHN    11
+#define ADC_STR2_CHN    24
+#define ADC_3V3_CHN     31
+#define ADC_5V_CHN      7
+#define ADC_5V5_CHN     8
+#define ADC_12V_CHN     9
+#define ADC_VBAT_CHN    10
+
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)
 #define ON_SW     (!SW2_PORT)
@@ -256,6 +276,8 @@
 #define FUEL_PRIME_DUR     1000
 #define BASIC_CONTROL_WAIT 1000
 #define STR_MAX_DUR        4000
+#define DIAG_MSG_SEND      1000
+#define RAIL_VOLT_SEND     500
 
 // Function definitions
 void main(void);
