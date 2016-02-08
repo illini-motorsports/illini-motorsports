@@ -19,9 +19,13 @@ volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
 uint16_t wiper_values[NUM_LOADS] = {0};
 uint16_t peak_wiper_values[NUM_LOADS] = {0};
 
+// Stores the calculated FB pin resistance for each load
+double fb_resistances[NUM_LOADS] = {0.0};
+
 // State variables determined by various sources
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
+uint16_t total_current_draw = 0;
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
@@ -123,14 +127,16 @@ void main(void) {
   //TODO: Should actually set them to value stored in flash memory
   int i;
   for (i = 0; i < NUM_LOADS; i++) {
-    wiper_values[i] = 0x80;
-    peak_wiper_values[i] = 0x80;
+    wiper_values[i] = 128;
+    peak_wiper_values[i] = 128;
+    fb_resistances[i] = WPR_TO_RES(128.0);
   }
   send_all_rheo(0x80);
 
-  //TODO: Remove this
+  //TODO: Remove this after implementing flash memory
   wiper_values[ECU_IDX] = 218;
   set_rheo(ECU_IDX, 218);
+  fb_resistances[ECU_IDX] = WPR_TO_RES(218.0);
 
   // Turn on state-independent loads
   EN_ECU_LAT = PWR_ON;
@@ -246,9 +252,6 @@ void main(void) {
     CLI();
     if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
       if (!STR_EN) {
-        set_rheo(STR0_IDX, wiper_values[STR0_IDX]);
-        set_rheo(STR1_IDX, wiper_values[STR1_IDX]);
-        set_rheo(STR2_IDX, wiper_values[STR2_IDX]);
         EN_STR_LAT = PWR_ON;
         str_en_tmr = millis;
       }
@@ -279,8 +282,9 @@ void main(void) {
 
       CAN_data data = {0};
       data.halfword0 = (uint16_t ) seconds;
-      data.halfword1 = millis; //TODO: Change this to total current draw
-      CAN_send_message(0x211, 8, data);
+      data.halfword1 = total_current_draw;
+      data.word1 = millis; //TODO: Change this to PCB temp and IC temp
+      CAN_send_message(0x300, 8, data);
 
       diag_send_tmr = millis;
     }
@@ -294,23 +298,104 @@ void main(void) {
       STI();
 
       uint32_t fb_volt_ign = read_adc_chn(ADC_IGN_CHN);
-      uint16_t fb_volt_ign_conv = ((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5) * 1000.0;
+      uint16_t current_ign = (((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5) 
+          * IGN_SCLINV * IGN_RATIO) / fb_resistances[IGN_IDX];
 
       uint32_t fb_volt_inj = read_adc_chn(ADC_INJ_CHN);
-      uint16_t fb_volt_inj_conv = ((((double) fb_volt_inj) / 4095.0) * 3.3 * 1.5) * 1000.0;
+      uint16_t current_inj = (((((double) fb_volt_inj) / 4095.0) * 3.3 * 1.5) 
+          * INJ_SCLINV * INJ_RATIO) / fb_resistances[INJ_IDX];
 
       uint32_t fb_volt_fuel = read_adc_chn(ADC_FUEL_CHN);
-      uint16_t fb_volt_fuel_conv = ((((double) fb_volt_fuel) / 4095.0) * 3.3 * 1.5) * 1000.0;
+      uint16_t current_fuel = (((((double) fb_volt_fuel) / 4095.0) * 3.3 * 1.5) 
+          * FUEL_SCLINV * FUEL_RATIO) / fb_resistances[FUEL_IDX];
 
       uint32_t fb_volt_ecu = read_adc_chn(ADC_ECU_CHN);
-      uint16_t fb_volt_ecu_conv = ((((double) fb_volt_ecu) / 4095.0) * 3.3 * 1.5) * 1000.0;
+      uint16_t current_ecu = (((((double) fb_volt_ecu) / 4095.0) * 3.3 * 1.5) 
+          * ECU_SCLINV * ECU_RATIO) / fb_resistances[ECU_IDX];
 
       CAN_data load_current_data = {0};
-      load_current_data.halfword0 = fb_volt_ign_conv;
-      load_current_data.halfword1 = fb_volt_inj_conv;
-      load_current_data.halfword2 = fb_volt_fuel_conv;
-      load_current_data.halfword3 = fb_volt_ecu_conv;
+      load_current_data.halfword0 = current_ign;
+      load_current_data.halfword1 = current_inj;
+      load_current_data.halfword2 = current_fuel;
+      load_current_data.halfword3 = current_ecu;
       CAN_send_message(0x304, 8, load_current_data);
+
+      uint32_t fb_volt_wtr = read_adc_chn(ADC_WTR_CHN);
+      uint16_t current_wtr = (((((double) fb_volt_wtr) / 4095.0) * 3.3 * 1.5) 
+          * WTR_SCLINV * WTR_RATIO) / fb_resistances[WTR_IDX];
+
+      uint32_t fb_volt_fan = read_adc_chn(ADC_FAN_CHN);
+      uint16_t current_fan = (((((double) fb_volt_fan) / 4095.0) * 3.3 * 1.5) 
+          * FAN_SCLINV * FAN_RATIO) / fb_resistances[FAN_IDX];
+
+      uint32_t fb_volt_aux = read_adc_chn(ADC_AUX_CHN);
+      uint16_t current_aux = (((((double) fb_volt_aux) / 4095.0) * 3.3 * 1.5) 
+          * AUX_SCLINV * AUX_RATIO) / fb_resistances[AUX_IDX];
+
+      uint32_t fb_volt_pdlu = read_adc_chn(ADC_PDLU_CHN);
+      uint16_t current_pdlu = (((((double) fb_volt_pdlu) / 4095.0) * 3.3 * 1.5) 
+          * PDLU_SCLINV * PDLU_RATIO) / fb_resistances[PDLU_IDX];
+
+      load_current_data.doubleword = 0;
+      load_current_data.halfword0 = current_wtr;
+      load_current_data.halfword1 = current_fan;
+      load_current_data.halfword2 = current_aux;
+      load_current_data.halfword3 = current_pdlu;
+      CAN_send_message(0x305, 8, load_current_data);
+
+      uint32_t fb_volt_pdld = read_adc_chn(ADC_PDLD_CHN);
+      uint16_t current_pdld = (((((double) fb_volt_pdld) / 4095.0) * 3.3 * 1.5) 
+          * PDLD_SCLINV * PDLD_RATIO) / fb_resistances[PDLD_IDX];
+
+      uint32_t fb_volt_b5v5 = read_adc_chn(ADC_B5V5_CHN);
+      uint16_t current_b5v5 = (((((double) fb_volt_b5v5) / 4095.0) * 3.3 * 1.5) 
+          * B5V5_SCLINV * B5V5_RATIO) / fb_resistances[B5V5_IDX];
+
+      uint32_t fb_volt_bvbat = read_adc_chn(ADC_BVBAT_CHN);
+      uint16_t current_bvbat = (((((double) fb_volt_bvbat) / 4095.0) * 3.3 * 1.5) 
+          * BVBAT_SCLINV * BVBAT_RATIO) / fb_resistances[BVBAT_IDX];
+
+      load_current_data.doubleword = 0;
+      load_current_data.halfword0 = current_pdld;
+      load_current_data.halfword1 = current_b5v5;
+      load_current_data.halfword2 = current_bvbat;
+      CAN_send_message(0x305, 6, load_current_data);
+
+      uint32_t fb_volt_str0 = read_adc_chn(ADC_STR0_CHN);
+      uint16_t current_str0 = (((((double) fb_volt_str0) / 4095.0) * 3.3 * 1.5) 
+          * STR0_SCLINV * STR0_RATIO) / fb_resistances[STR0_IDX];
+
+      uint32_t fb_volt_str1 = read_adc_chn(ADC_STR1_CHN);
+      uint16_t current_str1 = (((((double) fb_volt_str1) / 4095.0) * 3.3 * 1.5) 
+          * STR1_SCLINV * STR1_RATIO) / fb_resistances[STR1_IDX];
+
+      uint32_t fb_volt_str2 = read_adc_chn(ADC_STR2_CHN);
+      uint16_t current_str2 = (((((double) fb_volt_str2) / 4095.0) * 3.3 * 1.5) 
+          * STR2_SCLINV * STR2_RATIO) / fb_resistances[STR2_IDX];
+
+      uint16_t current_str_total = current_str0 + current_str1 + current_str2;
+
+      load_current_data.doubleword = 0;
+      load_current_data.halfword0 = current_str0;
+      load_current_data.halfword1 = current_str1;
+      load_current_data.halfword2 = current_str2;
+      load_current_data.halfword3 = current_str_total;
+      CAN_send_message(0x306, 8, load_current_data);
+
+      // Calculate total current consumption
+      double current_total = ((double) current_ign) / (IGN_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_inj) / (INJ_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_fuel) / (FUEL_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_ecu) / (ECU_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_wtr) / (WTR_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_fan) / (FAN_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_aux) / (AUX_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_pdlu) / (PDLU_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_pdld) / (PDLD_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_b5v5) / (B5V5_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_bvbat) / (BVBAT_SCLINV / TOTAL_SCLINV);
+      current_total += ((double) current_str_total) / (STR_SCLINV / TOTAL_SCLINV);
+      total_current_draw = current_total;
     }
     STI();
 
