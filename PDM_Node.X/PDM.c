@@ -19,6 +19,9 @@ volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
 uint16_t wiper_values[NUM_LOADS] = {0};
 uint16_t peak_wiper_values[NUM_LOADS] = {0};
 
+// Stores whether each load is currently in peak mode
+uint8_t peak_state[NUM_LOADS] = {0};
+
 // Stores the calculated FB pin resistance for each load
 double fb_resistances[NUM_LOADS] = {0.0};
 
@@ -32,6 +35,7 @@ volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr = 0;
+uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr = 0;
 
 /**
  * Main function
@@ -129,6 +133,7 @@ void main(void) {
   for (i = 0; i < NUM_LOADS; i++) {
     wiper_values[i] = 128;
     peak_wiper_values[i] = 128;
+    peak_state[i] = 0;
     fb_resistances[i] = WPR_TO_RES(128.0);
   }
   send_all_rheo(0x80);
@@ -149,7 +154,9 @@ void main(void) {
   // Main loop
   while (1) {
 
-    // Determine if the fuel pump should be priming
+    /**
+     * Determine if the fuel pump should be priming
+     */
     CLI();
     if (ON_SW) {
       fuel_prime_flag = 1;
@@ -158,7 +165,9 @@ void main(void) {
     }
     STI();
 
-    // Determine if the car is experiencing an over-temperature condition
+    /**
+     * Determine if the car is experiencing an over-temperature condition
+     */
     CLI();
     if (over_temp_flag) {
       if (eng_temp < FAN_THRESHOLD_L) {
@@ -194,44 +203,58 @@ void main(void) {
        */
 
       if (ON_SW) {
-        //TODO: Enable IGN
+        // Enable IGN
         EN_IGN_LAT = PWR_ON;
 
-        //TODO: Enable INJ
+        // Enable INJ
         EN_INJ_LAT = PWR_ON;
 
-        //TODO: Enable FUEL
+        // Enable FUEL
+        uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
+        set_rheo(FUEL_IDX, peak_wpr_val);
+        fb_resistances[FUEL_IDX] = WPR_TO_RES(peak_wpr_val);
+        peak_state[FUEL_IDX] = 1;
         EN_FUEL_LAT = PWR_ON;
+        fuel_peak_tmr = millis;
 
         // If STR load is on, disable WATER and FAN. Otherwise, enable them.
         if (STR_EN) {
-          //TODO: Disable WTR
+          // Disable WTR
           EN_WTR_LAT = PWR_OFF;
 
-          //TODO: Disable FAN
+          // Disable FAN
           EN_FAN_LAT = PWR_OFF;
         } else {
-          //TODO: Enable WTR
+          // Enable WTR
+          uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
+          set_rheo(WTR_IDX, peak_wpr_val);
+          fb_resistances[WTR_IDX] = WPR_TO_RES(peak_wpr_val);
+          peak_state[WTR_IDX] = 1;
           EN_WTR_LAT = PWR_ON;
+          wtr_peak_tmr = millis;
 
-          //TODO: Enable FAN
+          // Enable FAN
+          peak_wpr_val = peak_wiper_values[FAN_IDX];
+          set_rheo(FAN_IDX, peak_wpr_val);
+          fb_resistances[FAN_IDX] = WPR_TO_RES(peak_wpr_val);
+          peak_state[FAN_IDX] = 1;
           EN_FAN_LAT = PWR_ON;
+          fan_peak_tmr = millis;
         }
-
       } else {
-        //TODO: Disable IGN
+        // Disable IGN
         EN_IGN_LAT = PWR_OFF;
 
-        //TODO: Disable INJ
+        // Disable INJ
         EN_INJ_LAT = PWR_OFF;
 
-        //TODO: Disable FUEL
+        // Disable FUEL
         EN_FUEL_LAT = PWR_OFF;
 
-        //TODO: Disable WTR
+        // Disable WTR
         EN_WTR_LAT = PWR_OFF;
 
-        //TODO: Disable FAN
+        // Disable FAN
         EN_FAN_LAT = PWR_OFF;
       }
     } else {
@@ -267,16 +290,53 @@ void main(void) {
     }
     STI();
 
-    //TODO: Check peak timers
+    /**
+     * Check peak timers and reset to normal mode if enough time has past
+     */
+    //FUEL
+    CLI();
+    if (FUEL_EN && peak_state[FUEL_IDX] && (millis - fuel_peak_tmr > FUEL_PEAK_DUR)) {
+      STI();
+
+      uint16_t wpr_val = wiper_values[FUEL_IDX];
+      set_rheo(FUEL_IDX, wpr_val);
+      fb_resistances[FUEL_IDX] = WPR_TO_RES(wpr_val);
+      peak_state[FUEL_IDX] = 0;
+    }
+    STI();
+
+    //WTR
+    CLI();
+    if (WTR_EN && peak_state[WTR_IDX] && (millis - wtr_peak_tmr > WTR_PEAK_DUR)) {
+      STI();
+
+      uint16_t wpr_val = wiper_values[WTR_IDX];
+      set_rheo(WTR_IDX, wpr_val);
+      fb_resistances[WTR_IDX] = WPR_TO_RES(wpr_val);
+      peak_state[WTR_IDX] = 0;
+    }
+    STI();
+
+    //FAN
+    CLI();
+    if (FAN_EN && peak_state[FAN_IDX] && (millis - fan_peak_tmr > FAN_PEAK_DUR)) {
+      STI();
+
+      uint16_t wpr_val = wiper_values[FAN_IDX];
+      set_rheo(FAN_IDX, wpr_val);
+      fb_resistances[FAN_IDX] = WPR_TO_RES(wpr_val);
+      peak_state[FAN_IDX] = 0;
+    }
+    STI();
 
     //TODO: Overcurrent detection
 
     //TODO: Control PDLU/PDLD
 
-    CLI();
     /**
      * Send diagnostic CAN messages
      */
+    CLI();
     if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
       STI();
 
@@ -436,6 +496,13 @@ void main(void) {
     }
     STI();
 
+    /**
+     * Send current value of peak mode current cutoffs 
+     */
+
+    /**
+     * Send current value of normal mode current cutoffs
+     */
 
     //TODO: ???
     //TODO: Profit
@@ -508,6 +575,8 @@ void process_CAN_msg(CAN_message msg) {
 
       motec1_recv_tmr = millis;
       break;
+
+    //TODO: Accept new values for CAN current cut-offs
   }
 }
 
