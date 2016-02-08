@@ -3,7 +3,7 @@
  * Author: Jake Leonard
  * Comments: Ported from the Adafruit arduino library
  */
-
+/*
 #ifndef	RA8875_H 
 #define	RA8875_H
 
@@ -17,7 +17,6 @@ void writeReg(uint8_t reg, uint8_t val);
 void writeData(uint8_t d);
 void writeCommand(uint8_t d);
 void displayOn(uint8_t on);
-void delay(int d);
 
 // Define statements for registers and other info
 // Colors (RGB565)
@@ -224,4 +223,4 @@ void delay(int d);
 #define RA8875_INTC2_TP         0x04
 #define RA8875_INTC2_BTE        0x02
 
-#endif	/* RA8875_H */
+#endif	*/ /* RA8875_H */

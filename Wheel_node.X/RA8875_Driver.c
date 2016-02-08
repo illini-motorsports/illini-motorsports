@@ -3,16 +3,15 @@
  * Author: Jake Leonard
  * Comments: Ported from the Adafruit arduino library
  */
-
+/*
 #include "RA8875_Driver.h"
-
 // Initialize Screen
 void lcd_init(){
   // init PLL
   writeReg(RA8875_PLLC1, RA8875_PLLC1_PLLDIV1 + 10);
-  delay(1);
+  //delay(1);
   writeReg(RA8875_PLLC2, RA8875_PLLC2_DIV4);
-  delay(1);
+ // delay(1);
   writeReg(RA8875_SYSR, RA8875_SYSR_16BPP | RA8875_SYSR_MCU8);
 
   // Set env variables
@@ -27,16 +26,16 @@ void lcd_init(){
   uint16_t _width = 480;
   uint16_t _height = 272;
   writeReg(RA8875_PCSR, pixclk);
-  delay(1);
+  //delay(1);
   
-  /* Horizontal settings registers */
+  // Horizontal settings registers
   writeReg(RA8875_HDWR, (_width / 8) - 1);                          // H width: (HDWR + 1) * 8 = 480
   writeReg(RA8875_HNDFTR, RA8875_HNDFTR_DE_HIGH + hsync_finetune);
   writeReg(RA8875_HNDR, (hsync_nondisp - hsync_finetune - 2)/8);    // H non-display: HNDR * 8 + HNDFTR + 2 = 10
   writeReg(RA8875_HSTR, hsync_start/8 - 1);                         // Hsync start: (HSTR + 1)*8 
   writeReg(RA8875_HPWR, RA8875_HPWR_LOW + (hsync_pw/8 - 1));        // HSync pulse width = (HPWR+1) * 8
   
-  /* Vertical settings registers */
+  // Vertical settings registers 
   writeReg(RA8875_VDHR0, (uint16_t)(_height - 1) & 0xFF);
   writeReg(RA8875_VDHR1, (uint16_t)(_height - 1) >> 8);
   writeReg(RA8875_VNDR0, vsync_nondisp-1);                          // V non-display period = VNDR + 1
@@ -45,21 +44,21 @@ void lcd_init(){
   writeReg(RA8875_VSTR1, vsync_start >> 8);
   writeReg(RA8875_VPWR, RA8875_VPWR_LOW + vsync_pw - 1);            // Vsync pulse width = VPWR + 1
   
-  /* Set active window X */
+  // Set active window X 
   writeReg(RA8875_HSAW0, 0);                                        // horizontal start point
   writeReg(RA8875_HSAW1, 0);
   writeReg(RA8875_HEAW0, (uint16_t)(_width - 1) & 0xFF);            // horizontal end point
   writeReg(RA8875_HEAW1, (uint16_t)(_width - 1) >> 8);
   
-  /* Set active window Y */
+  // Set active window Y 
   writeReg(RA8875_VSAW0, 0);                                        // vertical start point
   writeReg(RA8875_VSAW1, 0);  
   writeReg(RA8875_VEAW0, (uint16_t)(_height - 1) & 0xFF);           // horizontal end point
   writeReg(RA8875_VEAW1, (uint16_t)(_height - 1) >> 8);
   
-  /* Clear the entire window */
+  // Clear the entire window 
   writeReg(RA8875_MCLR, RA8875_MCLR_START | RA8875_MCLR_FULL);
-  delay(500); 
+  //delay(500); 
 }
 
  
@@ -96,11 +95,11 @@ void writeData(uint8_t d) {
   while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
   LATBbits.LATB8 = 1; // CS deselected
 }
-
-void delay(int d){
-	int i = 0;
-	for(;i<d*10;i++);
-}
+*/
+//void delay(int d){
+//	int i = 0;
+//	for(;i<d*10;i++);
+//}
 
 /*
 void Adafruit_RA8875::sleep(boolean sleep) 
