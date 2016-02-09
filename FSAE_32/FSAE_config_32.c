@@ -39,7 +39,7 @@
 #pragma config WDTPS = 0b10100  // Watchdog Timer Postscaler (1:1048576)
 #pragma config FCKSM = 0b11     // Clock Switching and Monitor Selection (Clock Switch Enabled, FSCM Enabled)
 #pragma config OSCIOFNC = 0b1   // CLKO Output Signal Active on the OSCO Pin (Disabled)
-#pragma config POSCMOD = 0b11   // Primary Oscillator Configuration (EC mode selected)
+#pragma config POSCMOD = 0b00   // Primary Oscillator Configuration (EC mode selected)
 #pragma config IESO = 0b0       // Internal/External Switch Over (Disabled)
 #pragma config FSOSCEN = 0b0    // Secondary Oscillator Enable (Disable SOSC)
 #pragma config DMTINTV = 0b111  // DMT Count Window Interval (Window/Interval value is 127/128 counter value)
@@ -54,9 +54,9 @@
 #pragma config UPLLFSEL = 0b1      // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
 #pragma config FPLLODIV = 0b001    // Default System PLL Output Divisor (PLL output divided by 2)
 #pragma config FPLLMULT = 0b110001 // System PLL Multiplier (PLL Multiply by 50)
-#pragma config FPLLICLK = 0b1      // System PLL Input Clock Selection (POSC is input to the System PLL)
-#pragma config FPLLRNG = 0b001     // System PLL Divided Input Clock Frequency Range (8-16Mhz)
-#pragma config FPLLIDIV = 0b000    // System PLL Input Divider (Divide by 3)
+#pragma config FPLLICLK = 0b0      // System PLL Input Clock Selection (POSC is input to the System PLL)
+#pragma config FPLLRNG = 0b010     // System PLL Divided Input Clock Frequency Range (8-16Mhz)
+#pragma config FPLLIDIV = 0b010    // System PLL Input Divider (Divide by 3)
 
 // DEVCFG3
 #pragma config FUSBIDIO = 0b0  // USB USBID Selection (Controlled by the port function)
@@ -120,6 +120,16 @@ void init_general(void) {
 
   // INTCON
   INTCONbits.MVEC = 1; // Multi Vector Configuration Bit (Configured for multi-vectored mode)
+
+  // PRISS
+  PRISSbits.PRI7SS = 7; // IPL 7 Shadow Set (Shadow Set 7)
+  PRISSbits.PRI6SS = 6; // IPL 6 Shadow Set (Shadow Set 6)
+  PRISSbits.PRI5SS = 5; // IPL 5 Shadow Set (Shadow Set 7)
+  PRISSbits.PRI4SS = 4; // IPL 4 Shadow Set (Shadow Set 4)
+  PRISSbits.PRI3SS = 3; // IPL 3 Shadow Set (Shadow Set 3)
+  PRISSbits.PRI2SS = 2; // IPL 2 Shadow Set (Shadow Set 2)
+  PRISSbits.PRI1SS = 1; // IPL 1 Shadow Set (Shadow Set 1)
+  PRISSbits.SS0 = 0;    // Single Vector Shadow Set (Not presented with a shadow set)
 
   lock_config();
 }
@@ -818,6 +828,5 @@ void init_termination(void) {
   TERM_TRIS = OUTPUT;
 
   // Set termination based on value defined in specific node's header
-  //TERM_LAT = TERMINATING;
-  //TERM_LAT = 0;
+  TERM_LAT = TERMINATING;
 }

@@ -149,6 +149,9 @@ void main(void) {
   EN_B5V5_LAT = PWR_ON;
   EN_BVBAT_LAT = PWR_ON;
 
+  // Trigger initial ADC conversion
+  ADCCON3bits.GSWTRG = 1;
+
   STI(); // Enable interrupts
 
   // Main loop
@@ -157,18 +160,15 @@ void main(void) {
     /**
      * Determine if the fuel pump should be priming
      */
-    CLI();
     if (ON_SW) {
       fuel_prime_flag = 1;
     } else if (millis - fuel_prime_tmr > FUEL_PRIME_DUR && FUEL_EN) {
       fuel_prime_flag = 0;
     }
-    STI();
 
     /**
      * Determine if the car is experiencing an over-temperature condition
      */
-    CLI();
     if (over_temp_flag) {
       if (eng_temp < FAN_THRESHOLD_L) {
         over_temp_flag = 0;
@@ -178,7 +178,6 @@ void main(void) {
         over_temp_flag = 1;
       }
     }
-    STI();
 
     /**
      * Toggle state-dependent loads
@@ -189,7 +188,6 @@ void main(void) {
      * Only power on or power off a load if it is not already on or off, even if
      * the conditions match.
      */
-    CLI();
     if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
         millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
         millis - motec1_recv_tmr > BASIC_CONTROL_WAIT) {
@@ -269,10 +267,8 @@ void main(void) {
       //TODO: Toggle WTR
       //TODO: Toggle FAN
     }
-    STI();
 
     // STR
-    CLI();
     if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
       if (!STR_EN) {
         EN_STR_LAT = PWR_ON;
@@ -288,46 +284,33 @@ void main(void) {
         EN_STR_LAT = PWR_OFF;
       }
     }
-    STI();
 
     /**
      * Check peak timers and reset to normal mode if enough time has past
      */
     //FUEL
-    CLI();
     if (FUEL_EN && peak_state[FUEL_IDX] && (millis - fuel_peak_tmr > FUEL_PEAK_DUR)) {
-      STI();
-
       uint16_t wpr_val = wiper_values[FUEL_IDX];
       set_rheo(FUEL_IDX, wpr_val);
       fb_resistances[FUEL_IDX] = WPR_TO_RES(wpr_val);
       peak_state[FUEL_IDX] = 0;
     }
-    STI();
 
     //WTR
-    CLI();
     if (WTR_EN && peak_state[WTR_IDX] && (millis - wtr_peak_tmr > WTR_PEAK_DUR)) {
-      STI();
-
       uint16_t wpr_val = wiper_values[WTR_IDX];
       set_rheo(WTR_IDX, wpr_val);
       fb_resistances[WTR_IDX] = WPR_TO_RES(wpr_val);
       peak_state[WTR_IDX] = 0;
     }
-    STI();
 
     //FAN
-    CLI();
     if (FAN_EN && peak_state[FAN_IDX] && (millis - fan_peak_tmr > FAN_PEAK_DUR)) {
-      STI();
-
       uint16_t wpr_val = wiper_values[FAN_IDX];
       set_rheo(FAN_IDX, wpr_val);
       fb_resistances[FAN_IDX] = WPR_TO_RES(wpr_val);
       peak_state[FAN_IDX] = 0;
     }
-    STI();
 
     //TODO: Overcurrent detection
 
@@ -336,10 +319,7 @@ void main(void) {
     /**
      * Send diagnostic CAN messages
      */
-    CLI();
     if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
-      STI();
-
       CAN_data data = {0};
       data.halfword0 = (uint16_t ) seconds;
       data.halfword1 = total_current_draw;
@@ -348,15 +328,11 @@ void main(void) {
 
       diag_send_tmr = millis;
     }
-    STI();
 
     /**
      * Sample load current data and send results on CAN
      */
-    CLI();
     if(millis - load_current_send_tmr >= LOAD_CUR_SEND) {
-      STI();
-
       uint32_t fb_volt_ign = read_adc_chn(ADC_IGN_CHN);
       uint16_t current_ign = (((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5) 
           * IGN_SCLINV * IGN_RATIO) / fb_resistances[IGN_IDX];
@@ -419,7 +395,7 @@ void main(void) {
       load_current_data.halfword0 = current_pdld;
       load_current_data.halfword1 = current_b5v5;
       load_current_data.halfword2 = current_bvbat;
-      CAN_send_message(0x305, 6, load_current_data);
+      CAN_send_message(0x306, 6, load_current_data);
 
       uint32_t fb_volt_str0 = read_adc_chn(ADC_STR0_CHN);
       uint16_t current_str0 = (((((double) fb_volt_str0) / 4095.0) * 3.3 * 1.5) 
@@ -440,7 +416,9 @@ void main(void) {
       load_current_data.halfword1 = current_str1;
       load_current_data.halfword2 = current_str2;
       load_current_data.halfword3 = current_str_total;
-      CAN_send_message(0x306, 8, load_current_data);
+      CAN_send_message(0x307, 8, load_current_data);
+
+      load_current_send_tmr = millis;
 
       // Calculate total current consumption
       double current_total = ((double) current_ign) / (IGN_SCLINV / TOTAL_SCLINV);
@@ -457,15 +435,11 @@ void main(void) {
       current_total += ((double) current_str_total) / (STR_SCLINV / TOTAL_SCLINV);
       total_current_draw = current_total;
     }
-    STI();
 
     /**
      * Sample voltage rail data and send results on CAN
      */
-    CLI();
     if(millis - rail_volt_send_tmr >= RAIL_VOLT_SEND) {
-      STI();
-
       uint32_t rail_vbat = read_adc_chn(ADC_VBAT_CHN);
       uint16_t rail_vbat_conv = ((((double) rail_vbat) / 4095.0) * 3.3 * 5) * 1000.0;
 
@@ -494,7 +468,6 @@ void main(void) {
 
       rail_volt_send_tmr = millis;
     }
-    STI();
 
     /**
      * Send current value of peak mode current cutoffs 
@@ -543,7 +516,9 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
   millis++; // Increment millis count
 
   //TODO: Move this?
-  ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+  if(ADCCON2bits.EOSRDY) {
+    ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+  }
 
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
