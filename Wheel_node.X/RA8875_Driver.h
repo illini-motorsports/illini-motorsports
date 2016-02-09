@@ -27,10 +27,41 @@ void Display_On(uint8_t isOn);
 #define LCD_DISP_SLEEP 			0x02
 
 // Command/Data pins for SPI
-#define LCD_DATAWRITE        0x00
-#define LCD_DATAREAD         0x40
-#define LCD_CMDWRITE         0x80
-#define LCD_CMDREAD          0xC0
+#define LCD_DATAWRITE			0x00
+#define LCD_DATAREA				0x40
+#define LCD_CMDWRITE			0x80
+#define LCD_CMDREAD				0xC0
+
+/**********************************
+******* LCD Init Code *************/
+// Horizontal Setup
+#define LCD_HRZ_WIDTH			0x14
+#define LCD_HNDFTR				0x15
+#define LCD_HNDR				0x16
+#define LCD_HSTR				0x17
+#define LCD_HPWR				0x18
+
+// Vertical Setup
+#define LCD_VDHR0				0x19
+#define LCD_VDHR1				0x1A
+#define LCD_VNDR0				0x1B
+#define LCD_VNDR1				0x1C
+#define LCD_VSTR0				0x1D
+#define LCD_VSTR1				0x1E
+#define LCD_VPWR				0x1F
+
+// Setting Active Window
+// Start points
+#define LCD_HSAW0			0x30
+#define LCD_HSAW1			0x31
+#define LCD_VSAW0			0x32
+#define LCD_VSAW1			0x33
+
+// End points
+#define LCD_HEAW0			0x34
+#define LCD_HEAW1			0x35
+#define LCD_VEAW0			0x36
+#define LCD_VEAW1			0x37
 
 /*
 // Define statements for registers and other info

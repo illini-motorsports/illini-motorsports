@@ -17,6 +17,7 @@
 #include "RA8875_Driver.h"
 
 #define TERMINATING 1
+#define INTERNAL_CLK 1
 
 // Indicator LED's
 #define PIC_FN_TRIS 	TRISBbits.TRISB6

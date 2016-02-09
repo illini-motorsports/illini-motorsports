@@ -49,31 +49,31 @@ void LCD_Init(void) {
     delay(1);
 
     //Horizontal set
-    writeCommand(0x14); //HDWR//Horizontal Display Width Setting Bit[6:0]
+    writeCommand(LCD_HRZ_WIDTH); //HDWR//Horizontal Display Width Setting Bit[6:0]
     writeData(0x3B); //Horizontal display width(pixels) = (HDWR + 1)*8
-    writeCommand(0x15); //Horizontal Non-Display Period Fine Tuning Option Register (HNDFTR)
+    writeCommand(LCD_HNDFTR); //Horizontal Non-Display Period Fine Tuning Option Register (HNDFTR)
     writeData(0x00); //Horizontal Non-Display Period Fine Tuning(HNDFT) [3:0]
-    writeCommand(0x16); //HNDR//Horizontal Non-Display Period Bit[4:0]
+    writeCommand(LCD_HNDR); //HNDR//Horizontal Non-Display Period Bit[4:0]
     writeData(0x01); //Horizontal Non-Display Period (pixels) = (HNDR + 1)*8
-    writeCommand(0x17); //HSTR//HSYNC Start Position[4:0]
+    writeCommand(LCD_HSTR); //HSTR//HSYNC Start Position[4:0]
     writeData(0x00); //HSYNC Start Position(PCLK) = (HSTR + 1)*8
-    writeCommand(0x18); //HPWR//HSYNC Polarity ,The period width of HSYNC.
+    writeCommand(LCD_HPWR); //HPWR//HSYNC Polarity ,The period width of HSYNC.
     writeData(0x05); //HSYNC Width [4:0] HSYNC Pulse width(PCLK) = (HPWR + 1)*8
 
     //Vertical set
-    writeCommand(0x19); //VDHR0 //Vertical Display Height Bit [7:0]
+    writeCommand(LCD_VDHR0); //VDHR0 //Vertical Display Height Bit [7:0]
     writeData(0x0f); //Vertical pixels = VDHR + 1
-    writeCommand(0x1a); //VDHR1 //Vertical Display Height Bit [8]
+    writeCommand(LCD_VDHR1); //VDHR1 //Vertical Display Height Bit [8]
     writeData(0x01); //Vertical pixels = VDHR + 1
-    writeCommand(0x1b); //VNDR0 //Vertical Non-Display Period Bit [7:0]
+    writeCommand(LCD_VNDR0); //VNDR0 //Vertical Non-Display Period Bit [7:0]
     writeData(0x02); //VSYNC Start Position(PCLK) = (VSTR + 1)
-    writeCommand(0x1c); //VNDR1 //Vertical Non-Display Period Bit [8]
+    writeCommand(LCD_VNDR1); //VNDR1 //Vertical Non-Display Period Bit [8]
     writeData(0x00); //Vertical Non-Display area = (VNDR + 1)
-    writeCommand(0x1d); //VSTR0 //VSYNC Start Position[7:0]
+    writeCommand(LCD_VSTR0); //VSTR0 //VSYNC Start Position[7:0]
     writeData(0x07); //VSYNC Start Position(PCLK) = (VSTR + 1)
-    writeCommand(0x1e); //VSTR1 //VSYNC Start Position[8]
+    writeCommand(LCD_VSTR1); //VSTR1 //VSYNC Start Position[8]
     writeData(0x00); //VSYNC Start Position(PCLK) = (VSTR + 1)
-    writeCommand(0x1f); //VPWR //VSYNC Polarity ,VSYNC Pulse Width[6:0]
+    writeCommand(LCD_VPWR); //VPWR //VSYNC Polarity ,VSYNC Pulse Width[6:0]
     writeData(0x09); //VSYNC Pulse Width(PCLK) = (VPWR + 1)
 
     //Active window set
