@@ -39,13 +39,24 @@
 #pragma config WDTPS = 0b10100  // Watchdog Timer Postscaler (1:1048576)
 #pragma config FCKSM = 0b11     // Clock Switching and Monitor Selection (Clock Switch Enabled, FSCM Enabled)
 #pragma config OSCIOFNC = 0b1   // CLKO Output Signal Active on the OSCO Pin (Disabled)
+
+#if INTERNAL_CLK
+#pragma config POSCMOD = 0b11   // Primary Oscillator Configuration (POSC disabled)
+#else
 #pragma config POSCMOD = 0b00   // Primary Oscillator Configuration (EC mode selected)
+#endif
+
 #pragma config IESO = 0b0       // Internal/External Switch Over (Disabled)
 #pragma config FSOSCEN = 0b0    // Secondary Oscillator Enable (Disable SOSC)
 #pragma config DMTINTV = 0b111  // DMT Count Window Interval (Window/Interval value is 127/128 counter value)
 #pragma config FNOSC = 0b001    // Oscillator Selection Bits (SPLL)
 
 /**
+ * Internal Clock:
+ * SYSCLK == SPLL == ((FPLLICLK / FPLLIDIV) / FPLLODIV) * FPLLMULT ==
+ * ((FRC / 1) / 2) * 50 == (8Mhz / 2) * 50 == 200Mhz
+ *
+ * External Clock:
  * SYSCLK == SPLL == ((FPLLICLK / FPLLIDIV) / FPLLODIV) * FPLLMULT ==
  * ((POSC / 3) / 2) * 50 == (24Mhz / 6) * 50 == 200Mhz
  */
@@ -54,9 +65,16 @@
 #pragma config UPLLFSEL = 0b1      // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
 #pragma config FPLLODIV = 0b001    // Default System PLL Output Divisor (PLL output divided by 2)
 #pragma config FPLLMULT = 0b110001 // System PLL Multiplier (PLL Multiply by 50)
+
+#if INTERNAL_CLK
+#pragma config FPLLICLK = 0b1      // System PLL Input Clock Selection (FRC is input to the System PLL)
+#pragma config FPLLRNG = 0b001     // System PLL Divided Input Clock Frequency Range (5-10Mhz)
+#pragma config FPLLIDIV = 0b000    // System PLL Input Divider (Divide by 1)
+#else
 #pragma config FPLLICLK = 0b0      // System PLL Input Clock Selection (POSC is input to the System PLL)
 #pragma config FPLLRNG = 0b010     // System PLL Divided Input Clock Frequency Range (8-16Mhz)
 #pragma config FPLLIDIV = 0b010    // System PLL Input Divider (Divide by 3)
+#endif
 
 // DEVCFG3
 #pragma config FUSBIDIO = 0b0  // USB USBID Selection (Controlled by the port function)

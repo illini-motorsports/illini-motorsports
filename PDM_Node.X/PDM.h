@@ -18,6 +18,9 @@
 // Enable programmable termination
 #define TERMINATING 1
 
+// Determines whether the internal or external clock source is used
+#define INTERNAL_CLK 0
+
 // Defines for MOSFET control
 #define PWR_ON  1
 #define PWR_OFF 0
