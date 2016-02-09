@@ -1,159 +1,118 @@
-/* 
+/*
  * File: RA8875_Driver.c
  * Author: Jake Leonard
- * Comments: Ported from the Adafruit arduino library
+ * Comments: Functions for interfacing with the RA8875 Display Driver
  */
-/*
 #include "RA8875_Driver.h"
-// Initialize Screen
-void lcd_init(){
-  // init PLL
-  writeReg(RA8875_PLLC1, RA8875_PLLC1_PLLDIV1 + 10);
-  //delay(1);
-  writeReg(RA8875_PLLC2, RA8875_PLLC2_DIV4);
- // delay(1);
-  writeReg(RA8875_SYSR, RA8875_SYSR_16BPP | RA8875_SYSR_MCU8);
 
-  // Set env variables
-  uint8_t pixclk = RA8875_PCSR_PDATL | RA8875_PCSR_4CLK;
-  uint8_t hsync_start = 8;
-  uint8_t hsync_pw = 48;
-  uint8_t hsync_finetune = 0;
-  uint8_t hsync_nondisp = 10;
-  uint8_t vsync_pw = 10;
-  uint16_t vsync_nondisp = 3;
-  uint16_t vsync_start = 8;
-  uint16_t _width = 480;
-  uint16_t _height = 272;
-  writeReg(RA8875_PCSR, pixclk);
-  //delay(1);
-  
-  // Horizontal settings registers
-  writeReg(RA8875_HDWR, (_width / 8) - 1);                          // H width: (HDWR + 1) * 8 = 480
-  writeReg(RA8875_HNDFTR, RA8875_HNDFTR_DE_HIGH + hsync_finetune);
-  writeReg(RA8875_HNDR, (hsync_nondisp - hsync_finetune - 2)/8);    // H non-display: HNDR * 8 + HNDFTR + 2 = 10
-  writeReg(RA8875_HSTR, hsync_start/8 - 1);                         // Hsync start: (HSTR + 1)*8 
-  writeReg(RA8875_HPWR, RA8875_HPWR_LOW + (hsync_pw/8 - 1));        // HSync pulse width = (HPWR+1) * 8
-  
-  // Vertical settings registers 
-  writeReg(RA8875_VDHR0, (uint16_t)(_height - 1) & 0xFF);
-  writeReg(RA8875_VDHR1, (uint16_t)(_height - 1) >> 8);
-  writeReg(RA8875_VNDR0, vsync_nondisp-1);                          // V non-display period = VNDR + 1
-  writeReg(RA8875_VNDR1, vsync_nondisp >> 8);
-  writeReg(RA8875_VSTR0, vsync_start-1);                            // Vsync start position = VSTR + 1
-  writeReg(RA8875_VSTR1, vsync_start >> 8);
-  writeReg(RA8875_VPWR, RA8875_VPWR_LOW + vsync_pw - 1);            // Vsync pulse width = VPWR + 1
-  
-  // Set active window X 
-  writeReg(RA8875_HSAW0, 0);                                        // horizontal start point
-  writeReg(RA8875_HSAW1, 0);
-  writeReg(RA8875_HEAW0, (uint16_t)(_width - 1) & 0xFF);            // horizontal end point
-  writeReg(RA8875_HEAW1, (uint16_t)(_width - 1) >> 8);
-  
-  // Set active window Y 
-  writeReg(RA8875_VSAW0, 0);                                        // vertical start point
-  writeReg(RA8875_VSAW1, 0);  
-  writeReg(RA8875_VEAW0, (uint16_t)(_height - 1) & 0xFF);           // horizontal end point
-  writeReg(RA8875_VEAW1, (uint16_t)(_height - 1) >> 8);
-  
-  // Clear the entire window 
-  writeReg(RA8875_MCLR, RA8875_MCLR_START | RA8875_MCLR_FULL);
-  //delay(500); 
+// Turns Display on and off based on isOn Argument
+
+void Display_On(uint8_t isOn) {
+    writeCommand(LCD_POWER);
+    if (isOn) {
+        writeData(LCD_DISP_ON);
+    } else {
+        writeData(LCD_DISP_OFF);
+    }
 }
 
- 
-void displayOn(uint8_t on) 
-{
- if (on) 
-   writeReg(RA8875_PWRR, RA8875_PWRR_NORMAL | RA8875_PWRR_DISPON);
- else
-   writeReg(RA8875_PWRR, RA8875_PWRR_NORMAL | RA8875_PWRR_DISPOFF);
+// Hard reset for LCD
+
+void LCD_Reset(void) {
+    LCD_RST_LAT = 0;
+    delay(1);
+    LCD_RST_LAT = 1;
+    delay(10);
 }
 
-void  writeReg(uint8_t reg, uint8_t val) 
-{
-  writeCommand(reg);
-  writeData(val);
+// First init function for the LCD
+
+void PLL_Init(void) {
+    writeCommand(0x88);
+    writeData(0x0a);
+    delay(1);
+    writeCommand(0x89);
+    writeData(0x02);
+    delay(1);
 }
 
-void writeCommand(uint8_t d) {
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  LATBbits.LATB8 = 0; // CS selected
-  SPI1BUF = RA8875_CMDWRITE;
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  SPI1BUF = d;
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  LATBbits.LATB8 = 1; // CS deselected
+// Main LCD init function
+
+void LCD_Init(void) {
+    PLL_Init();
+    //Set color space to 8 bit, 65k Color depth
+    writeCommand(0x10); //SYSR
+    writeData(0x0c);
+
+    writeCommand(0x04); //set PCLK invers
+    writeData(0x82);
+    delay(1);
+
+    //Horizontal set
+    writeCommand(0x14); //HDWR//Horizontal Display Width Setting Bit[6:0]
+    writeData(0x3B); //Horizontal display width(pixels) = (HDWR + 1)*8
+    writeCommand(0x15); //Horizontal Non-Display Period Fine Tuning Option Register (HNDFTR)
+    writeData(0x00); //Horizontal Non-Display Period Fine Tuning(HNDFT) [3:0]
+    writeCommand(0x16); //HNDR//Horizontal Non-Display Period Bit[4:0]
+    writeData(0x01); //Horizontal Non-Display Period (pixels) = (HNDR + 1)*8
+    writeCommand(0x17); //HSTR//HSYNC Start Position[4:0]
+    writeData(0x00); //HSYNC Start Position(PCLK) = (HSTR + 1)*8
+    writeCommand(0x18); //HPWR//HSYNC Polarity ,The period width of HSYNC.
+    writeData(0x05); //HSYNC Width [4:0] HSYNC Pulse width(PCLK) = (HPWR + 1)*8
+
+    //Vertical set
+    writeCommand(0x19); //VDHR0 //Vertical Display Height Bit [7:0]
+    writeData(0x0f); //Vertical pixels = VDHR + 1
+    writeCommand(0x1a); //VDHR1 //Vertical Display Height Bit [8]
+    writeData(0x01); //Vertical pixels = VDHR + 1
+    writeCommand(0x1b); //VNDR0 //Vertical Non-Display Period Bit [7:0]
+    writeData(0x02); //VSYNC Start Position(PCLK) = (VSTR + 1)
+    writeCommand(0x1c); //VNDR1 //Vertical Non-Display Period Bit [8]
+    writeData(0x00); //Vertical Non-Display area = (VNDR + 1)
+    writeCommand(0x1d); //VSTR0 //VSYNC Start Position[7:0]
+    writeData(0x07); //VSYNC Start Position(PCLK) = (VSTR + 1)
+    writeCommand(0x1e); //VSTR1 //VSYNC Start Position[8]
+    writeData(0x00); //VSYNC Start Position(PCLK) = (VSTR + 1)
+    writeCommand(0x1f); //VPWR //VSYNC Polarity ,VSYNC Pulse Width[6:0]
+    writeData(0x09); //VSYNC Pulse Width(PCLK) = (VPWR + 1)
+
+    //Active window set
+    //setting active window X
+    writeCommand(0x30); //Horizontal Start Point 0 of Active Window (HSAW0)
+    writeData(0x00); //Horizontal Start Point of Active Window [7:0]
+    writeCommand(0x31); //Horizontal Start Point 1 of Active Window (HSAW1)
+    writeData(0x00); //Horizontal Start Point of Active Window [9:8]
+    writeCommand(0x34); //Horizontal End Point 0 of Active Window (HEAW0)
+    writeData(0xDF); //Horizontal End Point of Active Window [7:0]
+    writeCommand(0x35); //Horizontal End Point 1 of Active Window (HEAW1)
+    writeData(0x01); //Horizontal End Point of Active Window [9:8]
+    //setting active window Y
+    writeCommand(0x32); //Vertical Start Point 0 of Active Window (VSAW0)
+    writeData(0x00); //Vertical Start Point of Active Window [7:0]
+    writeCommand(0x33); //Vertical Start Point 1 of Active Window (VSAW1)
+    writeData(0x00); //Vertical Start Point of Active Window [8]
+    writeCommand(0x36); //Vertical End Point of Active Window 0 (VEAW0)
+    writeData(0x0F); //Vertical End Point of Active Window [7:0]
+    writeCommand(0x37); //Vertical End Point of Active Window 1 (VEAW1)
+    writeData(0x01); //Vertical End Point of Active Window [8]
 }
 
-void writeData(uint8_t d) {
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  LATBbits.LATB8 = 0; // CS selected
-  SPI1BUF = RA8875_DATAWRITE;
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  SPI1BUF = d;
-  while(SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-  LATBbits.LATB8 = 1; // CS deselected
-}
-*/
-//void delay(int d){
-//	int i = 0;
-//	for(;i<d*10;i++);
-//}
-
-/*
-void Adafruit_RA8875::sleep(boolean sleep) 
-{
- if (sleep) 
-   writeReg(RA8875_PWRR, RA8875_PWRR_DISPOFF | RA8875_PWRR_SLEEP);
- else
-   writeReg(RA8875_PWRR, RA8875_PWRR_DISPOFF);
+void writeCommand(uint8_t command) {
+    while (SPI_BUSY); // Wait for idle SPI module
+    LCD_CS_LAT = 0; // CS selected
+    SPI_BUFFER = LCD_CMDWRITE;
+    while (SPI_BUSY); // Wait for idle SPI module
+    SPI_BUFFER = command;
+    while (SPI_BUSY); // Wait for idle SPI module
+    LCD_CS_LAT = 1; // CS deselected
 }
 
-void  Adafruit_RA8875::writeReg(uint8_t reg, uint8_t val) 
-{
-  writeCommand(reg);
-  writeData(val);
+void writeData(uint8_t data) {
+    while (SPI_BUSY); // Wait for idle SPI module
+    LCD_CS_LAT = 0; // CS selected
+    SPI_BUFFER = LCD_DATAWRITE;
+    while (SPI_BUSY); // Wait for idle SPI module
+    SPI_BUFFER = data;
+    while (SPI_BUSY); // Wait for idle SPI module
+    LCD_CS_LAT = 1; // CS deselected
 }
-
-uint8_t  Adafruit_RA8875::readReg(uint8_t reg) 
-{
-  writeCommand(reg);
-  return readData();
-}
-
-void  Adafruit_RA8875::writeData(uint8_t d) 
-{
-  digitalWrite(_cs, LOW);
-  SPI.transfer(RA8875_DATAWRITE);
-  SPI.transfer(d);
-  digitalWrite(_cs, HIGH);
-}
-
-uint8_t  Adafruit_RA8875::readData(void) 
-{
-  digitalWrite(_cs, LOW);
-  SPI.transfer(RA8875_DATAREAD);
-  uint8_t x = SPI.transfer(0x0);
-  digitalWrite(_cs, HIGH);
-  return x;
-}
-
-void  Adafruit_RA8875::writeCommand(uint8_t d) 
-{
-  digitalWrite(_cs, LOW);
-  SPI.transfer(RA8875_CMDWRITE);
-  SPI.transfer(d);
-  digitalWrite(_cs, HIGH);
-}
-
-
-uint8_t  Adafruit_RA8875::readStatus(void) 
-{
-  digitalWrite(_cs, LOW);
-  SPI.transfer(RA8875_CMDREAD);
-  uint8_t x = SPI.transfer(0x0);
-  digitalWrite(_cs, HIGH);
-  return x;
-}
-*/

@@ -3,7 +3,6 @@
  * Author: Jake Leonard
  * Comments: Ported from the Adafruit arduino library
  */
-/*
 #ifndef	RA8875_H 
 #define	RA8875_H
 
@@ -11,13 +10,29 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <xc.h> // include processor files - each processor file is guarded.  
+#include "Wheel.h"
 
-void lcd_init();
-void writeReg(uint8_t reg, uint8_t val);
-void writeData(uint8_t d);
-void writeCommand(uint8_t d);
-void displayOn(uint8_t on);
+void LCD_Init(void);
+void PLL_Init(void);
+void LCD_Reset(void);
+void writeData(uint8_t data);
+void writeCommand(uint8_t command);
+void Display_On(uint8_t isOn);
 
+// Jake Defined Constants
+#define LCD_POWER 				0x01
+#define LCD_DISP_ON 			0x80
+#define LCD_DISP_OFF 			0x00
+#define LCD_DISP_SFT_RST 		0x01
+#define LCD_DISP_SLEEP 			0x02
+
+// Command/Data pins for SPI
+#define LCD_DATAWRITE        0x00
+#define LCD_DATAREAD         0x40
+#define LCD_CMDWRITE         0x80
+#define LCD_CMDREAD          0xC0
+
+/*
 // Define statements for registers and other info
 // Colors (RGB565)
 #define	RA8875_BLACK            0x0000
@@ -223,4 +238,5 @@ void displayOn(uint8_t on);
 #define RA8875_INTC2_TP         0x04
 #define RA8875_INTC2_BTE        0x02
 
-#endif	*/ /* RA8875_H */
+ */
+#endif	/* RA8875_H */
