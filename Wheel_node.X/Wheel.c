@@ -66,7 +66,7 @@ void main(void){
 	PIC_FN_TRIS = OUTPUT;
 	PIC_MODE_TRIS = OUTPUT;
 	//LCD_BACKLITE_TRIS = OUTPUT;
-	PIC_FN_LAT = 0;
+	PIC_FN_LAT = 1;
 	PIC_MODE_LAT = 0;
 	//LCD_BACKLITE_LAT = 0;
 	
@@ -112,27 +112,30 @@ void update_sw_values(){
 }
 
 void delay(uint32_t mil){
-	int i = 0;
+	
+    int i = 0;
 	for(;i < mil*10000;i+=1);
-	//CLI();
-	//uint32_t delay_stop = millis + mil;
-	//STI();
-	//Nop();
-	//CLI();
-	//while(delay_stop > millis){
-	//	STI();
-	//	Nop();
-	//	Nop();
-	//	Nop();
-	//	CLI();
-	//}
-	//STI();
+    /*
+	CLI();
+	register uint32_t delay_stop = millis + mil;
+	STI();
+	Nop();
+	CLI();
+	while(delay_stop > millis){
+		STI();
+		Nop();
+		Nop();
+		Nop();
+		CLI();
+	}
+	STI();
+    */
 }
 
 void PLL_init(void){
 	writeCommand(0x88);
 	writeData(0x0a);
-	//delay(1);
+	delay(100);
 	writeCommand(0x89);
 	writeData(0x02);
 	//delay(1);
