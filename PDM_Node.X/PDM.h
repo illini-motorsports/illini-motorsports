@@ -18,6 +18,9 @@
 // Enable programmable termination
 #define TERMINATING 1
 
+// Determines whether the internal or external clock source is used
+#define INTERNAL_CLK 0
+
 // Defines for MOSFET control
 #define PWR_ON  1
 #define PWR_OFF 0
@@ -312,8 +315,8 @@
 #define BASIC_CONTROL_WAIT 1000
 #define STR_MAX_DUR        4000
 #define DIAG_MSG_SEND      1000
-#define LOAD_CUR_SEND      500
-#define RAIL_VOLT_SEND     500
+#define LOAD_CUR_SEND      10
+#define RAIL_VOLT_SEND     50
 #define FUEL_PEAK_DUR      50
 #define WTR_PEAK_DUR       50
 #define FAN_PEAK_DUR       50
