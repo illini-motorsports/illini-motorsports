@@ -78,41 +78,49 @@ void LCD_Init(void) {
 
     //Active window set
     //setting active window X
-    writeCommand(0x30); //Horizontal Start Point 0 of Active Window (HSAW0)
+    writeCommand(LCD_HSAW0); //Horizontal Start Point 0 of Active Window (HSAW0)
     writeData(0x00); //Horizontal Start Point of Active Window [7:0]
-    writeCommand(0x31); //Horizontal Start Point 1 of Active Window (HSAW1)
+    writeCommand(LCD_HSAW1); //Horizontal Start Point 1 of Active Window (HSAW1)
     writeData(0x00); //Horizontal Start Point of Active Window [9:8]
-    writeCommand(0x34); //Horizontal End Point 0 of Active Window (HEAW0)
+    writeCommand(LCD_HEAW0); //Horizontal End Point 0 of Active Window (HEAW0)
     writeData(0xDF); //Horizontal End Point of Active Window [7:0]
-    writeCommand(0x35); //Horizontal End Point 1 of Active Window (HEAW1)
+    writeCommand(LCD_HEAW1); //Horizontal End Point 1 of Active Window (HEAW1)
     writeData(0x01); //Horizontal End Point of Active Window [9:8]
     //setting active window Y
-    writeCommand(0x32); //Vertical Start Point 0 of Active Window (VSAW0)
+    writeCommand(LCD_VSAW0); //Vertical Start Point 0 of Active Window (VSAW0)
     writeData(0x00); //Vertical Start Point of Active Window [7:0]
-    writeCommand(0x33); //Vertical Start Point 1 of Active Window (VSAW1)
+    writeCommand(LCD_VSAW1); //Vertical Start Point 1 of Active Window (VSAW1)
     writeData(0x00); //Vertical Start Point of Active Window [8]
-    writeCommand(0x36); //Vertical End Point of Active Window 0 (VEAW0)
+    writeCommand(LCD_VEAW0); //Vertical End Point of Active Window 0 (VEAW0)
     writeData(0x0F); //Vertical End Point of Active Window [7:0]
-    writeCommand(0x37); //Vertical End Point of Active Window 1 (VEAW1)
+    writeCommand(LCD_VEAW1); //Vertical End Point of Active Window 1 (VEAW1)
     writeData(0x01); //Vertical End Point of Active Window [8]
 }
 
 void writeCommand(uint8_t command) {
+    SPI_Send(LCD_CMDWRITE);
+    SPI_Send(command);
+}
+
+void writeData(uint8_t data) {
+    SPI_Send(LCD_DATAWRITE);
+    SPI_Send(data);
+}
+
+void SPI_Send(uint8_t data) {
     while (SPI_BUSY); // Wait for idle SPI module
     LCD_CS_LAT = 0; // CS selected
-    SPI_BUFFER = LCD_CMDWRITE;
-    while (SPI_BUSY); // Wait for idle SPI module
-    SPI_BUFFER = command;
+    SPI_BUFFER = data;
     while (SPI_BUSY); // Wait for idle SPI module
     LCD_CS_LAT = 1; // CS deselected
 }
 
-void writeData(uint8_t data) {
-    while (SPI_BUSY); // Wait for idle SPI module
-    LCD_CS_LAT = 0; // CS selected
-    SPI_BUFFER = LCD_DATAWRITE;
-    while (SPI_BUSY); // Wait for idle SPI module
-    SPI_BUFFER = data;
-    while (SPI_BUSY); // Wait for idle SPI module
-    LCD_CS_LAT = 1; // CS deselected
+void SPI_Double_Send(uint8_t data1, uint8_t data2) {
+    while (SPI_BUSY);
+    LCD_CS_LAT = 0;
+    SPI_BUFFER = data1;
+    while (SPI_BUSY);
+    SPI_BUFFER = data2;
+    while (SPI_BUSY);
+    LCD_CS_LAT = 1;
 }

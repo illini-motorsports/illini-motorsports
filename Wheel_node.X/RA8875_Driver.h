@@ -17,6 +17,8 @@ void PLL_Init(void);
 void LCD_Reset(void);
 void writeData(uint8_t data);
 void writeCommand(uint8_t command);
+void SPI_Send(uint8_t data);
+void SPI_Double_Send(uint8_t data1, uint8_t data2;
 void Display_On(uint8_t isOn);
 
 // Jake Defined Constants
@@ -28,7 +30,7 @@ void Display_On(uint8_t isOn);
 
 // Command/Data pins for SPI
 #define LCD_DATAWRITE			0x00
-#define LCD_DATAREA				0x40
+#define LCD_DATAREAD			0x40
 #define LCD_CMDWRITE			0x80
 #define LCD_CMDREAD				0xC0
 

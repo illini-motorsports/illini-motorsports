@@ -12,44 +12,6 @@ volatile uint8_t mode = 0;
 uint8_t momentaries[4] = {0};
 uint8_t toggles[4] = {0};
 
-//	Exception handler:
-
-static enum {
-    EXCEP_IRQ = 0, // interrupt
-    EXCEP_AdEL = 4, // address error exception (load or ifetch)
-    EXCEP_AdES, // address error exception (store)
-    EXCEP_IBE, // bus error (ifetch)
-    EXCEP_DBE, // bus error (load/store)
-    EXCEP_Sys, // syscall
-    EXCEP_Bp, // breakpoint
-    EXCEP_RI, // reserved instruction
-    EXCEP_CpU, // coprocessor unusable
-    EXCEP_Overflow, // arithmetic overflow
-    EXCEP_Trap, // trap (possible divide by zero)
-    EXCEP_IS1 = 16, // implementation specfic 1
-    EXCEP_CEU, // CorExtend Unuseable
-    EXCEP_C2E // coprocessor 2
-} _excep_code;
-
-static unsigned int _epc_code;
-static unsigned int _excep_addr;
-
-// this function overrides the normal _weak_ generic handler
-
-void _general_exception_handler(void) {
-    asm volatile("mfc0 %0,$13" : "=r" (_excep_code));
-    asm volatile("mfc0 %0,$14" : "=r" (_excep_addr));
-
-    _excep_code = (_excep_code & 0x0000007C) >> 2;
-    while (1) {
-        // Examine _excep_code to identify the type of exception
-        // Examine _excep_addr to find the address that caused the exception
-        Nop();
-        Nop();
-        Nop();
-    }
-}//	End of exception handler
-
 void main(void) {
     init_general(); // Set general runtime configuration bits
     init_gpio_pins(); // Set all I/O pins to low outputs
@@ -58,7 +20,7 @@ void main(void) {
     init_timer1(); // Initialize Second interrupts
     init_timer2(); // Initialize Millisecond interrupts
     init_spi(); // Initialize SPI interface
-    init_termination(TERMINATING); // Initialize Programmable Termination
+    init_termination(); // Initialize Programmable Termination
     //init_can(); // Initialize CAN
 
     asm volatile ("ei"); // Enable interrupts
@@ -90,8 +52,9 @@ void main(void) {
     // Start LCD
     LCD_Reset();
     LCD_Init();
+    Display_On(1);
     while (1) {
-        update_sw_values();
+        //Update_sw_values();
         delay(100);
         PIC_FN_LAT = 1;
         PIC_MODE_LAT = 0;
