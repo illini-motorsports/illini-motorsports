@@ -68,6 +68,8 @@
 #endif
 #elif SHIFTLIGHTS
 #include "ECAN_ShiftLights.h"
+#elif DYNOHUB
+#include "ECAN_DynoHub.h"
 #elif WHEEL
 #include "ECAN_Wheel.h"
 #elif PDM
@@ -75,29 +77,11 @@
 #elif TELEMETRY
 #include "ECAN_Telemetry.h"
 #endif
+#include "p18f46k80.h"
 
-#if defined(HI_TECH_C)
-#define HITECH_C18
-#else
 #define MCHP_C18
-#endif
 
-#if defined(MCHP_C18) && defined(HITECH_C18)
-#error "Invalid Compiler selection."
-#endif
-
-#if !defined(MCHP_C18) && !defined(HITECH_C18)
-#error "Compiler not supported."
-#endif
-
-#if defined(MCHP_C18)
-#include "p18F46K80.h"
-#endif
-
-#if defined(HITECH_C18)
-#include <pic18.h>
-#endif
-
+#define ECAN_TX_FLAGS ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1
 
 /*********************************************************************
  *
