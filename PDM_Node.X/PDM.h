@@ -48,7 +48,7 @@
 // Pin definitions for EN signal bus
 #define EN_IGN_LAT    LATDbits.LATD15
 #define EN_INJ_LAT    LATCbits.LATC15
-#define EN_FUEL_LAT   LATFbits.LATF3
+#define EN_FUEL_LAT   LATGbits.LATG0
 #define EN_ECU_LAT    LATFbits.LATF2
 #define EN_WTR_LAT    LATFbits.LATF8
 #define EN_FAN_LAT    LATAbits.LATA3
@@ -60,7 +60,7 @@
 #define EN_STR_LAT    LATDbits.LATD9
 #define EN_IGN_PORT   PORTDbits.RD15
 #define EN_INJ_PORT   PORTCbits.RC15
-#define EN_FUEL_PORT  PORTFbits.RF3
+#define EN_FUEL_PORT  PORTGbits.RG0
 #define EN_ECU_PORT   PORTFbits.RF2
 #define EN_WTR_PORT   PORTFbits.RF8
 #define EN_FAN_PORT   PORTAbits.RA3
@@ -72,7 +72,7 @@
 #define EN_STR_PORT   PORTDbits.RD9
 #define EN_IGN_TRIS   TRISDbits.TRISD15
 #define EN_INJ_TRIS   TRISCbits.TRISC15
-#define EN_FUEL_TRIS  TRISFbits.TRISF3
+#define EN_FUEL_TRIS  TRISGbits.TRISG0
 #define EN_ECU_TRIS   TRISFbits.TRISF2
 #define EN_WTR_TRIS   TRISFbits.TRISF8
 #define EN_FAN_TRIS   TRISAbits.TRISA3
@@ -82,6 +82,9 @@
 #define EN_B5V5_TRIS  TRISAbits.TRISA14
 #define EN_BVBAT_TRIS TRISAbits.TRISA15
 #define EN_STR_TRIS   TRISDbits.TRISD9
+
+// Pin defnition for unused EN_FUEL signal (due to 1V silicon bug)
+#define EN_FUEL_UNUSED_TRIS TRISFbits.TRISF3
 
 // Pin definitions for !CS signal bus
 #define CS_IGN_LAT     LATEbits.LATE8
@@ -135,7 +138,7 @@
 #define SW5_PORT   PORTFbits.RF0
 #define SW6_PORT   PORTFbits.RF1
 #define SW7_PORT   PORTGbits.RG1
-#define SW8_PORT   PORTGbits.RG0
+//#define SW8_PORT   PORTGbits.RG0
 #define SW9_PORT   PORTAbits.RA6
 #define KILL_PORT  PORTAbits.RA7
 #define SW1_TRIS   TRISDbits.TRISD12
@@ -145,7 +148,7 @@
 #define SW5_TRIS   TRISFbits.TRISF0
 #define SW6_TRIS   TRISFbits.TRISF1
 #define SW7_TRIS   TRISGbits.TRISG1
-#define SW8_TRIS   TRISGbits.TRISG0
+//#define SW8_TRIS   TRISGbits.TRISG0
 #define SW9_TRIS   TRISAbits.TRISA6
 #define KILL_TRIS  TRISAbits.TRISA7
 

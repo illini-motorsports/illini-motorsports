@@ -66,6 +66,9 @@ void main(void) {
   EN_BVBAT_TRIS = OUTPUT;
   EN_STR_TRIS = OUTPUT;
 
+  // Set unused EN_FUEL pin to input so it doesn't interfere
+  EN_FUEL_UNUSED_TRIS = INPUT;
+
   // Turn off all loads
   EN_IGN_LAT = PWR_OFF;
   EN_INJ_LAT = PWR_OFF;
@@ -88,7 +91,7 @@ void main(void) {
   SW5_TRIS = INPUT;
   SW6_TRIS = INPUT;
   SW7_TRIS = INPUT;
-  SW8_TRIS = INPUT;
+  //SW8_TRIS = INPUT;
   SW9_TRIS = INPUT;
   KILL_TRIS = INPUT;
 
