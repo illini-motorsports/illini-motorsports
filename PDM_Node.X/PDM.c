@@ -16,8 +16,8 @@ volatile uint32_t millis = 0;
 volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
 
 // Stores wiper values for each load
-uint16_t wiper_values[NUM_LOADS] = {0};
-uint16_t peak_wiper_values[NUM_LOADS] = {0};
+uint8_t wiper_values[NUM_LOADS] = {0};
+uint8_t peak_wiper_values[NUM_LOADS] = {0};
 
 // Stores whether each load is currently in peak mode
 uint8_t peak_state[NUM_LOADS] = {0};
@@ -130,21 +130,67 @@ void main(void) {
   // Disconnect terminal A from resistor network for all rheostats
   send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
 
-  // Set all rheostats to 2.5k
-  //TODO: Should actually set them to value stored in flash memory
-  int i;
-  for (i = 0; i < NUM_LOADS; i++) {
-    wiper_values[i] = 128;
-    peak_wiper_values[i] = 128;
-    peak_state[i] = 0;
-    fb_resistances[i] = WPR_TO_RES(128.0);
-  }
-  send_all_rheo(0x80);
+  // Get wiper data struct from NVM
+  Wiper_nvm_data data = {0};
+  read_nvm_data(&data, sizeof(Wiper_nvm_data));
 
-  //TODO: Remove this after implementing flash memory
-  wiper_values[ECU_IDX] = 218;
-  set_rheo(ECU_IDX, 218);
-  fb_resistances[ECU_IDX] = WPR_TO_RES(218.0);
+  // Check to see if the wiper data in NVM has been initialized
+  if(data.key != NVM_WPR_CONSTANT) {
+    // Initialize wiper values to 3kOhm and peak wiper values to 4kOhm
+    uint32_t i;
+    for (i = 0; i < NUM_LOADS; i++) {
+      wiper_values[i] = RES_TO_WPR(3000);
+      peak_wiper_values[i] = RES_TO_WPR(4000);
+    }
+
+    // Store default wiper data struct in NVM
+    data.key = NVM_WPR_CONSTANT;
+    data.ign_wpr_val = wiper_values[IGN_IDX];
+    data.inj_wpr_val = wiper_values[INJ_IDX];
+    data.fuel_wpr_val = wiper_values[FUEL_IDX];
+    data.ecu_wpr_val = wiper_values[ECU_IDX];
+    data.wtr_wpr_val = wiper_values[WTR_IDX];
+    data.fan_wpr_val = wiper_values[FAN_IDX];
+    data.aux_wpr_val = wiper_values[AUX_IDX];
+    data.pdlu_wpr_val = wiper_values[PDLU_IDX];
+    data.pdld_wpr_val = wiper_values[PDLD_IDX];
+    data.b5v5_wpr_val = wiper_values[B5V5_IDX];
+    data.bvbat_wpr_val = wiper_values[BVBAT_IDX];
+    data.str0_wpr_val = wiper_values[STR0_IDX];
+    data.str1_wpr_val = wiper_values[STR1_IDX];
+    data.str2_wpr_val = wiper_values[STR2_IDX];
+    data.fuel_peak_wpr_val = peak_wiper_values[FUEL_IDX];
+    data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
+    data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
+    write_nvm_data(&data, sizeof(Wiper_nvm_data));
+  } else {
+    // Copy peak and normal wiper values from NVM
+    wiper_values[IGN_IDX] = data.ign_wpr_val;
+    wiper_values[INJ_IDX] = data.inj_wpr_val;
+    wiper_values[FUEL_IDX] = data.fuel_wpr_val;
+    wiper_values[ECU_IDX] = data.ecu_wpr_val;
+    wiper_values[WTR_IDX] = data.wtr_wpr_val;
+    wiper_values[FAN_IDX] = data.fan_wpr_val;
+    wiper_values[AUX_IDX] = data.aux_wpr_val;
+    wiper_values[PDLU_IDX] = data.pdlu_wpr_val;
+    wiper_values[PDLD_IDX] = data.pdld_wpr_val;
+    wiper_values[B5V5_IDX] = data.b5v5_wpr_val;
+    wiper_values[BVBAT_IDX] = data.bvbat_wpr_val;
+    wiper_values[STR0_IDX] = data.str0_wpr_val;
+    wiper_values[STR1_IDX] = data.str1_wpr_val;
+    wiper_values[STR2_IDX] = data.str2_wpr_val;
+    peak_wiper_values[FUEL_IDX] = data.fuel_peak_wpr_val;
+    peak_wiper_values[WTR_IDX] = data.wtr_peak_wpr_val;
+    peak_wiper_values[FAN_IDX] = data.fan_peak_wpr_val;
+  }
+
+  // Set each rheostat to the value loaded from NVM
+  uint32_t i;
+  for (i = 0; i < NUM_LOADS; i++) {
+    set_rheo(i, wiper_values[i]);
+    peak_state[i] = 0;
+    fb_resistances[i] = WPR_TO_RES(wiper_values[i]);
+  }
 
   // Turn on state-independent loads
   EN_ECU_LAT = PWR_ON;
@@ -205,18 +251,24 @@ void main(void) {
 
       if (ON_SW) {
         // Enable IGN
-        EN_IGN_LAT = PWR_ON;
+        if (!IGN_EN) {
+          EN_IGN_LAT = PWR_ON;
+        }
 
         // Enable INJ
-        EN_INJ_LAT = PWR_ON;
+        if (!INJ_EN) {
+          EN_INJ_LAT = PWR_ON;
+        }
 
         // Enable FUEL
-        uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
-        set_rheo(FUEL_IDX, peak_wpr_val);
-        fb_resistances[FUEL_IDX] = WPR_TO_RES(peak_wpr_val);
-        peak_state[FUEL_IDX] = 1;
-        EN_FUEL_LAT = PWR_ON;
-        fuel_peak_tmr = millis;
+        if (!FUEL_EN) {
+          uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
+          set_rheo(FUEL_IDX, peak_wpr_val);
+          fb_resistances[FUEL_IDX] = WPR_TO_RES(peak_wpr_val);
+          peak_state[FUEL_IDX] = 1;
+          EN_FUEL_LAT = PWR_ON;
+          fuel_peak_tmr = millis;
+        }
 
         // If STR load is on, disable WATER and FAN. Otherwise, enable them.
         if (STR_EN) {
@@ -227,20 +279,24 @@ void main(void) {
           EN_FAN_LAT = PWR_OFF;
         } else {
           // Enable WTR
-          uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
-          set_rheo(WTR_IDX, peak_wpr_val);
-          fb_resistances[WTR_IDX] = WPR_TO_RES(peak_wpr_val);
-          peak_state[WTR_IDX] = 1;
-          EN_WTR_LAT = PWR_ON;
-          wtr_peak_tmr = millis;
+          if (!WTR_EN) {
+            uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
+            set_rheo(WTR_IDX, peak_wpr_val);
+            fb_resistances[WTR_IDX] = WPR_TO_RES(peak_wpr_val);
+            peak_state[WTR_IDX] = 1;
+            EN_WTR_LAT = PWR_ON;
+            wtr_peak_tmr = millis;
+          }
 
           // Enable FAN
-          peak_wpr_val = peak_wiper_values[FAN_IDX];
-          set_rheo(FAN_IDX, peak_wpr_val);
-          fb_resistances[FAN_IDX] = WPR_TO_RES(peak_wpr_val);
-          peak_state[FAN_IDX] = 1;
-          EN_FAN_LAT = PWR_ON;
-          fan_peak_tmr = millis;
+          if (!FAN_EN) {
+            uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
+            set_rheo(FAN_IDX, peak_wpr_val);
+            fb_resistances[FAN_IDX] = WPR_TO_RES(peak_wpr_val);
+            peak_state[FAN_IDX] = 1;
+            EN_FAN_LAT = PWR_ON;
+            fan_peak_tmr = millis;
+          }
         }
       } else {
         // Disable IGN

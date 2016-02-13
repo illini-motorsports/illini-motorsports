@@ -13,6 +13,7 @@
 #include "../FSAE_32/FSAE_config_32.h"
 #include "../FSAE_32/FSAE_CAN_32.h"
 #include "../FSAE_32/FSAE_adc_32.h"
+#include "../FSAE_32/FSAE_nvm_32.h"
 #include "../FSAE.X/CAN.h"
 
 // Enable programmable termination
@@ -324,8 +325,12 @@
 #define WTR_PEAK_DUR       50
 #define FAN_PEAK_DUR       50
 
+// Constant used to check whether the NVM has been initialized
+#define NVM_WPR_CONSTANT 0xDEADBEEF
+
 /**
- * Function to convert a wiper value to the expected resistance of the rheostat.
+ * Functions to convert a wiper value to the expected resistance of the rheostat
+ * and vice versa.
  * 
  * Luckily, the conversion is mostly linear, so a linear regression approximates
  * the value well. These values were determined experimentally and should give a
@@ -336,6 +341,35 @@
  * Selection" tab of the "PCB Info" document for more info.
  */
 #define WPR_TO_RES(wpr) ((19.11639223 * (wpr)) + 256.6676635)
+#define RES_TO_WPR(res) (0.0523111 * ((res) - 256.6676635))
+
+/**
+ * Struct representing the layout of wiper value data in non-volatile memory. The
+ * key value is a unique constant that we can use to check whether the NVM has
+ * been initialized by the PDM.
+ */
+typedef struct {
+  uint32_t key;
+
+  uint8_t ign_wpr_val;
+  uint8_t inj_wpr_val;
+  uint8_t fuel_wpr_val;
+  uint8_t ecu_wpr_val;
+  uint8_t wtr_wpr_val;
+  uint8_t fan_wpr_val;
+  uint8_t aux_wpr_val;
+  uint8_t pdlu_wpr_val;
+  uint8_t pdld_wpr_val;
+  uint8_t b5v5_wpr_val;
+  uint8_t bvbat_wpr_val;
+  uint8_t str0_wpr_val;
+  uint8_t str1_wpr_val;
+  uint8_t str2_wpr_val;
+
+  uint8_t fuel_peak_wpr_val;
+  uint8_t wtr_peak_wpr_val;
+  uint8_t fan_peak_wpr_val;
+} Wiper_nvm_data;
 
 // Function definitions
 void main(void);
