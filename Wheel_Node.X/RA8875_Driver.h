@@ -1,16 +1,71 @@
-/* 
+/*
  * File: RA8875_Driver.h
  * Author: Jake Leonard
  * Comments: Ported from the Adafruit arduino library
  */
-
-#ifndef	RA8875_H 
+#ifndef	RA8875_H
 #define	RA8875_H
 
-#include <xc.h> // include processor files - each processor file is guarded.  
-#include "RA8875_Driver.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <xc.h> // include processor files - each processor file is guarded.
+#include "Wheel.h"
 
+void LCD_Init(void);
+void PLL_Init(void);
+void LCD_Reset(void);
+void writeData(uint8_t data);
+void writeCommand(uint8_t command);
+void SPI_Send(uint8_t data);
+void SPI_Double_Send(uint8_t data1, uint8_t data2;
+void Display_On(uint8_t isOn);
 
+// Jake Defined Constants
+#define LCD_POWER 				0x01
+#define LCD_DISP_ON 			0x80
+#define LCD_DISP_OFF 			0x00
+#define LCD_DISP_SFT_RST 		0x01
+#define LCD_DISP_SLEEP 			0x02
+
+// Command/Data pins for SPI
+#define LCD_DATAWRITE			0x00
+#define LCD_DATAREAD			0x40
+#define LCD_CMDWRITE			0x80
+#define LCD_CMDREAD				0xC0
+
+/**********************************
+******* LCD Init Code *************/
+// Horizontal Setup
+#define LCD_HRZ_WIDTH			0x14
+#define LCD_HNDFTR				0x15
+#define LCD_HNDR				0x16
+#define LCD_HSTR				0x17
+#define LCD_HPWR				0x18
+
+// Vertical Setup
+#define LCD_VDHR0				0x19
+#define LCD_VDHR1				0x1A
+#define LCD_VNDR0				0x1B
+#define LCD_VNDR1				0x1C
+#define LCD_VSTR0				0x1D
+#define LCD_VSTR1				0x1E
+#define LCD_VPWR				0x1F
+
+// Setting Active Window
+// Start points
+#define LCD_HSAW0			0x30
+#define LCD_HSAW1			0x31
+#define LCD_VSAW0			0x32
+#define LCD_VSAW1			0x33
+
+// End points
+#define LCD_HEAW0			0x34
+#define LCD_HEAW1			0x35
+#define LCD_VEAW0			0x36
+#define LCD_VEAW1			0x37
+
+/*
 // Define statements for registers and other info
 // Colors (RGB565)
 #define	RA8875_BLACK            0x0000
@@ -19,7 +74,7 @@
 #define	RA8875_GREEN            0x07E0
 #define RA8875_CYAN             0x07FF
 #define RA8875_MAGENTA          0xF81F
-#define RA8875_YELLOW           0xFFE0  
+#define RA8875_YELLOW           0xFFE0
 #define RA8875_WHITE            0xFFFF
 
 // Command/Data pins for SPI
@@ -216,4 +271,5 @@
 #define RA8875_INTC2_TP         0x04
 #define RA8875_INTC2_BTE        0x02
 
+ */
 #endif	/* RA8875_H */

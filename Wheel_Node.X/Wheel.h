@@ -1,4 +1,4 @@
-/* 
+/*
  * File: Wheel.c
  * Author: Jake Leonard
  * Comments: Main code that controls the wheel module
@@ -91,4 +91,3 @@ void update_sw_values();
 void delay(uint32_t mil);
 
 #endif	/* WHEEL_H */
-
