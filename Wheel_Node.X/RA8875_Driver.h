@@ -13,11 +13,11 @@
 #include "Wheel.h"
 
 void LCD_Init(void);
-void PLL_Init(void);
+void PLL_Init(uint8_t pll1, uint8_t pll2);
 void LCD_Reset(void);
 void writeData(uint8_t data);
 void writeCommand(uint8_t command);
-void SPI_Send(uint8_t data);
+void writeReg(uint8_t reg, uint8_t data);
 void SPI_Double_Send(uint8_t data1, uint8_t data2);
 void Display_On(uint8_t isOn);
 
