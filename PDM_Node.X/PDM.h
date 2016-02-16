@@ -13,6 +13,7 @@
 #include "../FSAE_32/FSAE_config_32.h"
 #include "../FSAE_32/FSAE_CAN_32.h"
 #include "../FSAE_32/FSAE_adc_32.h"
+#include "../FSAE_32/FSAE_nvm_32.h"
 #include "../FSAE.X/CAN.h"
 
 // Enable programmable termination
@@ -48,7 +49,7 @@
 // Pin definitions for EN signal bus
 #define EN_IGN_LAT    LATDbits.LATD15
 #define EN_INJ_LAT    LATCbits.LATC15
-#define EN_FUEL_LAT   LATFbits.LATF3
+#define EN_FUEL_LAT   LATGbits.LATG0
 #define EN_ECU_LAT    LATFbits.LATF2
 #define EN_WTR_LAT    LATFbits.LATF8
 #define EN_FAN_LAT    LATAbits.LATA3
@@ -60,7 +61,7 @@
 #define EN_STR_LAT    LATDbits.LATD9
 #define EN_IGN_PORT   PORTDbits.RD15
 #define EN_INJ_PORT   PORTCbits.RC15
-#define EN_FUEL_PORT  PORTFbits.RF3
+#define EN_FUEL_PORT  PORTGbits.RG0
 #define EN_ECU_PORT   PORTFbits.RF2
 #define EN_WTR_PORT   PORTFbits.RF8
 #define EN_FAN_PORT   PORTAbits.RA3
@@ -72,7 +73,7 @@
 #define EN_STR_PORT   PORTDbits.RD9
 #define EN_IGN_TRIS   TRISDbits.TRISD15
 #define EN_INJ_TRIS   TRISCbits.TRISC15
-#define EN_FUEL_TRIS  TRISFbits.TRISF3
+#define EN_FUEL_TRIS  TRISGbits.TRISG0
 #define EN_ECU_TRIS   TRISFbits.TRISF2
 #define EN_WTR_TRIS   TRISFbits.TRISF8
 #define EN_FAN_TRIS   TRISAbits.TRISA3
@@ -82,6 +83,9 @@
 #define EN_B5V5_TRIS  TRISAbits.TRISA14
 #define EN_BVBAT_TRIS TRISAbits.TRISA15
 #define EN_STR_TRIS   TRISDbits.TRISD9
+
+// Pin defnition for unused EN_FUEL signal (due to 1V silicon bug)
+#define EN_FUEL_UNUSED_TRIS TRISFbits.TRISF3
 
 // Pin definitions for !CS signal bus
 #define CS_IGN_LAT     LATEbits.LATE8
@@ -135,7 +139,7 @@
 #define SW5_PORT   PORTFbits.RF0
 #define SW6_PORT   PORTFbits.RF1
 #define SW7_PORT   PORTGbits.RG1
-#define SW8_PORT   PORTGbits.RG0
+//#define SW8_PORT   PORTGbits.RG0
 #define SW9_PORT   PORTAbits.RA6
 #define KILL_PORT  PORTAbits.RA7
 #define SW1_TRIS   TRISDbits.TRISD12
@@ -145,7 +149,7 @@
 #define SW5_TRIS   TRISFbits.TRISF0
 #define SW6_TRIS   TRISFbits.TRISF1
 #define SW7_TRIS   TRISGbits.TRISG1
-#define SW8_TRIS   TRISGbits.TRISG0
+//#define SW8_TRIS   TRISGbits.TRISG0
 #define SW9_TRIS   TRISAbits.TRISA6
 #define KILL_TRIS  TRISAbits.TRISA7
 
@@ -321,8 +325,12 @@
 #define WTR_PEAK_DUR       50
 #define FAN_PEAK_DUR       50
 
+// Constant used to check whether the NVM has been initialized
+#define NVM_WPR_CONSTANT 0xDEADBEEF
+
 /**
- * Function to convert a wiper value to the expected resistance of the rheostat.
+ * Functions to convert a wiper value to the expected resistance of the rheostat
+ * and vice versa.
  * 
  * Luckily, the conversion is mostly linear, so a linear regression approximates
  * the value well. These values were determined experimentally and should give a
@@ -333,6 +341,35 @@
  * Selection" tab of the "PCB Info" document for more info.
  */
 #define WPR_TO_RES(wpr) ((19.11639223 * (wpr)) + 256.6676635)
+#define RES_TO_WPR(res) (0.0523111 * ((res) - 256.6676635))
+
+/**
+ * Struct representing the layout of wiper value data in non-volatile memory. The
+ * key value is a unique constant that we can use to check whether the NVM has
+ * been initialized by the PDM.
+ */
+typedef struct {
+  uint32_t key;
+
+  uint8_t ign_wpr_val;
+  uint8_t inj_wpr_val;
+  uint8_t fuel_wpr_val;
+  uint8_t ecu_wpr_val;
+  uint8_t wtr_wpr_val;
+  uint8_t fan_wpr_val;
+  uint8_t aux_wpr_val;
+  uint8_t pdlu_wpr_val;
+  uint8_t pdld_wpr_val;
+  uint8_t b5v5_wpr_val;
+  uint8_t bvbat_wpr_val;
+  uint8_t str0_wpr_val;
+  uint8_t str1_wpr_val;
+  uint8_t str2_wpr_val;
+
+  uint8_t fuel_peak_wpr_val;
+  uint8_t wtr_peak_wpr_val;
+  uint8_t fan_peak_wpr_val;
+} Wiper_nvm_data;
 
 // Function definitions
 void main(void);

@@ -4,20 +4,18 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>ECAN.h</itemPath>
-      <itemPath>ECAN_AnalogHub_Front.h</itemPath>
-      <itemPath>ECAN_AnalogHub_Rear.h</itemPath>
-      <itemPath>ECAN_Logger.h</itemPath>
-      <itemPath>ECAN_PDM.h</itemPath>
-      <itemPath>ECAN_ShiftLights.h</itemPath>
-      <itemPath>ECAN_Telemetry.h</itemPath>
-      <itemPath>ECAN_Wheel.h</itemPath>
-      <itemPath>ECAN_DynoHub.h</itemPath>
+      <itemPath>DynoHub.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="LinkerScript"
+                   displayName="Linker Files"
+                   projectFiles="true">
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>ECAN.c</itemPath>
+      <itemPath>../ECAN.X/ECAN.c</itemPath>
+      <itemPath>DynoHub.c</itemPath>
+      <itemPath>../FSAE.X/FSAE.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -26,11 +24,11 @@
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>.</Elem>
+    <Elem>../FSAE.X</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="default" type="3">
+    <conf name="default" type="2">
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <targetDevice>PIC18F46K80</targetDevice>
@@ -81,10 +79,10 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="../FSAE.X"/>
-        <property key="optimization-master" value="Enable all"/>
-        <property key="preprocessor-macros" value=""/>
-        <property key="procedural-abstraction-passes" value="0"/>
+        <property key="extra-include-directories" value="../ECAN.X"/>
+        <property key="optimization-master" value="Debug friendly"/>
+        <property key="preprocessor-macros" value="DYNOHUB"/>
+        <property key="procedural-abstraction-passes" value="4"/>
         <property key="storage-class" value="sca"/>
         <property key="verbose" value="false"/>
         <property key="warning-level" value="2"/>
@@ -97,6 +95,12 @@
         <property key="preprocessor.macros" value=""/>
         <property key="warning.level" value="0"/>
       </C18-AS>
+      <C18-LD>
+        <property key="cod-file" value="false"/>
+        <property key="extra-lib-directories" value=""/>
+        <property key="hex-output-format" value="INHX32"/>
+        <property key="map-file" value="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"/>
+      </C18-LD>
       <C18LanguageToolchain>
         <property key="extended-mode" value="false"/>
         <property key="extended-mode-mcc18" value="false"/>
@@ -108,6 +112,7 @@
       </C18LanguageToolchain>
       <PICkit3PlatformTool>
         <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze Peripherals" value="true"/>
         <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
         <property key="ToolFirmwareFilePath"
                   value="Press to browse for a specific firmware version"/>
@@ -145,7 +150,7 @@
         <property key="programoptions.testmodeentrymethod" value="VPPFirst"/>
         <property key="programoptions.usehighvoltageonmclr" value="false"/>
         <property key="programoptions.uselvpprogramming" value="false"/>
-        <property key="voltagevalue" value="1.875"/>
+        <property key="voltagevalue" value="5.0"/>
       </PICkit3PlatformTool>
     </conf>
   </confs>

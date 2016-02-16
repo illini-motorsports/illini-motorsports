@@ -120,7 +120,7 @@ void init_general(void) {
   CFGCONbits.PGLOCK = 1;    // Permission Group Lock (Permission Group registers are locked. Writes to PG registers are not allowed)
   CFGCONbits.USBSSEN = 1;   // USB Suspend Sleep Enable (USB PHY clock is shut down when Sleep mode is active)
   CFGCONbits.IOANCPN = 0;   // I/O Analog Charge Pump Enable (Charge pump disabled)
-  CFGCONbits.ECCCON = 0b10; // Flash ECC Configuration (ECC and dynamic ECC are disabled (ECCCON<1:0> bits are locked))
+  CFGCONbits.ECCCON = 0b11; // Flash ECC Configuration (ECC and dynamic ECC are disabled (ECCCON<1:0> bits are writable))
   CFGCONbits.JTAGEN = 0;    // JTAG Port Enable (Disable the JTAG port)
   CFGCONbits.TROEN = 0;     // Trace Output Enable (Disable trace outputs and stop trace clock)
   CFGCONbits.TDOEN = 1;     // TDO Enable for 2-Wire JTAG (2-wire JTAG protocol uses TDO)

@@ -1,15 +1,15 @@
-/* 
+/*
  * File: RA8875_Driver.h
  * Author: Jake Leonard
  * Comments: Ported from the Adafruit arduino library
  */
-#ifndef	RA8875_H 
+#ifndef	RA8875_H
 #define	RA8875_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <xc.h> // include processor files - each processor file is guarded.  
+#include <xc.h> // include processor files - each processor file is guarded.
 #include "Wheel.h"
 
 void LCD_Init(void);
@@ -74,7 +74,7 @@ void Display_On(uint8_t isOn);
 #define	RA8875_GREEN            0x07E0
 #define RA8875_CYAN             0x07FF
 #define RA8875_MAGENTA          0xF81F
-#define RA8875_YELLOW           0xFFE0  
+#define RA8875_YELLOW           0xFFE0
 #define RA8875_WHITE            0xFFFF
 
 // Command/Data pins for SPI
