@@ -42,7 +42,7 @@ void LCD_Init(void) {
     PLL_Init();
     //Set color space to 8 bit, 65k Color depth
     writeCommand(0x10); //SYSR
-    writeData(0x0c);
+    writeData(0x0C);
 
     writeCommand(0x04); //set PCLK invers
     writeData(0x82);
@@ -98,13 +98,11 @@ void LCD_Init(void) {
 }
 
 void writeCommand(uint8_t command) {
-    SPI_Send(LCD_CMDWRITE);
-    SPI_Send(command);
+    SPI_Double_Send(LCD_CMDWRITE, command);
 }
 
 void writeData(uint8_t data) {
-    SPI_Send(LCD_DATAWRITE);
-    SPI_Send(data);
+    SPI_Double_Send(LCD_DATAWRITE, data);
 }
 
 void SPI_Send(uint8_t data) {
@@ -116,6 +114,8 @@ void SPI_Send(uint8_t data) {
 }
 
 void SPI_Double_Send(uint8_t data1, uint8_t data2) {
+    //    uint16_t message = data1;
+    //    message = (message << 8) | data2;
     while (SPI_BUSY);
     LCD_CS_LAT = 0;
     SPI_BUFFER = data1;

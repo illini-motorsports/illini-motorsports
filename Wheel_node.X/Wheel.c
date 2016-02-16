@@ -55,10 +55,12 @@ void main(void) {
     Display_On(1);
     while (1) {
         //Update_sw_values();
-        delay(100);
+        writeCommand(0xAA);
+        writeData(0xAA);
+        //    delay(100);
         PIC_FN_LAT = 1;
         PIC_MODE_LAT = 0;
-        delay(100);
+        //   delay(100);
         PIC_FN_LAT = 0;
         PIC_MODE_LAT = 1;
     }
