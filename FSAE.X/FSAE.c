@@ -19,6 +19,8 @@
 #include "Pins_Wheel.h"
 #elif TELEMETRY
 #include "Pins_Telemetry.h"
+#elif PADDLESHIFTING
+#include "Pins_PaddleShifting.h"
 #endif
 
 /**

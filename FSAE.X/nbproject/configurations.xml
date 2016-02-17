@@ -10,6 +10,7 @@
       <itemPath>Pins_ShiftLights.h</itemPath>
       <itemPath>Pins_Telemetry.h</itemPath>
       <itemPath>Pins_Wheel.h</itemPath>
+      <itemPath>Pins_PaddleShifting.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -37,7 +38,7 @@
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>C18</languageToolchain>
         <languageToolchainVersion>3.40</languageToolchainVersion>
-        <platform>3</platform>
+        <platform>2</platform>
       </toolsSet>
       <compileType>
         <linkerTool>

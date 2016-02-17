@@ -76,7 +76,10 @@
 #include "ECAN_PDM.h"
 #elif TELEMETRY
 #include "ECAN_Telemetry.h"
+#elif PADDLESHIFTING
+#include "ECAN_PaddleShifting.h"
 #endif
+
 #include "p18f46k80.h"
 
 #define MCHP_C18

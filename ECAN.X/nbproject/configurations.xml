@@ -13,6 +13,7 @@
       <itemPath>ECAN_Telemetry.h</itemPath>
       <itemPath>ECAN_Wheel.h</itemPath>
       <itemPath>ECAN_DynoHub.h</itemPath>
+      <itemPath>ECAN_PaddleShifting.h</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"

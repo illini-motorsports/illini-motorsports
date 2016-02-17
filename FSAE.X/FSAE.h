@@ -10,6 +10,14 @@
 #ifndef FSAE_H
 #define FSAE_H
 
+// Definitions for variable types
+#define uint8_t UINT8
+#define uint16_t UINT16
+#define uint32_t UINT32
+#define int8_t INT8
+#define int16_t INT16
+#define int32_t INT32
+
 /**
  * Magic Numbers
  */
