@@ -29,6 +29,8 @@ double fb_resistances[NUM_LOADS] = {0.0};
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
 uint16_t total_current_draw = 0;
+uint8_t wtr_override_sw = 0;
+uint8_t fan_override_sw = 0;
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
@@ -320,11 +322,70 @@ void main(void) {
        * Perform regular load control
        */
 
-      //TODO: Toggle IGN
-      //TODO: Toggle INJ
-      //TODO: Toggle FUEL
-      //TODO: Toggle WTR
-      //TODO: Toggle FAN
+      // IGN, INJ, FUEL
+      //TODO: Determine less dangerous way of keeping these loads on than ENG_ON?
+      if(ON_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
+        // Enable IGN if not already enabled
+        if (!IGN_EN) {
+          EN_IGN_LAT = PWR_ON;
+        }
+
+        // Enable INJ if not already enabled
+        if (!INJ_EN) {
+          EN_INJ_LAT = PWR_ON;
+        }
+
+        // Enable FUEL if not already enabled
+        if (!FUEL_EN) {
+          uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
+          set_rheo(FUEL_IDX, peak_wpr_val);
+          fb_resistances[FUEL_IDX] = WPR_TO_RES(peak_wpr_val);
+          peak_state[FUEL_IDX] = 1;
+          EN_FUEL_LAT = PWR_ON;
+          fuel_peak_tmr = millis;
+        }
+      } else {
+        // Disable IGN
+        EN_IGN_LAT = PWR_OFF;
+
+        // Disable INJ
+        EN_INJ_LAT = PWR_OFF;
+
+        // Disable FUEL
+        EN_FUEL_LAT = PWR_OFF;
+      }
+
+      // WTR
+      if((ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw) && !STR_EN) {
+        // Enable WTR if not already enabled
+        if (!WTR_EN) {
+          uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
+          set_rheo(WTR_IDX, peak_wpr_val);
+          fb_resistances[WTR_IDX] = WPR_TO_RES(peak_wpr_val);
+          peak_state[WTR_IDX] = 1;
+          EN_WTR_LAT = PWR_ON;
+          wtr_peak_tmr = millis;
+        }
+      } else {
+        // Disable WTR
+        EN_WTR_LAT = PWR_OFF;
+      }
+
+      // FAN
+      if((over_temp_flag || fan_override_sw) && !STR_EN) {
+        // Enable FAN if not already enabled
+        if (!FAN_EN) {
+          uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
+          set_rheo(FAN_IDX, peak_wpr_val);
+          fb_resistances[FAN_IDX] = WPR_TO_RES(peak_wpr_val);
+          peak_state[FAN_IDX] = 1;
+          EN_FAN_LAT = PWR_ON;
+          fan_peak_tmr = millis;
+        }
+      } else {
+        // Disable FAN
+        EN_FAN_LAT = PWR_OFF;
+      }
     }
 
     // STR
@@ -343,6 +404,8 @@ void main(void) {
         EN_STR_LAT = PWR_OFF;
       }
     }
+
+    //TODO: Control PDLU/PDLD
 
     /**
      * Check peak timers and reset to normal mode if enough time has past
@@ -373,8 +436,6 @@ void main(void) {
 
     //TODO: Overcurrent detection
 
-    //TODO: Control PDLU/PDLD
-
     /**
      * Send diagnostic CAN messages
      */
@@ -393,19 +454,19 @@ void main(void) {
      */
     if(millis - load_current_send_tmr >= LOAD_CUR_SEND) {
       uint32_t fb_volt_ign = read_adc_chn(ADC_IGN_CHN);
-      uint16_t current_ign = (((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_ign = (((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5)
           * IGN_SCLINV * IGN_RATIO) / fb_resistances[IGN_IDX];
 
       uint32_t fb_volt_inj = read_adc_chn(ADC_INJ_CHN);
-      uint16_t current_inj = (((((double) fb_volt_inj) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_inj = (((((double) fb_volt_inj) / 4095.0) * 3.3 * 1.5)
           * INJ_SCLINV * INJ_RATIO) / fb_resistances[INJ_IDX];
 
       uint32_t fb_volt_fuel = read_adc_chn(ADC_FUEL_CHN);
-      uint16_t current_fuel = (((((double) fb_volt_fuel) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_fuel = (((((double) fb_volt_fuel) / 4095.0) * 3.3 * 1.5)
           * FUEL_SCLINV * FUEL_RATIO) / fb_resistances[FUEL_IDX];
 
       uint32_t fb_volt_ecu = read_adc_chn(ADC_ECU_CHN);
-      uint16_t current_ecu = (((((double) fb_volt_ecu) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_ecu = (((((double) fb_volt_ecu) / 4095.0) * 3.3 * 1.5)
           * ECU_SCLINV * ECU_RATIO) / fb_resistances[ECU_IDX];
 
       CAN_data load_current_data = {0};
@@ -416,19 +477,19 @@ void main(void) {
       CAN_send_message(0x304, 8, load_current_data);
 
       uint32_t fb_volt_wtr = read_adc_chn(ADC_WTR_CHN);
-      uint16_t current_wtr = (((((double) fb_volt_wtr) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_wtr = (((((double) fb_volt_wtr) / 4095.0) * 3.3 * 1.5)
           * WTR_SCLINV * WTR_RATIO) / fb_resistances[WTR_IDX];
 
       uint32_t fb_volt_fan = read_adc_chn(ADC_FAN_CHN);
-      uint16_t current_fan = (((((double) fb_volt_fan) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_fan = (((((double) fb_volt_fan) / 4095.0) * 3.3 * 1.5)
           * FAN_SCLINV * FAN_RATIO) / fb_resistances[FAN_IDX];
 
       uint32_t fb_volt_aux = read_adc_chn(ADC_AUX_CHN);
-      uint16_t current_aux = (((((double) fb_volt_aux) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_aux = (((((double) fb_volt_aux) / 4095.0) * 3.3 * 1.5)
           * AUX_SCLINV * AUX_RATIO) / fb_resistances[AUX_IDX];
 
       uint32_t fb_volt_pdlu = read_adc_chn(ADC_PDLU_CHN);
-      uint16_t current_pdlu = (((((double) fb_volt_pdlu) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_pdlu = (((((double) fb_volt_pdlu) / 4095.0) * 3.3 * 1.5)
           * PDLU_SCLINV * PDLU_RATIO) / fb_resistances[PDLU_IDX];
 
       load_current_data.doubleword = 0;
@@ -439,15 +500,15 @@ void main(void) {
       CAN_send_message(0x305, 8, load_current_data);
 
       uint32_t fb_volt_pdld = read_adc_chn(ADC_PDLD_CHN);
-      uint16_t current_pdld = (((((double) fb_volt_pdld) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_pdld = (((((double) fb_volt_pdld) / 4095.0) * 3.3 * 1.5)
           * PDLD_SCLINV * PDLD_RATIO) / fb_resistances[PDLD_IDX];
 
       uint32_t fb_volt_b5v5 = read_adc_chn(ADC_B5V5_CHN);
-      uint16_t current_b5v5 = (((((double) fb_volt_b5v5) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_b5v5 = (((((double) fb_volt_b5v5) / 4095.0) * 3.3 * 1.5)
           * B5V5_SCLINV * B5V5_RATIO) / fb_resistances[B5V5_IDX];
 
       uint32_t fb_volt_bvbat = read_adc_chn(ADC_BVBAT_CHN);
-      uint16_t current_bvbat = (((((double) fb_volt_bvbat) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_bvbat = (((((double) fb_volt_bvbat) / 4095.0) * 3.3 * 1.5)
           * BVBAT_SCLINV * BVBAT_RATIO) / fb_resistances[BVBAT_IDX];
 
       load_current_data.doubleword = 0;
@@ -457,15 +518,15 @@ void main(void) {
       CAN_send_message(0x306, 6, load_current_data);
 
       uint32_t fb_volt_str0 = read_adc_chn(ADC_STR0_CHN);
-      uint16_t current_str0 = (((((double) fb_volt_str0) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_str0 = (((((double) fb_volt_str0) / 4095.0) * 3.3 * 1.5)
           * STR0_SCLINV * STR0_RATIO) / fb_resistances[STR0_IDX];
 
       uint32_t fb_volt_str1 = read_adc_chn(ADC_STR1_CHN);
-      uint16_t current_str1 = (((((double) fb_volt_str1) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_str1 = (((((double) fb_volt_str1) / 4095.0) * 3.3 * 1.5)
           * STR1_SCLINV * STR1_RATIO) / fb_resistances[STR1_IDX];
 
       uint32_t fb_volt_str2 = read_adc_chn(ADC_STR2_CHN);
-      uint16_t current_str2 = (((((double) fb_volt_str2) / 4095.0) * 3.3 * 1.5) 
+      uint16_t current_str2 = (((((double) fb_volt_str2) / 4095.0) * 3.3 * 1.5)
           * STR2_SCLINV * STR2_RATIO) / fb_resistances[STR2_IDX];
 
       uint16_t current_str_total = current_str0 + current_str1 + current_str2;
@@ -529,7 +590,7 @@ void main(void) {
     }
 
     /**
-     * Send current value of peak mode current cutoffs 
+     * Send current value of peak mode current cutoffs
      */
 
     /**
@@ -611,6 +672,7 @@ void process_CAN_msg(CAN_message msg) {
       break;
 
     //TODO: Accept new values for CAN current cut-offs
+    //TODO: Get WTR/FAN override switch state from wheel CAN messages
   }
 }
 

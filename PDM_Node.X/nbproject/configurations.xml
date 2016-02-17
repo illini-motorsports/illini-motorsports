@@ -17,6 +17,7 @@
       <itemPath>../FSAE_32/FSAE_config_32.c</itemPath>
       <itemPath>../FSAE_32/FSAE_CAN_32.c</itemPath>
       <itemPath>../FSAE_32/FSAE_adc_32.c</itemPath>
+      <itemPath>../FSAE_32/FSAE_nvm_32.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
