@@ -22,6 +22,7 @@
 #define MOTEC3_ID       0x203
 #define MOTEC4_ID       0x204
 #define MOTEC5_ID       0x205
+#define PADDLE0_ID      0x600
 
 #define BEACON_ID       0xE5L
 #define LOGGING_ID      0X2AAL
@@ -44,6 +45,8 @@
 #define FAN_SW_BYTE         4
 #define WATER_SW_BYTE       6
 #define LOGGING_BYTE        0
+#define UPTIME_BYTE         0
+#define PCB_TEMP_BYTE       2
 
 /**
  * Byte position of ADL channels in their CAN messages

@@ -84,6 +84,7 @@
  */
 
 volatile uint32_t millis;  // Holds timer0 rollover count
+volatile uint32_t seconds; // Holds timer1 rollover count
 volatile uint16_t rpm;     // Holds engine RPM data from CAN
 
 // ECAN variables
@@ -92,29 +93,119 @@ uint8_t data[8];				  // Holds CAN data bytes
 uint8_t dataLen;				  // Holds number of CAN data bytes
 ECAN_RX_MSG_FLAGS flags;	// Holds information about recieved message
 
+void main(void) {
+  /**
+   * Declare local variables
+   */
+  uint32_t diag_send_tmr, temp_samp_tmr, gear_samp_tmr = 0;
+  uint8_t data[8] = {0};
+  int16_t temp = 0; // Holds temperature reading of PCB in units of [C/0.005]
+
+  /**
+   * Initialize global variables
+   */
+  millis = 0;
+  seconds = 0;
+  rpm = 0;
+  id = 0;
+  dataLen = 0;
+  flags = 0;
+
+  /**
+   * General initialization
+   */
+  init_unused_pins();
+  init_oscillator();
+  init_timer0();
+  init_timer1();
+  init_ADC();
+
+  /**
+   * Initialize I/O pins
+   */
+
+  TEMP_TRIS = INPUT;
+  TERM_TRIS = INPUT;
+  GEAR_POS_TRIS = INPUT;
+  SHIFT_UP_TRIS = INPUT;
+  SHIFT_DOWN_TRIS = INPUT;
+  SHIFT_NEUT_TRIS = INPUT;
+
+  ACT_UP_TRIS = OUTPUT;
+  ACT_UP_LAT = 0;
+  ACT_DN_TRIS = OUTPUT;
+  ACT_DN_LAT = 0;
+
+  /**
+   * Setup Peripherals
+   */
+
+  ANCON0 = 0b00000110; // AN1, AN2 analog, rest digital
+  ANCON1 = 0x00;       // Default all pins to digital
+
+  // Programmable termination
+  TERM_TRIS = OUTPUT;
+  TERM_LAT = 0; // Not terminating
+
+  ECANInitialize();
+
+  // Interrupts setup
+  INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
+  INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
+  RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
+
+  // Main loop
+  while(1) {
+
+    /**
+     * Sample GEAR_POS signal
+     */
+    if(millis - gear_samp_tmr >= GEAR_SAMP_INTV) {
+      uint16_t gear_samp = sample(ADC_GEAR_CHN);
+
+      /**
+       * TODO: Apply linearization of sensor and CAN scalars to set value
+       */
+      gear_samp_tmr = millis;
+    }
+
+    /**
+     * Sample TEMP signal
+     */
+    if(millis - temp_samp_tmr >= TEMP_SAMP_INTV) {
+      uint16_t temp_samp = sample(ADC_TEMP_CHN);
+
+      /**
+       * Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
+       * Temp [C] = ((5 * (temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
+       * Temp [C] = (5 * (temp_samp / 40.95)) - 75) [C]
+       * Temp [C] = (temp_samp * 0.1221001221) - 75 [C]
+       * Temp [C / 0.005] = 200 * ((temp_samp * 0.1221001221) - 75) [C / 0.005]
+       * Temp [C / 0.005] = (temp_samp * 24.42002442) - 15000 [C / 0.005]
+       */
+
+      temp = (((float) temp_samp) * 24.42002442f) - 15000.0f;
+      temp_samp_tmr = millis;
+    }
+
+
+    /**
+     * Send diagnostic CAN message
+     */
+    if(millis - diag_send_tmr >= DIAG_MSG_SEND) {
+      ((uint16_t*) data)[UPTIME_BYTE] = seconds;
+      ((int16_t*) data)[PCB_TEMP_BYTE] = temp;
+      ECANSendMessage(PADDLE0_ID, data, 4, ECAN_TX_FLAGS);
+      diag_send_tmr = millis;
+    }
+  }
+}
+
 /**
- * Interrupts
+ * void high_isr(void)
+ *
+ * Function to service high-priority interrupts
  */
-
-/*********************************************************************************
-  Interrupt Function:
-    void high_isr(void)
-  Summary:
-    Function to service interrupts
-  Conditions:
-	Timer0 module must be setup along with the oscillator being used
-	ECAN must be configured
-  Input:
-    none
-  Return Values:
-    none
-  Side Effects:
-	Reloads the timer0 registers and increments millis
-	Resets the interrupt flags after servicing them
-	Sets rpm
-  Description:
-
-  *********************************************************************************/
 #pragma code high_vector = 0x08
 void high_vector(void) {
     _asm goto high_isr _endasm
@@ -131,8 +222,16 @@ void high_isr(void) {
     millis++;
   }
 
+  // Check for timer1 rollover
+  if (PIR1bits.TMR1IF) {
+    PIR1bits.TMR1IF = 0;
+    TMR1H = TMR1H_RELOAD;
+    TMR1L = TMR1L_RELOAD;
+    seconds++;
+  }
+
 	// Check for received CAN message
-	if(PIR5bits.RXB1IF) {
+	if (PIR5bits.RXB1IF) {
 		PIR5bits.RXB1IF = 0; // Reset the flag
 
 		// Get data from receive buffer
@@ -144,30 +243,15 @@ void high_isr(void) {
   }
 }
 
-void main(void) {
-  init_oscillator();
-  init_timer0();
-  //init_timer1();
-	init_unused_pins();
-
-  /**
-   * Peripherals Setup
-   */
-
-  ANCON0 = 0x00;    // Default all pins to digital
-  ANCON1 = 0x00;    // Default all pins to digital
-
-  // Programmable termination
-  TERM_TRIS = OUTPUT;
-  TERM_LAT = 0; // Not terminating
-
-	ECANInitialize();
-
-  // Interrupts setup
-	INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
-	INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
-	RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
-
-  // Main loop
-  while(1);
+/**
+ * uint16_t sample(const uint8_t ch)
+ *
+ * This function reads the analog voltage of a pin and then returns the value
+ *
+ * @param ch - which pin to sample
+ */
+uint16_t sample(const uint8_t ch) {
+  SelChanConvADC(ch); // Configure which pin you want to read and start A/D converter
+  while(BusyADC()); // Wait for complete conversion
+  return ReadADC();
 }
