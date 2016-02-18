@@ -17,10 +17,20 @@
 #include "../FSAE.X/FSAE.h"
 #include "../FSAE.X/CAN.h"
 
+// State variable definitions
+#define SHIFT_UP_SW (!SHIFT_UP_PORT)
+#define SHIFT_DN_SW (!SHIFT_DN_PORT)
+#define SHIFT_NT_BT (!SHIFT_NT_PORT)
+
+// Definitions for gear position variable
+#define GEAR_NEUT 0
+#define GEAR_FAIL 7
+
 // Timing definitions (ms)
 #define UPSHIFT_DUR    100
 #define DNSHIFT_DUR    100
-#define DIAG_MSG_SEND  1000
+#define LOCKOUT_DUR    50
+#define DIAG_MSG_SEND  100
 #define TEMP_SAMP_INTV 1000
 #define GEAR_SAMP_INTV 10
 
@@ -36,12 +46,12 @@
 #define GEAR_POS_PORT PORTAbits.RA1
 
 // Pin definitions for SHIFT signals
-#define SHIFT_UP_TRIS   TRISDbits.TRISD4
-#define SHIFT_UP_PORT   PORTDbits.RD4
-#define SHIFT_DOWN_TRIS TRISDbits.TRISD5
-#define SHIFT_DOWN_PORT PORTDbits.RD5
-#define SHIFT_NEUT_TRIS TRISDbits.TRISD6
-#define SHIFT_NEUT_PORT PORTDbits.RD6
+#define SHIFT_UP_TRIS TRISDbits.TRISD4
+#define SHIFT_UP_PORT PORTDbits.RD4
+#define SHIFT_DN_TRIS TRISDbits.TRISD5
+#define SHIFT_DN_PORT PORTDbits.RD5
+#define SHIFT_NT_TRIS TRISDbits.TRISD6
+#define SHIFT_NT_PORT PORTDbits.RD6
 
 // Pin definitions for ACT signals
 #define ACT_UP_TRIS TRISBbits.TRISB0
@@ -58,5 +68,7 @@
 // Function definitions
 void high_isr(void);
 uint16_t sample(const uint8_t ch);
+void process_upshift_press(void);
+void process_downshift_press(void);
 
 #endif /* PADDLESHIFTING_H */

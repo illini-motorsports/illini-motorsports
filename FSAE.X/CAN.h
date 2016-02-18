@@ -16,13 +16,13 @@
 /**
  * CAN message IDs
  */
-#define MOTEC0_ID       0x200
-#define MOTEC1_ID       0x201
-#define MOTEC2_ID       0x202
-#define MOTEC3_ID       0x203
-#define MOTEC4_ID       0x204
-#define MOTEC5_ID       0x205
-#define PADDLE0_ID      0x600
+#define MOTEC0_ID       0x100
+#define MOTEC1_ID       0x101
+#define MOTEC2_ID       0x102
+#define MOTEC3_ID       0x103
+#define MOTEC4_ID       0x104
+#define MOTEC5_ID       0x105
+#define PADDLE0_ID      0x200
 
 #define BEACON_ID       0xE5L
 #define LOGGING_ID      0X2AAL
@@ -40,13 +40,17 @@
 #define ENG_TEMP_BYTE       0
 #define VOLT_ECU_BYTE       6
 
-#define GEAR_BYTE           4
 #define GDN_SPD_BYTE        0
 #define FAN_SW_BYTE         4
 #define WATER_SW_BYTE       6
 #define LOGGING_BYTE        0
 #define UPTIME_BYTE         0
 #define PCB_TEMP_BYTE       2
+
+#define GEAR_BYTE           4
+#define QUEUE_NT_BYTE       5
+#define QUEUE_UP_BYTE       6
+#define QUEUE_DN_BYTE       7
 
 /**
  * Byte position of ADL channels in their CAN messages

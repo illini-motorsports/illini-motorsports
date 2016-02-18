@@ -83,9 +83,21 @@
  * Global Variables
  */
 
-volatile uint32_t millis;  // Holds timer0 rollover count
-volatile uint32_t seconds; // Holds timer1 rollover count
-volatile uint16_t rpm;     // Holds engine RPM data from CAN
+volatile uint32_t millis = 0;  // Holds timer0 rollover count
+volatile uint32_t seconds = 0; // Holds timer1 rollover count
+
+volatile uint16_t rpm = 0;     // Holds engine RPM data from CAN
+
+volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP
+volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
+
+volatile uint8_t queue_up = 0; // Number of queued upshifts
+volatile uint8_t queue_dn = 0; // Number of queued downshifts
+volatile uint8_t queue_nt = 0; // Number of queued neutral shifts
+
+volatile uint8_t gear = GEAR_FAIL; // Current gear
+
+volatile uint32_t lockout_tmr = 0; // Holds millis value of last lockout set
 
 // ECAN variables
 uint32_t id;              // Holds CAN msgID
@@ -100,16 +112,6 @@ void main(void) {
   uint32_t diag_send_tmr, temp_samp_tmr, gear_samp_tmr = 0;
   uint8_t data[8] = {0};
   int16_t temp = 0; // Holds temperature reading of PCB in units of [C/0.005]
-
-  /**
-   * Initialize global variables
-   */
-  millis = 0;
-  seconds = 0;
-  rpm = 0;
-  id = 0;
-  dataLen = 0;
-  flags = 0;
 
   /**
    * General initialization
@@ -128,8 +130,8 @@ void main(void) {
   TERM_TRIS = INPUT;
   GEAR_POS_TRIS = INPUT;
   SHIFT_UP_TRIS = INPUT;
-  SHIFT_DOWN_TRIS = INPUT;
-  SHIFT_NEUT_TRIS = INPUT;
+  SHIFT_DN_TRIS = INPUT;
+  SHIFT_NT_TRIS = INPUT;
 
   ACT_UP_TRIS = OUTPUT;
   ACT_UP_LAT = 0;
@@ -195,6 +197,11 @@ void main(void) {
     if(millis - diag_send_tmr >= DIAG_MSG_SEND) {
       ((uint16_t*) data)[UPTIME_BYTE] = seconds;
       ((int16_t*) data)[PCB_TEMP_BYTE] = temp;
+      data[GEAR_BYTE] = gear;
+      data[QUEUE_NT_BYTE] = queue_nt;
+      data[QUEUE_UP_BYTE] = queue_up;
+      data[QUEUE_DN_BYTE] = queue_dn;
+
       ECANSendMessage(PADDLE0_ID, data, 4, ECAN_TX_FLAGS);
       diag_send_tmr = millis;
     }
@@ -214,12 +221,23 @@ void high_vector(void) {
 
 #pragma interrupt high_isr
 void high_isr(void) {
-
   // Check for timer0 rollover indicating a millisecond has passed
   if (INTCONbits.TMR0IF) {
     INTCONbits.TMR0IF = 0;
     WriteTimer0(0x85);  // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
     millis++;
+
+    // Check for a new shift_up switch press
+    if(SHIFT_UP_SW && !prev_switch_up) {
+      process_upshift_press();
+    }
+    prev_switch_up = SHIFT_UP_SW;
+
+    // Check for a new shift_dn switch press
+    if(SHIFT_DN_SW && !prev_switch_dn) {
+      process_downshift_press();
+    }
+    prev_switch_dn = SHIFT_DN_SW;
   }
 
   // Check for timer1 rollover
@@ -254,4 +272,98 @@ uint16_t sample(const uint8_t ch) {
   SelChanConvADC(ch); // Configure which pin you want to read and start A/D converter
   while(BusyADC()); // Wait for complete conversion
   return ReadADC();
+}
+
+/**
+ * void process_upshift_press(void)
+ *
+ * After registering an upshift press, determine if we should increment the queue
+ */
+void process_upshift_press(void) {
+  if (queue_nt == 1) {
+    return;
+  }
+
+  if (millis - lockout_tmr < LOCKOUT_DUR) {
+    return;
+  }
+
+  if (gear == GEAR_FAIL) {
+    //TODO: Implement basic control
+    return;
+  }
+
+  if (SHIFT_NT_BT) { // Pressed while holding the neutral button
+    if (gear == GEAR_NEUT) {
+      queue_nt = 0;
+    } else if (gear == 1 || gear == 2) {
+      queue_nt = 1;
+      queue_up = 0;
+      queue_dn = 0;
+    } else {
+      queue_dn = 1;
+      lockout_tmr = millis;
+    }
+  } else { // Pressed while not holding the neutral button
+    if (queue_dn > 0) {
+      queue_dn = 0;
+      queue_up = 0;
+      return;
+    }
+
+    if (gear == GEAR_NEUT) {
+      queue_dn = 1;
+      lockout_tmr = millis;
+      return;
+    }
+
+    if (queue_up < 6 - gear) {
+      queue_up++;
+      lockout_tmr = millis;
+    }
+  }
+}
+
+/**
+ * void process_downshift_press(void)
+ *
+ * After registering an downshift press, determine if we should increment the queue
+ */
+void process_downshift_press(void) {
+  if (queue_nt == 1) {
+    return;
+  }
+
+  if (millis - lockout_tmr < LOCKOUT_DUR) {
+    return;
+  }
+
+  if (gear == GEAR_FAIL) {
+    //TODO: Implement basic control
+    return;
+  }
+
+  if (SHIFT_NT_BT) { // Pressed while holding the neutral button
+    if (gear == GEAR_NEUT) {
+      queue_nt = 0;
+    } else if (gear == 1 || gear == 2) {
+      queue_nt = 1;
+      queue_up = 0;
+      queue_dn = 0;
+    } else {
+      queue_dn = 1;
+      lockout_tmr = millis;
+    }
+  } else { // Pressed while not holding the neutral button
+    if (queue_up > 0) {
+      queue_dn = 0;
+      queue_up = 0;
+      return;
+    }
+
+    if (queue_dn + 1 < gear) {
+      queue_dn++;
+      lockout_tmr = millis;
+    }
+  }
 }
