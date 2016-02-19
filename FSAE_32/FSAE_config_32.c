@@ -829,6 +829,12 @@ void init_spi() {
   SPI1CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI1CONbits.CKE = 1;     // SPI Clock Edge Select bit (Serial output data changes on transition from active clock state to idle clock state)
 
+//TODO: Move this into a parameter
+#if BUILD_SWHEEL
+  SPI1BRG = 24;
+  SPI1CONbits.MODE16 = 0;
+#endif
+
   // Enable SPI1 module
   SPI1CONbits.ON = 1;
 

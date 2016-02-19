@@ -17,6 +17,10 @@
 #include "../PDM_Node.X/PDM.h"
 #endif
 
+#ifdef BUILD_SWHEEL
+#include "../SWheel_Node.X/SWheel.h"
+#endif
+
 // Code control defines
 //#define REFCLKO
 
