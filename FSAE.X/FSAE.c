@@ -70,7 +70,7 @@ void init_ADC(void) {
 void init_timer0(void) {
   // Turn on and configure the TIMER0 oscillator
   OpenTimer0(TIMER_INT_ON & T0_8BIT & T0_SOURCE_INT & T0_PS_1_128);
-  WriteTimer0(TMR0_RELOAD); // Load timer register
+  TMR0L = TMR0_RELOAD; // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
   INTCON2bits.TMR0IP = 1; // High priority
 }
 
@@ -128,8 +128,7 @@ void init_oscillator(void) {
   OSCTUNEbits.PLLEN = 1; // Frequency Multiplier PLL Select (1 to enable)
 
   // OSCCCON
-  OSCCONbits.SCS1 = 0; // Select configuration chosen oscillator
-  OSCCONbits.SCS0 = 0; // SCS = 00
+  OSCCONbits.SCS = 0; // Select configuration chosen oscillator
 
   // OSCCON2
   OSCCON2bits.MFIOSEL = 0;

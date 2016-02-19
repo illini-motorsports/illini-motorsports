@@ -23,7 +23,7 @@
 #ifdef INTERNAL
 #pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
 #else
-#pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+#pragma config FOSC = HS2       // Oscillator (HS oscillator (High power, 16MHz - 25MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -120,7 +120,6 @@ void main(void) {
   init_oscillator();
   init_timer0();
   init_timer1();
-  init_ADC();
 
   /**
    * Initialize I/O pins
@@ -144,10 +143,11 @@ void main(void) {
 
   ANCON0 = 0b00000110; // AN1, AN2 analog, rest digital
   ANCON1 = 0x00;       // Default all pins to digital
+  init_ADC();
 
   // Programmable termination
   TERM_TRIS = OUTPUT;
-  TERM_LAT = 0; // Not terminating
+  TERM_LAT = 1; // Terminating
 
   ECANInitialize();
 
@@ -186,23 +186,22 @@ void main(void) {
        * Temp [C / 0.005] = (temp_samp * 24.42002442) - 15000 [C / 0.005]
        */
 
-      temp = (((float) temp_samp) * 24.42002442f) - 15000.0f;
+      temp = (((double) temp_samp) * 24.42002442) - 15000.0;
       temp_samp_tmr = millis;
     }
-
 
     /**
      * Send diagnostic CAN message
      */
     if(millis - diag_send_tmr >= DIAG_MSG_SEND) {
-      ((uint16_t*) data)[UPTIME_BYTE] = seconds;
-      ((int16_t*) data)[PCB_TEMP_BYTE] = temp;
+      ((uint16_t*) data)[UPTIME_BYTE / 2] = seconds;
+      ((int16_t*) data)[PCB_TEMP_BYTE / 2] = temp;
       data[GEAR_BYTE] = gear;
       data[QUEUE_NT_BYTE] = queue_nt;
       data[QUEUE_UP_BYTE] = queue_up;
       data[QUEUE_DN_BYTE] = queue_dn;
 
-      ECANSendMessage(PADDLE0_ID, data, 4, ECAN_TX_FLAGS);
+      ECANSendMessage(PADDLE0_ID, data, 8, ECAN_TX_FLAGS);
       diag_send_tmr = millis;
     }
   }
@@ -224,7 +223,7 @@ void high_isr(void) {
   // Check for timer0 rollover indicating a millisecond has passed
   if (INTCONbits.TMR0IF) {
     INTCONbits.TMR0IF = 0;
-    WriteTimer0(0x85);  // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
+    TMR0L = 0x84; // Adjusted from TMR0_RELOAD experimentally
     millis++;
 
     // Check for a new shift_up switch press

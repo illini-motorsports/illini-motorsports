@@ -31,7 +31,7 @@
 #define DNSHIFT_DUR    100
 #define LOCKOUT_DUR    50
 #define DIAG_MSG_SEND  100
-#define TEMP_SAMP_INTV 1000
+#define TEMP_SAMP_INTV 333
 #define GEAR_SAMP_INTV 10
 
 // Pin definitions for TERM signal
