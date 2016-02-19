@@ -24,12 +24,12 @@
 #define MOTEC5_ID       0x105
 #define PADDLE0_ID      0x200
 
-#define BEACON_ID       0xE5L
-#define LOGGING_ID      0X2AAL
-#define FAN_SW_ID       0x500L
-#define PDM_ID          0x300L
-#define ADL_ID          0x500L
-#define FAN_SW_ADL_ID   0x00
+#define BEACON_ID       0x0E5
+#define LOGGING_ID      0X2AA
+#define FAN_SW_ID       0x500
+#define PDM_ID          0x300
+#define ADL_ID          0x500
+//#define FAN_SW_ADL_ID   0x00
 
 /**
  * Byte position of channels in their CAN messages
@@ -55,6 +55,7 @@
 /**
  * Byte position of ADL channels in their CAN messages
  */
+#define ADL_IDX_BYTE 0
 #define ADL1_BYTE 2
 #define ADL2_BYTE 4
 #define ADL3_BYTE 6

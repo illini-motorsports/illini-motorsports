@@ -22,17 +22,37 @@
 #define SHIFT_DN_SW (!SHIFT_DN_PORT)
 #define SHIFT_NT_BT (!SHIFT_NT_PORT)
 
+// Misc state definitions
+#define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
+
+// Timing definitions (ms)
+#define LOCKOUT_DUR    500 //TODO: Tune this value
+#define DIAG_MSG_SEND  10
+#define TEMP_SAMP_INTV 333
+#define GEAR_SAMP_INTV 10
+#define MAX_SHIFT_DUR  100 //TODO: Tune this value
+#define RELAX_WAIT     50  //TODO: Tune this value
+#define IGN_CUT_WAIT   10  //TODO: Tune this value
+
+// Definitions for error conditions
+//TODO: Decide on these values
+#define LOW_VOLT    1000 // 10.00V
+#define LOWER_VOLT  900  // 9.00V
+#define IGN_CUT_RPM 2500 // 2500rpm
+#define IGN_CUT_TPS 750  // 75.0%
+
+// Thresholds
+#define RPM_ON_THRESHOLD 600.0 // rpm
+#define MAX_RETRY        2
+
 // Definitions for gear position variable
 #define GEAR_NEUT 0
 #define GEAR_FAIL 7
 
-// Timing definitions (ms)
-#define UPSHIFT_DUR    100
-#define DNSHIFT_DUR    100
-#define LOCKOUT_DUR    50
-#define DIAG_MSG_SEND  100
-#define TEMP_SAMP_INTV 333
-#define GEAR_SAMP_INTV 10
+// Definitions for shift enum
+#define SHIFT_ENUM_UP 0
+#define SHIFT_ENUM_DN 1
+#define SHIFT_ENUM_NT 2
 
 // Pin definitions for TERM signal
 #define TERM_TRIS TRISCbits.TRISC6
@@ -70,5 +90,10 @@ void high_isr(void);
 uint16_t sample(const uint8_t ch);
 void process_upshift_press(void);
 void process_downshift_press(void);
+uint8_t check_shift_conditions(uint8_t shift_enum);
+void do_shift(uint8_t shift_enum);
+void sample_gear(void);
+void sample_temp(void);
+void send_diag_can(void);
 
 #endif /* PADDLESHIFTING_H */
