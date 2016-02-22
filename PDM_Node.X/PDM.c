@@ -38,6 +38,7 @@ uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr = 0;
+uint32_t pdlu_tmr, pdld_tmr = 0;
 
 /**
  * Main function
@@ -231,6 +232,42 @@ void main(void) {
     }
 
     /**
+     * Control PDLU/PDLD loads based on the ACT_UP/ACT_DN signals
+     */
+
+    // PDLU
+    if (ACT_UP_SW && !ACT_DN_SW && (millis - pdlu_tmr < MAX_PDL_DUR)) {
+      // Enable PDLU
+      if(!PDLU_EN) {
+        EN_PDLU_LAT = PWR_ON;
+        pdlu_tmr = millis;
+      }
+    } else {
+      // Reset PDLU timer if the ACT_UP signal has been disabled 
+      if(!ACT_UP_SW) {
+        pdlu_tmr = millis;
+      }
+
+      EN_PDLU_LAT = PWR_OFF;
+    }
+
+    // PDLD
+    if (ACT_DN_SW && !ACT_UP_SW && (millis - pdld_tmr < MAX_PDL_DUR)) {
+      // Enable PDLD
+      if(!PDLD_EN) {
+        EN_PDLD_LAT = PWR_ON;
+        pdld_tmr = millis;
+      }
+    } else {
+      // Reset PDLD timer if the ACT_DN signal has been disabled 
+      if(!ACT_DN_SW) {
+        pdld_tmr = millis;
+      }
+
+      EN_PDLD_LAT = PWR_OFF;
+    }
+
+    /**
      * Toggle state-dependent loads
      *
      * When enabling an inductive load, set the peak current limit and set the
@@ -400,12 +437,8 @@ void main(void) {
         str_en_tmr = millis;
       }
 
-      if (STR_EN) {
-        EN_STR_LAT = PWR_OFF;
-      }
+      EN_STR_LAT = PWR_OFF;
     }
-
-    //TODO: Control PDLU/PDLD
 
     /**
      * Check peak timers and reset to normal mode if enough time has past
@@ -590,11 +623,11 @@ void main(void) {
     }
 
     /**
-     * Send current value of peak mode current cutoffs
+     *TODO: Send current value of peak mode current cutoffs
      */
 
     /**
-     * Send current value of normal mode current cutoffs
+     *TODO: Send current value of normal mode current cutoffs
      */
 
     //TODO: ???

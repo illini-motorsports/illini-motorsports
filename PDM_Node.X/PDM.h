@@ -46,6 +46,47 @@
 #define STR1_IDX  12
 #define STR2_IDX  13
 
+// Thresholds
+#define RPM_ON_THRESHOLD 600.0 // rpm
+#define FAN_THRESHOLD_H  90.0  // C
+#define FAN_THRESHOLD_L  84.0  // C
+
+// Timing constants (ms)
+#define FUEL_PRIME_DUR     1000
+#define BASIC_CONTROL_WAIT 1000
+#define STR_MAX_DUR        4000
+#define DIAG_MSG_SEND      1000
+#define LOAD_CUR_SEND      10
+#define RAIL_VOLT_SEND     50
+#define FUEL_PEAK_DUR      50
+#define WTR_PEAK_DUR       50
+#define FAN_PEAK_DUR       50
+#define MAX_PDL_DUR        500
+
+// Switch state definitions
+#define STR_SW    (!SW1_PORT)
+#define ON_SW     (!SW2_PORT)
+#define ACT_UP_SW (!SW3_PORT)
+#define ACT_DN_SW (!SW4_PORT)
+#define KILL_SW   (!KILL_PORT)
+
+// Misc state definitions
+#define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
+
+// Load state definitions
+#define IGN_EN   (EN_IGN_PORT == PWR_ON)
+#define INJ_EN   (EN_INJ_PORT == PWR_ON)
+#define FUEL_EN  (EN_FUEL_PORT == PWR_ON)
+#define ECU_EN   (EN_ECU_PORT == PWR_ON)
+#define WTR_EN   (EN_WTR_PORT == PWR_ON)
+#define FAN_EN   (EN_FAN_PORT == PWR_ON)
+#define AUX_EN   (EN_AUX_PORT == PWR_ON)
+#define PDLU_EN  (EN_PDLU_PORT == PWR_ON)
+#define PDLD_EN  (EN_PDLD_PORT == PWR_ON)
+#define B5V5_EN  (EN_B5V5_PORT == PWR_ON)
+#define BVBAT_EN (EN_BVBAT_PORT == PWR_ON)
+#define STR_EN   (EN_STR_PORT == PWR_ON)
+
 // Pin definitions for EN signal bus
 #define EN_IGN_LAT    LATDbits.LATD15
 #define EN_INJ_LAT    LATCbits.LATC15
@@ -285,45 +326,6 @@
 #define STR_SCLINV   100.0
 #define TOTAL_SCLINV 100.0
 
-// Switch state definitions
-#define STR_SW    (!SW1_PORT)
-#define ON_SW     (!SW2_PORT)
-#define ACT_UP_SW (!SW3_PORT)
-#define ACT_DN_SW (!SW4_PORT)
-#define KILL_SW   (!KILL_PORT)
-
-// Misc state definitions
-#define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
-
-// Load state definitions
-#define IGN_EN   (EN_IGN_PORT == PWR_ON)
-#define INJ_EN   (EN_INJ_PORT == PWR_ON)
-#define FUEL_EN  (EN_FUEL_PORT == PWR_ON)
-#define ECU_EN   (EN_ECU_PORT == PWR_ON)
-#define WTR_EN   (EN_WTR_PORT == PWR_ON)
-#define FAN_EN   (EN_FAN_PORT == PWR_ON)
-#define AUX_EN   (EN_AUX_PORT == PWR_ON)
-#define PDLU_EN  (EN_PDLU_PORT == PWR_ON)
-#define PDLD_EN  (EN_PDLD_PORT == PWR_ON)
-#define B5V5_EN  (EN_B5V5_PORT == PWR_ON)
-#define BVBAT_EN (EN_BVBAT_PORT == PWR_ON)
-#define STR_EN   (EN_STR_PORT == PWR_ON)
-
-// Thresholds
-#define RPM_ON_THRESHOLD 600.0 // rpm
-#define FAN_THRESHOLD_H  90.0  // C
-#define FAN_THRESHOLD_L  84.0  // C
-
-// Timing constants (ms)
-#define FUEL_PRIME_DUR     1000
-#define BASIC_CONTROL_WAIT 1000
-#define STR_MAX_DUR        4000
-#define DIAG_MSG_SEND      1000
-#define LOAD_CUR_SEND      10
-#define RAIL_VOLT_SEND     50
-#define FUEL_PEAK_DUR      50
-#define WTR_PEAK_DUR       50
-#define FAN_PEAK_DUR       50
 
 // Constant used to check whether the NVM has been initialized
 #define NVM_WPR_CONSTANT 0xDEADBEEF
