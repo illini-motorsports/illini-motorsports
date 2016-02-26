@@ -40,6 +40,7 @@
 #define ERRNO_BYTE          2
 
 #define ENG_RPM_BYTE        0
+#define TPS_BYTE            2
 #define OIL_PRES_BYTE       4
 #define OIL_TEMP_BYTE       6
 #define ENG_TEMP_BYTE       0

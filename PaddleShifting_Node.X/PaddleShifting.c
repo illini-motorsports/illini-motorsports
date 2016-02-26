@@ -120,6 +120,7 @@ void main(void) {
   /**
    * General initialization
    */
+
   init_unused_pins();
   init_oscillator();
   init_timer0();
@@ -235,10 +236,19 @@ void high_isr(void) {
 
 		// Get data from receive buffer
 		ECANReceiveMessage(&id, data, &dataLen, &flags);
+
     if (id == MOTEC0_ID) {
       ((uint8_t*) &eng_rpm)[0] = data[ENG_RPM_BYTE + 1];
       ((uint8_t*) &eng_rpm)[1] = data[ENG_RPM_BYTE];
+
+      ((uint8_t*) &throttle_pos)[0] = data[TPS_BYTE + 1];
+      ((uint8_t*) &throttle_pos)[1] = data[TPS_BYTE];
 		}
+
+    if (id == MOTEC1_ID) {
+      ((uint8_t*) &bat_volt)[0] = data[VOLT_ECU_BYTE + 1];
+      ((uint8_t*) &bat_volt)[1] = data[VOLT_ECU_BYTE];
+    }
   }
 }
 
