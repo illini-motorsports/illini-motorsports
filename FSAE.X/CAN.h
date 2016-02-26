@@ -16,6 +16,7 @@
 /**
  * CAN message IDs
  */
+#define ERROR_ID        0x00F
 #define MOTEC0_ID       0x100
 #define MOTEC1_ID       0x101
 #define MOTEC2_ID       0x102
@@ -34,6 +35,10 @@
 /**
  * Byte position of channels in their CAN messages
  */
+
+#define ORIGIN_BYTE         0
+#define ERRNO_BYTE          2
+
 #define ENG_RPM_BYTE        0
 #define OIL_PRES_BYTE       4
 #define OIL_TEMP_BYTE       6

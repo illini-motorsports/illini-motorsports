@@ -87,7 +87,7 @@ volatile uint32_t millis = 0;  // Holds timer0 rollover count
 volatile uint32_t seconds = 0; // Holds timer1 rollover count
 
 volatile int16_t eng_rpm = 0;      // Engine RPM (from MoTeC)
-volatile int16_t bat_volt = 0;     // Battery voltage (from PDM/ECU?)
+volatile int16_t bat_volt = 0;     //TODO: Battery voltage (from PDM/ECU?)
 volatile int16_t throttle_pos = 0; // Throttle position (from MoTeC)
 
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP
@@ -116,9 +116,6 @@ uint8_t dataLen = 0;				 // Holds number of CAN data bytes
 ECAN_RX_MSG_FLAGS flags = 0; // Holds information about recieved message
 
 void main(void) {
-  /**
-   * Declare local variables
-   */
 
   /**
    * General initialization
@@ -154,7 +151,7 @@ void main(void) {
 
   // Programmable termination
   TERM_TRIS = OUTPUT;
-  TERM_LAT = 1; // Terminating
+  TERM_LAT = 1; //TODO: Terminating
 
   ECANInitialize();
 
@@ -357,6 +354,8 @@ void process_downshift_press(void) {
  * 
  * Checks various conditions and determines if the requested shift is allowable.
  * 
+ * TODO: Send CAN messages with error code for screen to display.
+ * 
  * @param shift_enum The type of shift being requested
  * @return 0 if restricted, 1 if allowable
  */
@@ -364,6 +363,7 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
   // Prevent shifting up past neutral on low voltage
   if (gear == 1 && shift_enum == SHIFT_ENUM_UP) {
     if (bat_volt != 0 && bat_volt < LOW_VOLT) {
+      send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_LOWVOLT);
       return 0;
     }
   }
@@ -371,17 +371,20 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
   // Prevent shifting down past neutral on low voltage
   if (gear == 2 && shift_enum == SHIFT_ENUM_DN) {
     if (bat_volt != 0 && bat_volt < LOW_VOLT) {
+      send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_LOWVOLT);
       return 0;
     }
   }
   
   // Prevent any shifting on very low voltage
   if (bat_volt != 0 && bat_volt < LOWER_VOLT) {
+    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_LOWERVOLT);
     return 0;
   }
 
   // Prevent shifting while the engine is off
   if (!ENG_ON) {
+    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_ENGOFF);
     return 0;
   }
 
@@ -389,11 +392,19 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
 
   // Prevent shifting past 6th gear
   if (gear == 6 && shift_enum == SHIFT_ENUM_UP) {
+    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_SHIFTPAST);
     return 0;
   }
 
   // Prevent shifting past 1st gear
   if (gear == 1 && shift_enum == SHIFT_ENUM_DN) {
+    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_SHIFTPAST);
+    return 0;
+  }
+
+  // Prevent shifting into neutral from anything other than 1st or 2nd
+  if (shift_enum == SHIFT_ENUM_NT && !(gear == 1 || gear == 2)) {
+    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_BADNEUT);
     return 0;
   }
 
@@ -561,11 +572,9 @@ void sample_gear(void) {
   if(millis - gear_samp_tmr >= GEAR_SAMP_INTV) {
     uint16_t gear_samp = sample(ADC_GEAR_CHN);
     
+    //TODO: Apply linearization of sensor and CAN scalars to set value
     gear = GEAR_NEUT;
-    
-    /**
-     * TODO: Apply linearization of sensor and CAN scalars to set value
-     */
+
     gear_samp_tmr = millis;
   }
 }

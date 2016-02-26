@@ -11,6 +11,7 @@
       <itemPath>Pins_Telemetry.h</itemPath>
       <itemPath>Pins_Wheel.h</itemPath>
       <itemPath>Pins_PaddleShifting.h</itemPath>
+      <itemPath>errno.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -20,6 +21,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>FSAE.c</itemPath>
+      <itemPath>errno.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

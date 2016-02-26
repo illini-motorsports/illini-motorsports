@@ -16,6 +16,7 @@
 #include "../ECAN.X/ECAN.h"
 #include "../FSAE.X/FSAE.h"
 #include "../FSAE.X/CAN.h"
+#include "../FSAE.X/errno.h"
 
 // State variable definitions
 #define SHIFT_UP_SW (!SHIFT_UP_PORT)
