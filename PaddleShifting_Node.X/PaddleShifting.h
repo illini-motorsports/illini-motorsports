@@ -96,5 +96,6 @@ void do_shift(uint8_t shift_enum);
 void sample_gear(void);
 void sample_temp(void);
 void send_diag_can(void);
+void relax_wait(void);
 
 #endif /* PADDLESHIFTING_H */

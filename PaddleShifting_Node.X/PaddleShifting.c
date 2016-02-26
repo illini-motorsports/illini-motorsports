@@ -421,10 +421,10 @@ void do_shift(uint8_t shift_enum) {
   const uint8_t SHIFT_DN = shift_enum == SHIFT_ENUM_DN;
   const uint8_t SHIFT_NT = shift_enum == SHIFT_ENUM_NT;
 
-  uint32_t relax_wait_tmr;
   uint32_t ign_wait_tmr;
 
   // Store the target gear
+  uint8_t orig_gear = gear;
   uint8_t gear_target;
   if (SHIFT_UP) {
     gear_target = gear + 1;
@@ -497,13 +497,7 @@ void do_shift(uint8_t shift_enum) {
         ((int16_t*) data)[ADL10_BYTE / 2] = 0;
         ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
         
-        // Wait for RELAX_WAIT millis and do main loop functions in the process
-        relax_wait_tmr = millis;
-        while (millis - relax_wait_tmr < RELAX_WAIT) {
-          sample_gear();
-          sample_temp();
-          send_diag_can();
-        }
+        relax_wait();
 
         // Decrement queued shifts value
         if (SHIFT_UP) {
@@ -524,14 +518,7 @@ void do_shift(uint8_t shift_enum) {
           ACT_DN_LAT = 0;
           retry_dn++;
         }
-
-        // Wait for RELAX_WAIT millis and do main loop functions in the process
-        relax_wait_tmr = millis;
-        while (millis - relax_wait_tmr < RELAX_WAIT) {
-          sample_gear();
-          sample_temp();
-          send_diag_can();
-        }
+        relax_wait();
 
         if (SHIFT_UP && retry_up > MAX_RETRY) {
           queue_up = 0;
@@ -555,8 +542,62 @@ void do_shift(uint8_t shift_enum) {
      * Perform a neutral shift
      */
 
-    //TODO: Implement this
-    return;
+    if (!check_shift_conditions(shift_enum)) {
+      queue_nt = 0;
+      retry_nt = 0;
+      return;
+    }
+
+    // Fire actuator
+    if (orig_gear == 1) {
+      ACT_UP_LAT = 1; 
+    } else if (orig_gear == 2) {
+      ACT_DN_LAT = 1; 
+    }
+    act_tmr = millis;
+    
+    while (1) {
+      sample_gear();
+      
+      if (gear == GEAR_NEUT) {
+        // Relax actuator
+        ACT_DN_LAT = 0; 
+        ACT_UP_LAT = 0;
+        relax_wait();
+        
+        retry_nt = 0;
+        queue_nt = 0;
+        return;
+      } else if (gear == orig_gear) {
+        if (millis - act_tmr >= MAX_SHIFT_DUR) {
+          // Relax actuator
+          ACT_DN_LAT = 0; 
+          ACT_UP_LAT = 0;
+          relax_wait();
+
+          retry_nt++;
+          break;
+        }
+      } else {
+        // Relax actuator
+        ACT_DN_LAT = 0; 
+        ACT_UP_LAT = 0;
+        relax_wait();
+        
+        retry_nt++;
+        break;
+      }
+      
+      // Do main loop functions while waiting
+      sample_temp();
+      send_diag_can();
+    }
+
+    if (retry_nt > MAX_RETRY) {
+      queue_nt = 0;
+      retry_nt = 0;
+      send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_MAXRETRY);
+    }
   }
 }
 
@@ -615,5 +656,20 @@ void send_diag_can(void) {
     
     ECANSendMessage(PADDLE0_ID, data, 8, ECAN_TX_FLAGS);
     diag_send_tmr = millis;
+  }
+}
+
+/**
+ * void relax_wait(void)
+ * 
+ * Waits for the actuator to return to the relaxed position
+ */
+void relax_wait(void) {
+  // Wait for RELAX_WAIT millis and do main loop functions in the process
+  uint32_t relax_wait_tmr = millis;
+  while (millis - relax_wait_tmr < RELAX_WAIT) {
+    sample_gear();
+    sample_temp();
+    send_diag_can();
   }
 }
