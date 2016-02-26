@@ -39,7 +39,8 @@ const rom char* errno_msg[NUM_ERR] = {
   /*  23 */ "Shifting prevented due to stall protection",
   /*  24 */ "Shifting prevented due to overrev protection",
   /*  25 */ "Shifting to nonexistant gear prevented",
-  /*  26 */ "Neutral shift from 3rd or higher prevented"
+  /*  26 */ "Neutral shift from 3rd or higher prevented",
+  /*  27 */ "Exceeded maximum number of retry shifts"
 };
 
 /**

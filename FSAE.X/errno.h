@@ -14,7 +14,7 @@
 #include "CAN.h"
 #include "../ECAN.X/ECAN.h"
 
-#define NUM_ERR 27
+#define NUM_ERR 28
 
 /**
  * Error Codes
@@ -29,6 +29,7 @@
 #define ERR_PDL_OVERREV        24  // Prevented shifting that would overrev engine
 #define ERR_PDL_SHIFTPAST      25  // Prevented shifting past 1st or 6th gear
 #define ERR_PDL_BADNEUT        26  // Prevented neutral shift from not 1st/2nd
+#define ERR_PDL_MAXRETRY       27  // Exceeded maximum number of retry shifts
 
 // Defined in errno.c
 //TODO: Modify this for xc32 compiler?

@@ -83,4 +83,12 @@
 #define OIL_TEMP_SCL 0.1
 #define VOLT_ECU_SCL 0.01
 
+/**
+ * ADL definitions
+ */
+#define ADL_IDX_1_3 0
+#define ADL_IDX_4_6 1
+#define ADL_IDX_7_9 2
+#define ADL_IDX_10  3
+
 #endif /* CAN_H */

@@ -354,9 +354,7 @@ void process_downshift_press(void) {
  * 
  * Checks various conditions and determines if the requested shift is allowable.
  * 
- * TODO: Send CAN messages with error code for screen to display.
- * 
- * @param shift_enum The type of shift being requested
+ * @param shift_enum - The type of shift being requested
  * @return 0 if restricted, 1 if allowable
  */
 uint8_t check_shift_conditions(uint8_t shift_enum) {
@@ -459,14 +457,14 @@ void do_shift(uint8_t shift_enum) {
     if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
         (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
       //TODO: Finalize this
-      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = 4; // ADL10?
+      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10;
       ((int16_t*) data)[ADL10_BYTE / 2] = 1;
       ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
     }
 
-    // Wait IGN_CUT_WAIT millis
+    // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
     ign_wait_tmr = millis;
-    while (millis - ign_wait_tmr >= IGN_CUT_WAIT) {
+    while (millis - ign_wait_tmr < IGN_CUT_WAIT) {
       sample_gear();
       sample_temp();
       send_diag_can();
@@ -475,15 +473,15 @@ void do_shift(uint8_t shift_enum) {
     // Fire actuator
     if (SHIFT_UP) {
       ACT_UP_LAT = 1; 
-    } else if (SHIFT_DN){
+    } else if (SHIFT_DN) {
       ACT_DN_LAT = 1;
     }
     act_tmr = millis;
 
-    while(1) {
+    while (1) {
       sample_gear();
 
-      if(gear == gear_target) {
+      if (gear == gear_target) {
         // Relax actuator
         if (SHIFT_UP) {
           ACT_UP_LAT = 0; 
@@ -495,13 +493,13 @@ void do_shift(uint8_t shift_enum) {
 
         // Send restore ignition message to ECU
         //TODO: Finalize this
-        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = 4; // ADL10?
+        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10;
         ((int16_t*) data)[ADL10_BYTE / 2] = 0;
         ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
         
         // Wait for RELAX_WAIT millis and do main loop functions in the process
         relax_wait_tmr = millis;
-        while (millis - relax_wait_tmr >= RELAX_WAIT) {
+        while (millis - relax_wait_tmr < RELAX_WAIT) {
           sample_gear();
           sample_temp();
           send_diag_can();
@@ -517,7 +515,7 @@ void do_shift(uint8_t shift_enum) {
         return;
       }
 
-      if(millis - act_tmr >= MAX_SHIFT_DUR) {
+      if (millis - act_tmr >= MAX_SHIFT_DUR) {
         // Relax actuator
         if (SHIFT_UP) {
           ACT_UP_LAT = 0; 
@@ -529,21 +527,20 @@ void do_shift(uint8_t shift_enum) {
 
         // Wait for RELAX_WAIT millis and do main loop functions in the process
         relax_wait_tmr = millis;
-        while (millis - relax_wait_tmr >= RELAX_WAIT) {
+        while (millis - relax_wait_tmr < RELAX_WAIT) {
           sample_gear();
           sample_temp();
           send_diag_can();
         }
 
-        if ((SHIFT_UP && retry_up > MAX_RETRY) ||
-            (SHIFT_DN && retry_dn > MAX_RETRY)) {
-          if (SHIFT_UP) {
-            queue_up = 0;
-            retry_up = 0;
-          } else if (SHIFT_DN) {
-            queue_dn = 0;
-            retry_dn = 0;
-          }
+        if (SHIFT_UP && retry_up > MAX_RETRY) {
+          queue_up = 0;
+          retry_up = 0;
+          send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_MAXRETRY);
+        } else if (SHIFT_DN && retry_dn > MAX_RETRY) {
+          queue_dn = 0;
+          retry_dn = 0;
+          send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_MAXRETRY);
         }
 
         return;
