@@ -15,6 +15,9 @@
 #define WIDTH 480
 #define HEIGHT 272
 
+// Formula Defined Functions
+void reset();
+
 //void softReset(void);
 void displayOn(uint8_t on);
 void sleep(uint8_t sleep);
@@ -51,6 +54,8 @@ void drawEllipse(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t sho
 void fillEllipse(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint16_t color);
 void drawCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color);
 void fillCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color);
+void setColor(uint16_t color, uint8_t isForeground);
+void writeCoordinates(uint8_t s_reg, uint16_t x, uint16_t y);
 
 /* Backlight */
 void GPIOX(uint8_t on);
@@ -72,6 +77,7 @@ uint8_t readData(void);
 void writeCommand(uint8_t d);
 uint8_t readStatus(void);
 uint8_t waitPoll(uint8_t r, uint8_t f);
+void SPI_double_send(uint8_t one, uint8_t two);
 uint16_t width(void);
 uint16_t height(void);
 
@@ -79,7 +85,7 @@ void PLLinit(void);
 void initialize(void);
 
 /* GFX Helper Functions */
-void circleHelper(int16_t x0, int16_t y0, int16_t r, uint16_t color, uint8_t filled);
+void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t filled);
 void rectHelper(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint8_t filled);
 void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, uint8_t filled);
 void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint16_t color, uint8_t filled);
@@ -88,6 +94,37 @@ void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t sho
 uint8_t _cs, _rst;
 uint16_t _width, _height;
 uint8_t _textScale;
+
+/* Jake Defined Values */
+
+// Rectangle Coordinates
+#define RA8875_RECT_X0_0				0x91
+#define RA8875_RECT_X0_1				0x92
+#define RA8875_RECT_Y0_0				0x93
+#define RA8875_RECT_Y0_1				0x94
+
+#define RA8875_RECT_X1_0				0x95
+#define RA8875_RECT_X1_1				0x96
+#define RA8875_RECT_Y1_0				0x97
+#define RA8875_RECT_Y1_1				0x98
+
+// Circle Coordinates
+#define RA8875_CIRC_X_0					0x99
+#define RA8875_CIRC_X_1					0x9a
+#define RA8875_CIRC_Y_0					0x9b
+#define RA8875_CIRC_Y_1					0x9c
+#define RA8875_CIRC_RAD					0x9d
+
+// Background Color Registers
+#define RA8875_BGCR_RED 				0x60
+#define RA8875_BGCR_GREEN 			0x61
+#define RA8875_BGCR_BLUE 				0x62
+
+// Foreground Color Registers
+#define RA8875_FGCR_RED 				0x63
+#define RA8875_FGCR_GREEN 			0x64
+#define RA8875_FGCR_BLUE 				0x65
+
 
 // Colors (RGB565)
 #define	RA8875_BLACK            0x0000

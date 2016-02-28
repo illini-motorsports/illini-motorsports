@@ -27,5 +27,6 @@
 // Function definitions
 void main(void);
 void delay(uint32_t num);
+void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t thick);
 
 #endif /* SWHEEL_H */
