@@ -25,6 +25,10 @@ uint8_t peak_state[NUM_LOADS] = {0};
 // Stores the calculated FB pin resistance for each load
 double fb_resistances[NUM_LOADS] = {0.0};
 
+// Recorded values from temperature sensors
+int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
+int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
+
 // State variables determined by various sources
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
@@ -39,6 +43,7 @@ uint32_t str_en_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
+uint32_t temp_samp_tmr = 0;
 
 /**
  * Main function
@@ -243,7 +248,7 @@ void main(void) {
         pdlu_tmr = millis;
       }
     } else {
-      // Reset PDLU timer if the ACT_UP signal has been disabled 
+      // Reset PDLU timer if the ACT_UP signal has been disabled
       if(!ACT_UP_SW) {
         pdlu_tmr = millis;
       }
@@ -259,7 +264,7 @@ void main(void) {
         pdld_tmr = millis;
       }
     } else {
-      // Reset PDLD timer if the ACT_DN signal has been disabled 
+      // Reset PDLD timer if the ACT_DN signal has been disabled
       if(!ACT_DN_SW) {
         pdld_tmr = millis;
       }
@@ -475,12 +480,18 @@ void main(void) {
     if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
       CAN_data data = {0};
       data.halfword0 = (uint16_t ) seconds;
-      data.halfword1 = total_current_draw;
-      data.word1 = millis; //TODO: Change this to PCB temp and IC temp
-      CAN_send_message(0x300, 8, data);
+      data.halfword1 = pcb_temp;
+      data.halfword2 = junc_temp;
+      data.halfword3 = total_current_draw;
 
+      CAN_send_message(PDM0_ID, 8, data);
       diag_send_tmr = millis;
     }
+
+    /**
+     * Sample temperature sensors
+     */
+    sample_temp();
 
     /**
      * Sample load current data and send results on CAN
@@ -630,6 +641,10 @@ void main(void) {
      *TODO: Send current value of normal mode current cutoffs
      */
 
+    /**
+     *TODO: Send enablity state and peak mode bitmaps
+     */
+
     //TODO: ???
     //TODO: Profit
   }
@@ -706,6 +721,41 @@ void process_CAN_msg(CAN_message msg) {
 
     //TODO: Accept new values for CAN current cut-offs
     //TODO: Get WTR/FAN override switch state from wheel CAN messages
+  }
+}
+
+/**
+ * void sample_temp(void)
+ *
+ * Samples the PCB temp sensor and internal die temp sensor, then updates
+ * variables if the interval has passed.
+ */
+void sample_temp(void) {
+  if(millis - temp_samp_tmr >= TEMP_SAMP_INTV) {
+
+    /**
+     * PCB Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
+     * PCB Temp [C] = ((5 * (pcb_temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
+     * PCB Temp [C] = (5 * (pcb_temp_samp / 40.95)) - 75) [C]
+     * PCB Temp [C] = (pcb_temp_samp * 0.1221001221) - 75 [C]
+     * PCB Temp [C / 0.005] = 200 * ((pcb_temp_samp * 0.1221001221) - 75) [C / 0.005]
+     * PCB Temp [C / 0.005] = (temp_samp * 24.42002442) - 15000 [C / 0.005]
+     */
+    uint32_t pcb_temp_samp = read_adc_chn(ADC_PTEMP_CHN);
+    pcb_temp = (((double) pcb_temp_samp) * 24.42002442) - 15000.0;
+
+    /**
+     * Junc Temp [C] = 200 [C/V] * (1 [V] - Sample [V])
+     * Junc Temp [C] = 200 [C/V] * (1 - (5 * (junc_temp_samp / 4095))) [V]
+     * Junc Temp [C] = 200 [C/V] * (1 - (junc_temp_samp / 819)) [V]
+     * Junc Temp [C] = 200 - (junc_temp_samp * 0.2442002442002442) [C]
+     * Junc Temp [C / 0.005] = 40000 - (junc_temp_samp * 48.84004884004884) [C / 0.005]
+     */
+
+    uint32_t junc_temp_samp = read_adc_chn(ADC_JTEMP_CHN);
+    junc_temp = (int16_t) (40000.0 - (((double) junc_temp_samp) * 48.84004884004884));
+
+    temp_samp_tmr = millis;
   }
 }
 
@@ -832,6 +882,7 @@ void init_adc_pdm(void) {
   ADC_5V5_TRIS = INPUT;
   ADC_12V_TRIS = INPUT;
   ADC_VBAT_TRIS = INPUT;
+  ADC_PTEMP_TRIS = INPUT;
 
   // Configure pins as analog inputs
   ADC_IGN_ANSEL = AN_INPUT;
@@ -853,6 +904,7 @@ void init_adc_pdm(void) {
   ADC_5V5_ANSEL = AN_INPUT;
   ADC_12V_ANSEL = AN_INPUT;
   ADC_VBAT_ANSEL = AN_INPUT;
+  ADC_PTEMP_ANSEL = AN_INPUT;
 
   /**
    * Select scan trigger as trigger source for class 2 inputs
@@ -866,6 +918,7 @@ void init_adc_pdm(void) {
   ADC_5V5_TRG = SCAN_TRIGGER;
   ADC_12V_TRG = SCAN_TRIGGER;
   ADC_VBAT_TRG = SCAN_TRIGGER;
+  ADC_PTEMP_TRG = SCAN_TRIGGER;
 
   // Include all channels as part of scan list
   ADC_IGN_CSS = 1;
@@ -887,4 +940,6 @@ void init_adc_pdm(void) {
   ADC_5V5_CSS = 1;
   ADC_12V_CSS = 1;
   ADC_VBAT_CSS = 1;
+  ADC_PTEMP_CSS = 1;
+  ADC_JTEMP_CSS = 1;
 }

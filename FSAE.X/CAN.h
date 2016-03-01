@@ -24,6 +24,7 @@
 #define MOTEC4_ID       0x104
 #define MOTEC5_ID       0x105
 #define PADDLE0_ID      0x200
+#define PDM0_ID         0x300
 
 #define BEACON_ID       0x0E5
 #define LOGGING_ID      0X2AA
