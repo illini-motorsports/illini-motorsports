@@ -384,9 +384,12 @@ typedef struct {
 // Function definitions
 void main(void);
 void process_CAN_msg(CAN_message msg);
+void send_diag_can(void);
+void sample_temp(void);
+void send_load_current_can(void);
+void send_rail_volt_can(void);
 void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 void init_adc_pdm(void);
-void sample_temp(void);
 
 #endif /* PDM_H */
