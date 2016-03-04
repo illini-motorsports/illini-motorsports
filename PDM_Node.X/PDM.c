@@ -291,9 +291,11 @@ void main(void) {
        * IGN, INJ, FUEL, WTR, and FAN will turn on when the ON_SW is in the on
        * position and turn off when the ON_SW is in the off position. Other
        * loads will still be controlled normally as they do not depend on CAN.
+       * The kill switch will disable the forementioned loads regardless of the
+       * position of the ON_SW.
        */
 
-      if (ON_SW) {
+      if (ON_SW && !KILL_SW) {
         // Enable IGN
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;
@@ -366,7 +368,7 @@ void main(void) {
 
       // IGN, INJ, FUEL
       //TODO: Determine less dangerous way of keeping these loads on than ENG_ON?
-      if(ON_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
+      if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
         // Enable IGN if not already enabled
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;

@@ -69,7 +69,7 @@
 #define ON_SW     (!SW2_PORT)
 #define ACT_UP_SW (!SW3_PORT)
 #define ACT_DN_SW (!SW4_PORT)
-#define KILL_SW   (!KILL_PORT)
+#define KILL_SW   (SW5_PORT)
 
 // Misc state definitions
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
