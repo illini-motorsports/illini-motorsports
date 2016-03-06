@@ -58,6 +58,7 @@
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10
 #define RAIL_VOLT_SEND     50
+#define CUTOFF_VAL_SEND    1000
 #define FUEL_PEAK_DUR      50
 #define WTR_PEAK_DUR       50
 #define FAN_PEAK_DUR       50
@@ -87,6 +88,10 @@
 #define B5V5_EN  (EN_B5V5_PORT == PWR_ON)
 #define BVBAT_EN (EN_BVBAT_PORT == PWR_ON)
 #define STR_EN   (EN_STR_PORT == PWR_ON)
+
+// Definitions for interval override control
+#define OVERRIDE    1
+#define NO_OVERRIDE 0
 
 // Pin definitions for EN signal bus
 #define EN_IGN_LAT    LATDbits.LATD15
@@ -334,6 +339,7 @@
 #define STR2_SCLINV  100.0
 #define STR_SCLINV   100.0
 #define TOTAL_SCLINV 100.0
+#define CUT_SCLINV   500.0
 
 // Constant used to check whether the NVM has been initialized
 #define NVM_WPR_CONSTANT 0xDEADBEEF
@@ -388,8 +394,10 @@ void send_diag_can(void);
 void sample_temp(void);
 void send_load_current_can(void);
 void send_rail_volt_can(void);
+void send_cutoff_values_can(uint8_t override);
 void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 void init_adc_pdm(void);
+void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff);
 
 #endif /* PDM_H */

@@ -20,6 +20,7 @@
 #define MOTEC_ID        0x100
 #define PADDLE_ID       0x200
 #define PDM_ID          0x600
+#define PDM_CONFIG_ID   0x620
 
 #define BEACON_ID       0x0E5
 #define LOGGING_ID      0X2AA
@@ -52,6 +53,10 @@
 #define QUEUE_NT_BYTE       5
 #define QUEUE_UP_BYTE       6
 #define QUEUE_DN_BYTE       7
+
+#define LOAD_IDX_BYTE       0
+#define PEAK_MODE_BYTE      1
+#define CUTOFF_SETTING_BYTE 2
 
 /**
  * Byte position of ADL channels in their CAN messages
