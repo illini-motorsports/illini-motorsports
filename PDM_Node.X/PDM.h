@@ -58,17 +58,19 @@
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10
 #define RAIL_VOLT_SEND     50
+#define CUTOFF_VAL_SEND    1000
 #define FUEL_PEAK_DUR      50
 #define WTR_PEAK_DUR       50
 #define FAN_PEAK_DUR       50
 #define MAX_PDL_DUR        500
+#define TEMP_SAMP_INTV     333
 
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)
 #define ON_SW     (!SW2_PORT)
 #define ACT_UP_SW (!SW3_PORT)
 #define ACT_DN_SW (!SW4_PORT)
-#define KILL_SW   (!KILL_PORT)
+#define KILL_SW   (SW5_PORT)
 
 // Misc state definitions
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
@@ -86,6 +88,10 @@
 #define B5V5_EN  (EN_B5V5_PORT == PWR_ON)
 #define BVBAT_EN (EN_BVBAT_PORT == PWR_ON)
 #define STR_EN   (EN_STR_PORT == PWR_ON)
+
+// Definitions for interval override control
+#define OVERRIDE    1
+#define NO_OVERRIDE 0
 
 // Pin definitions for EN signal bus
 #define EN_IGN_LAT    LATDbits.LATD15
@@ -214,6 +220,7 @@
 #define ADC_5V5_TRIS    TRISBbits.TRISB13
 #define ADC_12V_TRIS    TRISBbits.TRISB14
 #define ADC_VBAT_TRIS   TRISBbits.TRISB15
+#define ADC_PTEMP_TRIS   TRISBbits.TRISB11
 #define ADC_IGN_ANSEL   ANSELGbits.ANSG15
 #define ADC_INJ_ANSEL   ANSELAbits.ANSA5
 #define ADC_FUEL_ANSEL  ANSELEbits.ANSE5
@@ -233,6 +240,7 @@
 #define ADC_5V5_ANSEL   ANSELBbits.ANSB13
 #define ADC_12V_ANSEL   ANSELBbits.ANSB14
 #define ADC_VBAT_ANSEL  ANSELBbits.ANSB15
+#define ADC_PTEMP_ANSEL  ANSELBbits.ANSB11
 #define ADC_IGN_CSS     ADCCSS1bits.CSS23
 #define ADC_INJ_CSS     ADCCSS2bits.CSS34
 #define ADC_FUEL_CSS    ADCCSS1bits.CSS17
@@ -252,6 +260,8 @@
 #define ADC_5V5_CSS     ADCCSS1bits.CSS8
 #define ADC_12V_CSS     ADCCSS1bits.CSS9
 #define ADC_VBAT_CSS    ADCCSS1bits.CSS10
+#define ADC_PTEMP_CSS    ADCCSS1bits.CSS6
+#define ADC_JTEMP_CSS   ADCCSS2bits.CSS44
 //#define ADC_IGN_TRG     ADCTRG1bits.TRGSRC23
 //#define ADC_FUEL_TRG    ADCTRG1bits.TRGSRC17
 //#define ADC_ECU_TRG     ADCTRG1bits.TRGSRC16
@@ -270,6 +280,8 @@
 #define ADC_5V5_TRG     ADCTRG3bits.TRGSRC8
 #define ADC_12V_TRG     ADCTRG3bits.TRGSRC9
 #define ADC_VBAT_TRG    ADCTRG3bits.TRGSRC10
+#define ADC_PTEMP_TRG    ADCTRG2bits.TRGSRC6
+//#define ADC_JTEMP_TRG   ADCTRG3bits.TRGSRC44
 
 // ADC channel definitions
 #define ADC_IGN_CHN     23
@@ -291,6 +303,8 @@
 #define ADC_5V5_CHN     8
 #define ADC_12V_CHN     9
 #define ADC_VBAT_CHN    10
+#define ADC_PTEMP_CHN    6
+#define ADC_JTEMP_CHN   44
 
 // MOSFET Current Ratios
 #define IGN_RATIO   5300
@@ -325,7 +339,7 @@
 #define STR2_SCLINV  100.0
 #define STR_SCLINV   100.0
 #define TOTAL_SCLINV 100.0
-
+#define CUT_SCLINV   500.0
 
 // Constant used to check whether the NVM has been initialized
 #define NVM_WPR_CONSTANT 0xDEADBEEF
@@ -333,7 +347,7 @@
 /**
  * Functions to convert a wiper value to the expected resistance of the rheostat
  * and vice versa.
- * 
+ *
  * Luckily, the conversion is mostly linear, so a linear regression approximates
  * the value well. These values were determined experimentally and should give a
  * good general idea of the FB pin resistance, but there will be some error. The
@@ -376,8 +390,14 @@ typedef struct {
 // Function definitions
 void main(void);
 void process_CAN_msg(CAN_message msg);
+void send_diag_can(void);
+void sample_temp(void);
+void send_load_current_can(void);
+void send_rail_volt_can(void);
+void send_cutoff_values_can(uint8_t override);
 void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 void init_adc_pdm(void);
+void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff);
 
 #endif /* PDM_H */

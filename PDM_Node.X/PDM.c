@@ -25,6 +25,10 @@ uint8_t peak_state[NUM_LOADS] = {0};
 // Stores the calculated FB pin resistance for each load
 double fb_resistances[NUM_LOADS] = {0.0};
 
+// Recorded values from temperature sensors
+int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
+int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
+
 // State variables determined by various sources
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
@@ -36,9 +40,11 @@ uint8_t fan_override_sw = 0;
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
-uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr = 0;
+uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
+    cutoff_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
+uint32_t temp_samp_tmr = 0;
 
 /**
  * Main function
@@ -243,7 +249,7 @@ void main(void) {
         pdlu_tmr = millis;
       }
     } else {
-      // Reset PDLU timer if the ACT_UP signal has been disabled 
+      // Reset PDLU timer if the ACT_UP signal has been disabled
       if(!ACT_UP_SW) {
         pdlu_tmr = millis;
       }
@@ -259,7 +265,7 @@ void main(void) {
         pdld_tmr = millis;
       }
     } else {
-      // Reset PDLD timer if the ACT_DN signal has been disabled 
+      // Reset PDLD timer if the ACT_DN signal has been disabled
       if(!ACT_DN_SW) {
         pdld_tmr = millis;
       }
@@ -286,9 +292,11 @@ void main(void) {
        * IGN, INJ, FUEL, WTR, and FAN will turn on when the ON_SW is in the on
        * position and turn off when the ON_SW is in the off position. Other
        * loads will still be controlled normally as they do not depend on CAN.
+       * The kill switch will disable the forementioned loads regardless of the
+       * position of the ON_SW.
        */
 
-      if (ON_SW) {
+      if (ON_SW && !KILL_SW) {
         // Enable IGN
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;
@@ -361,7 +369,7 @@ void main(void) {
 
       // IGN, INJ, FUEL
       //TODO: Determine less dangerous way of keeping these loads on than ENG_ON?
-      if(ON_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
+      if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
         // Enable IGN if not already enabled
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;
@@ -472,162 +480,30 @@ void main(void) {
     /**
      * Send diagnostic CAN messages
      */
-    if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
-      CAN_data data = {0};
-      data.halfword0 = (uint16_t ) seconds;
-      data.halfword1 = total_current_draw;
-      data.word1 = millis; //TODO: Change this to PCB temp and IC temp
-      CAN_send_message(0x300, 8, data);
+    send_diag_can();
 
-      diag_send_tmr = millis;
-    }
+    /**
+     * Sample temperature sensors
+     */
+    sample_temp();
 
     /**
      * Sample load current data and send results on CAN
      */
-    if(millis - load_current_send_tmr >= LOAD_CUR_SEND) {
-      uint32_t fb_volt_ign = read_adc_chn(ADC_IGN_CHN);
-      uint16_t current_ign = (((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5)
-          * IGN_SCLINV * IGN_RATIO) / fb_resistances[IGN_IDX];
-
-      uint32_t fb_volt_inj = read_adc_chn(ADC_INJ_CHN);
-      uint16_t current_inj = (((((double) fb_volt_inj) / 4095.0) * 3.3 * 1.5)
-          * INJ_SCLINV * INJ_RATIO) / fb_resistances[INJ_IDX];
-
-      uint32_t fb_volt_fuel = read_adc_chn(ADC_FUEL_CHN);
-      uint16_t current_fuel = (((((double) fb_volt_fuel) / 4095.0) * 3.3 * 1.5)
-          * FUEL_SCLINV * FUEL_RATIO) / fb_resistances[FUEL_IDX];
-
-      uint32_t fb_volt_ecu = read_adc_chn(ADC_ECU_CHN);
-      uint16_t current_ecu = (((((double) fb_volt_ecu) / 4095.0) * 3.3 * 1.5)
-          * ECU_SCLINV * ECU_RATIO) / fb_resistances[ECU_IDX];
-
-      CAN_data load_current_data = {0};
-      load_current_data.halfword0 = current_ign;
-      load_current_data.halfword1 = current_inj;
-      load_current_data.halfword2 = current_fuel;
-      load_current_data.halfword3 = current_ecu;
-      CAN_send_message(0x304, 8, load_current_data);
-
-      uint32_t fb_volt_wtr = read_adc_chn(ADC_WTR_CHN);
-      uint16_t current_wtr = (((((double) fb_volt_wtr) / 4095.0) * 3.3 * 1.5)
-          * WTR_SCLINV * WTR_RATIO) / fb_resistances[WTR_IDX];
-
-      uint32_t fb_volt_fan = read_adc_chn(ADC_FAN_CHN);
-      uint16_t current_fan = (((((double) fb_volt_fan) / 4095.0) * 3.3 * 1.5)
-          * FAN_SCLINV * FAN_RATIO) / fb_resistances[FAN_IDX];
-
-      uint32_t fb_volt_aux = read_adc_chn(ADC_AUX_CHN);
-      uint16_t current_aux = (((((double) fb_volt_aux) / 4095.0) * 3.3 * 1.5)
-          * AUX_SCLINV * AUX_RATIO) / fb_resistances[AUX_IDX];
-
-      uint32_t fb_volt_pdlu = read_adc_chn(ADC_PDLU_CHN);
-      uint16_t current_pdlu = (((((double) fb_volt_pdlu) / 4095.0) * 3.3 * 1.5)
-          * PDLU_SCLINV * PDLU_RATIO) / fb_resistances[PDLU_IDX];
-
-      load_current_data.doubleword = 0;
-      load_current_data.halfword0 = current_wtr;
-      load_current_data.halfword1 = current_fan;
-      load_current_data.halfword2 = current_aux;
-      load_current_data.halfword3 = current_pdlu;
-      CAN_send_message(0x305, 8, load_current_data);
-
-      uint32_t fb_volt_pdld = read_adc_chn(ADC_PDLD_CHN);
-      uint16_t current_pdld = (((((double) fb_volt_pdld) / 4095.0) * 3.3 * 1.5)
-          * PDLD_SCLINV * PDLD_RATIO) / fb_resistances[PDLD_IDX];
-
-      uint32_t fb_volt_b5v5 = read_adc_chn(ADC_B5V5_CHN);
-      uint16_t current_b5v5 = (((((double) fb_volt_b5v5) / 4095.0) * 3.3 * 1.5)
-          * B5V5_SCLINV * B5V5_RATIO) / fb_resistances[B5V5_IDX];
-
-      uint32_t fb_volt_bvbat = read_adc_chn(ADC_BVBAT_CHN);
-      uint16_t current_bvbat = (((((double) fb_volt_bvbat) / 4095.0) * 3.3 * 1.5)
-          * BVBAT_SCLINV * BVBAT_RATIO) / fb_resistances[BVBAT_IDX];
-
-      load_current_data.doubleword = 0;
-      load_current_data.halfword0 = current_pdld;
-      load_current_data.halfword1 = current_b5v5;
-      load_current_data.halfword2 = current_bvbat;
-      CAN_send_message(0x306, 6, load_current_data);
-
-      uint32_t fb_volt_str0 = read_adc_chn(ADC_STR0_CHN);
-      uint16_t current_str0 = (((((double) fb_volt_str0) / 4095.0) * 3.3 * 1.5)
-          * STR0_SCLINV * STR0_RATIO) / fb_resistances[STR0_IDX];
-
-      uint32_t fb_volt_str1 = read_adc_chn(ADC_STR1_CHN);
-      uint16_t current_str1 = (((((double) fb_volt_str1) / 4095.0) * 3.3 * 1.5)
-          * STR1_SCLINV * STR1_RATIO) / fb_resistances[STR1_IDX];
-
-      uint32_t fb_volt_str2 = read_adc_chn(ADC_STR2_CHN);
-      uint16_t current_str2 = (((((double) fb_volt_str2) / 4095.0) * 3.3 * 1.5)
-          * STR2_SCLINV * STR2_RATIO) / fb_resistances[STR2_IDX];
-
-      uint16_t current_str_total = current_str0 + current_str1 + current_str2;
-
-      load_current_data.doubleword = 0;
-      load_current_data.halfword0 = current_str0;
-      load_current_data.halfword1 = current_str1;
-      load_current_data.halfword2 = current_str2;
-      load_current_data.halfword3 = current_str_total;
-      CAN_send_message(0x307, 8, load_current_data);
-
-      load_current_send_tmr = millis;
-
-      // Calculate total current consumption
-      double current_total = ((double) current_ign) / (IGN_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_inj) / (INJ_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_fuel) / (FUEL_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_ecu) / (ECU_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_wtr) / (WTR_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_fan) / (FAN_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_aux) / (AUX_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_pdlu) / (PDLU_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_pdld) / (PDLD_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_b5v5) / (B5V5_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_bvbat) / (BVBAT_SCLINV / TOTAL_SCLINV);
-      current_total += ((double) current_str_total) / (STR_SCLINV / TOTAL_SCLINV);
-      total_current_draw = current_total;
-    }
+    send_load_current_can();
 
     /**
      * Sample voltage rail data and send results on CAN
      */
-    if(millis - rail_volt_send_tmr >= RAIL_VOLT_SEND) {
-      uint32_t rail_vbat = read_adc_chn(ADC_VBAT_CHN);
-      uint16_t rail_vbat_conv = ((((double) rail_vbat) / 4095.0) * 3.3 * 5) * 1000.0;
-
-      uint32_t rail_12v = read_adc_chn(ADC_12V_CHN);
-      uint16_t rail_12v_conv = ((((double) rail_12v) / 4095.0) * 3.3 * 4) * 1000.0;
-
-      uint32_t rail_5v5 = read_adc_chn(ADC_5V5_CHN);
-      uint16_t rail_5v5_conv = ((((double) rail_5v5) / 4095.0) * 3.3 * 2) * 1000.0;
-
-      uint32_t rail_5v = read_adc_chn(ADC_5V_CHN);
-      uint16_t rail_5v_conv = ((((double) rail_5v) / 4095.0) * 3.3 * 2) * 1000.0;
-
-      uint32_t rail_3v3 = read_adc_chn(ADC_3V3_CHN);
-      uint16_t rail_3v3_conv = ((((double) rail_3v3) / 4095.0) * 3.3 * 2) * 1000.0;
-
-      CAN_data rail_voltage_data = {0};
-      rail_voltage_data.halfword0 = rail_vbat_conv;
-      rail_voltage_data.halfword1 = rail_12v_conv;
-      rail_voltage_data.halfword2 = rail_5v5_conv;
-      rail_voltage_data.halfword3 = rail_5v_conv;
-      CAN_send_message(0x302, 8, rail_voltage_data);
-
-      rail_voltage_data.doubleword = 0;
-      rail_voltage_data.halfword0 = rail_3v3_conv;
-      CAN_send_message(0x303, 2, rail_voltage_data);
-
-      rail_volt_send_tmr = millis;
-    }
+    send_rail_volt_can();
 
     /**
-     *TODO: Send current value of peak mode current cutoffs
+     * Send current values of peak and normal mode current cutoffs
      */
+    send_cutoff_values_can(NO_OVERRIDE);
 
     /**
-     *TODO: Send current value of normal mode current cutoffs
+     *TODO: Send enablity state and peak mode bitmaps
      */
 
     //TODO: ???
@@ -682,10 +558,14 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
  * @param msg The received CAN message
  */
 void process_CAN_msg(CAN_message msg) {
+  // Declare local variables
+  uint8_t load_idx, peak_mode = 0;
+  double cutoff = 0;
+
   CAN_recv_tmr = millis; // Record time of latest received CAN message
 
   switch (msg.id) {
-    case MOTEC0_ID:
+    case MOTEC_ID + 0:
       eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
           msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
       oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
@@ -695,7 +575,7 @@ void process_CAN_msg(CAN_message msg) {
 
       motec0_recv_tmr = millis;
       break;
-    case MOTEC1_ID:
+    case MOTEC_ID + 1:
       eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) |
           msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
       bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
@@ -703,9 +583,311 @@ void process_CAN_msg(CAN_message msg) {
 
       motec1_recv_tmr = millis;
       break;
+    case PDM_CONFIG_ID:
+      load_idx = msg.data[LOAD_IDX_BYTE];
+      peak_mode = msg.data[PEAK_MODE_BYTE];
+      cutoff = ((double) ((msg.data[CUTOFF_SETTING_BYTE] << 8) |
+          msg.data[CUTOFF_SETTING_BYTE + 1])) / CUT_SCLINV;
+      set_current_cutoff(load_idx, peak_mode, cutoff);
+      break;
 
-    //TODO: Accept new values for CAN current cut-offs
     //TODO: Get WTR/FAN override switch state from wheel CAN messages
+  }
+}
+
+/**
+ * void send_diag_can(void)
+ *
+ * Sends the diagnostic CAN message if the interval has passed.
+ */
+void send_diag_can(void) {
+  if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
+    CAN_data data = {0};
+    data.halfword0 = (uint16_t) seconds;
+    data.halfword1 = pcb_temp;
+    data.halfword2 = junc_temp;
+    data.halfword3 = total_current_draw;
+
+    CAN_send_message(PDM_ID + 0, 8, data);
+    diag_send_tmr = millis;
+  }
+}
+
+/**
+ * void sample_temp(void)
+ *
+ * Samples the PCB temp sensor and internal die temp sensor, then updates
+ * variables if the interval has passed.
+ */
+void sample_temp(void) {
+  if(millis - temp_samp_tmr >= TEMP_SAMP_INTV) {
+
+    /**
+     * PCB Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
+     * PCB Temp [C] = ((5 * (pcb_temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
+     * PCB Temp [C] = (5 * (pcb_temp_samp / 40.95)) - 75) [C]
+     * PCB Temp [C] = (pcb_temp_samp * 0.1221001221) - 75 [C]
+     * PCB Temp [C / 0.005] = 200 * ((pcb_temp_samp * 0.1221001221) - 75) [C / 0.005]
+     * PCB Temp [C / 0.005] = (temp_samp * 24.42002442) - 15000 [C / 0.005]
+     */
+    uint32_t pcb_temp_samp = read_adc_chn(ADC_PTEMP_CHN);
+    pcb_temp = (((double) pcb_temp_samp) * 24.42002442) - 15000.0;
+
+    /**
+     * Junc Temp [C] = 200 [C/V] * (1 [V] - Sample [V])
+     * Junc Temp [C] = 200 [C/V] * (1 - (5 * (junc_temp_samp / 4095))) [V]
+     * Junc Temp [C] = 200 [C/V] * (1 - (junc_temp_samp / 819)) [V]
+     * Junc Temp [C] = 200 - (junc_temp_samp * 0.2442002442002442) [C]
+     * Junc Temp [C / 0.005] = 40000 - (junc_temp_samp * 48.84004884004884) [C / 0.005]
+     */
+
+    uint32_t junc_temp_samp = read_adc_chn(ADC_JTEMP_CHN);
+    junc_temp = (int16_t) (40000.0 - (((double) junc_temp_samp) * 48.84004884004884));
+
+    temp_samp_tmr = millis;
+  }
+}
+
+/**
+ * void send_load_current_can(void)
+ *
+ * If the interval has passed, samples current draw for each load and sends
+ * related CAN messages.
+ */
+void send_load_current_can(void) {
+  if(millis - load_current_send_tmr >= LOAD_CUR_SEND) {
+    uint32_t fb_volt_ign = read_adc_chn(ADC_IGN_CHN);
+    uint16_t current_ign = (((((double) fb_volt_ign) / 4095.0) * 3.3 * 1.5)
+        * IGN_SCLINV * IGN_RATIO) / fb_resistances[IGN_IDX];
+
+    uint32_t fb_volt_inj = read_adc_chn(ADC_INJ_CHN);
+    uint16_t current_inj = (((((double) fb_volt_inj) / 4095.0) * 3.3 * 1.5)
+        * INJ_SCLINV * INJ_RATIO) / fb_resistances[INJ_IDX];
+
+    uint32_t fb_volt_fuel = read_adc_chn(ADC_FUEL_CHN);
+    uint16_t current_fuel = (((((double) fb_volt_fuel) / 4095.0) * 3.3 * 1.5)
+        * FUEL_SCLINV * FUEL_RATIO) / fb_resistances[FUEL_IDX];
+
+    uint32_t fb_volt_ecu = read_adc_chn(ADC_ECU_CHN);
+    uint16_t current_ecu = (((((double) fb_volt_ecu) / 4095.0) * 3.3 * 1.5)
+        * ECU_SCLINV * ECU_RATIO) / fb_resistances[ECU_IDX];
+
+    CAN_data load_current_data = {0};
+    load_current_data.halfword0 = current_ign;
+    load_current_data.halfword1 = current_inj;
+    load_current_data.halfword2 = current_fuel;
+    load_current_data.halfword3 = current_ecu;
+    CAN_send_message(PDM_ID + 4, 8, load_current_data);
+
+    uint32_t fb_volt_wtr = read_adc_chn(ADC_WTR_CHN);
+    uint16_t current_wtr = (((((double) fb_volt_wtr) / 4095.0) * 3.3 * 1.5)
+        * WTR_SCLINV * WTR_RATIO) / fb_resistances[WTR_IDX];
+
+    uint32_t fb_volt_fan = read_adc_chn(ADC_FAN_CHN);
+    uint16_t current_fan = (((((double) fb_volt_fan) / 4095.0) * 3.3 * 1.5)
+        * FAN_SCLINV * FAN_RATIO) / fb_resistances[FAN_IDX];
+
+    uint32_t fb_volt_aux = read_adc_chn(ADC_AUX_CHN);
+    uint16_t current_aux = (((((double) fb_volt_aux) / 4095.0) * 3.3 * 1.5)
+        * AUX_SCLINV * AUX_RATIO) / fb_resistances[AUX_IDX];
+
+    uint32_t fb_volt_pdlu = read_adc_chn(ADC_PDLU_CHN);
+    uint16_t current_pdlu = (((((double) fb_volt_pdlu) / 4095.0) * 3.3 * 1.5)
+        * PDLU_SCLINV * PDLU_RATIO) / fb_resistances[PDLU_IDX];
+
+    load_current_data.doubleword = 0;
+    load_current_data.halfword0 = current_wtr;
+    load_current_data.halfword1 = current_fan;
+    load_current_data.halfword2 = current_aux;
+    load_current_data.halfword3 = current_pdlu;
+    CAN_send_message(PDM_ID + 5, 8, load_current_data);
+
+    uint32_t fb_volt_pdld = read_adc_chn(ADC_PDLD_CHN);
+    uint16_t current_pdld = (((((double) fb_volt_pdld) / 4095.0) * 3.3 * 1.5)
+        * PDLD_SCLINV * PDLD_RATIO) / fb_resistances[PDLD_IDX];
+
+    uint32_t fb_volt_b5v5 = read_adc_chn(ADC_B5V5_CHN);
+    uint16_t current_b5v5 = (((((double) fb_volt_b5v5) / 4095.0) * 3.3 * 1.5)
+        * B5V5_SCLINV * B5V5_RATIO) / fb_resistances[B5V5_IDX];
+
+    uint32_t fb_volt_bvbat = read_adc_chn(ADC_BVBAT_CHN);
+    uint16_t current_bvbat = (((((double) fb_volt_bvbat) / 4095.0) * 3.3 * 1.5)
+        * BVBAT_SCLINV * BVBAT_RATIO) / fb_resistances[BVBAT_IDX];
+
+    load_current_data.doubleword = 0;
+    load_current_data.halfword0 = current_pdld;
+    load_current_data.halfword1 = current_b5v5;
+    load_current_data.halfword2 = current_bvbat;
+    CAN_send_message(PDM_ID + 6, 6, load_current_data);
+
+    uint32_t fb_volt_str0 = read_adc_chn(ADC_STR0_CHN);
+    uint16_t current_str0 = (((((double) fb_volt_str0) / 4095.0) * 3.3 * 1.5)
+        * STR0_SCLINV * STR0_RATIO) / fb_resistances[STR0_IDX];
+
+    uint32_t fb_volt_str1 = read_adc_chn(ADC_STR1_CHN);
+    uint16_t current_str1 = (((((double) fb_volt_str1) / 4095.0) * 3.3 * 1.5)
+        * STR1_SCLINV * STR1_RATIO) / fb_resistances[STR1_IDX];
+
+    uint32_t fb_volt_str2 = read_adc_chn(ADC_STR2_CHN);
+    uint16_t current_str2 = (((((double) fb_volt_str2) / 4095.0) * 3.3 * 1.5)
+        * STR2_SCLINV * STR2_RATIO) / fb_resistances[STR2_IDX];
+
+    uint16_t current_str_total = current_str0 + current_str1 + current_str2;
+
+    load_current_data.doubleword = 0;
+    load_current_data.halfword0 = current_str0;
+    load_current_data.halfword1 = current_str1;
+    load_current_data.halfword2 = current_str2;
+    load_current_data.halfword3 = current_str_total;
+    CAN_send_message(PDM_ID + 7, 8, load_current_data);
+
+    load_current_send_tmr = millis;
+
+    // Calculate total current consumption
+    double current_total = ((double) current_ign) / (IGN_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_inj) / (INJ_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_fuel) / (FUEL_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_ecu) / (ECU_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_wtr) / (WTR_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_fan) / (FAN_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_aux) / (AUX_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_pdlu) / (PDLU_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_pdld) / (PDLD_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_b5v5) / (B5V5_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_bvbat) / (BVBAT_SCLINV / TOTAL_SCLINV);
+    current_total += ((double) current_str_total) / (STR_SCLINV / TOTAL_SCLINV);
+    total_current_draw = current_total;
+  }
+}
+
+/**
+ * void send_rail_volt_can(void)
+ *
+ * If the interval has passed, samples rail voltages and sends related CAN
+ * messages.
+ */
+void send_rail_volt_can(void) {
+  if(millis - rail_volt_send_tmr >= RAIL_VOLT_SEND) {
+    uint32_t rail_vbat = read_adc_chn(ADC_VBAT_CHN);
+    uint16_t rail_vbat_conv = ((((double) rail_vbat) / 4095.0) * 3.3 * 5) * 1000.0;
+
+    uint32_t rail_12v = read_adc_chn(ADC_12V_CHN);
+    uint16_t rail_12v_conv = ((((double) rail_12v) / 4095.0) * 3.3 * 4) * 1000.0;
+
+    uint32_t rail_5v5 = read_adc_chn(ADC_5V5_CHN);
+    uint16_t rail_5v5_conv = ((((double) rail_5v5) / 4095.0) * 3.3 * 2) * 1000.0;
+
+    uint32_t rail_5v = read_adc_chn(ADC_5V_CHN);
+    uint16_t rail_5v_conv = ((((double) rail_5v) / 4095.0) * 3.3 * 2) * 1000.0;
+
+    uint32_t rail_3v3 = read_adc_chn(ADC_3V3_CHN);
+    uint16_t rail_3v3_conv = ((((double) rail_3v3) / 4095.0) * 3.3 * 2) * 1000.0;
+
+    CAN_data rail_voltage_data = {0};
+    rail_voltage_data.halfword0 = rail_vbat_conv;
+    rail_voltage_data.halfword1 = rail_12v_conv;
+    rail_voltage_data.halfword2 = rail_5v5_conv;
+    rail_voltage_data.halfword3 = rail_5v_conv;
+    CAN_send_message(PDM_ID + 2, 8, rail_voltage_data);
+
+    rail_voltage_data.doubleword = 0;
+    rail_voltage_data.halfword0 = rail_3v3_conv;
+    CAN_send_message(PDM_ID + 3, 2, rail_voltage_data);
+
+    rail_volt_send_tmr = millis;
+  }
+}
+
+/**
+ * void send_cutoff_values_can(void)
+ *
+ * If the interval has passed, send current values of peak and normal mode
+ *  current cutoff.
+ *
+ * @param override - Whether to override the interval
+ */
+void send_cutoff_values_can(uint8_t override) {
+  if ((millis - cutoff_send_tmr >= CUTOFF_VAL_SEND) || override) {
+    double ign_cutoff = (4.7 / WPR_TO_RES(wiper_values[IGN_IDX])) * IGN_RATIO;
+    uint16_t ign_cutoff_scl = (uint16_t) (ign_cutoff * CUT_SCLINV);
+
+    double inj_cutoff = (4.7 / WPR_TO_RES(wiper_values[INJ_IDX])) * INJ_RATIO;
+    uint16_t inj_cutoff_scl = (uint16_t) (inj_cutoff * CUT_SCLINV);
+
+    double ecu_cutoff = (4.7 / WPR_TO_RES(wiper_values[ECU_IDX])) * ECU_RATIO;
+    uint16_t ecu_cutoff_scl = (uint16_t) (ecu_cutoff * CUT_SCLINV);
+
+    double aux_cutoff = (4.7 / WPR_TO_RES(wiper_values[AUX_IDX])) * AUX_RATIO;
+    uint16_t aux_cutoff_scl = (uint16_t) (aux_cutoff * CUT_SCLINV);
+
+    CAN_data cutoff_value_data = {0};
+    cutoff_value_data.halfword0 = ign_cutoff_scl;
+    cutoff_value_data.halfword1 = inj_cutoff_scl;
+    cutoff_value_data.halfword2 = ecu_cutoff_scl;
+    cutoff_value_data.halfword3 = aux_cutoff_scl;
+    CAN_send_message(PDM_ID + 8, 8, cutoff_value_data);
+
+    double pdlu_cutoff = (4.7 / WPR_TO_RES(wiper_values[PDLU_IDX])) * PDLU_RATIO;
+    uint16_t pdlu_cutoff_scl = (uint16_t) (pdlu_cutoff * CUT_SCLINV);
+
+    double pdld_cutoff = (4.7 / WPR_TO_RES(wiper_values[PDLD_IDX])) * PDLD_RATIO;
+    uint16_t pdld_cutoff_scl = (uint16_t) (pdld_cutoff * CUT_SCLINV);
+
+    double b5v5_cutoff = (4.7 / WPR_TO_RES(wiper_values[B5V5_IDX])) * B5V5_RATIO;
+    uint16_t b5v5_cutoff_scl = (uint16_t) (b5v5_cutoff * CUT_SCLINV);
+
+    double bvbat_cutoff = (4.7 / WPR_TO_RES(wiper_values[BVBAT_IDX])) * BVBAT_RATIO;
+    uint16_t bvbat_cutoff_scl = (uint16_t) (bvbat_cutoff * CUT_SCLINV);
+
+    cutoff_value_data.halfword0 = pdlu_cutoff_scl;
+    cutoff_value_data.halfword1 = pdld_cutoff_scl;
+    cutoff_value_data.halfword2 = b5v5_cutoff_scl;
+    cutoff_value_data.halfword3 = bvbat_cutoff_scl;
+    CAN_send_message(PDM_ID + 9, 8, cutoff_value_data);
+
+    double str0_cutoff = (4.7 / WPR_TO_RES(wiper_values[STR0_IDX])) * STR0_RATIO;
+    uint16_t str0_cutoff_scl = (uint16_t) (str0_cutoff * CUT_SCLINV);
+
+    double str1_cutoff = (4.7 / WPR_TO_RES(wiper_values[STR1_IDX])) * STR1_RATIO;
+    uint16_t str1_cutoff_scl = (uint16_t) (str1_cutoff * CUT_SCLINV);
+
+    double str2_cutoff = (4.7 / WPR_TO_RES(wiper_values[STR2_IDX])) * STR2_RATIO;
+    uint16_t str2_cutoff_scl = (uint16_t) (str2_cutoff * CUT_SCLINV);
+
+    cutoff_value_data.halfword0 = str0_cutoff_scl;
+    cutoff_value_data.halfword1 = str1_cutoff_scl;
+    cutoff_value_data.halfword2 = str2_cutoff_scl;
+    CAN_send_message(PDM_ID + 10, 6, cutoff_value_data);
+
+    double fuel_cutoff = (4.7 / WPR_TO_RES(wiper_values[FUEL_IDX])) * FUEL_RATIO;
+    uint16_t fuel_cutoff_scl = (uint16_t) (fuel_cutoff * CUT_SCLINV);
+
+    double wtr_cutoff = (4.7 / WPR_TO_RES(wiper_values[WTR_IDX])) * WTR_RATIO;
+    uint16_t wtr_cutoff_scl = (uint16_t) (wtr_cutoff * CUT_SCLINV);
+
+    double fan_cutoff = (4.7 / WPR_TO_RES(wiper_values[FAN_IDX])) * FAN_RATIO;
+    uint16_t fan_cutoff_scl = (uint16_t) (fan_cutoff * CUT_SCLINV);
+
+    cutoff_value_data.halfword0 = fuel_cutoff_scl;
+    cutoff_value_data.halfword1 = wtr_cutoff_scl;
+    cutoff_value_data.halfword2 = fan_cutoff_scl;
+    CAN_send_message(PDM_ID + 11, 6, cutoff_value_data);
+
+    double fuel_peak_cutoff = (4.7 / WPR_TO_RES(peak_wiper_values[FUEL_IDX])) * FUEL_RATIO;
+    uint16_t fuel_peak_cutoff_scl = (uint16_t) (fuel_peak_cutoff * CUT_SCLINV);
+
+    double wtr_peak_cutoff = (4.7 / WPR_TO_RES(peak_wiper_values[WTR_IDX])) * WTR_RATIO;
+    uint16_t wtr_peak_cutoff_scl = (uint16_t) (wtr_peak_cutoff * CUT_SCLINV);
+
+    double fan_peak_cutoff = (4.7 / WPR_TO_RES(peak_wiper_values[FAN_IDX])) * FAN_RATIO;
+    uint16_t fan_peak_cutoff_scl = (uint16_t) (fan_peak_cutoff * CUT_SCLINV);
+
+    cutoff_value_data.halfword0 = fuel_peak_cutoff_scl;
+    cutoff_value_data.halfword1 = wtr_peak_cutoff_scl;
+    cutoff_value_data.halfword2 = fan_peak_cutoff_scl;
+    CAN_send_message(PDM_ID + 12, 6, cutoff_value_data);
+
+    cutoff_send_tmr = millis;
   }
 }
 
@@ -832,6 +1014,7 @@ void init_adc_pdm(void) {
   ADC_5V5_TRIS = INPUT;
   ADC_12V_TRIS = INPUT;
   ADC_VBAT_TRIS = INPUT;
+  ADC_PTEMP_TRIS = INPUT;
 
   // Configure pins as analog inputs
   ADC_IGN_ANSEL = AN_INPUT;
@@ -853,6 +1036,7 @@ void init_adc_pdm(void) {
   ADC_5V5_ANSEL = AN_INPUT;
   ADC_12V_ANSEL = AN_INPUT;
   ADC_VBAT_ANSEL = AN_INPUT;
+  ADC_PTEMP_ANSEL = AN_INPUT;
 
   /**
    * Select scan trigger as trigger source for class 2 inputs
@@ -866,6 +1050,7 @@ void init_adc_pdm(void) {
   ADC_5V5_TRG = SCAN_TRIGGER;
   ADC_12V_TRG = SCAN_TRIGGER;
   ADC_VBAT_TRG = SCAN_TRIGGER;
+  ADC_PTEMP_TRG = SCAN_TRIGGER;
 
   // Include all channels as part of scan list
   ADC_IGN_CSS = 1;
@@ -887,4 +1072,80 @@ void init_adc_pdm(void) {
   ADC_5V5_CSS = 1;
   ADC_12V_CSS = 1;
   ADC_VBAT_CSS = 1;
+  ADC_PTEMP_CSS = 1;
+  ADC_JTEMP_CSS = 1;
+}
+
+/**
+ * void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff)
+ *
+ * Sets the current cutoff of the indicated load to the requested value and
+ * saves the setting in non-volatile memory.
+ *
+ * @param load_idx - Index of the load to change
+ * @param peak_mode - Whether to set the peak mode cutoff or the normal mode cutoff
+ * @param cutoff - The cutoff current (in amps) to set
+ */
+void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
+  uint32_t ratio = 0;
+
+  switch (load_idx) {
+    case IGN_IDX: ratio = IGN_RATIO; break;
+    case INJ_IDX: ratio = INJ_RATIO; break;
+    case FUEL_IDX: ratio = FUEL_RATIO; break;
+    case ECU_IDX: ratio = ECU_RATIO; break;
+    case WTR_IDX: ratio = WTR_RATIO; break;
+    case FAN_IDX: ratio = FAN_RATIO; break;
+    case AUX_IDX: ratio = AUX_RATIO; break;
+    case PDLU_IDX: ratio = PDLU_RATIO; break;
+    case PDLD_IDX: ratio = PDLD_RATIO; break;
+    case B5V5_IDX: ratio = B5V5_RATIO; break;
+    case BVBAT_IDX: ratio = BVBAT_RATIO; break;
+    case STR0_IDX: ratio = STR0_RATIO; break;
+    case STR1_IDX: ratio = STR1_RATIO; break;
+    case STR2_IDX: ratio = STR2_RATIO; break;
+  }
+
+  // Calculate FB pin resistance needed for the requested current cutoff
+  double fb_resistance = (ratio * 4.7) / cutoff;
+
+  // Store the desired peak or normal mode wiper setting
+  if (peak_mode) {
+    peak_wiper_values[load_idx] = RES_TO_WPR(fb_resistance);
+  } else {
+    wiper_values[load_idx] = RES_TO_WPR(fb_resistance);
+  }
+
+  // Set the rheostat wiper setting to the new value
+  if (peak_state[load_idx]) {
+    set_rheo(load_idx, peak_wiper_values[load_idx]);
+    fb_resistances[load_idx] = WPR_TO_RES(wiper_values[load_idx]);
+  } else {
+    set_rheo(load_idx, wiper_values[load_idx]);
+    fb_resistances[load_idx] = WPR_TO_RES(peak_wiper_values[load_idx]);
+  }
+
+  send_cutoff_values_can(OVERRIDE);
+
+  // Save peak and normal mode wiper values in NVM
+  Wiper_nvm_data data = {0};
+  data.key = NVM_WPR_CONSTANT;
+  data.ign_wpr_val = wiper_values[IGN_IDX];
+  data.inj_wpr_val = wiper_values[INJ_IDX];
+  data.fuel_wpr_val = wiper_values[FUEL_IDX];
+  data.ecu_wpr_val = wiper_values[ECU_IDX];
+  data.wtr_wpr_val = wiper_values[WTR_IDX];
+  data.fan_wpr_val = wiper_values[FAN_IDX];
+  data.aux_wpr_val = wiper_values[AUX_IDX];
+  data.pdlu_wpr_val = wiper_values[PDLU_IDX];
+  data.pdld_wpr_val = wiper_values[PDLD_IDX];
+  data.b5v5_wpr_val = wiper_values[B5V5_IDX];
+  data.bvbat_wpr_val = wiper_values[BVBAT_IDX];
+  data.str0_wpr_val = wiper_values[STR0_IDX];
+  data.str1_wpr_val = wiper_values[STR1_IDX];
+  data.str2_wpr_val = wiper_values[STR2_IDX];
+  data.fuel_peak_wpr_val = peak_wiper_values[FUEL_IDX];
+  data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
+  data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
+  write_nvm_data(&data, sizeof(Wiper_nvm_data));
 }
