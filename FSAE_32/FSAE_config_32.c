@@ -792,6 +792,7 @@ void init_spi() {
   // Initialize SDI1/SDO1 PPS pins
   CFGCONbits.IOLOCK = 0;
   TRISBbits.TRISB9 = INPUT;
+  ANSELBbits.ANSB9 = 0;
   SDI1Rbits.SDI1R = 0b0101; // RPB9
   TRISBbits.TRISB10 = OUTPUT;
   RPB10Rbits.RPB10R = 0b0101; // SDO1
@@ -806,7 +807,7 @@ void init_spi() {
   SPI1CONbits.ON = 0;
 
   // Clear receive buffer
-  SPI1BUF = 0;
+  uint32_t readVal = SPI1BUF;
 
   // Use standard buffer mode
   SPI1CONbits.ENHBUF = 0;
@@ -828,10 +829,13 @@ void init_spi() {
   SPI1CONbits.MODE16 = 1;  // 32/16-Bit Communication Select bits (16-bit)
   SPI1CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI1CONbits.CKE = 1;     // SPI Clock Edge Select bit (Serial output data changes on transition from active clock state to idle clock state)
+  SPI1CONbits.DISSDI = 0;
+  SPI1CONbits.DISSDO = 0;
+  SPI1CONbits.SMP = 1;
 
 //TODO: Move this into a parameter
 #if BUILD_SWHEEL
-  SPI1BRG = 24;
+  SPI1BRG = 9;
   SPI1CONbits.MODE16 = 0;
 #endif
 

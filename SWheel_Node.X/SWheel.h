@@ -10,6 +10,7 @@
 #define SWHEEL_H
 
 #include <sys/types.h>
+//#include <plib.h>
 #include "../FSAE_32/FSAE_config_32.h"
 #include "RA8875_driver.h"
 
@@ -17,16 +18,15 @@
 #define TERMINATING 1
 
 // Determines whether the internal or external clock source is used
-#define INTERNAL_CLK 1
+#define INTERNAL_CLK 0
 
-#define LCD_CS_TRIS TRISBbits.TRISB8
-#define LCD_CS_LAT  LATBbits.LATB8
-#define LCD_RST_TRIS TRISBbits.TRISB11
-#define LCD_RST_LAT  LATBbits.LATB11
+#define LCD_CS_TRIS TRISGbits.TRISG9
+#define LCD_CS_LAT  LATGbits.LATG9
+#define LCD_RST_TRIS TRISBbits.TRISB4
+#define LCD_RST_LAT  LATBbits.LATB4
 
 // Function definitions
 void main(void);
 void delay(uint32_t num);
-void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t thick);
 
 #endif /* SWHEEL_H */

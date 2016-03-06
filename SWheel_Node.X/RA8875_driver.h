@@ -11,9 +11,11 @@
 
 #include <xc.h>
 #include <sys/types.h>
+#include <math.h>
 
 #define WIDTH 480
 #define HEIGHT 272
+#define LCD_WAIT	PORTFbits.RF12
 
 // Formula Defined Functions
 void reset();
@@ -30,11 +32,17 @@ void textTransparent(uint16_t foreColor);
 void textEnlarge(uint8_t scale);
 void textWrite(const char* buffer, uint16_t len);
 
+/* Formula Specific Functions*/
+void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bMask);
+void sevenSegmentDigit(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t digit);
+void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t color, uint16_t number);
+void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t decDigits, uint16_t color, double number);
+void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t fg, uint16_t bg);
+
 /* Graphics functions */
 void graphicsMode(void);
 void setXY(uint16_t x, uint16_t y);
 void pushPixels(uint32_t num, uint16_t p);
-//void fillRect(void);
 
 /* Adafruit_GFX functions */
 void drawPixel(int16_t x, int16_t y, uint16_t color);
@@ -77,7 +85,10 @@ uint8_t readData(void);
 void writeCommand(uint8_t d);
 uint8_t readStatus(void);
 uint8_t waitPoll(uint8_t r, uint8_t f);
-void SPI_double_send(uint8_t one, uint8_t two);
+uint8_t SPI_send(uint8_t data);
+uint8_t readData(void);
+uint8_t readReg(uint8_t reg);
+uint8_t waitPoll(uint8_t reg, uint8_t flag);
 uint16_t width(void);
 uint16_t height(void);
 
@@ -96,6 +107,17 @@ uint16_t _width, _height;
 uint8_t _textScale;
 
 /* Jake Defined Values */
+
+#define SEVEN_SEG_0 		0x7E
+#define SEVEN_SEG_1 		0x30
+#define SEVEN_SEG_2 		0x6D
+#define SEVEN_SEG_3 		0x79
+#define SEVEN_SEG_4 		0x33
+#define SEVEN_SEG_5 		0x5B
+#define SEVEN_SEG_6 		0x5F
+#define SEVEN_SEG_7 		0x70
+#define SEVEN_SEG_8 		0x7F
+#define SEVEN_SEG_9 		0x7B
 
 // Rectangle Coordinates
 #define RA8875_RECT_X0_0				0x91
