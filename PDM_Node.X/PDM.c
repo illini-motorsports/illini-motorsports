@@ -32,12 +32,13 @@ int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 // State variables determined by various sources
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
+uint8_t str_pulse_flag = 0;
 uint16_t total_current_draw = 0;
 uint8_t wtr_override_sw = 0;
 uint8_t fan_override_sw = 0;
 
 // Timing interval variables
-volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr = 0;
+volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr, motec2_recv_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
@@ -140,18 +141,19 @@ void main(void) {
   send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
 
   // Get wiper data struct from NVM
-  Wiper_nvm_data data = {0};
-  read_nvm_data(&data, sizeof(Wiper_nvm_data));
+  //Wiper_nvm_data data = {0};
+  //read_nvm_data(&data, sizeof(Wiper_nvm_data));
 
   // Check to see if the wiper data in NVM has been initialized
-  if(data.key != NVM_WPR_CONSTANT) {
-    // Initialize wiper values to 3kOhm and peak wiper values to 4kOhm
+  //if(data.key != NVM_WPR_CONSTANT) {
+    // Initialize normal and peak wiper values to 300Ohm
     uint32_t i;
     for (i = 0; i < NUM_LOADS; i++) {
-      wiper_values[i] = RES_TO_WPR(3000);
-      peak_wiper_values[i] = RES_TO_WPR(4000);
+      wiper_values[i] = RES_TO_WPR(300);
+      peak_wiper_values[i] = RES_TO_WPR(300);
     }
 
+    /*
     // Store default wiper data struct in NVM
     data.key = NVM_WPR_CONSTANT;
     data.ign_wpr_val = wiper_values[IGN_IDX];
@@ -192,9 +194,10 @@ void main(void) {
     peak_wiper_values[WTR_IDX] = data.wtr_peak_wpr_val;
     peak_wiper_values[FAN_IDX] = data.fan_peak_wpr_val;
   }
+   */
 
   // Set each rheostat to the value loaded from NVM
-  uint32_t i;
+  //uint32_t i;
   for (i = 0; i < NUM_LOADS; i++) {
     set_rheo(i, wiper_values[i]);
     peak_state[i] = 0;
@@ -284,7 +287,8 @@ void main(void) {
      */
     if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
         millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
-        millis - motec1_recv_tmr > BASIC_CONTROL_WAIT) {
+        millis - motec1_recv_tmr > BASIC_CONTROL_WAIT ||
+        millis - motec2_recv_tmr > BASIC_CONTROL_WAIT) {
 
       /**
        * Perform basic load control
@@ -437,6 +441,7 @@ void main(void) {
     if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
       if (!STR_EN) {
         EN_STR_LAT = PWR_ON;
+        str_pulse_flag = 1;
         str_en_tmr = millis;
       }
     } else {
@@ -446,6 +451,11 @@ void main(void) {
       }
 
       EN_STR_LAT = PWR_OFF;
+      str_pulse_flag = 0;
+    }
+
+    if (millis - str_en_tmr > STR_PULSE_DUR) {
+      str_pulse_flag = 0;
     }
 
     /**
@@ -549,6 +559,10 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
   }
 
+  if (str_pulse_flag) {
+    EN_STR_LAT = !EN_STR_PORT;
+  }
+
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
 
@@ -568,26 +582,31 @@ void process_CAN_msg(CAN_message msg) {
     case MOTEC_ID + 0:
       eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
           msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
-      oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
-          msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
-      oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) |
-          msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
+      bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
+          msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
 
       motec0_recv_tmr = millis;
       break;
     case MOTEC_ID + 1:
       eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) |
           msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
-      bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
-          msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
+      oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) |
+          msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
 
       motec1_recv_tmr = millis;
       break;
+    case MOTEC_ID + 2:
+      oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
+          msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
+
+      motec2_recv_tmr = millis;
+      break;
+
     case PDM_CONFIG_ID:
       load_idx = msg.data[LOAD_IDX_BYTE];
       peak_mode = msg.data[PEAK_MODE_BYTE];
-      cutoff = ((double) ((msg.data[CUTOFF_SETTING_BYTE] << 8) |
-          msg.data[CUTOFF_SETTING_BYTE + 1])) / CUT_SCLINV;
+      cutoff = ((double) ((msg.data[CUTOFF_SETTING_BYTE + 1] << 8) |
+          msg.data[CUTOFF_SETTING_BYTE])) / CUT_SCLINV;
       set_current_cutoff(load_idx, peak_mode, cutoff);
       break;
 
@@ -1087,7 +1106,7 @@ void init_adc_pdm(void) {
  * @param cutoff - The cutoff current (in amps) to set
  */
 void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
-  uint32_t ratio = 0;
+  double ratio = 0;
 
   switch (load_idx) {
     case IGN_IDX: ratio = IGN_RATIO; break;
@@ -1119,14 +1138,15 @@ void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
   // Set the rheostat wiper setting to the new value
   if (peak_state[load_idx]) {
     set_rheo(load_idx, peak_wiper_values[load_idx]);
-    fb_resistances[load_idx] = WPR_TO_RES(wiper_values[load_idx]);
+    fb_resistances[load_idx] = WPR_TO_RES(peak_wiper_values[load_idx]);
   } else {
     set_rheo(load_idx, wiper_values[load_idx]);
-    fb_resistances[load_idx] = WPR_TO_RES(peak_wiper_values[load_idx]);
+    fb_resistances[load_idx] = WPR_TO_RES(wiper_values[load_idx]);
   }
 
   send_cutoff_values_can(OVERRIDE);
 
+  /*
   // Save peak and normal mode wiper values in NVM
   Wiper_nvm_data data = {0};
   data.key = NVM_WPR_CONSTANT;
@@ -1148,4 +1168,5 @@ void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
   data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
   data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
   write_nvm_data(&data, sizeof(Wiper_nvm_data));
+  */
 }

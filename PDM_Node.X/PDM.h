@@ -55,6 +55,7 @@
 #define FUEL_PRIME_DUR     1000
 #define BASIC_CONTROL_WAIT 1000
 #define STR_MAX_DUR        4000
+#define STR_PULSE_DUR      100
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10
 #define RAIL_VOLT_SEND     50
@@ -67,7 +68,7 @@
 
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)
-#define ON_SW     (!SW2_PORT)
+#define ON_SW     (SW2_PORT)
 #define ACT_UP_SW (!SW3_PORT)
 #define ACT_DN_SW (!SW4_PORT)
 #define KILL_SW   (SW5_PORT)
@@ -87,7 +88,7 @@
 #define PDLD_EN  (EN_PDLD_PORT == PWR_ON)
 #define B5V5_EN  (EN_B5V5_PORT == PWR_ON)
 #define BVBAT_EN (EN_BVBAT_PORT == PWR_ON)
-#define STR_EN   (EN_STR_PORT == PWR_ON)
+#define STR_EN   (EN_STR_PORT == PWR_ON || str_pulse_flag)
 
 // Definitions for interval override control
 #define OVERRIDE    1
@@ -307,20 +308,20 @@
 #define ADC_JTEMP_CHN   44
 
 // MOSFET Current Ratios
-#define IGN_RATIO   5300
-#define INJ_RATIO   2800
-#define FUEL_RATIO  8800
-#define ECU_RATIO   2800
-#define WTR_RATIO   5300
-#define FAN_RATIO   8800
-#define AUX_RATIO   5300
-#define PDLU_RATIO  8800
-#define PDLD_RATIO  8800
-#define B5V5_RATIO  2800
-#define BVBAT_RATIO 2800
-#define STR0_RATIO  8800
-#define STR1_RATIO  8800
-#define STR2_RATIO  8800
+#define IGN_RATIO   5300.0
+#define INJ_RATIO   2800.0
+#define FUEL_RATIO  8800.0
+#define ECU_RATIO   8800.0
+#define WTR_RATIO   5300.0
+#define FAN_RATIO   8800.0
+#define AUX_RATIO   5300.0
+#define PDLU_RATIO  8800.0
+#define PDLD_RATIO  8800.0
+#define B5V5_RATIO  2800.0
+#define BVBAT_RATIO 2800.0
+#define STR0_RATIO  8800.0
+#define STR1_RATIO  8800.0
+#define STR2_RATIO  8800.0
 
 // Load Scalar Inverse
 #define IGN_SCLINV   1000.0
@@ -339,7 +340,7 @@
 #define STR2_SCLINV  100.0
 #define STR_SCLINV   100.0
 #define TOTAL_SCLINV 100.0
-#define CUT_SCLINV   500.0
+#define CUT_SCLINV   400.0
 
 // Constant used to check whether the NVM has been initialized
 #define NVM_WPR_CONSTANT 0xDEADBEEF
