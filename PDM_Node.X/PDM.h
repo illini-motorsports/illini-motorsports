@@ -60,6 +60,7 @@
 #define LOAD_CUR_SEND      10
 #define RAIL_VOLT_SEND     50
 #define CUTOFF_VAL_SEND    1000
+#define LOAD_STATUS_SEND   500
 #define FUEL_PEAK_DUR      50
 #define WTR_PEAK_DUR       50
 #define FAN_PEAK_DUR       50
@@ -396,6 +397,7 @@ void sample_temp(void);
 void send_load_current_can(void);
 void send_rail_volt_can(void);
 void send_cutoff_values_can(uint8_t override);
+void send_load_status_can(uint8_t override);
 void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 void init_adc_pdm(void);

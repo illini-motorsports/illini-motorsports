@@ -42,7 +42,7 @@ volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr, motec2_recv_tm
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
-    cutoff_send_tmr = 0;
+    cutoff_send_tmr, load_status_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
 uint32_t temp_samp_tmr = 0;
@@ -217,6 +217,7 @@ void main(void) {
 
   // Main loop
   while (1) {
+    uint8_t load_state_changed = 0;
 
     /**
      * Determine if the fuel pump should be priming
@@ -247,33 +248,41 @@ void main(void) {
     // PDLU
     if (ACT_UP_SW && !ACT_DN_SW && (millis - pdlu_tmr < MAX_PDL_DUR)) {
       // Enable PDLU
-      if(!PDLU_EN) {
+      if (!PDLU_EN) {
         EN_PDLU_LAT = PWR_ON;
         pdlu_tmr = millis;
+        load_state_changed = 1;
       }
     } else {
       // Reset PDLU timer if the ACT_UP signal has been disabled
-      if(!ACT_UP_SW) {
+      if (!ACT_UP_SW) {
         pdlu_tmr = millis;
       }
 
-      EN_PDLU_LAT = PWR_OFF;
+      if (PDLU_EN) {
+        EN_PDLU_LAT = PWR_OFF;
+        load_state_changed = 1;
+      }
     }
 
     // PDLD
     if (ACT_DN_SW && !ACT_UP_SW && (millis - pdld_tmr < MAX_PDL_DUR)) {
       // Enable PDLD
-      if(!PDLD_EN) {
+      if (!PDLD_EN) {
         EN_PDLD_LAT = PWR_ON;
         pdld_tmr = millis;
+        load_state_changed = 1;
       }
     } else {
       // Reset PDLD timer if the ACT_DN signal has been disabled
-      if(!ACT_DN_SW) {
+      if (!ACT_DN_SW) {
         pdld_tmr = millis;
       }
 
-      EN_PDLD_LAT = PWR_OFF;
+      if (PDLD_EN) {
+        EN_PDLD_LAT = PWR_OFF;
+        load_state_changed = 1;
+      }
     }
 
     /**
@@ -304,11 +313,13 @@ void main(void) {
         // Enable IGN
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;
+          load_state_changed = 1;
         }
 
         // Enable INJ
         if (!INJ_EN) {
           EN_INJ_LAT = PWR_ON;
+          load_state_changed = 1;
         }
 
         // Enable FUEL
@@ -319,15 +330,22 @@ void main(void) {
           peak_state[FUEL_IDX] = 1;
           EN_FUEL_LAT = PWR_ON;
           fuel_peak_tmr = millis;
+          load_state_changed = 1;
         }
 
         // If STR load is on, disable WATER and FAN. Otherwise, enable them.
         if (STR_EN) {
           // Disable WTR
-          EN_WTR_LAT = PWR_OFF;
+          if (WTR_EN) {
+            EN_WTR_LAT = PWR_OFF;
+            load_state_changed = 1;
+          }
 
           // Disable FAN
-          EN_FAN_LAT = PWR_OFF;
+          if (FAN_EN) {
+            EN_FAN_LAT = PWR_OFF;
+            load_state_changed = 1;
+          }
         } else {
           // Enable WTR
           if (!WTR_EN) {
@@ -337,6 +355,7 @@ void main(void) {
             peak_state[WTR_IDX] = 1;
             EN_WTR_LAT = PWR_ON;
             wtr_peak_tmr = millis;
+            load_state_changed = 1;
           }
 
           // Enable FAN
@@ -347,23 +366,39 @@ void main(void) {
             peak_state[FAN_IDX] = 1;
             EN_FAN_LAT = PWR_ON;
             fan_peak_tmr = millis;
+            load_state_changed = 1;
           }
         }
       } else {
         // Disable IGN
-        EN_IGN_LAT = PWR_OFF;
+        if (IGN_EN) {
+          EN_IGN_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
 
         // Disable INJ
-        EN_INJ_LAT = PWR_OFF;
+        if (INJ_EN) {
+          EN_INJ_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
 
         // Disable FUEL
-        EN_FUEL_LAT = PWR_OFF;
+        if (FUEL_EN) {
+          EN_FUEL_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
 
         // Disable WTR
-        EN_WTR_LAT = PWR_OFF;
+        if (WTR_EN) {
+          EN_WTR_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
 
         // Disable FAN
-        EN_FAN_LAT = PWR_OFF;
+        if (FAN_EN) {
+          EN_FAN_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
       }
     } else {
 
@@ -377,11 +412,13 @@ void main(void) {
         // Enable IGN if not already enabled
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;
+          load_state_changed = 1;
         }
 
         // Enable INJ if not already enabled
         if (!INJ_EN) {
           EN_INJ_LAT = PWR_ON;
+          load_state_changed = 1;
         }
 
         // Enable FUEL if not already enabled
@@ -392,16 +429,26 @@ void main(void) {
           peak_state[FUEL_IDX] = 1;
           EN_FUEL_LAT = PWR_ON;
           fuel_peak_tmr = millis;
+          load_state_changed = 1;
         }
       } else {
         // Disable IGN
-        EN_IGN_LAT = PWR_OFF;
+        if (IGN_EN) {
+          EN_IGN_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
 
         // Disable INJ
-        EN_INJ_LAT = PWR_OFF;
+        if (INJ_EN) {
+          EN_INJ_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
 
         // Disable FUEL
-        EN_FUEL_LAT = PWR_OFF;
+        if (FUEL_EN) {
+          EN_FUEL_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
       }
 
       // WTR
@@ -414,10 +461,14 @@ void main(void) {
           peak_state[WTR_IDX] = 1;
           EN_WTR_LAT = PWR_ON;
           wtr_peak_tmr = millis;
+          load_state_changed = 1;
         }
       } else {
         // Disable WTR
-        EN_WTR_LAT = PWR_OFF;
+        if (WTR_EN) {
+          EN_WTR_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
       }
 
       // FAN
@@ -430,10 +481,14 @@ void main(void) {
           peak_state[FAN_IDX] = 1;
           EN_FAN_LAT = PWR_ON;
           fan_peak_tmr = millis;
+          load_state_changed = 1;
         }
       } else {
         // Disable FAN
-        EN_FAN_LAT = PWR_OFF;
+        if (FAN_EN) {
+          EN_FAN_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
       }
     }
 
@@ -443,6 +498,7 @@ void main(void) {
         EN_STR_LAT = PWR_ON;
         str_pulse_flag = 1;
         str_en_tmr = millis;
+        load_state_changed = 1;
       }
     } else {
       if (!STR_SW) {
@@ -450,8 +506,11 @@ void main(void) {
         str_en_tmr = millis;
       }
 
-      EN_STR_LAT = PWR_OFF;
-      str_pulse_flag = 0;
+      if (STR_EN) {
+        EN_STR_LAT = PWR_OFF;
+        str_pulse_flag = 0;
+        load_state_changed = 1;
+      }
     }
 
     if (millis - str_en_tmr > STR_PULSE_DUR) {
@@ -467,6 +526,7 @@ void main(void) {
       set_rheo(FUEL_IDX, wpr_val);
       fb_resistances[FUEL_IDX] = WPR_TO_RES(wpr_val);
       peak_state[FUEL_IDX] = 0;
+      load_state_changed = 1;
     }
 
     //WTR
@@ -475,6 +535,7 @@ void main(void) {
       set_rheo(WTR_IDX, wpr_val);
       fb_resistances[WTR_IDX] = WPR_TO_RES(wpr_val);
       peak_state[WTR_IDX] = 0;
+      load_state_changed = 1;
     }
 
     //FAN
@@ -483,6 +544,7 @@ void main(void) {
       set_rheo(FAN_IDX, wpr_val);
       fb_resistances[FAN_IDX] = WPR_TO_RES(wpr_val);
       peak_state[FAN_IDX] = 0;
+      load_state_changed = 1;
     }
 
     //TODO: Overcurrent detection
@@ -513,11 +575,13 @@ void main(void) {
     send_cutoff_values_can(NO_OVERRIDE);
 
     /**
-     *TODO: Send enablity state and peak mode bitmaps
+     * Send enablity state and peak mode state bitmaps on CAN
      */
-
-    //TODO: ???
-    //TODO: Profit
+    if (load_state_changed) {
+      send_load_status_can(OVERRIDE);
+    } else {
+      send_load_status_can(NO_OVERRIDE);
+    }
   }
 }
 
@@ -907,6 +971,53 @@ void send_cutoff_values_can(uint8_t override) {
     CAN_send_message(PDM_ID + 12, 6, cutoff_value_data);
 
     cutoff_send_tmr = millis;
+  }
+}
+
+/**
+ * void send_load_status_can(void)
+ *
+ * If the interval has passed or the caller overrode the check, send out the
+ * enablity status and peak mode status of all loads on CAN.
+ *
+ * @param override - Whether to override the interval
+ */
+void send_load_status_can(uint8_t override) {
+  if ((millis - load_status_send_tmr >= LOAD_STATUS_SEND) || override) {
+    CAN_data data = {0};
+
+    // Create load enablity bitmap
+    data.halfword0 = 0x0 |
+        IGN_EN << (15 - IGN_IDX) |
+        INJ_EN << (15 - INJ_IDX) |
+        FUEL_EN << (15 - FUEL_IDX) |
+        ECU_EN << (15 - ECU_IDX) |
+        WTR_EN << (15 - WTR_IDX) |
+        FAN_EN << (15 - FAN_IDX) |
+        AUX_EN << (15 - AUX_IDX) |
+        PDLU_EN << (15 - PDLU_IDX) |
+        PDLD_EN << (15 - PDLD_IDX) |
+        B5V5_EN << (15 - B5V5_IDX) |
+        BVBAT_EN << (15 - BVBAT_IDX) |
+        STR_EN << (15 - STR_IDX);
+
+    // Create load peak mode bitmap
+    data.halfword1 = 0x0 |
+        peak_state[IGN_IDX] << (15 - IGN_IDX) |
+        peak_state[INJ_IDX] << (15 - INJ_IDX) |
+        peak_state[FUEL_IDX] << (15 - FUEL_IDX) |
+        peak_state[ECU_IDX] << (15 - ECU_IDX) |
+        peak_state[WTR_IDX] << (15 - WTR_IDX) |
+        peak_state[FAN_IDX] << (15 - FAN_IDX) |
+        peak_state[AUX_IDX] << (15 - AUX_IDX) |
+        peak_state[PDLU_IDX] << (15 - PDLU_IDX) |
+        peak_state[PDLD_IDX] << (15 - PDLD_IDX) |
+        peak_state[B5V5_IDX] << (15 - B5V5_IDX) |
+        peak_state[BVBAT_IDX] << (15 - BVBAT_IDX) |
+        peak_state[STR_IDX] << (15 - STR_IDX);
+
+    CAN_send_message(PDM_ID + 0x1, 4, data);
+    load_current_send_tmr = millis;
   }
 }
 
