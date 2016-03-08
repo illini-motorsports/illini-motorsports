@@ -27,12 +27,7 @@ static volatile uint32_t CAN_FIFO_Buffers[256];
  * @param data A Pointer to the data bytes
  * @return -1 on failure, 0 on success
  */
-int32_t CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data) {
-  // Only allow even DLCs that are less than or equal to 8
-  if(!(dlc == 0 || dlc == 2 || dlc == 4 || dlc == 6 || dlc == 8)) {
-    return -1;
-  }
-
+void CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data) {
   // Get pointer to correct location in transmit FIFO
   CanTxMessageBuffer* transmit = (CanTxMessageBuffer*) (PA_TO_KVA1(C1FIFOUA1));
 
@@ -68,8 +63,6 @@ int32_t CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data) {
 
   // Request transmission of the message
   C1FIFOCON1bits.TXREQ = 1;
-
-  return 0;
 }
 
 /**

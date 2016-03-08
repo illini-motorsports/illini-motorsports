@@ -47,25 +47,29 @@
 #define STR2_IDX  13
 
 // Thresholds
-#define RPM_ON_THRESHOLD 600.0 // rpm
+#define RPM_ON_THRESHOLD 200.0 // rpm
 #define FAN_THRESHOLD_H  90.0  // C
 #define FAN_THRESHOLD_L  84.0  // C
 
 // Timing constants (ms)
+
 #define FUEL_PRIME_DUR     1000
-#define BASIC_CONTROL_WAIT 1000
 #define STR_MAX_DUR        4000
 #define STR_PULSE_DUR      100
+#define MAX_PDL_DUR        500
+
+#define BASIC_CONTROL_WAIT 1000
+#define TEMP_SAMP_INTV     333
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10
 #define RAIL_VOLT_SEND     50
 #define CUTOFF_VAL_SEND    1000
 #define LOAD_STATUS_SEND   500
-#define FUEL_PEAK_DUR      50
-#define WTR_PEAK_DUR       50
-#define FAN_PEAK_DUR       50
-#define MAX_PDL_DUR        500
-#define TEMP_SAMP_INTV     333
+
+#define FUEL_PEAK_DUR      100
+#define WTR_PEAK_DUR       100
+#define FAN_PEAK_DUR       100
+#define ECU_PEAK_DUR       20
 
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)

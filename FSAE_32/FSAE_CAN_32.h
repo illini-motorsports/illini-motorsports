@@ -158,7 +158,7 @@ static volatile uint32_t CAN_rx_ovf = 0;
 static volatile uint32_t CAN_tx_ovf = 0;
 
 // Function definitions
-int32_t CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data);
+void CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data);
 void CAN_recv_messages(void (*handler)(CAN_message msg));
 void init_can(void);
 
