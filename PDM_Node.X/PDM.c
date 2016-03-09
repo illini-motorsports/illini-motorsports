@@ -34,8 +34,7 @@ uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
 uint8_t str_pulse_flag = 0;
 uint16_t total_current_draw = 0;
-uint8_t wtr_override_sw = 0;
-uint8_t fan_override_sw = 0;
+uint8_t wtr_override_sw, fan_override_sw = 0;
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr, motec2_recv_tmr = 0;
@@ -46,6 +45,12 @@ uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
 uint32_t temp_samp_tmr = 0;
+
+/**
+ * For whatever reason, reading from EN_IGN_PORT does not work. Instead, we'll
+ * keep track of the value with a global variable.
+ */
+uint8_t ign_enabled = 0;
 
 /**
  * Main function
@@ -226,7 +231,7 @@ void main(void) {
     /**
      * Determine if the fuel pump should be priming
      */
-    if (ON_SW) {
+    if (!ON_SW) {
       fuel_prime_flag = 1;
     } else if (millis - fuel_prime_tmr > FUEL_PRIME_DUR && FUEL_EN) {
       fuel_prime_flag = 0;
@@ -318,6 +323,7 @@ void main(void) {
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;
           load_state_changed = 1;
+          ign_enabled = 1;
         }
 
         // Enable INJ
@@ -334,6 +340,7 @@ void main(void) {
           peak_state[FUEL_IDX] = 1;
           EN_FUEL_LAT = PWR_ON;
           fuel_peak_tmr = millis;
+          fuel_prime_tmr = millis;
           load_state_changed = 1;
         }
 
@@ -343,12 +350,14 @@ void main(void) {
           if (WTR_EN) {
             EN_WTR_LAT = PWR_OFF;
             load_state_changed = 1;
+            peak_state[WTR_IDX] = 0;
           }
 
           // Disable FAN
           if (FAN_EN) {
             EN_FAN_LAT = PWR_OFF;
             load_state_changed = 1;
+            peak_state[FAN_IDX] = 0;
           }
         } else {
           // Enable WTR
@@ -378,6 +387,7 @@ void main(void) {
         if (IGN_EN) {
           EN_IGN_LAT = PWR_OFF;
           load_state_changed = 1;
+          ign_enabled = 0;
         }
 
         // Disable INJ
@@ -390,18 +400,21 @@ void main(void) {
         if (FUEL_EN) {
           EN_FUEL_LAT = PWR_OFF;
           load_state_changed = 1;
+          peak_state[FUEL_IDX] = 0;
         }
 
         // Disable WTR
         if (WTR_EN) {
           EN_WTR_LAT = PWR_OFF;
           load_state_changed = 1;
+          peak_state[WTR_IDX] = 0;
         }
 
         // Disable FAN
         if (FAN_EN) {
           EN_FAN_LAT = PWR_OFF;
           load_state_changed = 1;
+          peak_state[FAN_IDX] = 0;
         }
       }
     } else {
@@ -410,13 +423,14 @@ void main(void) {
        * Perform regular load control
        */
 
-      // IGN, INJ, FUEL
+      // IGN, INJ
       //TODO: Determine less dangerous way of keeping these loads on than ENG_ON?
-      if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
+      if(ON_SW && !KILL_SW && (ENG_ON || STR_EN)) {
         // Enable IGN if not already enabled
         if (!IGN_EN) {
           EN_IGN_LAT = PWR_ON;
           load_state_changed = 1;
+          ign_enabled = 1;
         }
 
         // Enable INJ if not already enabled
@@ -424,7 +438,23 @@ void main(void) {
           EN_INJ_LAT = PWR_ON;
           load_state_changed = 1;
         }
+      } else {
+        // Disable IGN
+        if (IGN_EN) {
+          EN_IGN_LAT = PWR_OFF;
+          load_state_changed = 1;
+          ign_enabled = 0;
+        }
 
+        // Disable INJ
+        if (INJ_EN) {
+          EN_INJ_LAT = PWR_OFF;
+          load_state_changed = 1;
+        }
+      }
+
+      // FUEL
+      if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
         // Enable FUEL if not already enabled
         if (!FUEL_EN) {
           uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
@@ -433,25 +463,15 @@ void main(void) {
           peak_state[FUEL_IDX] = 1;
           EN_FUEL_LAT = PWR_ON;
           fuel_peak_tmr = millis;
+          fuel_prime_tmr = millis;
           load_state_changed = 1;
         }
       } else {
-        // Disable IGN
-        if (IGN_EN) {
-          EN_IGN_LAT = PWR_OFF;
-          load_state_changed = 1;
-        }
-
-        // Disable INJ
-        if (INJ_EN) {
-          EN_INJ_LAT = PWR_OFF;
-          load_state_changed = 1;
-        }
-
         // Disable FUEL
         if (FUEL_EN) {
           EN_FUEL_LAT = PWR_OFF;
           load_state_changed = 1;
+          peak_state[FUEL_IDX] = 0;
         }
       }
 
@@ -472,6 +492,7 @@ void main(void) {
         if (WTR_EN) {
           EN_WTR_LAT = PWR_OFF;
           load_state_changed = 1;
+          peak_state[WTR_IDX] = 0;
         }
       }
 
@@ -492,6 +513,7 @@ void main(void) {
         if (FAN_EN) {
           EN_FAN_LAT = PWR_OFF;
           load_state_changed = 1;
+          peak_state[FAN_IDX] = 0;
         }
       }
     }
@@ -1045,8 +1067,8 @@ void send_load_status_can(uint8_t override) {
         ACT_DN_SW << 4 |
         KILL_SW << 3;
 
-    CAN_send_message(PDM_ID + 0x1, 5, data);
-    load_current_send_tmr = millis;
+    CAN_send_message(PDM_ID + 0x1, 6, data);
+    load_status_send_tmr = millis;
   }
 }
 

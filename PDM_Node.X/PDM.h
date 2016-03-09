@@ -53,7 +53,7 @@
 
 // Timing constants (ms)
 
-#define FUEL_PRIME_DUR     1000
+#define FUEL_PRIME_DUR     500
 #define STR_MAX_DUR        4000
 #define STR_PULSE_DUR      100
 #define MAX_PDL_DUR        500
@@ -82,7 +82,8 @@
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
 
 // Load state definitions
-#define IGN_EN   (EN_IGN_PORT == PWR_ON)
+//#define IGN_EN   (EN_IGN_PORT == PWR_ON)
+#define IGN_EN   (ign_enabled)
 #define INJ_EN   (EN_INJ_PORT == PWR_ON)
 #define FUEL_EN  (EN_FUEL_PORT == PWR_ON)
 #define ECU_EN   (EN_ECU_PORT == PWR_ON)
@@ -112,7 +113,7 @@
 #define EN_B5V5_LAT   LATAbits.LATA14
 #define EN_BVBAT_LAT  LATAbits.LATA15
 #define EN_STR_LAT    LATDbits.LATD9
-#define EN_IGN_PORT   PORTDbits.RD15
+//#define EN_IGN_PORT   PORTDbits.RD15
 #define EN_INJ_PORT   PORTCbits.RC15
 #define EN_FUEL_PORT  PORTGbits.RG0
 #define EN_ECU_PORT   PORTFbits.RF2
