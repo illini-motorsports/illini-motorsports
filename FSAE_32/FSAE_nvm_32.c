@@ -26,36 +26,7 @@ void nvm_write_word(void* addr, uint32_t data) {
   NVMCONbits.NVMOP = 0x1; // NVMOP for word programming
   NVMCONSET = _NVMCON_WREN_MASK;
 
-  /**
-   * Start programming flash memory
-   */
-
-  CLI(); // Disable Interrupts
-
-  // Disable DMA
-  uint32_t dma_susp; // Storage for current DMA state
-  if (!(dma_susp = DMACONbits.SUSPEND)) {
-    DMACONSET = _DMACON_SUSPEND_MASK; // Suspend DMA module
-    while((DMACONbits.DMABUSY)); // Wait for DMA to be actually suspended
-  }
-
-  // Unlock sequence
-  NVMKEY = 0x0;
-  NVMKEY = 0xAA996655;
-  NVMKEY = 0x556699AA;
-  NVMCONSET = _NVMCON_WR_MASK;
-
-  if (!dma_susp){
-    DMACONCLR = _DMACON_SUSPEND_MASK; // Resume DMA module
-  }
-
-  STI(); // Enable interrupts
-
-  // Wait for WR bit to clear
-  while(NVMCON & _NVMCON_WR_MASK);
-
-  // Disable future flash write/erase operations
-  NVMCONCLR = _NVMCON_WREN_MASK;
+  nvm_init_operation();
 }
 
 /**
@@ -81,10 +52,47 @@ void read_nvm_data(void* buffer, uint32_t count) {
  * @param count Number of bytes to copy
  */
 void write_nvm_data(void* buffer, uint32_t count) {
+  nvm_erase_page(); // Page must be erased before a write can take place
+
   uint32_t iter;
   for(iter = 0; iter < count; iter += 4) {
     void* addr = PA_TO_KVA1(USER_NVM_PHYS_ADDR + iter);
     uint32_t word = ((uint32_t*) buffer)[iter / 4];
     nvm_write_word(addr, word);
   }
+}
+
+/**
+ * void nvm_erase_page(void)
+ * 
+ * Erases the page used for NVM so that the cells can be written to again.
+ */
+void nvm_erase_page(void) {
+  NVMADDR = USER_NVM_PHYS_ADDR; // Set base page address
+  NVMCONbits.NVMOP = 0x4; // Set to page erase
+  NVMCONSET = _NVMCON_WREN_MASK;
+  nvm_init_operation();
+}
+
+/**
+ * void nvm_init_operation(void);
+ * 
+ * Start the flash memory programming/erase operation.
+ */
+void nvm_init_operation(void) {
+  CLI(); // Disable Interrupts
+
+  // Unlock sequence
+  NVMKEY = 0x0;
+  NVMKEY = 0xAA996655;
+  NVMKEY = 0x556699AA;
+  NVMCONSET = _NVMCON_WR_MASK;
+
+  STI(); // Enable interrupts
+
+  // Wait for WR bit to clear
+  while(NVMCON & _NVMCON_WR_MASK);
+
+  // Disable future flash write/erase operations
+  NVMCONCLR = _NVMCON_WREN_MASK;
 }

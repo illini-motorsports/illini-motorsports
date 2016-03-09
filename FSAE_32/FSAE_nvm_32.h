@@ -15,16 +15,15 @@
 #include "FSAE_config_32.h"
 
 /**
- * Use the last 8KB of program flash as NVM space.
- *
- * NOTE: The Pickit3 configuration must be set to preserve these last two pages
- * of program flash, otherwise the values will be erased every time the device
- * is programmed.
+ * TODO: The Pickit3 configuration must be set to preserve this page of program
+ * flash, otherwise the values will be erased every time the device is programmed.
  */
-#define USER_NVM_PHYS_ADDR 0x1D1FE000
+#define USER_NVM_PHYS_ADDR 0x1D00F000
 
 // Function definitions
 void read_nvm_data(void* buffer, uint32_t count);
 void write_nvm_data(void* buffer, uint32_t count);
+void nvm_erase_page(void);
+void nvm_init_operation(void);
 
 #endif /* FSAE_nvm_32_H */
