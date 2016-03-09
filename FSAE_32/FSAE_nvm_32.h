@@ -14,7 +14,14 @@
 #include <sys/kmem.h>
 #include "FSAE_config_32.h"
 
-#define USER_NVM_PHYS_ADDR 0x1D080000
+/**
+ * Use the last 8KB of program flash as NVM space.
+ *
+ * NOTE: The Pickit3 configuration must be set to preserve these last two pages
+ * of program flash, otherwise the values will be erased every time the device
+ * is programmed.
+ */
+#define USER_NVM_PHYS_ADDR 0x1D1FE000
 
 // Function definitions
 void read_nvm_data(void* buffer, uint32_t count);

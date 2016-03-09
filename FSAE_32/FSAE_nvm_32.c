@@ -10,9 +10,9 @@
 
 /**
  * void nvm_write_word(void* addr, uint32_t data)
- * 
+ *
  * Writes one word of data to the NVM memory located at addr
- * 
+ *
  * @param addr Address to write the word to
  * @param data The word of data to write
  */
@@ -21,7 +21,7 @@ void nvm_write_word(void* addr, uint32_t data) {
   NVMADDR = KVA_TO_PA(addr);
   NVMDATA0 = data;
 
-  // Enable flash for write operation and set the NVMOP 
+  // Enable flash for write operation and set the NVMOP
   NVMCONCLR = _NVMCON_WREN_MASK;
   NVMCONbits.NVMOP = 0x1; // NVMOP for word programming
   NVMCONSET = _NVMCON_WREN_MASK;
@@ -29,10 +29,10 @@ void nvm_write_word(void* addr, uint32_t data) {
   /**
    * Start programming flash memory
    */
-  
-  CLI(); // Disable Interrupts    
 
-  // Disable DMA    
+  CLI(); // Disable Interrupts
+
+  // Disable DMA
   uint32_t dma_susp; // Storage for current DMA state
   if (!(dma_susp = DMACONbits.SUSPEND)) {
     DMACONSET = _DMACON_SUSPEND_MASK; // Suspend DMA module
@@ -50,20 +50,20 @@ void nvm_write_word(void* addr, uint32_t data) {
   }
 
   STI(); // Enable interrupts
-  
+
   // Wait for WR bit to clear
   while(NVMCON & _NVMCON_WR_MASK);
-  
+
   // Disable future flash write/erase operations
   NVMCONCLR = _NVMCON_WREN_MASK;
 }
 
 /**
- * void read_nvm_data(void* buffer, uint32_t count) 
- * 
+ * void read_nvm_data(void* buffer, uint32_t count)
+ *
  * Copies count bytes from the user data area in non-volatile memory to the
  * given buffer address.
- * 
+ *
  * @param buffer Address of the buffer to copy data to
  * @param count Number of bytes to copy
  */
@@ -73,10 +73,10 @@ void read_nvm_data(void* buffer, uint32_t count) {
 
 /**
  * void write_nvm_data(void* data, uint32_t count)
- * 
+ *
  * Writes count bytes from the given buffer address to the user data area in
  * non-volatile memory. Starts at the beginning of the user NVM area.
- * 
+ *
  * @param buffer Address of the data buffer to copy from
  * @param count Number of bytes to copy
  */

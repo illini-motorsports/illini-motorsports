@@ -141,11 +141,11 @@ void main(void) {
   send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
 
   // Get wiper data struct from NVM
-  //Wiper_nvm_data data = {0};
-  //read_nvm_data(&data, sizeof(Wiper_nvm_data));
+  Wiper_nvm_data data = {0};
+  read_nvm_data(&data, sizeof(Wiper_nvm_data));
 
   // Check to see if the wiper data in NVM has been initialized
-  //if(data.key != NVM_WPR_CONSTANT) {
+  if(data.key != NVM_WPR_CONSTANT) {
     // Initialize normal and peak wiper values to 300Ohm
     uint32_t i;
     for (i = 0; i < NUM_LOADS; i++) {
@@ -153,7 +153,6 @@ void main(void) {
       peak_wiper_values[i] = RES_TO_WPR(300);
     }
 
-    /*
     // Store default wiper data struct in NVM
     data.key = NVM_WPR_CONSTANT;
     data.ign_wpr_val = wiper_values[IGN_IDX];
@@ -194,10 +193,9 @@ void main(void) {
     peak_wiper_values[WTR_IDX] = data.wtr_peak_wpr_val;
     peak_wiper_values[FAN_IDX] = data.fan_peak_wpr_val;
   }
-   */
 
   // Set each rheostat to the value loaded from NVM
-  //uint32_t i;
+  uint32_t i;
   for (i = 0; i < NUM_LOADS; i++) {
     set_rheo(i, wiper_values[i]);
     peak_state[i] = 0;
@@ -1288,7 +1286,6 @@ void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
 
   send_cutoff_values_can(OVERRIDE);
 
-  /*
   // Save peak and normal mode wiper values in NVM
   Wiper_nvm_data data = {0};
   data.key = NVM_WPR_CONSTANT;
@@ -1310,5 +1307,4 @@ void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
   data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
   data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
   write_nvm_data(&data, sizeof(Wiper_nvm_data));
-  */
 }
