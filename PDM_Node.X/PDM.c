@@ -541,6 +541,7 @@ void main(void) {
 
     if (millis - str_en_tmr > STR_PULSE_DUR) {
       str_pulse_flag = 0;
+      EN_STR_LAT = PWR_ON;
     }
 
     /**
