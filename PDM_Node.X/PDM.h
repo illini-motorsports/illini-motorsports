@@ -20,7 +20,7 @@
 
 //#define INTERNAL
 #define MCHP_C18
-//#define CRIT_KILL
+#define CRIT_KILL
 
 /*
  * Magic Numbers
@@ -35,6 +35,7 @@
 #define CAN_PERIOD 50
 #define START_WAIT 4000
 #define BASIC_CONTROL_WAIT 1000
+#define STR_PULSE_DUR 100
 
 // Critical kill wait timers (ms)
 #define CRIT_WAIT_VOLTAGE 5000
@@ -84,6 +85,9 @@
 #define ECU_ch      ADC_CH7
 #define PCB_ch      ADC_CH8
 #define FUEL_ch     ADC_CH9
+
+// State definitions
+#define START_EN (START_PORT || str_pulse_flag)
 
 /*
  * Pin Definitions

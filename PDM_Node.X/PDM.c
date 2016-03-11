@@ -101,6 +101,8 @@ static volatile signed int engine_temp, oil_temp, oil_press, rpm, voltage;
 static volatile unsigned long FAN_SW_tmr, WATER_SW_tmr, engine_temp_tmr, oil_temp_tmr,
 oil_press_tmr, rpm_tmr, voltage_tmr, CAN_recv_tmr;
 
+static volatile unsigned char str_pulse_flag = 0;
+
 // ECAN variables
 static unsigned long id; // Holds CAN msgID
 static unsigned char data[8]; // Holds CAN data bytes
@@ -194,6 +196,10 @@ void high_isr(void) {
         INTCONbits.TMR0IF = 0;
         TMR0L = TMR0_RELOAD; // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
         millis++;
+
+        if (str_pulse_flag) {
+            START_LAT = !START_PORT;
+        }
     }
 
     // Check for received CAN message
@@ -548,7 +554,7 @@ void main(void) {
                 /**
                  * If START is on, disable WATER and FAN. Otherwise, enable them.
                  */
-                if(START_PORT) {
+                if(START_EN) {
                     // Disable WATER due to START
                     if(WATER_PORT) {
                         WATER_LAT = PWR_OFF;
@@ -585,13 +591,13 @@ void main(void) {
                 }
 
                 // WATER
-                if(WATER_PORT || START_PORT) {
+                if(WATER_PORT || START_EN) {
                     WATER_LAT = PWR_OFF;
                     load_states[WATER_val] = 0;
                 }
 
                 // FAN
-                if(FAN_PORT || START_PORT) {
+                if(FAN_PORT || START_EN) {
                     FAN_LAT = PWR_OFF;
                     load_states[FAN_val] = 0;
                 }
@@ -602,7 +608,7 @@ void main(void) {
              */
 
             // FUEL
-            if(!ON_SW_PORT && (PRIME || ON || START_PORT)) {
+            if(!ON_SW_PORT && (PRIME || ON || START_EN)) {
                 if(!FUEL_PORT) {
                     FUEL_P_LAT = PWR_ON;
                     FUEL_LAT = PWR_ON;
@@ -610,7 +616,7 @@ void main(void) {
                     FUEL_peak_tmr = millis;
                     PRIME_tmr = millis;
                 }
-            } else if(ON_SW_PORT || (!PRIME && !ON && !START_PORT)) {
+            } else if(ON_SW_PORT || (!PRIME && !ON && !START_EN)) {
                 if(FUEL_PORT) {
                     FUEL_LAT = PWR_OFF;
                     load_states[FUEL_val] = 0;
@@ -618,14 +624,14 @@ void main(void) {
             }
 
             // WATER
-            if((WATER_SW || FAN_SW || OVER_TEMP || ON) && !START_PORT) {
+            if((WATER_SW || FAN_SW || OVER_TEMP || ON) && !START_EN) {
                 if(!WATER_PORT) {
                     WATER_P_LAT = PWR_ON;
                     WATER_LAT = PWR_ON;
                     WATER_peak_tmr = millis;
                     load_states[WATER_val] = 1;
                 }
-            } else if((!ON && !WATER_SW && !FAN_SW && !OVER_TEMP) || START_PORT) {
+            } else if((!ON && !WATER_SW && !FAN_SW && !OVER_TEMP) || START_EN) {
                 if(WATER_PORT) {
                     WATER_LAT = PWR_OFF;
                     load_states[WATER_val] = 0;
@@ -633,14 +639,14 @@ void main(void) {
             }
 
             // FAN
-            if((FAN_SW || OVER_TEMP) && !START_PORT) {
+            if((FAN_SW || OVER_TEMP) && !START_EN) {
                 if(!FAN_PORT) {
                     FAN_P_LAT = PWR_ON;
                     FAN_LAT = PWR_ON;
                     FAN_peak_tmr = millis;
                     load_states[FAN_val] = 1;
                 }
-            } else if((!FAN_SW && !OVER_TEMP) || START_PORT) {
+            } else if((!FAN_SW && !OVER_TEMP) || START_EN) {
                 if(FAN_PORT) {
                     FAN_LAT = PWR_OFF;
                     load_states[FAN_val] = 0;
@@ -657,22 +663,30 @@ void main(void) {
         CLI();
         // START
         if(!START_SW_PORT && (millis - START_tmr < START_WAIT)) {
-            if(!START_PORT) {
+            if(!START_EN) {
                 START_P_LAT = PWR_ON;
                 START_LAT = PWR_ON;
                 load_states[START_val] = 1;
                 START_peak_tmr = millis;
                 START_tmr = millis;
+                str_pulse_flag = 1;
             }
         } else if(START_SW_PORT || (millis - START_tmr >= START_WAIT)) {
             if(START_SW_PORT) {
                 // Reset START_tmr if the start switch is in the off position
                 START_tmr = millis;
             }
-            if(START_PORT) {
+            if(START_EN) {
                 START_LAT = PWR_OFF;
                 load_states[START_val] = 0;
             }
+            str_pulse_flag = 0;
+        }
+
+        if(millis - START_tmr > STR_PULSE_DUR) {
+            str_pulse_flag = 0;
+            START_P_LAT = PWR_ON;
+            START_LAT = PWR_ON;
         }
         STI();
 
