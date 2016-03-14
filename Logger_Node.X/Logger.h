@@ -1,118 +1,61 @@
 /**
- * Logger Header
+ * Data Node Main File Header
  *
- * Processor:   PIC32MZ2048ECM064
- * Compiler:    Microchip XC32
- * Author:      Andrew Mass
- * Created:     2015-2016
+ * File Name:       DAQ.h
+ * Processor:       PIC18F46K80
+ * Complier:        Microchip C18
+ * Author:          George Schwieters
+ * Author:          Andrew Mass
+ * Created:         2012-2013
  */
-#ifndef LOGGER_H
-#define LOGGER_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <xc.h>
-#include "Logger_config.h"
+#ifndef DAQ_H
+#define DAQ_H
+
+#include "GenericTypeDefs.h"
+#include "FSconfig.h"
 
 /**
- * Create CanRxMessageBuffer struct
+ * Code Control
  */
 
-// CMSGSID
-typedef struct {
-  unsigned SID:11;
-  unsigned FILHIT:5;
-  unsigned CMSGTS:16;
-} rxcmsgsid;
-
-// CMSGEID
-typedef struct {
-  unsigned DLC:4;
-  unsigned RB0:1;
-  unsigned :3;
-  unsigned RB1:1;
-  unsigned RTR:1;
-  unsigned EID:18;
-  unsigned IDE:1;
-  unsigned SRR:1;
-  unsigned :2;
-} rxcmsgeid;
-
-// CMSGDATA0
-typedef struct {
-  unsigned Byte0:8;
-  unsigned Byte1:8;
-  unsigned Byte2:8;
-  unsigned Byte3:8;
-} rxcmsgdata0;
-
-// CMSGDATA1
-typedef struct {
-  unsigned Byte4:8;
-  unsigned Byte5:8;
-  unsigned Byte6:8;
-  unsigned Byte7:8;
-} rxcmsgdata1;
-
-// CanRxMessageBuffer
-typedef union uCanRxMessageBuffer {
-  struct {
-    rxcmsgsid CMSGSID;
-    rxcmsgeid CMSGEID;
-    rxcmsgdata0 CMSGDATA0;
-    rxcmsgdata0 CMSGDATA1;
-  };
-  int messageWord[4];
-} CanRxMessageBuffer;
+//#define INTERNAL
 
 /**
- * Create CanTxMessageBuffer struct
+ * Magic Numbers
  */
 
-// CMSGSID
+#define BUFFER_SIZE MEDIA_SECTOR_SIZE
+#define MSGS_READ 4
+#define RPM_THRESH 200 // RPM threshold for engine to be considered on
+#define CAN_PERIOD 250 // Send log filename every 250ms
+#define RPM_WAIT 500 // Wait 500ms before closing file
+
+/**
+ * Pin Defintions
+ */
+
+#define TERM_LAT    LATCbits.LATC6
+
+/**
+ * Typedefs
+ */
+
 typedef struct {
-  unsigned SID:11;
-  unsigned :21;
-} txcmsgsid;
+    unsigned char* left;
+    unsigned char* right;
+} BUFFER_TUPLE;
 
-// CMSGEID
-typedef struct {
-  unsigned DLC:4;
-  unsigned RB0:1;
-  unsigned :3;
-  unsigned RB1:1;
-  unsigned RTR:1;
-  unsigned EID:18;
-  unsigned IDE:1;
-  unsigned SRR:1;
-  unsigned :2;
-} txcmsgeid;
+void low_isr(void);
+void high_isr(void);
+void abort(void);
+void read_CAN_buffers(void);
 
-// CMSGDATA0
-typedef struct {
-  unsigned Byte0:8;
-  unsigned Byte1:8;
-  unsigned Byte2:8;
-  unsigned Byte3:8;
-} txcmsgdata0;
+void append_write_buffer(const unsigned char * temp, unsigned char applen);
+void buff_cat(unsigned char *WriteBuffer, const unsigned char *writeData,
+        unsigned int *bufflen, const unsigned char applen,
+        const unsigned char offset);
+void swap_len(void);
+void swap_buff(void);
 
-// CMSGDATA1
-typedef struct {
-  unsigned Byte4:8;
-  unsigned Byte5:8;
-  unsigned Byte6:8;
-  unsigned Byte7:8;
-} txcmsgdata1;
-
-// CanTxMessageBuffer
-typedef union uCanTxMessageBuffer {
-  struct {
-    txcmsgsid CMSGSID;
-    txcmsgeid CMSGEID;
-    txcmsgdata0 CMSGDATA0;
-    txcmsgdata0 CMSGDATA1;
-  };
-  int messageWord[4];
-} CanTxMessageBuffer;
-
-#endif /* LOGGER_H */
+#endif

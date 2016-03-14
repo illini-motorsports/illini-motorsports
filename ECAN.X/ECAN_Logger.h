@@ -7,8 +7,6 @@
 #ifndef ECANCONFIG_H
 #define ECANCONFIG_H
 
-#include "CAN.h"
-
 // ECAN Routine Mode:
 // Possible values are ECAN_LIB_MODE_FIXED, ECAN_LIB_MODE_RUN_TIME
 //   Use ECAN_LIB_MODE_FIXED if run-time selection of mode is not required.

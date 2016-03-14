@@ -19,13 +19,13 @@
 #define ERROR_ID        0x00F
 #define MOTEC_ID        0x100
 #define PADDLE_ID       0x200
+#define LOGGER_ID       0X2AA
 #define WHEEL_ID        0x400
 #define ADL_ID          0x500
 #define PDM_ID          0x600
 #define PDM_CONFIG_ID   0x620
 
 #define BEACON_ID       0x0E5
-#define LOGGING_ID      0X2AA
 
 /**
  * Byte position of channels in their CAN messages
