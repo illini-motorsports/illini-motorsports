@@ -161,19 +161,19 @@ void high_isr(void) {
         // Get data from receive buffer.
         ECANReceiveMessage(&id, data, &dataLen, &flags);
 
-        if(id == RPM_ID) {
+        if(id == MOTEC_ID + 0x0) {
             //lastRPMAccess
             rpmLastAccess = millis;
-            ((BYTE*) & rpm)[0] = data[RPM_BYTE + 1];
-            ((BYTE*) & rpm)[1] = data[RPM_BYTE];
+            ((BYTE*) & rpm)[0] = data[ENG_RPM_BYTE + 1];
+            ((BYTE*) & rpm)[1] = data[ENG_RPM_BYTE];
         }
-        if(id == ENGINE_TEMP_ID) {
+        if(id == MOTEC_ID + 0x1) {
             //lastEngineTempAccess
             engineLastAccess = millis;
-            ((BYTE*) & engineTemp)[0] = data[ENGINE_TEMP_BYTE + 1];
-            ((BYTE*) & engineTemp)[1] = data[ENGINE_TEMP_BYTE];
+            ((BYTE*) & engineTemp)[0] = data[ENG_TEMP_BYTE + 1];
+            ((BYTE*) & engineTemp)[1] = data[ENG_TEMP_BYTE];
         }
-        if(id == OIL_TEMP_ID) {
+        if(id == MOTEC_ID + 0x1) {
             //lastOilTempAccess;
             oilLastAccess = millis;
             ((BYTE*) & oilTemp)[0] = data[OIL_TEMP_BYTE + 1];
