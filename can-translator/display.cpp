@@ -26,7 +26,7 @@ void CoalesceComputeThread::run() {
 AppDisplay::AppDisplay() : QWidget() {
   this->successful = false;
   this->resize(WIDTH, HEIGHT);
-  this->setWindowTitle("Illini Motorsports CAN Translator - 2015");
+  this->setWindowTitle("Illini Motorsports CAN Translator - 2015-2016");
   this->setLayout(&layout);
 
   connect(&data, SIGNAL(error(QString)), this, SLOT(handleError(QString)));
@@ -41,7 +41,7 @@ AppDisplay::AppDisplay() : QWidget() {
   QFont font_header("Helvetica", 20, QFont::Bold);
   QFont font_subheader("Helvetica", 15);
   QFont font_message("Helvetica", 15, QFont::Black);
-  QFont font_channel("Helvetica", 9);
+  QFont font_signal("Helvetica", 9);
 
   lbl_header.setText("Illini Motorsports CAN Translator - 2015");
   lbl_header.setFont(font_header);
@@ -70,10 +70,10 @@ AppDisplay::AppDisplay() : QWidget() {
 
   layout.addLayout(&layout_reads);
 
-  btn_select_all.setText("Select All Channels");
+  btn_select_all.setText("Select All Signals");
   layout_selects.addWidget(&btn_select_all, 1);
 
-  btn_select_none.setText("Select No Channels");
+  btn_select_none.setText("Select No Signals");
   layout_selects.addWidget(&btn_select_none, 1);
 
   layout.addLayout(&layout_selects);
@@ -89,7 +89,7 @@ AppDisplay::AppDisplay() : QWidget() {
   table.setColumnCount(7);
 
   QStringList headers;
-  headers << "ID" << "L" << "BE" << "Channel 0" << "Channel 1" << "Channel 2" << "Channel 3";
+  headers << "ID" << "L" << "BE" << "Signal 0" << "Signal 1" << "Signal 2" << "Signal 3";
   table.setHorizontalHeaderLabels(headers);
 
   table.horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
@@ -114,24 +114,19 @@ AppDisplay::AppDisplay() : QWidget() {
     item_dlc->setFlags(Qt::NoItemFlags);
     table.setItem(i, 1, item_dlc);
 
-    QTableWidgetItem* item_ibe = new QTableWidgetItem(msg.isBigEndian ? "T" : "F");
-    item_ibe->setFlags(Qt::NoItemFlags);
-    table.setItem(i, 2, item_ibe);
-
     int j = 0;
-    typedef QVector<Channel>::iterator it_chn;
-    for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
-      Channel chn = *chnIt;
-      QTableWidgetItem* item = new QTableWidgetItem("     " + chn.title + "<" + chn.units + ">" + " isS: " + (chn.isSigned ? "T" : "F") +
-          " S: " + QString::number(chn.scalar) + " O: " + QString::number(chn.offset) +
-          " Min: " + QString::number(chn.min) + " Max: " + QString::number(chn.max));
+    typedef QVector<Signal>::iterator it_sig;
+    for(it_sig sigIt = msg.sigs.begin(); sigIt != msg.sigs.end(); sigIt++) {
+      Signal sig = *sigIt;
+      QTableWidgetItem* item = new QTableWidgetItem("     " + sig.title + "<" + sig.units + ">" + " isS: " + (sig.isSigned ? "T" : "F") +
+          " S: " + QString::number(sig.scalar) + " O: " + QString::number(sig.offset));
       item->setFlags(Qt::NoItemFlags);
-      item->setFont(font_channel);
+      item->setFont(font_signal);
       table.setItem(i, 3 + j, item);
 
       QCheckBox* box = new QCheckBox();
       box->setFocusPolicy(Qt::NoFocus);
-      box->setChecked(!(chn.title.compare("Unused") == 0 || chn.title.compare("Rsrvd") == 0));
+      box->setChecked(!(sig.title.compare("Unused") == 0 || sig.title.compare("Rsrvd") == 0));
       box->setStyleSheet("QCheckBox:hover { background-color: rgba(255, 255, 255, 0); }");
       table.setCellWidget(i, 3 + j, box);
       j++;
@@ -176,8 +171,8 @@ map<unsigned short, vector<bool> > AppDisplay::getEnabled() {
     Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
 
     int j = 0;
-    typedef QVector<Channel>::iterator it_chn;
-    for(it_chn chnIt = msg.channels.begin(); chnIt != msg.channels.end(); chnIt++) {
+    typedef QVector<Signal>::iterator it_sig;
+    for(it_sig sigIt = msg.sigs.begin(); sigIt != msg.sigs.end(); sigIt++) {
       msgEnabled.push_back(((QCheckBox*) table.cellWidget(i, 3 + j))->isChecked());
       j++;
     }
@@ -201,7 +196,7 @@ void AppDisplay::selectBoxes(bool checked) {
   for(int i = 0; i < table.rowCount(); i++) {
     Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
 
-    for(int j = 0; j < msg.channels.size(); j++) {
+    for(int j = 0; j < msg.sigs.size(); j++) {
       ((QCheckBox*) table.cellWidget(i, 3 + j))->setChecked(checked);
     }
   }
@@ -213,7 +208,7 @@ void AppDisplay::enableBoxes(bool enabled) {
   for(int i = 0; i < table.rowCount(); i++) {
     Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
 
-    for(int j = 0; j < msg.channels.size(); j++) {
+    for(int j = 0; j < msg.sigs.size(); j++) {
       ((QCheckBox*) table.cellWidget(i, 3 + j))->setEnabled(enabled);
     }
   }
@@ -333,12 +328,12 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
     btn_coalesce.click();
   }
 
-  // Selects all channel checkboxes.
+  // Selects all signal checkboxes.
   if(e->text() == "a") {
     btn_select_all.click();
   }
 
-  // Selects no channel checkboxes.
+  // Selects no signal checkboxes.
   if(e->text() == "n") {
     btn_select_none.click();
   }

@@ -179,10 +179,10 @@ bool AppData::writeAxis() {
       vector<double> vec_msg;
       vector<bool> msgEnabled = this->enabled[msg.id];
 
-      for(int i = 0; i < msg.channels.size(); i++) {
-        Channel chn = msg.channels[i];
+      for(int i = 0; i < msg.sigs.size(); i++) {
+        Signal sig = msg.sigs[i];
         if(msgEnabled[i]) {
-          outFile << "  " << chn.title.toStdString() << " [" << chn.units.toStdString() << "]";
+          outFile << "  " << sig.title.toStdString() << " [" << sig.units.toStdString() << "]";
           vec_msg.push_back(0.0);
         }
       }
@@ -251,25 +251,25 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
       int j = 0;
       vector<double> values;
       bool badChnFound = false;
-      for(int i = 0; i < msg.channels.size(); i++) {
-        Channel chn = msg.channels[i];
+      for(int i = 0; i < msg.sigs.size(); i++) {
+        Signal sig = msg.sigs[i];
 
         if(msgEnabled[i]) {
           double value;
-          if(chn.isSigned) {
-            signed int data = msg.isBigEndian ?
+          if(sig.isSigned) {
+            signed int data = sig.isBigEndian ?
               buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
             value = (double) data;
           } else {
-            unsigned int data = msg.isBigEndian ?
+            unsigned int data = sig.isBigEndian ?
               buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
             value = (double) data;
           }
 
-          values.push_back((value - chn.offset) * chn.scalar);
+          values.push_back((value - sig.offset) * sig.scalar);
 
           // Check to see if the calculated value is out of range.
-          if(values[j] < chn.min || values[j] > chn.max) {
+          if(values[j] < sig.min || values[j] > sig.max) {
             badChnFound = true;
           }
 
@@ -356,8 +356,8 @@ void AppData::processLine(QString line) {
     vector<bool> msgEnabled = this->enabled[msg.id];
 
     int j = 0;
-    for(int i = 0; i < msg.channels.size(); i++) {
-      Channel chn = msg.channels[i];
+    for(int i = 0; i < msg.sigs.size(); i++) {
+      Signal sig = msg.sigs[i];
 
       if(msgEnabled[i]) {
         double value;
@@ -366,20 +366,20 @@ void AppData::processLine(QString line) {
         unsigned char byteOne = sections[5 + (i * 2)].toUInt(&successful, 10);
         unsigned char byteTwo = sections[5 + (i * 2) + 1].toUInt(&successful, 10);
         if(!successful) {
-          emit error("Invalid channel data.");
+          emit error("Invalid signal data.");
           return;
         }
 
-        if(chn.isSigned) {
-          signed int data = msg.isBigEndian ? byteOne << 8 | byteTwo :
+        if(sig.isSigned) {
+          signed int data = sig.isBigEndian ? byteOne << 8 | byteTwo :
             byteTwo << 8 | byteOne;
           value = (double) data;
         } else {
-          unsigned int data = msg.isBigEndian ? byteOne << 8 | byteTwo :
+          unsigned int data = sig.isBigEndian ? byteOne << 8 | byteTwo :
             byteTwo << 8 | byteOne;
           value = (double) data;
         }
-        latestValues[messageIndices[msg.id]][j] = (value - chn.offset) * chn.scalar;
+        latestValues[messageIndices[msg.id]][j] = (value - sig.offset) * sig.scalar;
         j++;
       }
     }

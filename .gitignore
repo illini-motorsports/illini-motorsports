@@ -45,3 +45,6 @@ can-translator/out.txt
 *.hex
 *.map
 *.cof
+
+# Misc
+can-translator/config.dbc

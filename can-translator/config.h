@@ -1,10 +1,9 @@
 /**
- * @file config.h
- * Handles the scanning of CAN messages from config.txt.
+ * Config Header
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2015-05-31
+ * @date Modified: 2016-03-13
  */
 #ifndef CONFIG_H
 #define CONFIG_H
@@ -16,78 +15,75 @@
 #include <QStringList>
 #include <QTextStream>
 #include <QCoreApplication>
+#include <stdint.h>
 
 using std::map;
 
-/**
- * Struct that represents a specific channel in a CAN message. Contains
- * information about the position of the channel in the message, the title of
- * the channel, a string representing the units, and a scalar for the channel.
- */
-struct Channel {
-  unsigned char pos;
+// Struct that represents a specific signal in a CAN message definition
+struct Signal {
   QString title;
+  QString units;
+  uint8_t startBit;
+  uint8_t bitLen;
   bool isSigned;
+  bool isBigEndian;
   double scalar;
   double offset;
-  QString units;
   double min;
   double max;
 
-  Channel() {
-    pos = 0;
+  Signal() {
     title = "";
+    units = "";
+    startBit = 0;
+    bitLen = 0;
     isSigned = false;
+    isBigEndian = false;
     scalar = 0.0;
     offset = 0.0;
-    units = "";
-    min = 0.0;
-    max = 65535.0;
+    min = 0;
+    max = 0;
   }
 
   bool valid() {
     return !(title.isEmpty() && units.isEmpty());
   }
+
+  QString toString() {
+    return title + "<" + units + ">" + " isS: " + (isSigned ? "T" : "F") +
+        " isBE: " + (isBigEndian ? "T" : "F") + " S: " + QString::number(scalar) +
+        " O: " + QString::number(offset) + " sb: " + QString::number(startBit) +
+        " bl: " + QString::number(bitLen) + " min: " + QString::number(min) +
+        " max: " + QString::number(max);
+  }
 };
 
-/**
- * Struct that represents a CAN message. Contains information about the CAN ID
- * of the message, the data length, the byte order, an array of structs that
- * hold all of the channels contained in the message, and a timestamp value.
- */
+// Struct that represents one CAN message definition
 struct Message {
-  unsigned short id;
-  unsigned char dlc;
-  bool isBigEndian;
-  QVector<Channel> channels;
+  uint16_t id;
+  uint8_t dlc;
+  QVector<Signal> sigs;
 
   Message() {
     id = 0;
     dlc = 0;
-    isBigEndian = false;
   }
 
   bool valid() {
-    return !(id == 0 && dlc == 0 && !isBigEndian);
+    return !(id == 0 && dlc == 0);
   }
 };
 
 /**
- * Class which handles the scanning of CAN messages from config.txt.
+ * Class which configures the program to use the CAN spec specified in the
+ * config file.
  */
 class AppConfig : public QObject {
   Q_OBJECT
 
   public:
 
-    /**
-     * Reads config.txt from the current directory and extracts CAN message
-     * information from the file. Builds a map from the CAN message ID to a struct
-     * containing all the necessary information about the message.
-     *
-     * @returns A map from message IDs to a Message struct.
-     */
-    map<unsigned short, Message> getMessages();
+    map<uint16_t, Message> getMessages();
 
   signals:
 
@@ -101,35 +97,9 @@ class AppConfig : public QObject {
 
   private:
 
-    /**
-     * Opens an input stream from config.txt and reads the file into a vector of
-     * strings, where each element in the vector is a CAN message. Lines that
-     * are blank or comments are ignored.
-     *
-     * @returns An array of each valid line read from the config file.
-     */
-    QVector<QString> readFile();
-
-    /**
-     * Takes a single line from the config file as input and returns a message
-     * struct with all applicable data. Throws errors if input data is missing
-     * or malformed.
-     *
-     * @params line A string representing a single line from the config file.
-     * @returns A Message struct with all applicable data.
-     */
-    Message getMessage(QString line);
-
-    /**
-     * Takes a single section from a line in the config file and returns a
-     * channel struct with all applicable data. Throws errors if input data is
-     * missing or malformed.
-     *
-     * @params pos The position of this section in the parent line.
-     * @params section The section of the line.
-     * @returns A Channel struct with all applicable data.
-     */
-    Channel getChannel(int pos, QString section);
+    QVector< QVector<QString> > readFile();
+    Message getMessage(QVector<QString> messageBlock);
+    Signal getSignal(QString signalDef);
 };
 
 #endif // CONFIG_H
