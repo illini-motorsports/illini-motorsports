@@ -5,7 +5,7 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>Wheel.h</itemPath>
-      <itemPath>RA8875_Driver.h</itemPath>
+      <itemPath>RA8875_driver.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -14,13 +14,12 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>Wheel.c</itemPath>
-      <itemPath>AddieLibCPP.txt</itemPath>
-      <itemPath>AddieLibH.txt</itemPath>
-      <itemPath>RA8875_Driver.c</itemPath>
+      <itemPath>../FSAE_32/FSAE_config_32.c</itemPath>
       <itemPath>../FSAE_32/FSAE_CAN_32.c</itemPath>
       <itemPath>../FSAE_32/FSAE_adc_32.c</itemPath>
-      <itemPath>../FSAE_32/FSAE_config_32.c</itemPath>
+      <itemPath>../FSAE_32/FSAE_nvm_32.c</itemPath>
+      <itemPath>Wheel.c</itemPath>
+      <itemPath>RA8875_driver.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -92,6 +91,24 @@
       <C32-AR>
         <property key="additional-options-chop-files" value="false"/>
       </C32-AR>
+      <C32-AS>
+        <property key="assembler-symbols" value=""/>
+        <property key="enable-symbols" value="true"/>
+        <property key="exclude-floating-point-library" value="false"/>
+        <property key="expand-macros" value="false"/>
+        <property key="extra-include-directories-for-assembler" value=""/>
+        <property key="extra-include-directories-for-preprocessor" value=""/>
+        <property key="false-conditionals" value="false"/>
+        <property key="keep-locals" value="false"/>
+        <property key="list-assembly" value="false"/>
+        <property key="list-source" value="false"/>
+        <property key="list-symbols" value="false"/>
+        <property key="oXC32asm-list-to-file" value="false"/>
+        <property key="omit-debug-dirs" value="false"/>
+        <property key="omit-forms" value="false"/>
+        <property key="preprocessor-macros" value=""/>
+        <property key="warning-level" value=""/>
+      </C32-AS>
       <C32-LD>
         <property key="additional-options-use-response-files" value="false"/>
         <property key="enable-check-sections" value="false"/>
@@ -172,7 +189,6 @@
         <property key="COMPARATOR" value="true"/>
         <property key="DMA" value="true"/>
         <property key="ETHERNET CONTROLLER" value="true"/>
-        <property key="Freeze All Other Peripherals" value="true"/>
         <property key="INPUT CAPTURE 1" value="true"/>
         <property key="INPUT CAPTURE 2" value="true"/>
         <property key="INPUT CAPTURE 3" value="true"/>

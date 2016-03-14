@@ -17,8 +17,8 @@
 #include "../PDM_Node.X/PDM.h"
 #endif
 
-#ifdef BUILD_SWHEEL
-#include "../SWheel_Node.X/SWheel.h"
+#ifdef BUILD_WHEEL
+#include "../Wheel_Node.X/Wheel.h"
 #endif
 
 // Code control defines

@@ -834,7 +834,7 @@ void init_spi() {
   SPI1CONbits.SMP = 1;
 
 //TODO: Move this into a parameter
-#if BUILD_SWHEEL
+#if BUILD_WHEEL
   SPI1BRG = 9;
   SPI1CONbits.MODE16 = 0;
 #endif

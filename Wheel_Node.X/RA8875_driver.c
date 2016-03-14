@@ -7,7 +7,7 @@
  * Created:     2015-2016
  */
 #include "RA8875_driver.h"
-#include "SWheel.h"
+#include "Wheel.h"
 
 /*
  * Formula Functions
@@ -86,7 +86,7 @@ void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bM
 	uint8_t barHeight = (h - (3*boxD))/2;
 	uint8_t fhOffset = boxD + barHeight;
 	uint8_t shOffset = (2*boxD) + (2*barHeight);
-	
+
 	/*
 	 * Horizontal Bars
 	 */
@@ -95,7 +95,7 @@ void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bM
 		fillTriangle(x + boxD, y, x + hBoxD, y + hBoxD, x + boxD, y + boxD, color);
 		fillTriangle(x + w - boxD, y, x + w - hBoxD, y + hBoxD, x + w - boxD, y + boxD, color);
 	}
-	
+
 	if(bMask & 0x01){ // Second Bit
 		fillRect(x + boxD, y + boxD + barHeight, w - (2*boxD), boxD, color);
 		fillTriangle(x + boxD, y + fhOffset, x + hBoxD, y + hBoxD + fhOffset, x + boxD, y + boxD + fhOffset, color);
@@ -116,7 +116,7 @@ void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bM
 		fillTriangle(x, y + boxD, x + boxD, y + boxD, x + hBoxD, y + hBoxD, color);
 		fillTriangle(x, y + boxD + barHeight, x + boxD, y + boxD + barHeight, x + hBoxD, y + hBoxD + boxD + barHeight, color);
 		}
-		
+
 	if(bMask & 0x20){ // Second Bit
 		fillRect(x + w - boxD, y + boxD, boxD, barHeight, color);
 		fillTriangle(x + w - boxD, y + boxD, x + w, y + boxD, x + w - hBoxD, y + hBoxD, color);
@@ -489,11 +489,11 @@ void textWrite(const char* buffer, uint16_t len) {
 void drawPixel(int16_t x, int16_t y, uint16_t color){
 	writeCoordinates(RA8875_CURH0, x, y);
 	writeCommand(RA8875_MRWC);
-	LCD_CS_LAT = 0;	
-	SPI_send(RA8875_DATAWRITE);	
-	SPI_send(color >> 8);	
-	SPI_send(color);	
-	LCD_CS_LAT = 1;	
+	LCD_CS_LAT = 0;
+	SPI_send(RA8875_DATAWRITE);
+	SPI_send(color >> 8);
+	SPI_send(color);
+	LCD_CS_LAT = 1;
 }
 
 void writeReg(uint8_t reg, uint8_t val) {
