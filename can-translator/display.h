@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2015-06-07
+ * @date Modified: 2016-03-15
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -14,16 +14,14 @@
 #include <QThread>
 #include <QCheckBox>
 #include <QKeyEvent>
+#include <QGroupBox>
 #include <QFileDialog>
-#include <QHeaderView>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QSizePolicy>
 #include <QVBoxLayout>
+#include <QScrollArea>
 #include <QApplication>
 #include <QProgressBar>
-#include <QTableWidget>
-#include <QTableWidgetItem>
 #include "data.h"
 #include "config.h"
 
@@ -179,7 +177,7 @@ class AppDisplay : public QWidget {
      * @returns A map of message IDs to arrays of bools that contains info about which
      *     channels the user selected to be converted.
      */
-    map<unsigned short, vector<bool> > getEnabled();
+    map<uint16_t, vector<bool> > getEnabled();
 
     /**
      * Sets all channel checkboxes as checked.
@@ -236,12 +234,16 @@ class AppDisplay : public QWidget {
     QVBoxLayout layout_headers;
     QHBoxLayout layout_selects;
     QHBoxLayout layout_reads;
+    QHBoxLayout layout_main;
+    QVBoxLayout layout_config;
+    QVBoxLayout layout_progress;
+
+    QScrollArea area_config;
+    QWidget area_config_helper;
 
     QLabel lbl_header;
     QLabel lbl_subheader;
     QLabel lbl_keymaps;
-
-    QTableWidget table;
 
     QPushButton btn_read_custom;
     QPushButton btn_read_vector;

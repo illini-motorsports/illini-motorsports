@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2015-06-07
+ * @date Modified: 2016-03-15
  */
 #include "display.h"
 
@@ -43,7 +43,7 @@ AppDisplay::AppDisplay() : QWidget() {
   QFont font_message("Helvetica", 15, QFont::Black);
   QFont font_signal("Helvetica", 9);
 
-  lbl_header.setText("Illini Motorsports CAN Translator - 2015");
+  lbl_header.setText("Illini Motorsports CAN Translator - 2015-2016");
   lbl_header.setFont(font_header);
   lbl_header.setStyleSheet("QLabel { color: black; }");
   lbl_header.setAlignment(Qt::AlignCenter);
@@ -78,78 +78,47 @@ AppDisplay::AppDisplay() : QWidget() {
 
   layout.addLayout(&layout_selects);
 
-  layout.addWidget(&bar_convert, 1);
+  // Configure config area (left side)
+  area_config_helper.setLayout(&layout_config);
+  area_config.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+  area_config.setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  area_config.setWidgetResizable(true);
+  area_config.setWidget(&area_config_helper);
 
-  map<unsigned short, Message> messages = config.getMessages();
-  if(messages.size() > 0) {
+  // Configure progress area (right side)
+  layout_progress.addWidget(&bar_convert, 1);
+
+  // Add config and progress areas to main layout
+  layout_main.addWidget(&area_config);
+  layout_main.addLayout(&layout_progress);
+  layout.addLayout(&layout_main);
+
+  // Parse CAN spec from config file
+  map<uint16_t, Message> messages = config.getMessages();
+  if (messages.size() > 0) {
     this->successful = true;
   }
 
-  table.setRowCount(messages.size());
-  table.setColumnCount(7);
-
-  QStringList headers;
-  headers << "ID" << "L" << "BE" << "Signal 0" << "Signal 1" << "Signal 2" << "Signal 3";
-  table.setHorizontalHeaderLabels(headers);
-
-  table.horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-  table.horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
-  table.horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
-  table.horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
-  table.horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
-  table.horizontalHeader()->setSectionResizeMode(5, QHeaderView::Stretch);
-  table.horizontalHeader()->setSectionResizeMode(6, QHeaderView::Stretch);
-  table.verticalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-
-  int i = 0;
-  typedef map<unsigned short, Message>::iterator it_msg;
+  // Add message defintions to config area
+  typedef map<uint16_t, Message>::iterator it_msg;
   for(it_msg msgIt = messages.begin(); msgIt != messages.end(); msgIt++) {
     Message msg = msgIt->second;
 
-    QTableWidgetItem* item_id = new QTableWidgetItem(QString::number(msg.id, 16));
-    item_id->setFlags(Qt::NoItemFlags);
-    table.setItem(i, 0, item_id);
+    QGroupBox* messageGroup = new QGroupBox(msg.toString());
+    QVBoxLayout* signalsLayout = new QVBoxLayout();
+    messageGroup->setLayout(signalsLayout);
 
-    QTableWidgetItem* item_dlc = new QTableWidgetItem(QString::number(msg.dlc));
-    item_dlc->setFlags(Qt::NoItemFlags);
-    table.setItem(i, 1, item_dlc);
-
-    int j = 0;
-    typedef QVector<Signal>::iterator it_sig;
-    for(it_sig sigIt = msg.sigs.begin(); sigIt != msg.sigs.end(); sigIt++) {
-      Signal sig = *sigIt;
-      QTableWidgetItem* item = new QTableWidgetItem("     " + sig.title + "<" + sig.units + ">" + " isS: " + (sig.isSigned ? "T" : "F") +
-          " S: " + QString::number(sig.scalar) + " O: " + QString::number(sig.offset));
-      item->setFlags(Qt::NoItemFlags);
-      item->setFont(font_signal);
-      table.setItem(i, 3 + j, item);
-
+    for (Signal sig: msg.sigs) {
       QCheckBox* box = new QCheckBox();
       box->setFocusPolicy(Qt::NoFocus);
-      box->setChecked(!(sig.title.compare("Unused") == 0 || sig.title.compare("Rsrvd") == 0));
+      box->setChecked(true);
       box->setStyleSheet("QCheckBox:hover { background-color: rgba(255, 255, 255, 0); }");
-      table.setCellWidget(i, 3 + j, box);
-      j++;
+      box->setText(sig.toString());
+      signalsLayout->addWidget(box);
     }
 
-    while(j < 4) {
-      QTableWidgetItem* item = new QTableWidgetItem();
-      item->setFlags(Qt::NoItemFlags);
-      table.setItem(i, 3 + j, item);
-      j++;
-    }
-
-    i++;
+    layout_config.addWidget(messageGroup);
   }
-
-  table.setFocusPolicy(Qt::NoFocus);
-  table.setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-  table.setMinimumHeight(550);
-  table.setMinimumWidth(1400);
-  table.setFont(font_message);
-  table.resizeColumnsToContents();
-  table.show();
-  layout.addWidget(&table, 1);
 
   connect(&computeThread, SIGNAL(finish(bool)), this, SLOT(convertFinish(bool)));
   connect(&coalesceComputeThread, SIGNAL(finish(bool)), this, SLOT(coalesceFinish(bool)));
@@ -161,8 +130,10 @@ AppDisplay::AppDisplay() : QWidget() {
   connect(&btn_coalesce, SIGNAL(clicked()), this, SLOT(coalesceLogfiles()));
 }
 
-map<unsigned short, vector<bool> > AppDisplay::getEnabled() {
-  map<unsigned short, vector<bool> > enabled;
+map<uint16_t, vector<bool> > AppDisplay::getEnabled() {
+  map<uint16_t, vector<bool> > enabled;
+  return enabled;
+  /*
   map<unsigned short, Message> messages = config.getMessages();
 
   for(int i = 0; i < table.rowCount(); i++) {
@@ -180,6 +151,7 @@ map<unsigned short, vector<bool> > AppDisplay::getEnabled() {
   }
 
   return enabled;
+  */
 }
 
 void AppDisplay::selectAll() {
@@ -191,6 +163,7 @@ void AppDisplay::selectNone() {
 }
 
 void AppDisplay::selectBoxes(bool checked) {
+  /*
   map<unsigned short, Message> messages = config.getMessages();
   bool conv;
   for(int i = 0; i < table.rowCount(); i++) {
@@ -200,9 +173,11 @@ void AppDisplay::selectBoxes(bool checked) {
       ((QCheckBox*) table.cellWidget(i, 3 + j))->setChecked(checked);
     }
   }
+  */
 }
 
 void AppDisplay::enableBoxes(bool enabled) {
+  /*
   map<unsigned short, Message> messages = config.getMessages();
   bool conv;
   for(int i = 0; i < table.rowCount(); i++) {
@@ -212,6 +187,7 @@ void AppDisplay::enableBoxes(bool enabled) {
       ((QCheckBox*) table.cellWidget(i, 3 + j))->setEnabled(enabled);
     }
   }
+  */
 }
 
 void AppDisplay::readDataCustom() {

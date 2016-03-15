@@ -120,7 +120,7 @@ Message AppConfig::getMessage(QVector<QString> messageBlock) {
     return Message();
   }
 
-  for (int i = 1; i < messageBlock.size() - 1; i++) {
+  for (int i = 1; i < messageBlock.size(); i++) {
     Signal sig = getSignal(messageBlock[i]);
     if (!sig.valid()) {
       return Message();

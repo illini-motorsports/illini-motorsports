@@ -70,7 +70,12 @@ struct Message {
   }
 
   bool valid() {
-    return !(id == 0 && dlc == 0);
+    return !(id == 0 && dlc == 0 && sigs.size() == 0);
+  }
+
+  QString toString() {
+    return "0x" + QString::number(id, 16) + " - DLC: " + QString::number(dlc) +
+        " Signals: " + QString::number(sigs.size());
   }
 };
 
