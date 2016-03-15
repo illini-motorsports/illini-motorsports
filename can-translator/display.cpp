@@ -8,21 +8,6 @@
  */
 #include "display.h"
 
-void ComputeThread::run() {
-  for(int i = 0; i < filenames.size(); i++) {
-    this->data->filename = this->filenames.at(i);
-    if(!(this->data->writeAxis() && this->data->readData(this->isVectorFile))) {
-      finish(false);
-      return;
-    }
-  }
-  finish(true);
-}
-
-void CoalesceComputeThread::run() {
-  finish(this->data->coalesceLogfiles(this->filenames));
-}
-
 AppDisplay::AppDisplay() : QWidget() {
   this->successful = false;
   this->resize(WIDTH, HEIGHT);
@@ -121,6 +106,7 @@ AppDisplay::AppDisplay() : QWidget() {
   }
 
   connect(&computeThread, SIGNAL(finish(bool)), this, SLOT(convertFinish(bool)));
+  connect(&computeThread, SIGNAL(addFileProgress(QString)), this, SLOT(addFileProgress(QString)));
   connect(&coalesceComputeThread, SIGNAL(finish(bool)), this, SLOT(coalesceFinish(bool)));
 
   connect(&btn_select_all, SIGNAL(clicked()), this, SLOT(selectAll()));
@@ -128,6 +114,10 @@ AppDisplay::AppDisplay() : QWidget() {
   connect(&btn_read_custom, SIGNAL(clicked()), this, SLOT(readDataCustom()));
   connect(&btn_read_vector, SIGNAL(clicked()), this, SLOT(readDataVector()));
   connect(&btn_coalesce, SIGNAL(clicked()), this, SLOT(coalesceLogfiles()));
+}
+
+void AppDisplay::addFileProgress(QString filename) {
+  layout_progress.addWidget(new QLabel(filename));
 }
 
 map<uint16_t, vector<bool> > AppDisplay::getEnabled() {

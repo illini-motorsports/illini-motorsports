@@ -11,7 +11,6 @@
 
 #include <QFont>
 #include <QLabel>
-#include <QThread>
 #include <QCheckBox>
 #include <QKeyEvent>
 #include <QGroupBox>
@@ -24,87 +23,10 @@
 #include <QProgressBar>
 #include "data.h"
 #include "config.h"
+#include "compute.h"
 
 #define WIDTH 1400
 #define HEIGHT 720
-
-/**
- * Class which handles multithreading of the conversion process so that we
- * don't lock up the GUI thread while converting data.
- */
-class ComputeThread : public QThread {
-  Q_OBJECT
-
-  public:
-
-    /**
-     * Boolean which represents whether this thread is going to be used to
-     * convert a Vector log file or a custom log file.
-     */
-    bool isVectorFile;
-
-    /**
-     * A list of names of files to convert.
-     */
-    QStringList filenames;
-
-    /**
-     * Pointer to the instance of the data class used for the computation.
-     */
-    AppData* data;
-
-  signals:
-
-    /**
-     * Signal to be executed upon finishing the computation.
-     *
-     * @param success Whether the conversion was successful.
-     */
-    void finish(bool success);
-
-  private:
-
-    /**
-     * Starts the thread's main computation.
-     */
-    void run();
-};
-
-/**
- * Class with handles multithreading of the coalesce process so that we
- * don't lock up the GUI thread while coalescing logfiles.
- */
-class CoalesceComputeThread : public QThread {
-  Q_OBJECT
-
-  public:
-
-    /**
-     * A list of logfiles to coalesce.
-     */
-    QStringList filenames;
-
-    /**
-     * Pointer to the instance of the data class used for the computation.
-     */
-    AppData* data;
-
-  signals:
-
-    /**
-     * Signal to be executed upon finishing the computation.
-     *
-     * @param success Whether the conversion was successful.
-     */
-    void finish(bool success);
-
-  private:
-
-    /**
-     * Starts the thread's main computation.
-     */
-    void run();
-};
 
 /**
  * Class which handles the construction of the GUI and button presses.
@@ -169,6 +91,14 @@ class AppDisplay : public QWidget {
      * @param success Whether the coalesce was successful.
      */
     void coalesceFinish(bool success);
+
+    /**
+     * Slot to catch whenever we need to add another file progress bar to the
+     * progress bar layout.
+     *
+     * @param filename - The name of the file to add the progress bar for.
+     */
+    void addFileProgress(QString filename);
 
     /**
      * Scans the grid of checkboxes to see which channels the user wants
