@@ -93,6 +93,8 @@ volatile int16_t throttle_pos = 0; // Throttle position (from MoTeC)
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
 
+volatile uint8_t gear_fail_nt_shift = SHIFT_ENUM_NT; // Stores direction of neutral shift while in gear failure mode
+
 volatile uint8_t queue_up = 0; // Number of queued upshifts
 volatile uint8_t queue_dn = 0; // Number of queued downshifts
 volatile uint8_t queue_nt = 0; // Number of queued neutral shifts
@@ -237,15 +239,13 @@ void high_isr(void) {
 		// Get data from receive buffer
 		ECANReceiveMessage(&id, data, &dataLen, &flags);
 
-    if (id == MOTEC0_ID) {
+    if (id == MOTEC_ID + 0x0) {
       ((uint8_t*) &eng_rpm)[0] = data[ENG_RPM_BYTE + 1];
       ((uint8_t*) &eng_rpm)[1] = data[ENG_RPM_BYTE];
 
-      ((uint8_t*) &throttle_pos)[0] = data[TPS_BYTE + 1];
-      ((uint8_t*) &throttle_pos)[1] = data[TPS_BYTE];
-		}
+      ((uint8_t*) &throttle_pos)[0] = data[THROTTLE_POS_BYTE + 1];
+      ((uint8_t*) &throttle_pos)[1] = data[THROTTLE_POS_BYTE];
 
-    if (id == MOTEC1_ID) {
       ((uint8_t*) &bat_volt)[0] = data[VOLT_ECU_BYTE + 1];
       ((uint8_t*) &bat_volt)[1] = data[VOLT_ECU_BYTE];
     }
@@ -279,11 +279,6 @@ void process_upshift_press(void) {
     return;
   }
 
-  if (gear == GEAR_FAIL) {
-    //TODO: Implement basic control
-    return;
-  }
-
   if (SHIFT_NT_BT) { // Pressed while holding the neutral button
     if (gear == GEAR_NEUT) {
       queue_nt = 0;
@@ -291,6 +286,11 @@ void process_upshift_press(void) {
       queue_nt = 1;
       queue_up = 0;
       queue_dn = 0;
+    } else if (gear == GEAR_FAIL) {
+      queue_nt = 1;
+      queue_up = 0;
+      queue_dn = 0;
+      gear_fail_nt_shift = SHIFT_ENUM_UP;
     } else {
       queue_dn = 1;
       lockout_tmr = millis;
@@ -308,7 +308,7 @@ void process_upshift_press(void) {
       return;
     }
 
-    if (queue_up < 6 - gear) {
+    if (gear == GEAR_FAIL || queue_up < 6 - gear) {
       queue_up++;
       lockout_tmr = millis;
     }
@@ -329,11 +329,6 @@ void process_downshift_press(void) {
     return;
   }
 
-  if (gear == GEAR_FAIL) {
-    //TODO: Implement basic control
-    return;
-  }
-
   if (SHIFT_NT_BT) { // Pressed while holding the neutral button
     if (gear == GEAR_NEUT) {
       queue_nt = 0;
@@ -341,6 +336,11 @@ void process_downshift_press(void) {
       queue_nt = 1;
       queue_up = 0;
       queue_dn = 0;
+    } else if (gear == GEAR_FAIL) {
+      queue_nt = 1;
+      queue_up = 0;
+      queue_dn = 0;
+      gear_fail_nt_shift = SHIFT_ENUM_DN;
     } else {
       queue_dn = 1;
       lockout_tmr = millis;
@@ -352,7 +352,7 @@ void process_downshift_press(void) {
       return;
     }
 
-    if (queue_dn + 1 < gear) {
+    if (gear == GEAR_FAIL || queue_dn + 1 < gear) {
       queue_dn++;
       lockout_tmr = millis;
     }
@@ -371,7 +371,7 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
   // Prevent shifting up past neutral on low voltage
   if (gear == 1 && shift_enum == SHIFT_ENUM_UP) {
     if (bat_volt != 0 && bat_volt < LOW_VOLT) {
-      send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_LOWVOLT);
+      send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_LOWVOLT);
       return 0;
     }
   }
@@ -379,20 +379,20 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
   // Prevent shifting down past neutral on low voltage
   if (gear == 2 && shift_enum == SHIFT_ENUM_DN) {
     if (bat_volt != 0 && bat_volt < LOW_VOLT) {
-      send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_LOWVOLT);
+      send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_LOWVOLT);
       return 0;
     }
   }
   
   // Prevent any shifting on very low voltage
   if (bat_volt != 0 && bat_volt < LOWER_VOLT) {
-    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_LOWERVOLT);
+    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_LOWERVOLT);
     return 0;
   }
 
   // Prevent shifting while the engine is off
   if (!ENG_ON) {
-    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_ENGOFF);
+    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_ENGOFF);
     return 0;
   }
 
@@ -400,19 +400,19 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
 
   // Prevent shifting past 6th gear
   if (gear == 6 && shift_enum == SHIFT_ENUM_UP) {
-    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_SHIFTPAST);
+    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_SHIFTPAST);
     return 0;
   }
 
   // Prevent shifting past 1st gear
   if (gear == 1 && shift_enum == SHIFT_ENUM_DN) {
-    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_SHIFTPAST);
+    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_SHIFTPAST);
     return 0;
   }
 
   // Prevent shifting into neutral from anything other than 1st or 2nd
   if (shift_enum == SHIFT_ENUM_NT && !(gear == 1 || gear == 2)) {
-    send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_BADNEUT);
+    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_BADNEUT);
     return 0;
   }
 
@@ -533,11 +533,11 @@ void do_shift(uint8_t shift_enum) {
         if (SHIFT_UP && retry_up > MAX_RETRY) {
           queue_up = 0;
           retry_up = 0;
-          send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_MAXRETRY);
+          send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
         } else if (SHIFT_DN && retry_dn > MAX_RETRY) {
           queue_dn = 0;
           retry_dn = 0;
-          send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_MAXRETRY);
+          send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
         }
 
         return;
@@ -606,7 +606,7 @@ void do_shift(uint8_t shift_enum) {
     if (retry_nt > MAX_RETRY) {
       queue_nt = 0;
       retry_nt = 0;
-      send_errno_CAN_msg(PADDLE0_ID, ERR_PDL_MAXRETRY);
+      send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
     }
   }
 }
@@ -621,7 +621,7 @@ void sample_gear(void) {
     uint16_t gear_samp = sample(ADC_GEAR_CHN);
     
     //TODO: Apply linearization of sensor and CAN scalars to set value
-    gear = GEAR_NEUT;
+    gear = GEAR_FAIL;
 
     gear_samp_tmr = millis;
   }
@@ -664,7 +664,7 @@ void send_diag_can(void) {
     data[QUEUE_UP_BYTE] = queue_up;
     data[QUEUE_DN_BYTE] = queue_dn;
     
-    ECANSendMessage(PADDLE0_ID, data, 8, ECAN_TX_FLAGS);
+    ECANSendMessage(PADDLE_ID + 0x0, data, 8, ECAN_TX_FLAGS);
     diag_send_tmr = millis;
   }
 }

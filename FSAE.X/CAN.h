@@ -45,6 +45,7 @@
 #define ENG_TEMP_BYTE       0
 #define OIL_TEMP_BYTE       2
 #define OIL_PRES_BYTE       2
+#define THROTTLE_POS_BYTE   2
 
 // From PaddleShifting
 #define GEAR_BYTE           4
