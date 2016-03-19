@@ -390,11 +390,13 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
     return 0;
   }
 
+  /*
   // Prevent shifting while the engine is off
   if (!ENG_ON) {
     send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_ENGOFF);
     return 0;
   }
+   */
 
   //TODO: Check for over/under rev
 
@@ -474,7 +476,7 @@ void do_shift(uint8_t shift_enum) {
     if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
         (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
       //TODO: Finalize this
-      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10;
+      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
       ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
       ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
     }
@@ -652,7 +654,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
     if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
         (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
       //TODO: Finalize this
-      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10;
+      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
       ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
       ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
     }

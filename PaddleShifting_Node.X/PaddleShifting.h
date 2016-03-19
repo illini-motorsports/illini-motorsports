@@ -27,7 +27,7 @@
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
 
 // Timing definitions (ms)
-#define LOCKOUT_DUR    500 //TODO: Tune this value
+#define LOCKOUT_DUR    200 //TODO: Tune this value
 #define DIAG_MSG_SEND  10
 #define TEMP_SAMP_INTV 333
 #define GEAR_SAMP_INTV 10
@@ -35,7 +35,7 @@
 #define RELAX_WAIT     50  //TODO: Tune this value
 #define IGN_CUT_WAIT   10  //TODO: Tune this value
 #define UP_SHIFT_DUR   100 //TODO: Tune this value
-#define DN_SHIFT_DUR   100 //TODO: Tune this value
+#define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
 
 // Definitions for error conditions

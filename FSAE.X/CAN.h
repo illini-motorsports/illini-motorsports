@@ -83,22 +83,22 @@
 /**
  * ADL definitions
  */
-#define ADL_IDX_1_3  0
-#define ADL_IDX_4_6  1
-#define ADL_IDX_7_9  2
-#define ADL_IDX_10   3
-#define ADL_IDX_BYTE 0
-#define ADL1_BYTE    2
-#define ADL2_BYTE    4
-#define ADL3_BYTE    6
-#define ADL4_BYTE    2
-#define ADL5_BYTE    4
-#define ADL6_BYTE    6
-#define ADL7_BYTE    2
-#define ADL8_BYTE    4
-#define ADL9_BYTE    6
-#define ADL10_BYTE   2
-#define ADL11_BYTE   4
-#define ADL12_BYTE   6
+#define ADL_IDX_1_3   0
+#define ADL_IDX_4_6   1
+#define ADL_IDX_7_9   2
+#define ADL_IDX_10_12 3
+#define ADL_IDX_BYTE  0
+#define ADL1_BYTE     2
+#define ADL2_BYTE     4
+#define ADL3_BYTE     6
+#define ADL4_BYTE     2
+#define ADL5_BYTE     4
+#define ADL6_BYTE     6
+#define ADL7_BYTE     2
+#define ADL8_BYTE     4
+#define ADL9_BYTE     6
+#define ADL10_BYTE    2
+#define ADL11_BYTE    4
+#define ADL12_BYTE    6
 
 #endif /* CAN_H */

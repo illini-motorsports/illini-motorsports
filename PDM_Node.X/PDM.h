@@ -74,8 +74,8 @@
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)
 #define ON_SW     (SW2_PORT)
-#define ACT_UP_SW (!SW3_PORT)
-#define ACT_DN_SW (!SW4_PORT)
+#define ACT_UP_SW (SW3_PORT)
+#define ACT_DN_SW (SW4_PORT)
 #define KILL_SW   (SW5_PORT)
 
 // Misc state definitions
