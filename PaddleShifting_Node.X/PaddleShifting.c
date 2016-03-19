@@ -154,7 +154,7 @@ void main(void) {
 
   // Programmable termination
   TERM_TRIS = OUTPUT;
-  TERM_LAT = 1; //TODO: Terminating
+  TERM_LAT = 0; //Not terminating
 
   ECANInitialize();
 
@@ -433,9 +433,16 @@ void do_shift(uint8_t shift_enum) {
 
   uint32_t ign_wait_tmr;
 
-  // Store the target gear
   uint8_t orig_gear = gear;
   uint8_t gear_target;
+
+  // Fall back to gear sensor failure mode if necessary
+  if (gear == GEAR_FAIL) {
+    do_shift_gear_fail(shift_enum);
+    return;
+  }
+
+  // Store the target gear
   if (SHIFT_UP) {
     gear_target = gear + 1;
   } else if (SHIFT_DN) {
@@ -468,7 +475,7 @@ void do_shift(uint8_t shift_enum) {
         (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
       //TODO: Finalize this
       ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10;
-      ((int16_t*) data)[ADL10_BYTE / 2] = 1;
+      ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
       ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
     }
 
@@ -500,12 +507,6 @@ void do_shift(uint8_t shift_enum) {
           ACT_DN_LAT = 0;
           retry_dn = 0;
         }
-
-        // Send restore ignition message to ECU
-        //TODO: Finalize this
-        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10;
-        ((int16_t*) data)[ADL10_BYTE / 2] = 0;
-        ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
         
         relax_wait();
 
@@ -607,6 +608,135 @@ void do_shift(uint8_t shift_enum) {
       queue_nt = 0;
       retry_nt = 0;
       send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
+    }
+  }
+}
+
+/**
+ * void do_shift_gear_fail(uint8_t shift_enum)
+ * 
+ * Performs the requested shift sequence in gear sensor
+ * failure mode.
+ * 
+ * TODO: Combine this with normal do_shift function?
+ * 
+ * @param shift_enum The type of requested shift
+ */
+void do_shift_gear_fail(uint8_t shift_enum) {
+  const uint8_t SHIFT_UP = shift_enum == SHIFT_ENUM_UP;
+  const uint8_t SHIFT_DN = shift_enum == SHIFT_ENUM_DN;
+  const uint8_t SHIFT_NT = shift_enum == SHIFT_ENUM_NT;
+
+  uint32_t ign_wait_tmr;
+
+  if (SHIFT_UP || SHIFT_DN) {
+    /**
+     * Perform an upshift/downshift
+     */
+
+    if (!check_shift_conditions(shift_enum)) {
+      switch (shift_enum) { 
+        case SHIFT_ENUM_UP:
+          queue_up = 0;
+          retry_up = 0;
+          break;
+        case SHIFT_ENUM_DN:
+          queue_dn = 0;
+          retry_dn = 0;
+          break;
+      }
+      return;
+    }
+
+    // Send ignition cut message to ECU if required
+    if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
+        (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
+      //TODO: Finalize this
+      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10;
+      ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
+      ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
+    }
+
+    // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
+    ign_wait_tmr = millis;
+    while (millis - ign_wait_tmr < IGN_CUT_WAIT) {
+      sample_gear();
+      sample_temp();
+      send_diag_can();
+    }
+
+    // Fire actuator
+    if (SHIFT_UP) {
+      ACT_UP_LAT = 1; 
+    } else if (SHIFT_DN) {
+      ACT_DN_LAT = 1;
+    }
+    act_tmr = millis;
+
+    while (1) {
+      if ((SHIFT_UP && millis - act_tmr >= UP_SHIFT_DUR) ||
+          (SHIFT_DN && millis - act_tmr >= DN_SHIFT_DUR)) {
+        // Relax actuator
+        if (SHIFT_UP) {
+          ACT_UP_LAT = 0; 
+          retry_up = 0;
+        } else if (SHIFT_DN){
+          ACT_DN_LAT = 0;
+          retry_dn = 0;
+        }
+        
+        relax_wait();
+
+        // Decrement queued shifts value
+        if (SHIFT_UP) {
+          queue_up--;
+        } else if (SHIFT_DN){
+          queue_dn--;
+        }
+
+        return;
+      }
+
+      // Also do main loop functions during "busy" loop
+      sample_gear();
+      sample_temp();
+      send_diag_can();
+    }
+  } else if (SHIFT_NT) {
+    /**
+     * Perform a neutral shift
+     */
+
+    if (!check_shift_conditions(shift_enum)) {
+      queue_nt = 0;
+      retry_nt = 0;
+      return;
+    }
+
+    // Fire actuator
+    if (gear_fail_nt_shift == SHIFT_ENUM_UP) {
+      ACT_UP_LAT = 1; 
+    } else if (gear_fail_nt_shift == SHIFT_ENUM_DN) {
+      ACT_DN_LAT = 1; 
+    }
+    act_tmr = millis;
+    
+    while (1) {
+      if (millis - act_tmr >= NT_SHIFT_DUR) {
+        // Relax actuator
+        ACT_DN_LAT = 0; 
+        ACT_UP_LAT = 0;
+        relax_wait();
+        
+        retry_nt = 0;
+        queue_nt = 0;
+        return;
+      }
+      
+      // Do main loop functions while waiting
+      sample_gear();
+      sample_temp();
+      send_diag_can();
     }
   }
 }

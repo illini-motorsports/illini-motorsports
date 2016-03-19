@@ -31,9 +31,12 @@
 #define DIAG_MSG_SEND  10
 #define TEMP_SAMP_INTV 333
 #define GEAR_SAMP_INTV 10
-#define MAX_SHIFT_DUR  100 //TODO: Tune this value
+#define MAX_SHIFT_DUR  250 //TODO: Tune this value
 #define RELAX_WAIT     50  //TODO: Tune this value
 #define IGN_CUT_WAIT   10  //TODO: Tune this value
+#define UP_SHIFT_DUR   100 //TODO: Tune this value
+#define DN_SHIFT_DUR   100 //TODO: Tune this value
+#define NT_SHIFT_DUR   50  //TODO: Tune this value
 
 // Definitions for error conditions
 //TODO: Decide on these values
@@ -45,6 +48,9 @@
 // Thresholds
 #define RPM_ON_THRESHOLD 600.0 // rpm
 #define MAX_RETRY        2
+
+// Miscellaneous definitions
+#define IGN_CUT_SPOOF 10000 // Value for "spoofed" gear shift force sensor
 
 // Definitions for gear position variable
 #define GEAR_NEUT 0
@@ -93,6 +99,7 @@ void process_upshift_press(void);
 void process_downshift_press(void);
 uint8_t check_shift_conditions(uint8_t shift_enum);
 void do_shift(uint8_t shift_enum);
+void do_shift_gear_fail(uint8_t shift_enum);
 void sample_gear(void);
 void sample_temp(void);
 void send_diag_can(void);
