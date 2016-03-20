@@ -12,8 +12,8 @@
 volatile uint32_t millis = 0;
 
 // Declare CAN Vars;
-volatile double eng_rpm, bat_volt_ecu, eng_temp, oil_temp, oil_pres;
-volatile uint8_t gear_pos;
+volatile double eng_rpm = 0, bat_volt_ecu = 0, eng_temp = 0, oil_temp = 0, oil_pres = 0;
+volatile uint8_t gear_pos = 0;
 
 void main(void) {
   init_general();// Set general runtime configuration bits
