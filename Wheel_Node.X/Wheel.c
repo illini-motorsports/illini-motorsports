@@ -11,14 +11,19 @@
 // Count number of milliseconds since start of code execution
 volatile uint32_t millis = 0;
 
+// Declare CAN Vars;
+volatile double eng_rpm, bat_volt_ecu, eng_temp, oil_temp, oil_pres;
+volatile uint8_t gear_pos;
+
 void main(void) {
   init_general();// Set general runtime configuration bits
   init_gpio_pins();// Set all I/O pins to low outputs
   init_oscillator();// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
   init_spi();// Initialize SPI interface
+  init_can();
   STI();// Enable interrupts
-
+  
   LCD_CS_TRIS = OUTPUT;
   LCD_CS_LAT = 1;
   LCD_RST_TRIS = OUTPUT;
@@ -26,37 +31,27 @@ void main(void) {
   TRISBbits.TRISB7 = OUTPUT;
   LATBbits.LATB6 = 1;
   LATBbits.LATB7 = 0;
-
+  
   reset();
   initialize();
-
+  
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
   PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
   PWM1out(255);
-
+  
   while(1){
-	  double i = 0;
-	  for(i = 0;i<100;i+=11.1){
-  		fillScreen(RA8875_WHITE);
-  		sevenSegmentDigit(190,20,100,RA8875_BLACK,i/10);
-  		sevenSegmentDecimal(10,25,20,3,1,RA8875_BLACK,i);
-  		sevenSegmentDecimal(10,100,20,3,1,RA8875_BLACK,i);
-  		sevenSegmentDecimal(10,175,20,3,1,RA8875_BLACK,i);
-  		sevenSegmentDecimal(400,25,20,3,1,RA8875_BLACK,i);
-  		sevenSegmentDecimal(400,100,20,3,1,RA8875_BLACK,i);
-  		sevenSegmentDecimal(400,175,20,3,1,RA8875_BLACK,i);
-		delay(300);
-	  }
+	drawRaceScreen(oil_temp, oil_pres, eng_temp, gear_pos);
+  	delay(500);
   }
-
+  
   while(1){
-	  LATBbits.LATB6 = 0;
-	  LATBbits.LATB7 = 1;
-	  delay(100);
-	  LATBbits.LATB6 = 1;
-	  LATBbits.LATB7 = 0;
-	  delay(100);
+    LATBbits.LATB6 = 0;
+    LATBbits.LATB7 = 1;
+    delay(100);
+    LATBbits.LATB6 = 1;
+    LATBbits.LATB7 = 0;
+    delay(100);
   }
 }
 
@@ -66,7 +61,7 @@ void main(void) {
  * Fires once every millisecond.
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
-
+  
   millis++;// Increment millis count
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
@@ -74,4 +69,47 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 void delay(uint32_t num) {
   uint32_t start = millis;
   while (millis - start < num);
+}
+
+/**
+ * CAN1 Interrupt Handler
+ */
+void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) {
+  if (C1INTbits.RBIF) {
+    CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
+  }
+  
+  if (C1INTbits.RBOVIF) {
+    CAN_rx_ovf++;
+  }
+  
+  IFS4CLR = _IFS4_CAN1IF_MASK; // Clear CAN1 Interrupt Flag
+}
+
+void process_CAN_msg(CAN_message msg){
+  
+  switch (msg.id) {
+    case MOTEC_ID + 0:
+      eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
+          msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
+      bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
+          msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
+
+      break;
+    case MOTEC_ID + 1:
+      eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) |
+          msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
+      oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) |
+          msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
+
+      break;
+    case MOTEC_ID + 2:
+      oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
+          msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
+
+      break;
+	case PADDLE_ID:
+		gear_pos = msg.data[GEAR_BYTE];
+		break;
+  }
 }

@@ -11,6 +11,8 @@
 
 #include <sys/types.h>
 #include "../FSAE_32/FSAE_config_32.h"
+#include "../FSAE_32/FSAE_CAN_32.h"
+#include "../FSAE.X/CAN.h"
 #include "RA8875_driver.h"
 
 // Enable programmable termination
@@ -27,5 +29,6 @@
 // Function definitions
 void main(void);
 void delay(uint32_t num);
+void process_CAN_msg(CAN_message msg);
 
 #endif /* WHEEL_H */

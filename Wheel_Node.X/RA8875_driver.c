@@ -16,12 +16,37 @@ void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t fg, ui
   int mid = (w / 2) + x;
   int i = 0;
   for(;i<140;i+=20){
-  fillTriangle(x, y + h - (w/2) - i, x + w, y + h - (w/2) - i, mid, y + h - i, fg);
+	fillTriangle(x, y + h - (w/2) - i, x + w, y + h - (w/2) - i, mid, y + h - i, fg);
   fillTriangle(x, y + h - (w/2) - 10 - i, x + w, y + h - (w/2) - 10 - i, mid, y + h - 10 - i, bg);
   }
   fillRect(x-1, y-1, 6, h + 1, bg);
   fillRect(x+w-10, y-1, 11, h + 1, bg);
 }
+
+void drawRaceScreen(double oil_temp, double oil_pres, double water_temp, int gear_pos){
+  	graphicsMode();
+
+	fillScreen(RA8875_WHITE);
+	// Big Gear	 
+    sevenSegmentDigit(200,20,75,RA8875_BLACK,gear_pos);
+	// Oil Pressure
+	sevenSegmentMultDigit(10, 50, 20, 2, RA8875_BLACK, (uint16_t) (oil_pres+0.5));
+  	// Oil Temp
+	sevenSegmentMultDigit(10, 175, 20, 3, RA8875_BLACK, (uint16_t) (oil_temp+0.5));
+	// Water Temp
+	sevenSegmentMultDigit(400, 100, 20, 3, RA8875_BLACK, (uint16_t) (water_temp+0.5));
+
+  textMode();
+  textTransparent(RA8875_BLACK);
+  textEnlarge(1);
+  textSetCursor(10, 10);
+  textWrite("OIL PRES", 8);
+  textSetCursor(10, 145);
+  textWrite("OIL TEMP", 8);
+  textSetCursor(350, 50);
+  textWrite("WTR TEMP", 8);
+  graphicsMode();
+  }
 
 // Displays a decimal number using the seven segment helper functions
 void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t decDigits, uint16_t color, double number){
@@ -86,54 +111,86 @@ void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bM
 	uint8_t barHeight = (h - (3*boxD))/2;
 	uint8_t fhOffset = boxD + barHeight;
 	uint8_t shOffset = (2*boxD) + (2*barHeight);
-
+  
 	/*
-	 * Horizontal Bars
-	 */
+   * Horizontal Bars
+   */
 	if(bMask & 0x40){ //First Bit
 		fillRect(x + boxD, y, w - (2*boxD), boxD, color);
-		fillTriangle(x + boxD, y, x + hBoxD, y + hBoxD, x + boxD, y + boxD, color);
-		fillTriangle(x + w - boxD, y, x + w - hBoxD, y + hBoxD, x + w - boxD, y + boxD, color);
+	
+		fillTriangle(x + boxD, y, x + hBoxD, y + hBoxD, x + boxD, y + boxD, 
+			color);
+	
+		fillTriangle(x + w - boxD, y, x + w - hBoxD, y + hBoxD, x + w - boxD, 
+			y + boxD, color);
 	}
-
+  
 	if(bMask & 0x01){ // Second Bit
 		fillRect(x + boxD, y + boxD + barHeight, w - (2*boxD), boxD, color);
-		fillTriangle(x + boxD, y + fhOffset, x + hBoxD, y + hBoxD + fhOffset, x + boxD, y + boxD + fhOffset, color);
-		fillTriangle(x + w - boxD, y + fhOffset, x + w - hBoxD, y + hBoxD + fhOffset, x + w - boxD, y + boxD + fhOffset, color);
+	
+		fillTriangle(x + boxD, y + fhOffset, x + hBoxD, y + hBoxD + fhOffset, 
+			x + boxD, y + boxD + fhOffset, color);
+	
+		fillTriangle(x + w - boxD, y + fhOffset, x + w - hBoxD, y + hBoxD + fhOffset, 
+			x + w - boxD, y + boxD + fhOffset, color);
 	}
-
+  
 	if(bMask & 0x08){ // Fourth Bit
-		fillRect(x + boxD, y + (2*boxD) + (2*barHeight), w - (2*boxD), boxD, color);
-		fillTriangle(x + boxD, y + shOffset, x + hBoxD, y + hBoxD + shOffset, x + boxD, y + boxD + shOffset, color);
-		fillTriangle(x + w - boxD, y + shOffset, x + w - hBoxD, y + hBoxD + shOffset, x + w - boxD, y + boxD + shOffset, color);
-		}
-
+		fillRect(x + boxD, y + (2*boxD) + (2*barHeight), w - (2*boxD), boxD, 
+			color);
+	
+		fillTriangle(x + boxD, y + shOffset, x + hBoxD, y + hBoxD + shOffset, 
+			x + boxD, y + boxD + shOffset, color);
+	
+		fillTriangle(x + w - boxD, y + shOffset, x + w - hBoxD, y + hBoxD + shOffset, 
+			x + w - boxD, y + boxD + shOffset, color);
+  }
+  
 	/*
-	 * Vertical Bars
-	 */
+   * Vertical Bars
+   */
 	if(bMask & 0x02){ // Sixth Bit
 		fillRect(x, y + boxD, boxD, barHeight, color);
-		fillTriangle(x, y + boxD, x + boxD, y + boxD, x + hBoxD, y + hBoxD, color);
-		fillTriangle(x, y + boxD + barHeight, x + boxD, y + boxD + barHeight, x + hBoxD, y + hBoxD + boxD + barHeight, color);
-		}
-
+	
+		fillTriangle(x, y + boxD, x + boxD, y + boxD, x + hBoxD, y + hBoxD, 
+			color);
+	
+		fillTriangle(x, y + boxD + barHeight, x + boxD, y + boxD + barHeight, 
+			x + hBoxD, y + hBoxD + boxD + barHeight, color);
+  }
+  
 	if(bMask & 0x20){ // Second Bit
 		fillRect(x + w - boxD, y + boxD, boxD, barHeight, color);
-		fillTriangle(x + w - boxD, y + boxD, x + w, y + boxD, x + w - hBoxD, y + hBoxD, color);
-		fillTriangle(x + w - boxD, y + boxD + barHeight, x + w, y + boxD + barHeight, x + w - hBoxD, y + hBoxD + boxD + barHeight, color);
+	
+		fillTriangle(x + w - boxD, y + boxD, x + w, y + boxD, x + w - hBoxD, 
+			y + hBoxD, color);
+	
+		fillTriangle(x + w - boxD, y + boxD + barHeight, x + w, y + boxD + barHeight, 
+			x + w - hBoxD, y + hBoxD + boxD + barHeight, color);
 	}
-
+  
 	if(bMask & 0x04){ // Fifth Bit
 		fillRect(x, y + boxD + boxD + barHeight, boxD, barHeight, color);
-		fillTriangle(x, y + boxD + fhOffset, x + boxD, y + boxD + fhOffset, x + hBoxD, y + hBoxD + fhOffset, color);
-		fillTriangle(x, y + boxD + barHeight + fhOffset, x + boxD, y + boxD + barHeight + fhOffset, x + hBoxD, y + hBoxD + boxD + barHeight + fhOffset, color);
-		}
-
+	
+		fillTriangle(x, y + boxD + fhOffset, x + boxD, y + boxD + fhOffset, 
+			x + hBoxD, y + hBoxD + fhOffset, color);
+	
+		fillTriangle(x, y + boxD + barHeight + fhOffset, 
+			x + boxD, y + boxD + barHeight + fhOffset, x + hBoxD, 
+			y + hBoxD + boxD + barHeight + fhOffset, color);
+  }
+  
 	if(bMask & 0x10){ // Third Bit
-		fillRect(x + w - boxD, y + boxD + boxD + barHeight, boxD, barHeight, color);
-		fillTriangle(x + w - boxD, y + boxD + fhOffset, x + w, y + boxD + fhOffset, x + w - hBoxD, y + hBoxD + fhOffset, color);
-		fillTriangle(x + w - boxD, y + boxD + barHeight + fhOffset, x + w, y + boxD + barHeight + fhOffset, x + w - hBoxD, y + hBoxD + boxD + barHeight + fhOffset, color);
-		}
+		fillRect(x + w - boxD, y + boxD + boxD + barHeight, boxD, barHeight, 
+			color);
+	
+		fillTriangle(x + w - boxD, y + boxD + fhOffset, x + w, y + boxD + fhOffset, 
+			x + w - hBoxD, y + hBoxD + fhOffset, color);
+	
+		fillTriangle(x + w - boxD, y + boxD + barHeight + fhOffset, x + w, 
+			y + boxD + barHeight + fhOffset, x + w - hBoxD, 
+			y + hBoxD + boxD + barHeight + fhOffset, color);
+  }
 }
 
 /*
@@ -148,22 +205,22 @@ void reset() {
 
 void initialize(void) {
   TRISFbits.TRISF12 = INPUT;
-
+  
   /* Initialize PLL */
   PLLinit();
   writeReg(RA8875_SYSR, RA8875_SYSR_16BPP | RA8875_SYSR_MCU8);
-
+  
   /* Timing values */
   writeReg(RA8875_PCSR, RA8875_PCSR_PDATL | RA8875_PCSR_4CLK);// Pixclk
   delay(1);
-
+  
   /* Horizontal settings registers */
   writeReg(RA8875_HDWR, (WIDTH / 8) - 1);// H width
   writeReg(RA8875_HNDFTR, RA8875_HNDFTR_DE_HIGH);
   writeReg(RA8875_HNDR, 1);// H non-display
   writeReg(RA8875_HSTR, 0);// Hsync start
   writeReg(RA8875_HPWR, RA8875_HPWR_LOW + 5);// HSync pulse width
-
+  
   /* Vertical settings registers */
   writeReg(RA8875_VDHR0, (uint16_t) (HEIGHT - 1) & 0xFF);
   writeReg(RA8875_VDHR1, (uint16_t) (HEIGHT - 1) >> 8);
@@ -172,19 +229,19 @@ void initialize(void) {
   writeReg(RA8875_VSTR0, 7);// Vsync start position
   writeReg(RA8875_VSTR1, 0);
   writeReg(RA8875_VPWR, RA8875_VPWR_LOW + 9);// Vsync pulse width
-
+  
   /* Set active window X */
   writeReg(RA8875_HSAW0, 0);// horizontal start point
   writeReg(RA8875_HSAW1, 0);
   writeReg(RA8875_HEAW0, (uint16_t) (WIDTH - 1) & 0xFF);// horizontal end point
   writeReg(RA8875_HEAW1, (uint16_t) (WIDTH - 1) >> 8);
-
+  
   /* Set active window Y */
   writeReg(RA8875_VSAW0, 0);// vertical start point
   writeReg(RA8875_VSAW1, 0);
   writeReg(RA8875_VEAW0, (uint16_t) (HEIGHT - 1) & 0xFF);// horizontal end point
   writeReg(RA8875_VEAW1, (uint16_t) (HEIGHT - 1) >> 8);
-
+  
   /* Clear the entire window */
   writeReg(RA8875_MCLR, RA8875_MCLR_START | RA8875_MCLR_FULL);
   delay(500);
@@ -286,16 +343,16 @@ void fillCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t short
 void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
   // Begin Coordinates
   writeCoordinates(RA8875_RECT_X0_0, x0, y0);
-
+  
   // End Coordinates Coordinates
   writeCoordinates(RA8875_RECT_X1_0, x1, y1);
-
+  
   /* Set Color */
   setColor(color, 1);
-
+  
   /* Draw! */
   writeReg(RA8875_DCR, 0x80);
-
+  
   /* Wait for the command to finish */
   waitPoll(RA8875_DCR, RA8875_DCR_LINESQUTRI_STATUS);
 }
@@ -303,13 +360,13 @@ void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
 void rectHelper(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint8_t filled) {
   // Begin Coordinates
   writeCoordinates(RA8875_RECT_X0_0, x, y);
-
+  
   // End Coordinates Coordinates
   writeCoordinates(RA8875_RECT_X1_0, w, h);
-
+  
   /* Set Color */
   setColor(color, 1);
-
+  
   /* Draw! */
   writeCommand(RA8875_DCR);
   if (filled) {
@@ -317,20 +374,20 @@ void rectHelper(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint
   } else {
     writeData(0x90);
   }
-
+  
   /* Wait for the command to finish */
   waitPoll(RA8875_DCR, RA8875_DCR_LINESQUTRI_STATUS);
 }
 
 void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t filled) {
   writeCoordinates(RA8875_CIRC_X_0, x, y);
-
+  
   /* Set Radius */
   writeReg(RA8875_CIRC_RAD, r);
-
+  
   /* Set Color */
   setColor(color, 1);
-
+  
   /* Draw! */
   writeCommand(RA8875_DCR);
   if (filled) {
@@ -338,25 +395,25 @@ void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t fille
   } else {
     writeData(RA8875_DCR_CIRCLE_START | RA8875_DCR_NOFILL);
   }
-
+  
   /* Wait for the command to finish */
   waitPoll(RA8875_DCR, RA8875_DCR_CIRCLE_STATUS);
 }
 
 void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, uint8_t filled) {
-
+  
   /* Set Point 0 */
   writeCoordinates(0x91, x0, y0);
-
+  
   /* Set Point 1 */
   writeCoordinates(0x95, x1, y1);
-
+  
   /* Set Point 2 */
   writeCoordinates(0xA9, x2, y2);
-
+  
   /* Set Color */
   setColor(color, 1);
-
+  
   /* Draw! */
   writeCommand(RA8875_DCR);
   if (filled) {
@@ -364,22 +421,22 @@ void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, 
   } else {
     writeData(0x81);
   }
-
+  
   /* Wait for the command to finish */
   waitPoll(RA8875_DCR, RA8875_DCR_LINESQUTRI_STATUS);
 }
 
 void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint16_t color, uint8_t filled) {
-
+  
   /* Set Center Point */
   writeCoordinates(0xA5, xCenter, yCenter);
-
+  
   /* Set Long and Short Axis */
   writeCoordinates(0xA1, longAxis, shortAxis);
-
+  
   /* Set Color */
   setColor(color, 1);
-
+  
   /* Draw! */
   writeCommand(0xA0);
   if (filled) {
@@ -387,7 +444,7 @@ void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t s
   } else {
     writeData(0x80);
   }
-
+  
   /* Wait for the command to finish */
   waitPoll(RA8875_ELLIPSE, RA8875_ELLIPSE_STATUS);
 }
@@ -395,13 +452,13 @@ void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t s
 void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color, uint8_t filled) {
   /* Set Center Point */
   writeCoordinates(0xA5, xCenter, yCenter);
-
+  
   /* Set Long and Short Axis */
   writeCoordinates(0xA1, longAxis, shortAxis);
-
+  
   /* Set Color */
   setColor(color, 1);
-
+  
   /* Draw! */
   writeCommand(0xA0);
   if (filled) {
@@ -409,7 +466,7 @@ void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t sho
   } else {
     writeData(0x90 | (curvePart & 0x03));
   }
-
+  
   /* Wait for the command to finish */
   waitPoll(RA8875_ELLIPSE, RA8875_ELLIPSE_STATUS);
 }
@@ -424,7 +481,7 @@ void textMode(void) {
   uint8_t temp = readData();
   temp |= RA8875_MWCR0_TXTMODE;// Set bit 7
   writeData(temp);
-
+  
   /* Select the internal (ROM) font */
   writeCommand(0x21);
   temp = readData();
@@ -440,10 +497,10 @@ void textSetCursor(uint16_t x, uint16_t y) {
 void textColor(uint16_t foreColor, uint16_t bgColor) {
   /* Set Fore Color */
   setColor(foreColor, 1);
-
+  
   /* Set Background Color */
   setColor(bgColor, 0);
-
+  
   /* Clear transparency flag */
   writeCommand(0x22);
   uint8_t temp = readData();
@@ -454,7 +511,7 @@ void textColor(uint16_t foreColor, uint16_t bgColor) {
 void textTransparent(uint16_t foreColor) {
   /* Set Fore Color */
   setColor(foreColor, 1);
-
+  
   /* Set transparency flag */
   writeCommand(0x22);
   uint8_t temp = readData();
@@ -464,7 +521,7 @@ void textTransparent(uint16_t foreColor) {
 
 void textEnlarge(uint8_t scale) {
   if (scale > 3) scale = 3;
-
+  
   /* Set font size flags */
   writeCommand(0x22);
   uint8_t temp = readData();
@@ -472,7 +529,7 @@ void textEnlarge(uint8_t scale) {
   temp |= 0x5;
   temp |= 0b01000000;
   writeData(temp);
-
+  
   _textScale = scale;
 }
 
@@ -506,7 +563,7 @@ void writeData(uint8_t d) {
 	SPI_send(RA8875_DATAWRITE);
 	SPI_send(d);
 	LCD_CS_LAT = 1;
-
+  
 }
 
 void writeCommand(uint8_t d) {
@@ -563,7 +620,7 @@ void writeCoordinates(uint8_t s_reg, uint16_t x, uint16_t y) {
   /* Set X */
   writeReg(s_reg, x);
   writeReg(s_reg + 1, x >> 8);
-
+  
   /* Set Y */
   writeReg(s_reg + 2, y);
   writeReg(s_reg + 3, y >> 8);
