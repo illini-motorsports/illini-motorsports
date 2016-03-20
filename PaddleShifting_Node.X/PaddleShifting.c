@@ -478,7 +478,7 @@ void do_shift(uint8_t shift_enum) {
       //TODO: Finalize this
       ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
       ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
-      ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
+      ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
     }
 
     // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
@@ -509,6 +509,11 @@ void do_shift(uint8_t shift_enum) {
           ACT_DN_LAT = 0;
           retry_dn = 0;
         }
+
+        // Send ignition cut finished message to ECU
+        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
+        ((int16_t*) data)[ADL10_BYTE / 2] = 0;
+        ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
         
         relax_wait();
 
@@ -531,6 +536,12 @@ void do_shift(uint8_t shift_enum) {
           ACT_DN_LAT = 0;
           retry_dn++;
         }
+        
+        // Send ignition cut finished message to ECU
+        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
+        ((int16_t*) data)[ADL10_BYTE / 2] = 0;
+        ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
+
         relax_wait();
 
         if (SHIFT_UP && retry_up > MAX_RETRY) {
@@ -651,13 +662,13 @@ void do_shift_gear_fail(uint8_t shift_enum) {
     }
 
     // Send ignition cut message to ECU if required
-    if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
-        (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
+    //if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
+    //    (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
       //TODO: Finalize this
       ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
       ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
-      ECANSendMessage(ADL_ID, data, 8, ECAN_TX_FLAGS);
-    }
+      ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
+    //}
 
     // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
     ign_wait_tmr = millis;
@@ -686,6 +697,11 @@ void do_shift_gear_fail(uint8_t shift_enum) {
           ACT_DN_LAT = 0;
           retry_dn = 0;
         }
+
+        // Send ignition cut finished message to ECU
+        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
+        ((int16_t*) data)[ADL10_BYTE / 2] = 0;
+        ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
         
         relax_wait();
 

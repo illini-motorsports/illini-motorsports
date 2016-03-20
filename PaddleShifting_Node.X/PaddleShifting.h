@@ -32,9 +32,9 @@
 #define TEMP_SAMP_INTV 333
 #define GEAR_SAMP_INTV 10
 #define MAX_SHIFT_DUR  250 //TODO: Tune this value
-#define RELAX_WAIT     50  //TODO: Tune this value
+#define RELAX_WAIT     20  //TODO: Tune this value
 #define IGN_CUT_WAIT   10  //TODO: Tune this value
-#define UP_SHIFT_DUR   100 //TODO: Tune this value
+#define UP_SHIFT_DUR   150 //TODO: Tune this value
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
 
