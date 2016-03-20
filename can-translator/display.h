@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2016-03-15
+ * @date Modified: 2016-03-20
  */
 #ifndef APP_DISPLAY_H
 #define APP_DISPLAY_H
@@ -101,25 +101,6 @@ class AppDisplay : public QWidget {
     void addFileProgress(QString filename);
 
     /**
-     * Scans the grid of checkboxes to see which channels the user wants
-     * to convert, then returns this info.
-     *
-     * @returns A map of message IDs to arrays of bools that contains info about which
-     *     channels the user selected to be converted.
-     */
-    map<uint16_t, vector<bool> > getEnabled();
-
-    /**
-     * Sets all channel checkboxes as checked.
-     */
-    void selectAll();
-
-    /**
-     * Sets all channel checkboxes as not checked.
-     */
-    void selectNone();
-
-    /**
      * Displays the error message in a critical error message box.
      *
      * @param error The error message to display.
@@ -143,26 +124,11 @@ class AppDisplay : public QWidget {
      */
     void readData(bool isVectorFile);
 
-    /**
-     * Sets all channel checkboxes as either checked or not checked.
-     *
-     * @param checked Whether to set the boxes as checked or not checked.
-     */
-    void selectBoxes(bool checked);
-
-    /**
-     * Sets all channel checkboxes as either enabled or not enabled.
-     *
-     * @param enabled Whether to set the boxes as enabled or not enabled.
-     */
-    void enableBoxes(bool enabled);
-
     AppConfig config;
     AppData data;
 
     QVBoxLayout layout;
     QVBoxLayout layout_headers;
-    QHBoxLayout layout_selects;
     QHBoxLayout layout_reads;
     QHBoxLayout layout_main;
     QVBoxLayout layout_config;
@@ -178,8 +144,6 @@ class AppDisplay : public QWidget {
     QPushButton btn_read_custom;
     QPushButton btn_read_vector;
     QPushButton btn_coalesce;
-    QPushButton btn_select_all;
-    QPushButton btn_select_none;
 
     QProgressBar bar_convert;
 

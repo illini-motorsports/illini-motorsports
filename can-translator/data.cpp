@@ -41,6 +41,9 @@ bool AppData::readDataCustom() {
 }
 
 bool AppData::readDataVector() {
+  AppConfig config;
+  this->messages = config.getMessages();
+
   QFile inputFile(this->filename);
   if(inputFile.open(QIODevice::ReadOnly)) {
     QTextStream inputStream(&inputFile);
@@ -177,14 +180,11 @@ bool AppData::writeAxis() {
       Message msg = msgIt->second;
 
       vector<double> vec_msg;
-      vector<bool> msgEnabled = this->enabled[msg.id];
 
       for(int i = 0; i < msg.sigs.size(); i++) {
         Signal sig = msg.sigs[i];
-        if(msgEnabled[i]) {
-          outFile << "  " << sig.title.toStdString() << " [" << sig.units.toStdString() << "]";
-          vec_msg.push_back(0.0);
-        }
+        outFile << "  " << sig.title.toStdString() << " [" << sig.units.toStdString() << "]";
+        vec_msg.push_back(0.0);
       }
 
       latestValues.push_back(vec_msg);
@@ -246,7 +246,6 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
     Message msg = messages[msgId];
     if(msg.valid()) {
       badMsgFound = false;
-      vector<bool> msgEnabled = this->enabled[msg.id];
 
       int j = 0;
       vector<double> values;
@@ -254,27 +253,25 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
       for(int i = 0; i < msg.sigs.size(); i++) {
         Signal sig = msg.sigs[i];
 
-        if(msgEnabled[i]) {
-          double value;
-          if(sig.isSigned) {
-            signed int data = sig.isBigEndian ?
-              buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
-            value = (double) data;
-          } else {
-            unsigned int data = sig.isBigEndian ?
-              buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
-            value = (double) data;
-          }
-
-          values.push_back((value - sig.offset) * sig.scalar);
-
-          // Check to see if the calculated value is out of range.
-          if(values[j] < sig.min || values[j] > sig.max) {
-            badChnFound = true;
-          }
-
-          j++;
+        double value;
+        if(sig.isSigned) {
+          signed int data = sig.isBigEndian ?
+            buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
+          value = (double) data;
+        } else {
+          unsigned int data = sig.isBigEndian ?
+            buffer[iter] << 8 | buffer[iter + 1] : buffer[iter + 1] << 8 | buffer[iter];
+          value = (double) data;
         }
+
+        values.push_back((value - sig.offset) * sig.scalar);
+
+        // Check to see if the calculated value is out of range.
+        if(values[j] < sig.min || values[j] > sig.max) {
+          badChnFound = true;
+        }
+
+        j++;
         iter += 2;
       }
 
@@ -328,66 +325,116 @@ void AppData::processBuffer(unsigned char * buffer, int length) {
 }
 
 void AppData::processLine(QString line) {
-  AppConfig config;
-  map<unsigned short, Message> messages = config.getMessages();
-
   QStringList sections = line.split(" ", QString::SkipEmptyParts);
 
-  if(sections.size() == 2 && sections[1].compare("Trigger") == 0) {
-    return;
-  }
-
-  if(sections.size() < 7) {
-    emit error("Invalid log file line.");
+  // Check for invalid lines (non data lines)
+  if ((sections.size() == 2 && sections[1].compare("Trigger") == 0) ||
+      sections.size() < 6 || sections[1].compare("1") || sections[3].compare("Rx")) {
     return;
   }
 
   bool successful = true;
-  unsigned short msgId;
+  uint16_t msgId;
   msgId = sections[2].toUInt(&successful, 10);
-  if(!successful) {
-    emit error("Invalid message ID.");
+  if (!successful) {
+    emit error(QString("Invalid msgId: 0x%1").arg(msgId, 0, 16));
     return;
   }
 
   Message msg = messages[msgId];
+  if (!msg.valid()) {
+    emit error(QString("Invalid msgId: 0x%1").arg(msgId, 0, 16));
+    return;
+  }
 
-  if(msg.valid()) {
-    vector<bool> msgEnabled = this->enabled[msg.id];
+  uint8_t dlc;
+  dlc = sections[5].toUInt(&successful, 10);
+  if (!successful) {
+    emit error(QString("Invalid dlc"));
+    return;
+  }
 
-    int j = 0;
-    for(int i = 0; i < msg.sigs.size(); i++) {
-      Signal sig = msg.sigs[i];
+  uint8_t dataBytes[8];
+  for (int i = 0; i < 8; i++) {
+    dataBytes[i] = (dlc >= i + 1) ? sections[6 + i].toUInt(&successful, 10) : 0;
+  }
+  uint64_t data = dataBytes[0] |
+    ((uint64_t) dataBytes[1]) << 8 |
+    ((uint64_t) dataBytes[2]) << 16 |
+    ((uint64_t) dataBytes[3]) << 24 |
+    ((uint64_t) dataBytes[4]) << 32 |
+    ((uint64_t) dataBytes[5]) << 40 |
+    ((uint64_t) dataBytes[6]) << 48 |
+    ((uint64_t) dataBytes[7]) << 56;
 
-      if(msgEnabled[i]) {
-        double value;
+  if (!successful) {
+    emit error("Invalid signal data.");
+    return;
+  }
 
-        successful = true;
-        unsigned char byteOne = sections[5 + (i * 2)].toUInt(&successful, 10);
-        unsigned char byteTwo = sections[5 + (i * 2) + 1].toUInt(&successful, 10);
-        if(!successful) {
-          emit error("Invalid signal data.");
-          return;
-        }
+  int j = 0;
+  for (int i = 0; i < msg.sigs.size(); i++) {
+    Signal sig = msg.sigs[i];
 
-        if(sig.isSigned) {
-          signed int data = sig.isBigEndian ? byteOne << 8 | byteTwo :
-            byteTwo << 8 | byteOne;
-          value = (double) data;
+    double value;
+
+    uint64_t sigData = (data >> sig.startBit) & ((uint64_t) (pow(2, sig.bitLen) - 1));
+
+    if (sig.bitLen <= 8) {
+      value = sig.isSigned ? ((int8_t) sigData) : ((uint8_t) sigData);
+    } else if (sig.bitLen > 8 && sig.bitLen <= 16) {
+      if (sig.isBigEndian) {
+        value = sig.isSigned ? ((int16_t) sigData) : ((uint16_t) sigData);
+      } else {
+        if (sig.isSigned) {
+          int8_t* sigDataArray = (int8_t*) &sigData;
+          value = (int16_t) (sigDataArray[0] << 8 | sigDataArray[1]);
         } else {
-          unsigned int data = sig.isBigEndian ? byteOne << 8 | byteTwo :
-            byteTwo << 8 | byteOne;
-          value = (double) data;
+          uint8_t* sigDataArray = (uint8_t*) &sigData;
+          value = (uint16_t) (sigDataArray[0] << 8 | sigDataArray[1]);
         }
-        latestValues[messageIndices[msg.id]][j] = (value - sig.offset) * sig.scalar;
-        j++;
+      }
+    } else if (sig.bitLen > 16 && sig.bitLen <= 32) {
+      if (sig.isBigEndian) {
+        value = sig.isSigned ? ((int32_t) sigData) : ((uint32_t) sigData);
+      } else {
+        if (sig.isSigned) {
+          int8_t* sigDataArray = (int8_t*) &sigData;
+          value = (int32_t) (sigDataArray[0] << 24 | sigDataArray[1] << 16 |
+              sigDataArray[2] << 8 | sigDataArray[3]);
+        } else {
+          uint8_t* sigDataArray = (uint8_t*) &sigData;
+          value = (uint32_t) (sigDataArray[0] << 24 | sigDataArray[1] << 16 |
+              sigDataArray[2] << 8 | sigDataArray[3]);
+        }
+      }
+    } else if (sig.bitLen > 32) {
+      if (sig.isBigEndian) {
+        value = sig.isSigned ? ((int64_t) sigData) : ((uint64_t) sigData);
+      } else {
+        if (sig.isSigned) {
+          int8_t* sigDataArray = (int8_t*) &sigData;
+          value = (int64_t) (((int64_t) sigDataArray[0]) << 56 |
+              ((int64_t) sigDataArray[1]) << 48 | ((int64_t) sigDataArray[2]) << 40 |
+              ((int64_t) sigDataArray[3]) << 32 | ((int64_t) sigDataArray[4]) << 24 |
+              ((int64_t) sigDataArray[5]) << 16 | ((int64_t) sigDataArray[6]) << 8 |
+              ((int64_t) sigDataArray[7]));
+        } else {
+          uint8_t* sigDataArray = (uint8_t*) &sigData;
+          value = (uint64_t) (((uint64_t) sigDataArray[0]) << 56 |
+              ((uint64_t) sigDataArray[1]) << 48 | ((uint64_t) sigDataArray[2]) << 40 |
+              ((uint64_t) sigDataArray[3]) << 32 | ((uint64_t) sigDataArray[4]) << 24 |
+              ((uint64_t) sigDataArray[5]) << 16 | ((uint64_t) sigDataArray[6]) << 8 |
+              ((uint64_t) sigDataArray[7]));
+        }
       }
     }
 
-    latestValues[0][0] = sections[0].toDouble();
-
-    writeLine();
-  } else {
-    //emit error(QString("Invalid msgId: %1").arg(msgId, 0, 16));
+    latestValues[messageIndices[msg.id]][j] = (value - sig.offset) * sig.scalar;
+    j++;
   }
+
+  latestValues[0][0] = sections[0].toDouble();
+
+  writeLine();
 }

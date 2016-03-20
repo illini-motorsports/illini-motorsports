@@ -4,7 +4,7 @@
  *
  * @author Andrew Mass
  * @date Created: 2014-06-24
- * @date Modified: 2016-03-15
+ * @date Modified: 2016-03-20
  */
 #include "display.h"
 
@@ -39,7 +39,7 @@ AppDisplay::AppDisplay() : QWidget() {
   lbl_subheader.setAlignment(Qt::AlignCenter);
   layout_headers.addWidget(&lbl_subheader, 1);
 
-  lbl_keymaps.setText("[c] Convert Custom File     [v] Convert Vector File     [s] Coalesce Converted Logfiles     [a] Select All     [n] Select None     [q] Quit");
+  lbl_keymaps.setText("[c] Convert Custom File     [v] Convert Vector File     [s] Coalesce Converted Logfiles     [q] Quit");
   lbl_keymaps.setFont(font_subheader);
   lbl_keymaps.setAlignment(Qt::AlignCenter);
   layout_headers.addWidget(&lbl_keymaps, 1);
@@ -54,14 +54,6 @@ AppDisplay::AppDisplay() : QWidget() {
   layout_reads.addWidget(&btn_coalesce, 1);
 
   layout.addLayout(&layout_reads);
-
-  btn_select_all.setText("Select All Signals");
-  layout_selects.addWidget(&btn_select_all, 1);
-
-  btn_select_none.setText("Select No Signals");
-  layout_selects.addWidget(&btn_select_none, 1);
-
-  layout.addLayout(&layout_selects);
 
   // Configure config area (left side)
   area_config_helper.setLayout(&layout_config);
@@ -94,12 +86,7 @@ AppDisplay::AppDisplay() : QWidget() {
     messageGroup->setLayout(signalsLayout);
 
     for (Signal sig: msg.sigs) {
-      QCheckBox* box = new QCheckBox();
-      box->setFocusPolicy(Qt::NoFocus);
-      box->setChecked(true);
-      box->setStyleSheet("QCheckBox:hover { background-color: rgba(255, 255, 255, 0); }");
-      box->setText(sig.toString());
-      signalsLayout->addWidget(box);
+      signalsLayout->addWidget(new QLabel(sig.toString()));
     }
 
     layout_config.addWidget(messageGroup);
@@ -109,8 +96,6 @@ AppDisplay::AppDisplay() : QWidget() {
   connect(&computeThread, SIGNAL(addFileProgress(QString)), this, SLOT(addFileProgress(QString)));
   connect(&coalesceComputeThread, SIGNAL(finish(bool)), this, SLOT(coalesceFinish(bool)));
 
-  connect(&btn_select_all, SIGNAL(clicked()), this, SLOT(selectAll()));
-  connect(&btn_select_none, SIGNAL(clicked()), this, SLOT(selectNone()));
   connect(&btn_read_custom, SIGNAL(clicked()), this, SLOT(readDataCustom()));
   connect(&btn_read_vector, SIGNAL(clicked()), this, SLOT(readDataVector()));
   connect(&btn_coalesce, SIGNAL(clicked()), this, SLOT(coalesceLogfiles()));
@@ -118,66 +103,6 @@ AppDisplay::AppDisplay() : QWidget() {
 
 void AppDisplay::addFileProgress(QString filename) {
   layout_progress.addWidget(new QLabel(filename));
-}
-
-map<uint16_t, vector<bool> > AppDisplay::getEnabled() {
-  map<uint16_t, vector<bool> > enabled;
-  return enabled;
-  /*
-  map<unsigned short, Message> messages = config.getMessages();
-
-  for(int i = 0; i < table.rowCount(); i++) {
-    bool conv;
-    vector<bool> msgEnabled;
-    Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
-
-    int j = 0;
-    typedef QVector<Signal>::iterator it_sig;
-    for(it_sig sigIt = msg.sigs.begin(); sigIt != msg.sigs.end(); sigIt++) {
-      msgEnabled.push_back(((QCheckBox*) table.cellWidget(i, 3 + j))->isChecked());
-      j++;
-    }
-    enabled[msg.id] = msgEnabled;
-  }
-
-  return enabled;
-  */
-}
-
-void AppDisplay::selectAll() {
-  selectBoxes(true);
-}
-
-void AppDisplay::selectNone() {
-  selectBoxes(false);
-}
-
-void AppDisplay::selectBoxes(bool checked) {
-  /*
-  map<unsigned short, Message> messages = config.getMessages();
-  bool conv;
-  for(int i = 0; i < table.rowCount(); i++) {
-    Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
-
-    for(int j = 0; j < msg.sigs.size(); j++) {
-      ((QCheckBox*) table.cellWidget(i, 3 + j))->setChecked(checked);
-    }
-  }
-  */
-}
-
-void AppDisplay::enableBoxes(bool enabled) {
-  /*
-  map<unsigned short, Message> messages = config.getMessages();
-  bool conv;
-  for(int i = 0; i < table.rowCount(); i++) {
-    Message msg = messages[table.item(i, 0)->text().toUInt(&conv, 16)];
-
-    for(int j = 0; j < msg.sigs.size(); j++) {
-      ((QCheckBox*) table.cellWidget(i, 3 + j))->setEnabled(enabled);
-    }
-  }
-  */
 }
 
 void AppDisplay::readDataCustom() {
@@ -192,9 +117,6 @@ void AppDisplay::coalesceLogfiles() {
   btn_read_custom.setEnabled(false);
   btn_read_vector.setEnabled(false);
   btn_coalesce.setEnabled(false);
-  btn_select_all.setEnabled(false);
-  btn_select_none.setEnabled(false);
-  enableBoxes(false);
 
   QFileDialog dialog(this);
   dialog.setDirectory(".");
@@ -214,9 +136,6 @@ void AppDisplay::readData(bool isVectorFile) {
   btn_read_custom.setEnabled(false);
   btn_read_vector.setEnabled(false);
   btn_coalesce.setEnabled(false);
-  btn_select_all.setEnabled(false);
-  btn_select_none.setEnabled(false);
-  enableBoxes(false);
 
   QFileDialog dialog(this);
   dialog.setDirectory(".");
@@ -224,7 +143,6 @@ void AppDisplay::readData(bool isVectorFile) {
   dialog.setFileMode(QFileDialog::ExistingFiles);
   if(dialog.exec()) {
     computeThread.filenames = dialog.selectedFiles();
-    data.enabled = this->getEnabled();
 
     computeThread.isVectorFile = isVectorFile;
     computeThread.start();
@@ -251,9 +169,6 @@ void AppDisplay::convertFinish(bool success) {
   btn_read_custom.setEnabled(true);
   btn_read_vector.setEnabled(true);
   btn_coalesce.setEnabled(true);
-  btn_select_all.setEnabled(true);
-  btn_select_none.setEnabled(true);
-  enableBoxes(true);
 }
 
 void AppDisplay::coalesceFinish(bool success) {
@@ -265,9 +180,6 @@ void AppDisplay::coalesceFinish(bool success) {
   btn_read_custom.setEnabled(true);
   btn_read_vector.setEnabled(true);
   btn_coalesce.setEnabled(true);
-  btn_select_all.setEnabled(true);
-  btn_select_none.setEnabled(true);
-  enableBoxes(true);
 }
 
 void AppDisplay::handleError(QString error) {
@@ -292,16 +204,6 @@ void AppDisplay::keyPressEvent(QKeyEvent* e) {
   // Opens converted logfile dialog.
   if(e->text() == "s") {
     btn_coalesce.click();
-  }
-
-  // Selects all signal checkboxes.
-  if(e->text() == "a") {
-    btn_select_all.click();
-  }
-
-  // Selects no signal checkboxes.
-  if(e->text() == "n") {
-    btn_select_none.click();
   }
 
   // Quits the application.

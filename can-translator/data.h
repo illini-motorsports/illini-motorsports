@@ -70,12 +70,6 @@ class AppData : public QObject {
      */
     QString filename;
 
-    /**
-     * A map of message IDs to arrays of bools that contains info about which
-     * channels the user selected to be converted.
-     */
-    map<unsigned short, vector<bool> > enabled;
-
   signals:
 
     /**
@@ -143,6 +137,11 @@ class AppData : public QObject {
      * @param line The line of input from a Vector log file.
      */
     void processLine(QString line);
+
+    /**
+     * Stores the scanned CAN spec configuration.
+     */
+    map<uint16_t, Message> messages;
 };
 
 #endif // DATA_H
