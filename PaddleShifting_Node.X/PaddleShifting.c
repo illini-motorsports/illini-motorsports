@@ -79,6 +79,10 @@
 // CONFIG7H
 #pragma config EBTRB = OFF      // Table Read Protect Boot (Disabled)
 
+//TODO: Send CAN message after successful shift
+//TODO: Send second diagnostic message
+//TODO: Prevent shifts while kill switch is in rather than engine on
+
 /**
  * Global Variables
  */
@@ -761,15 +765,21 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 
 /**
  * void sample_gear(void)
- * 
+ *
  * Samples the gear position sensor and updates variables if the interval has passed.
  */
 void sample_gear(void) {
   if(millis - gear_samp_tmr >= GEAR_SAMP_INTV) {
     uint16_t gear_samp = sample(ADC_GEAR_CHN);
-    
+    uint16_t gear_voltage = (uint16_t) (((((double) gear_samp) / 4095.0)
+        * 3.3) * 10000);
+
     //TODO: Apply linearization of sensor and CAN scalars to set value
     gear = GEAR_FAIL;
+
+    data[GEAR_BYTE] = gear;
+    ((uint16_t*) data)[GEAR_VOLT_BYTE / 2] = gear_voltage;
+    ECANSendMessage(PADDLE_ID + 0x1, data, 4, ECAN_TX_FLAGS);
 
     gear_samp_tmr = millis;
   }
@@ -777,13 +787,13 @@ void sample_gear(void) {
 
 /**
  * void sample_temp(void)
- * 
+ *
  * Samples the PCB temp sensor and updates variables if the interval has passed.
  */
 void sample_temp(void) {
   if(millis - temp_samp_tmr >= TEMP_SAMP_INTV) {
     uint16_t temp_samp = sample(ADC_TEMP_CHN);
-    
+
     /**
      * Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
      * Temp [C] = ((5 * (temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
@@ -800,18 +810,17 @@ void sample_temp(void) {
 
 /**
  * void send_diag_can(void)
- * 
+ *
  * Sends the diagnostic CAN message if the interval has passed.
  */
 void send_diag_can(void) {
   if(millis - diag_send_tmr >= DIAG_MSG_SEND) {
     ((uint16_t*) data)[UPTIME_BYTE / 2] = seconds;
     ((int16_t*) data)[PCB_TEMP_BYTE / 2] = temp;
-    data[GEAR_BYTE] = gear;
     data[QUEUE_NT_BYTE] = queue_nt;
     data[QUEUE_UP_BYTE] = queue_up;
     data[QUEUE_DN_BYTE] = queue_dn;
-    
+
     ECANSendMessage(PADDLE_ID + 0x0, data, 8, ECAN_TX_FLAGS);
     diag_send_tmr = millis;
   }

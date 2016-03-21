@@ -48,10 +48,11 @@
 #define THROTTLE_POS_BYTE   2
 
 // From PaddleShifting
-#define GEAR_BYTE           4
-#define QUEUE_NT_BYTE       5
-#define QUEUE_UP_BYTE       6
-#define QUEUE_DN_BYTE       7
+#define GEAR_BYTE           2
+#define GEAR_VOLT_BYTE      0
+#define QUEUE_NT_BYTE       4
+#define QUEUE_UP_BYTE       5
+#define QUEUE_DN_BYTE       6
 
 // From Wheel
 #define SWITCH_BITS_BYTE    6

@@ -80,7 +80,7 @@
         <property key="enable-ot" value="false"/>
         <property key="enable-ou" value="false"/>
         <property key="enable-ow" value="true"/>
-        <property key="extra-include-directories" value="../ECAN.X"/>
+        <property key="extra-include-directories" value="../ECAN.X;../FSAE.X"/>
         <property key="optimization-master" value="Debug friendly"/>
         <property key="preprocessor-macros" value="PADDLESHIFTING"/>
         <property key="procedural-abstraction-passes" value="4"/>
@@ -113,6 +113,7 @@
       </C18LanguageToolchain>
       <PICkit3PlatformTool>
         <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze Peripherals" value="true"/>
         <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
         <property key="ToolFirmwareFilePath"
                   value="Press to browse for a specific firmware version"/>
