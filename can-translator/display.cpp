@@ -139,7 +139,7 @@ void AppDisplay::readData(bool isVectorFile) {
 
   QFileDialog dialog(this);
   dialog.setDirectory(".");
-  dialog.setNameFilter("*.txt *.TXT");
+  dialog.setNameFilter(isVectorFile ? "*.asc *.ASC" : "*.txt *.TXT");
   dialog.setFileMode(QFileDialog::ExistingFiles);
   if(dialog.exec()) {
     computeThread.filenames = dialog.selectedFiles();
@@ -159,7 +159,8 @@ void AppDisplay::convertFinish(bool success) {
       QString filename = data.filename;
       QMessageBox::information(this, "Conversion Completed!",
           QString("Output File: %1").arg(
-            filename.replace(".txt", ".out.txt", Qt::CaseInsensitive)));
+            filename.replace(".txt", ".out.txt", Qt::CaseInsensitive)
+                    .replace(".asc", ".out.txt", Qt::CaseInsensitive)));
     } else {
       QMessageBox::information(this, "Convesion Completed!",
           "Output files are stored in the same directory as the input files.");

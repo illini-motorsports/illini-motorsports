@@ -158,6 +158,7 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
 bool AppData::writeAxis() {
   QString outFilename = this->filename;
   outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
+  outFilename.replace(".asc", ".out.txt", Qt::CaseInsensitive);
   ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::trunc);
 
   if(outFile && outFile.good()) {
@@ -203,6 +204,7 @@ bool AppData::writeAxis() {
 void AppData::writeLine() {
   QString outFilename = this->filename;
   outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
+  outFilename.replace(".asc", ".out.txt", Qt::CaseInsensitive);
   ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::app);
 
   if(outFile && outFile.good()) {
@@ -329,7 +331,8 @@ void AppData::processLine(QString line) {
 
   // Check for invalid lines (non data lines)
   if ((sections.size() == 2 && sections[1].compare("Trigger") == 0) ||
-      sections.size() < 6 || sections[1].compare("1") || sections[3].compare("Rx")) {
+      sections.size() < 6 || sections[1].compare("1") || sections[3].compare("Rx") ||
+      sections[2].endsWith('x')) {
     return;
   }
 
@@ -337,13 +340,13 @@ void AppData::processLine(QString line) {
   uint16_t msgId;
   msgId = sections[2].toUInt(&successful, 10);
   if (!successful) {
-    emit error(QString("Invalid msgId: 0x%1").arg(msgId, 0, 16));
+    //TODO: emit error(QString("Invalid msgId: 0x%1").arg(sections[2]));
     return;
   }
 
   Message msg = messages[msgId];
   if (!msg.valid()) {
-    emit error(QString("Invalid msgId: 0x%1").arg(msgId, 0, 16));
+    //TODO: emit error(QString("Invalid msgId: 0x%1").arg(msgId, 0, 16));
     return;
   }
 
@@ -378,16 +381,17 @@ void AppData::processLine(QString line) {
 
     double value;
 
-    uint64_t sigData = (data >> sig.startBit) & ((uint64_t) (pow(2, sig.bitLen) - 1));
+    uint8_t startBit = sig.isBigEndian ? sig.startBit - 7 : sig.startBit;
+    uint64_t sigData = (data >> startBit) & ((uint64_t) (pow(2, sig.bitLen) - 1));
 
     if (sig.bitLen <= 8) {
       value = sig.isSigned ? ((int8_t) sigData) : ((uint8_t) sigData);
     } else if (sig.bitLen > 8 && sig.bitLen <= 16) {
-      if (sig.isBigEndian) {
+      if (!sig.isBigEndian) {
         value = sig.isSigned ? ((int16_t) sigData) : ((uint16_t) sigData);
       } else {
         if (sig.isSigned) {
-          int8_t* sigDataArray = (int8_t*) &sigData;
+          uint8_t* sigDataArray = (uint8_t*) &sigData;
           value = (int16_t) (sigDataArray[0] << 8 | sigDataArray[1]);
         } else {
           uint8_t* sigDataArray = (uint8_t*) &sigData;
@@ -395,11 +399,11 @@ void AppData::processLine(QString line) {
         }
       }
     } else if (sig.bitLen > 16 && sig.bitLen <= 32) {
-      if (sig.isBigEndian) {
+      if (!sig.isBigEndian) {
         value = sig.isSigned ? ((int32_t) sigData) : ((uint32_t) sigData);
       } else {
         if (sig.isSigned) {
-          int8_t* sigDataArray = (int8_t*) &sigData;
+          uint8_t* sigDataArray = (uint8_t*) &sigData;
           value = (int32_t) (sigDataArray[0] << 24 | sigDataArray[1] << 16 |
               sigDataArray[2] << 8 | sigDataArray[3]);
         } else {
@@ -409,11 +413,11 @@ void AppData::processLine(QString line) {
         }
       }
     } else if (sig.bitLen > 32) {
-      if (sig.isBigEndian) {
+      if (!sig.isBigEndian) {
         value = sig.isSigned ? ((int64_t) sigData) : ((uint64_t) sigData);
       } else {
         if (sig.isSigned) {
-          int8_t* sigDataArray = (int8_t*) &sigData;
+          uint8_t* sigDataArray = (uint8_t*) &sigData;
           value = (int64_t) (((int64_t) sigDataArray[0]) << 56 |
               ((int64_t) sigDataArray[1]) << 48 | ((int64_t) sigDataArray[2]) << 40 |
               ((int64_t) sigDataArray[3]) << 32 | ((int64_t) sigDataArray[4]) << 24 |
