@@ -32,8 +32,8 @@
 #define TERM_TRIS TRISAbits.TRISA2
 #define TERM_LAT  LATAbits.LATA2
 
-#define CLI() asm volatile("di; ehb")
-#define STI() asm volatile("ei")
+#define CLI() asm volatile("di; ehb;")
+#define STI() asm volatile("ei;")
 
 // Function definitions
 void init_general(void);

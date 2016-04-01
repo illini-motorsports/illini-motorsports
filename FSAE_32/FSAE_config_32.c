@@ -89,7 +89,7 @@
  * Unlock Sequence
  */
 void unlock_config(void) {
-  asm volatile("di"); // Disable interrupts
+  CLI(); // Disable interrupts
   SYSKEY = 0xAA996655;
   SYSKEY = 0x556699AA;
 }
@@ -99,7 +99,7 @@ void unlock_config(void) {
  */
 void lock_config(void) {
   SYSKEY = 0xDEADBEEF;
-  asm volatile("ei"); // Enable interrupts
+  STI(); // Enable interrupts
 }
 
 void init_general(void) {
@@ -651,7 +651,7 @@ void init_oscillator(void) {
   while(!PB8DIVbits.PBDIVRDY);
   PB8DIVbits.PBDIV = 0b0000001; // Peripheral Bus 8 Clock Divisor Control (PBCLK8 is SYSCLK divided by 2)
 
-#ifdef REFCLKO
+#if REFCLKO
   /**
    * REFO1CLK == (PBCLK1 / (2 * (RODIV + (ROTRIM / 512)))) ==
    * (100Mhz / (2 * (2 + (256/512)))) == (100Mhz / 5) == 20Mhz

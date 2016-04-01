@@ -22,6 +22,9 @@
 // Determines whether the internal or external clock source is used
 #define INTERNAL_CLK 0
 
+// Determines whether SYSCLK / 10 is driven out on RF0
+#define REFCLKO 0
+
 // Defines for MOSFET control
 #define PWR_ON  1
 #define PWR_OFF 0

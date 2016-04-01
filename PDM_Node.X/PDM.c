@@ -227,6 +227,7 @@ void main(void) {
   // Main loop
   while (1) {
     uint8_t load_state_changed = 0;
+    STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
     /**
      * Determine if the fuel pump should be priming
@@ -667,6 +668,20 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 }
 
 /**
+ * NMI Handler
+ * 
+ * This interrupt handler will reset the device when a clock failure occurs.
+ */
+void _nmi_handler(void) {
+  // Perform a software reset
+  unlock_config();
+  RSWRSTSET = 1;
+  uint16_t dummy = RSWRST;
+  while (1);
+  asm volatile("eret;"); // Should never be called
+}
+
+/**
  * Handler function for each received CAN message.
  *
  * @param msg The received CAN message
@@ -747,25 +762,25 @@ void sample_temp(void) {
 
     /**
      * PCB Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
-     * PCB Temp [C] = ((5 * (pcb_temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
-     * PCB Temp [C] = (5 * (pcb_temp_samp / 40.95)) - 75) [C]
-     * PCB Temp [C] = (pcb_temp_samp * 0.1221001221) - 75 [C]
-     * PCB Temp [C / 0.005] = 200 * ((pcb_temp_samp * 0.1221001221) - 75) [C / 0.005]
-     * PCB Temp [C / 0.005] = (temp_samp * 24.42002442) - 15000 [C / 0.005]
+     * PCB Temp [C] = ((3.3 * (pcb_temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
+     * PCB Temp [C] = (3.3 * (pcb_temp_samp / 40.95)) - 75) [C]
+     * PCB Temp [C] = (pcb_temp_samp * 0.080586080586) - 75 [C]
+     * PCB Temp [C / 0.005] = 200 * ((pcb_temp_samp * 0.080586080586) - 75) [C / 0.005]
+     * PCB Temp [C / 0.005] = (temp_samp * 16.1172161172) - 15000 [C / 0.005]
      */
     uint32_t pcb_temp_samp = read_adc_chn(ADC_PTEMP_CHN);
-    pcb_temp = (((double) pcb_temp_samp) * 24.42002442) - 15000.0;
+    pcb_temp = (((double) pcb_temp_samp) * 16.1172161172) - 15000.0;
 
     /**
      * Junc Temp [C] = 200 [C/V] * (1 [V] - Sample [V])
-     * Junc Temp [C] = 200 [C/V] * (1 - (5 * (junc_temp_samp / 4095))) [V]
-     * Junc Temp [C] = 200 [C/V] * (1 - (junc_temp_samp / 819)) [V]
-     * Junc Temp [C] = 200 - (junc_temp_samp * 0.2442002442002442) [C]
-     * Junc Temp [C / 0.005] = 40000 - (junc_temp_samp * 48.84004884004884) [C / 0.005]
+     * Junc Temp [C] = 200 [C/V] * (1 - (3.3 * (junc_temp_samp / 4095))) [V]
+     * Junc Temp [C] = 200 [C/V] * (1 - (junc_temp_samp / 1240.9090909)) [V]
+     * Junc Temp [C] = 200 - (junc_temp_samp * 0.161172161172) [C]
+     * Junc Temp [C / 0.005] = 40000 - (junc_temp_samp * 32.234432234432) [C / 0.005]
      */
 
     uint32_t junc_temp_samp = read_adc_chn(ADC_JTEMP_CHN);
-    junc_temp = (int16_t) (40000.0 - (((double) junc_temp_samp) * 48.84004884004884));
+    junc_temp = (int16_t) (40000.0 - (((double) junc_temp_samp) * 32.234432234432));
 
     temp_samp_tmr = millis;
   }

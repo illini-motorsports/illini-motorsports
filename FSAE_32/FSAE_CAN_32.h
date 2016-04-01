@@ -153,9 +153,9 @@ typedef union uCanTxMessageBuffer {
   int messageWord[4];
 } CanTxMessageBuffer;
 
-// Used to count the number of receive and transmit buffer overflows
-static volatile uint32_t CAN_rx_ovf = 0;
-static volatile uint32_t CAN_tx_ovf = 0;
+// Defined in FSAE_CAN_32.c
+extern volatile uint32_t CAN_rx_ovf;
+extern volatile uint32_t CAN_tx_ovf;
 
 // Function definitions
 void CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data);

@@ -19,6 +19,10 @@
  */
 static volatile uint32_t CAN_FIFO_Buffers[256];
 
+// Used to count the number of receive and transmit buffer overflows
+volatile uint32_t CAN_rx_ovf = 0;
+volatile uint32_t CAN_tx_ovf = 0;
+
 /**
  * Construct and send a CAN message based on data provided by the caller.
  *
@@ -28,6 +32,13 @@ static volatile uint32_t CAN_FIFO_Buffers[256];
  * @return -1 on failure, 0 on success
  */
 void CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data) {
+  // Reset the FIFO and count a TX overflow if the TX FIFO is full
+  if (!C1FIFOINT1bits.TXNFULLIF) {
+    C1FIFOCON1bits.FRESET = 1;
+    while (C1FIFOCON1bits.FRESET == 1);
+    CAN_tx_ovf++;
+  }
+
   // Get pointer to correct location in transmit FIFO
   CanTxMessageBuffer* transmit = (CanTxMessageBuffer*) (PA_TO_KVA1(C1FIFOUA1));
 
