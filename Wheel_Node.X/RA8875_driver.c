@@ -3,7 +3,7 @@
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
- * Author:      Andrew Mass
+ * Author:      Jake Leonard
  * Created:     2015-2016
  */
 #include "RA8875_driver.h"
@@ -50,6 +50,10 @@ void drawRaceScreen(double oil_temp, double oil_pres, double water_temp, int gea
 
 // Displays a decimal number using the seven segment helper functions
 void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t decDigits, uint16_t color, double number){
+	if(decDigits == 0){
+		sevenSegmentMultDigit(x, y, numWidth, numNums, color, (uint16_t) number);
+		return;
+	}
 	uint16_t intNum = number;
 	uint16_t decNum = (number - intNum) * pow(10, decDigits);
 	sevenSegmentMultDigit(x, y, numWidth, numNums - decDigits, color, intNum);
@@ -62,7 +66,9 @@ void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t n
 	uint16_t offset = numWidth*1.2;
 	int i = 0;
 	for(;i<numNums;i++){
-		sevenSegmentDigit(x + (offset*(numNums - i - 1)), y, numWidth, color, number%10);
+		if(number != 0){
+			sevenSegmentDigit(x + (offset*(numNums - i - 1)), y, numWidth, color, number%10);
+		}
 		number /=10;
 	}
 }

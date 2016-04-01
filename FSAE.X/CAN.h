@@ -48,8 +48,8 @@
 #define THROTTLE_POS_BYTE   2
 
 // From PaddleShifting
-#define GEAR_BYTE           2
 #define GEAR_VOLT_BYTE      0
+#define GEAR_BYTE           2
 #define QUEUE_NT_BYTE       4
 #define QUEUE_UP_BYTE       5
 #define QUEUE_DN_BYTE       6
@@ -71,7 +71,7 @@
  */
 #define ENG_RPM_SCL  1.0
 #define ENG_TEMP_SCL 0.1
-#define OIL_PRES_SCL 0.1
+#define OIL_PRES_SCL 0.001;
 #define OIL_TEMP_SCL 0.1
 #define VOLT_ECU_SCL 0.01
 

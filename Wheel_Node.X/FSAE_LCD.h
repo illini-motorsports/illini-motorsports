@@ -14,8 +14,10 @@
 #include <sys/types.h>
 #include "RA8875_driver.h"
 
-#define BACKGROUND_COLOR 0xFFFF
-#define FOREGROUND_COLOR 0x0000
+#define BACKGROUND_COLOR 0x001F
+#define FOREGROUND_COLOR 0xFBE0
+#define WARNING_COLOR 0x001F
+#define ERROR_COLOR 0x001F
 #define NUM_SCREENS 1
 #define RACE_SCREEN 0
 
@@ -68,6 +70,33 @@ typedef struct {
 	uint8_t len;
 } screen;
 
+// Motec Data Stream
+dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress, 
+				batVoltage, wheelSpeedFL, wheelSpeedFR, wheelSpeedRL, wheelSpeedRR,
+				gps, groundSpeed, driveSpeed, gpsSpeed, manifoldTemp, ambientTemp,
+				ambientPress, fuelTemp, fuelPress, lambda1, lambda2, lambda3, lambda4,
+				lcEnablity, fuelConsum;
+
+// Tire Temps
+dataItem ttFL1, ttFL2, ttFL3, ttFL4, ttFR1, ttFR2, ttFR3, ttFR4, ttRL1, ttRL2,
+				ttRL3, ttRL4, ttRR1, ttRR2, ttRR3, ttRR4;
+
+// Steering Wheel
+dataItem swTemp, swSW1, swSW2, swSW3, swSW4, swROT1, swROT2, swROT3, swTROT1,
+				swTROT2, swBUT1, swBUT2, swBUT3, swBUT4;
+
+// PDM
+dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v,
+				pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, 
+				pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUcut, pdmWTRdraw, pdmWTRNcut, 
+				pdmWTRPcut, pdmFANNdraw, pdmFANPdraw, pdmFANcut, pdmAUXdraw, pdmAUXcut, 
+				pdmPLDUdraw, pdmPLDUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, 
+				pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut, pdmSTR1draw, pdmSTR1cut, 
+				pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
+
+// Paddle Shifting
+dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue;
+
 void initDataItems(void);
 void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 
 				uint8_t whole, uint8_t dec);
@@ -77,6 +106,7 @@ void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
 				dataItem* data);
 void changeScreen(uint8_t num);
 void refreshScreenItems(void);
+void redrawItem(screenItem * item);
 void clearScreen(void);
 
 #endif /* _FSAE_LCD_H */

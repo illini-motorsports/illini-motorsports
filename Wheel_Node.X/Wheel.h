@@ -14,6 +14,7 @@
 #include "../FSAE_32/FSAE_CAN_32.h"
 #include "../FSAE.X/CAN.h"
 #include "RA8875_driver.h"
+#include "FSAE_LCD.h"
 
 // Enable programmable termination
 #define TERMINATING 1

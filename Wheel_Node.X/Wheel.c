@@ -3,7 +3,7 @@
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
- * Author:      Andrew Mass
+ * Author:      Jake Leonard
  * Created:     2015-2016
  */
 #include "Wheel.h"
@@ -21,7 +21,6 @@ void main(void) {
   init_oscillator();// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
   init_spi();// Initialize SPI interface
-  init_can();
   STI();// Enable interrupts
   
   LCD_CS_TRIS = OUTPUT;
@@ -31,28 +30,33 @@ void main(void) {
   TRISBbits.TRISB7 = OUTPUT;
   LATBbits.LATB6 = 1;
   LATBbits.LATB7 = 0;
-  
+
+	// Initialize RA8875
   reset();
   initialize();
-  
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
   PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
   PWM1out(255);
-  
+
+	/*
+	while(1){
+		fillScreen(RA8875_RED);
+		delay(500);
+	}
+	*/
+
+	// Initialize All the data streams
+	// This needs to be done before CAN starts
+	initDataItems();
+  init_can();
+
+  initAllScreens();
+	changeScreen(RACE_SCREEN);
+	
   while(1){
-	drawRaceScreen(oil_temp, oil_pres, eng_temp, gear_pos);
-  	delay(500);
-  }
-  
-  while(1){
-    LATBbits.LATB6 = 0;
-    LATBbits.LATB7 = 1;
-    delay(100);
-    LATBbits.LATB6 = 1;
-    LATBbits.LATB7 = 0;
-    delay(100);
-  }
+		refreshScreenItems();
+	  }
 }
 
 /**
@@ -97,19 +101,19 @@ void process_CAN_msg(CAN_message msg){
 
       break;
     case MOTEC_ID + 1:
-      eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) |
+      waterTemp.value = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) |
           msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
-      oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) |
+      oilTemp.value = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) |
           msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
 
       break;
     case MOTEC_ID + 2:
-      oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
+      oilPress.value = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
           msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
 
       break;
-	case PADDLE_ID:
-		gear_pos = msg.data[GEAR_BYTE];
+	case PADDLE_ID + 1:
+		gearPos.value = msg.data[GEAR_BYTE];
 		break;
   }
 }
