@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>Wheel.h</itemPath>
       <itemPath>RA8875_driver.h</itemPath>
+      <itemPath>FSAE_LCD.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -20,6 +21,7 @@
       <itemPath>../FSAE_32/FSAE_nvm_32.c</itemPath>
       <itemPath>Wheel.c</itemPath>
       <itemPath>RA8875_driver.c</itemPath>
+      <itemPath>FSAE_LCD.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
