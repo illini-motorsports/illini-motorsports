@@ -63,6 +63,7 @@
 
 #define BASIC_CONTROL_WAIT 1000
 #define TEMP_SAMP_INTV     333
+#define CURRENT_SAMP_INTV  5
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10
 #define RAIL_VOLT_SEND     50
@@ -402,6 +403,8 @@ void main(void);
 void process_CAN_msg(CAN_message msg);
 void send_diag_can(void);
 void sample_temp(void);
+void sample_load_current(void);
+void check_load_overcurrent(void);
 void send_load_current_can(void);
 void send_rail_volt_can(void);
 void send_cutoff_values_can(uint8_t override);
