@@ -144,9 +144,9 @@ void main(void) {
   SHIFT_NT_TRIS = INPUT;
 
   ACT_UP_TRIS = OUTPUT;
-  ACT_UP_LAT = 0;
+  ACT_UP_LAT = ACT_OFF;
   ACT_DN_TRIS = OUTPUT;
-  ACT_DN_LAT = 0;
+  ACT_DN_LAT = ACT_OFF;
 
   /**
    * Setup Peripherals
@@ -495,9 +495,9 @@ void do_shift(uint8_t shift_enum) {
 
     // Fire actuator
     if (SHIFT_UP) {
-      ACT_UP_LAT = 1; 
+      ACT_UP_LAT = ACT_ON; 
     } else if (SHIFT_DN) {
-      ACT_DN_LAT = 1;
+      ACT_DN_LAT = ACT_ON;
     }
     act_tmr = millis;
 
@@ -507,10 +507,10 @@ void do_shift(uint8_t shift_enum) {
       if (gear == gear_target) {
         // Relax actuator
         if (SHIFT_UP) {
-          ACT_UP_LAT = 0; 
+          ACT_UP_LAT = ACT_OFF; 
           retry_up = 0;
         } else if (SHIFT_DN){
-          ACT_DN_LAT = 0;
+          ACT_DN_LAT = ACT_OFF;
           retry_dn = 0;
         }
 
@@ -534,10 +534,10 @@ void do_shift(uint8_t shift_enum) {
       if (millis - act_tmr >= MAX_SHIFT_DUR) {
         // Relax actuator
         if (SHIFT_UP) {
-          ACT_UP_LAT = 0; 
+          ACT_UP_LAT = ACT_OFF; 
           retry_up++;
         } else if (SHIFT_DN){
-          ACT_DN_LAT = 0;
+          ACT_DN_LAT = ACT_OFF;
           retry_dn++;
         }
         
@@ -578,9 +578,9 @@ void do_shift(uint8_t shift_enum) {
 
     // Fire actuator
     if (orig_gear == 1) {
-      ACT_UP_LAT = 1; 
+      ACT_UP_LAT = ACT_ON; 
     } else if (orig_gear == 2) {
-      ACT_DN_LAT = 1; 
+      ACT_DN_LAT = ACT_ON; 
     }
     act_tmr = millis;
     
@@ -589,8 +589,8 @@ void do_shift(uint8_t shift_enum) {
       
       if (gear == GEAR_NEUT) {
         // Relax actuator
-        ACT_DN_LAT = 0; 
-        ACT_UP_LAT = 0;
+        ACT_DN_LAT = ACT_OFF; 
+        ACT_UP_LAT = ACT_OFF;
         relax_wait();
         
         retry_nt = 0;
@@ -599,8 +599,8 @@ void do_shift(uint8_t shift_enum) {
       } else if (gear == orig_gear) {
         if (millis - act_tmr >= MAX_SHIFT_DUR) {
           // Relax actuator
-          ACT_DN_LAT = 0; 
-          ACT_UP_LAT = 0;
+          ACT_DN_LAT = ACT_OFF; 
+          ACT_UP_LAT = ACT_OFF;
           relax_wait();
 
           retry_nt++;
@@ -608,8 +608,8 @@ void do_shift(uint8_t shift_enum) {
         }
       } else {
         // Relax actuator
-        ACT_DN_LAT = 0; 
-        ACT_UP_LAT = 0;
+        ACT_DN_LAT = ACT_OFF; 
+        ACT_UP_LAT = ACT_OFF;
         relax_wait();
         
         retry_nt++;
@@ -684,9 +684,9 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 
     // Fire actuator
     if (SHIFT_UP) {
-      ACT_UP_LAT = 1; 
+      ACT_UP_LAT = ACT_ON; 
     } else if (SHIFT_DN) {
-      ACT_DN_LAT = 1;
+      ACT_DN_LAT = ACT_ON;
     }
     act_tmr = millis;
 
@@ -695,10 +695,10 @@ void do_shift_gear_fail(uint8_t shift_enum) {
           (SHIFT_DN && millis - act_tmr >= DN_SHIFT_DUR)) {
         // Relax actuator
         if (SHIFT_UP) {
-          ACT_UP_LAT = 0; 
+          ACT_UP_LAT = ACT_OFF; 
           retry_up = 0;
         } else if (SHIFT_DN){
-          ACT_DN_LAT = 0;
+          ACT_DN_LAT = ACT_OFF;
           retry_dn = 0;
         }
 
@@ -737,17 +737,17 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 
     // Fire actuator
     if (gear_fail_nt_shift == SHIFT_ENUM_UP) {
-      ACT_UP_LAT = 1; 
+      ACT_UP_LAT = ACT_ON; 
     } else if (gear_fail_nt_shift == SHIFT_ENUM_DN) {
-      ACT_DN_LAT = 1; 
+      ACT_DN_LAT = ACT_ON; 
     }
     act_tmr = millis;
     
     while (1) {
       if (millis - act_tmr >= NT_SHIFT_DUR) {
         // Relax actuator
-        ACT_DN_LAT = 0; 
-        ACT_UP_LAT = 0;
+        ACT_DN_LAT = ACT_OFF; 
+        ACT_UP_LAT = ACT_OFF;
         relax_wait();
         
         retry_nt = 0;

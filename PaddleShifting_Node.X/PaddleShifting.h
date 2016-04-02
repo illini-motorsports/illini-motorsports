@@ -51,6 +51,8 @@
 
 // Miscellaneous definitions
 #define IGN_CUT_SPOOF 10000 // Value for "spoofed" gear shift force sensor
+#define ACT_ON  0
+#define ACT_OFF 1
 
 // Definitions for gear position variable
 #define GEAR_NEUT 0
