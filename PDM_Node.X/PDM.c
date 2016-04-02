@@ -35,14 +35,14 @@ int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 // State variables determined by various sources
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
-uint8_t str_pulse_flag = 0;
+//uint8_t str_pulse_flag = 0;
 uint16_t total_current_draw = 0;
 uint8_t wtr_override_sw, fan_override_sw = 0;
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr, motec2_recv_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
-uint32_t str_en_tmr, str_pulse_tmr = 0;
+//uint32_t str_en_tmr, str_pulse_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
     cutoff_send_tmr, load_status_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
@@ -522,6 +522,7 @@ void main(void) {
       }
     }
 
+    /*
     // STR
     if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
       if (!STR_EN) {
@@ -548,6 +549,7 @@ void main(void) {
         load_state_changed = 1;
       }
     }
+     */
 
     /**
      * Check peak timers and reset to normal mode if enough time has passed
@@ -672,9 +674,11 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
   }
 
+  /*
   if (str_pulse_flag) {
     EN_STR_LAT = !EN_STR_PORT;
   }
+   */
 
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
@@ -838,6 +842,7 @@ void sample_load_current(void) {
   load_current[BVBAT_IDX] = (((((double) read_adc_chn(ADC_BVBAT_CHN)) / 4095.0)
       * 3.3 * 1.5) * BVBAT_SCLINV * BVBAT_RATIO) / fb_resistances[BVBAT_IDX];
   
+  /*
   load_current[STR0_IDX] = (((((double) read_adc_chn(ADC_STR0_CHN)) / 4095.0)
       * 3.3 * 1.5) * STR0_SCLINV * STR0_RATIO) / fb_resistances[STR0_IDX];
   
@@ -846,6 +851,7 @@ void sample_load_current(void) {
   
   load_current[STR2_IDX] = (((((double) read_adc_chn(ADC_STR2_CHN)) / 4095.0)
       * 3.3 * 1.5) * STR2_SCLINV * STR2_RATIO) / fb_resistances[STR2_IDX];
+   */
 
   // Calculate total current consumption
   double current_total = ((double) load_current[IGN_IDX]) / (IGN_SCLINV / TOTAL_SCLINV);
@@ -859,9 +865,9 @@ void sample_load_current(void) {
   current_total += ((double) load_current[PDLD_IDX]) / (PDLD_SCLINV / TOTAL_SCLINV);
   current_total += ((double) load_current[B5V5_IDX]) / (B5V5_SCLINV / TOTAL_SCLINV);
   current_total += ((double) load_current[BVBAT_IDX]) / (BVBAT_SCLINV / TOTAL_SCLINV);
-  current_total += ((double) load_current[STR0_IDX]) / (STR0_SCLINV / TOTAL_SCLINV);
-  current_total += ((double) load_current[STR1_IDX]) / (STR1_SCLINV / TOTAL_SCLINV);
-  current_total += ((double) load_current[STR2_IDX]) / (STR2_SCLINV / TOTAL_SCLINV);
+  //current_total += ((double) load_current[STR0_IDX]) / (STR0_SCLINV / TOTAL_SCLINV);
+  //current_total += ((double) load_current[STR1_IDX]) / (STR1_SCLINV / TOTAL_SCLINV);
+  //current_total += ((double) load_current[STR2_IDX]) / (STR2_SCLINV / TOTAL_SCLINV);
   total_current_draw = current_total;
 }
 
@@ -885,8 +891,8 @@ void check_load_overcurrent(void) {
 void send_load_current_can(void) {
   if(millis - load_current_send_tmr >= LOAD_CUR_SEND) {
     CAN_data load_current_data = {0};
-    uint16_t current_str_total = load_current[STR0_IDX] + load_current[STR1_IDX]
-        + load_current[STR2_IDX];
+    //uint16_t current_str_total = load_current[STR0_IDX] + load_current[STR1_IDX]
+    //    + load_current[STR2_IDX];
 
     load_current_data.halfword0 = load_current[IGN_IDX];
     load_current_data.halfword1 = load_current[INJ_IDX];
@@ -907,12 +913,14 @@ void send_load_current_can(void) {
     load_current_data.halfword2 = load_current[BVBAT_IDX];
     CAN_send_message(PDM_ID + 6, 6, load_current_data);
 
+    /*
     load_current_data.doubleword = 0;
     load_current_data.halfword0 = load_current[STR0_IDX];
     load_current_data.halfword1 = load_current[STR1_IDX];
     load_current_data.halfword2 = load_current[STR2_IDX];
     load_current_data.halfword3 = current_str_total;
     CAN_send_message(PDM_ID + 7, 8, load_current_data);
+     */
 
     load_current_send_tmr = millis;
   }
@@ -1077,8 +1085,8 @@ void send_load_status_can(uint8_t override) {
         PDLU_EN << (15 - PDLU_IDX) |
         PDLD_EN << (15 - PDLD_IDX) |
         B5V5_EN << (15 - B5V5_IDX) |
-        BVBAT_EN << (15 - BVBAT_IDX) |
-        STR_EN << (15 - STR_IDX);
+        BVBAT_EN << (15 - BVBAT_IDX);// |
+        //STR_EN << (15 - STR_IDX);
 
     // Create load peak mode bitmap
     data.halfword1 = 0x0 |
@@ -1132,9 +1140,10 @@ void set_rheo(uint8_t load_idx, uint8_t val) {
     case PDLD_IDX: CS_PDLD_LAT = 0; break;
     case B5V5_IDX: CS_B5V5_LAT = 0; break;
     case BVBAT_IDX: CS_BVBAT_LAT = 0; break;
-    case STR0_IDX: CS_STR0_LAT = 0; break;
-    case STR1_IDX: CS_STR1_LAT = 0; break;
-    case STR2_IDX: CS_STR2_LAT = 0; break;
+    //case STR0_IDX: CS_STR0_LAT = 0; break;
+    //case STR1_IDX: CS_STR1_LAT = 0; break;
+    //case STR2_IDX: CS_STR2_LAT = 0; break;
+    default: return;
   }
 
   SPI1BUF = ((uint16_t) val);
@@ -1153,9 +1162,9 @@ void set_rheo(uint8_t load_idx, uint8_t val) {
     case PDLD_IDX: CS_PDLD_LAT = 1; break;
     case B5V5_IDX: CS_B5V5_LAT = 1; break;
     case BVBAT_IDX: CS_BVBAT_LAT = 1; break;
-    case STR0_IDX: CS_STR0_LAT = 1; break;
-    case STR1_IDX: CS_STR1_LAT = 1; break;
-    case STR2_IDX: CS_STR2_LAT = 1; break;
+    //case STR0_IDX: CS_STR0_LAT = 1; break;
+    //case STR1_IDX: CS_STR1_LAT = 1; break;
+    //case STR2_IDX: CS_STR2_LAT = 1; break;
   }
 }
 
@@ -1181,9 +1190,9 @@ void send_all_rheo(uint16_t msg) {
   CS_PDLD_LAT = 0;
   CS_B5V5_LAT = 0;
   CS_BVBAT_LAT = 0;
-  CS_STR0_LAT = 0;
-  CS_STR1_LAT = 0;
-  CS_STR2_LAT = 0;
+  //CS_STR0_LAT = 0;
+  //CS_STR1_LAT = 0;
+  //CS_STR2_LAT = 0;
 
   SPI1BUF = msg; // Send msg on SPI bus
   while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
@@ -1200,9 +1209,9 @@ void send_all_rheo(uint16_t msg) {
   CS_PDLD_LAT = 1;
   CS_B5V5_LAT = 1;
   CS_BVBAT_LAT = 1;
-  CS_STR0_LAT = 1;
-  CS_STR1_LAT = 1;
-  CS_STR2_LAT = 1;
+  //CS_STR0_LAT = 1;
+  //CS_STR1_LAT = 1;
+  //CS_STR2_LAT = 1;
 }
 
 /**
@@ -1281,9 +1290,9 @@ void init_adc_pdm(void) {
   ADC_PDLD_CSS = 1;
   ADC_B5V5_CSS = 1;
   ADC_BVBAT_CSS = 1;
-  ADC_STR0_CSS = 1;
-  ADC_STR1_CSS = 1;
-  ADC_STR2_CSS = 1;
+  //ADC_STR0_CSS = 1;
+  //ADC_STR1_CSS = 1;
+  //ADC_STR2_CSS = 1;
   ADC_3V3_CSS = 1;
   ADC_5V_CSS = 1;
   ADC_5V5_CSS = 1;
