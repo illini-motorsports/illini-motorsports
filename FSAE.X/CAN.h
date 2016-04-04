@@ -78,11 +78,14 @@
 #define FUEL_TRIM_BYTE			2
 
 // From PaddleShifting
-#define GEAR_VOLT_BYTE      0
-#define GEAR_BYTE           2
+#define PADDLE_UPTIME_BYTE	0
+#define PADDLE_TEMP_BYTE		2
 #define QUEUE_NT_BYTE       4
 #define QUEUE_UP_BYTE       5
 #define QUEUE_DN_BYTE       6
+
+#define GEAR_VOLT_BYTE      0
+#define GEAR_BYTE           2
 
 // From Wheel
 #define SWITCH_BITS_BYTE    6
@@ -92,13 +95,64 @@
 #define PEAK_MODE_BYTE      1
 #define CUTOFF_SETTING_BYTE 2
 
-// ******************************
 // From PDM
-// ******************************
 #define PDM_UPTIME_BYTE 		0
 #define PDM_PCB_TEMP_BYTE 	2
 #define PDM_IC_TEMP_BYTE		4
 #define TOTAL_CURRENT_BYTE	6
+
+#define LOAD_ENABLITY_BYTE  0
+#define LOAD_PEAK_BYTE			2
+#define PDM_SWITCH_BYTE			4
+
+#define VBAT_RAIL_BYTE			0
+#define V12_RAIL_BYTE				2
+#define V5V5_RAIL_BYTE			4
+#define V5_RAIL_BYTE				6
+
+#define V3V3_RAIL_BYTE			0
+
+#define IGN_DRAW_BYTE				0
+#define INJ_DRAW_BYTE				2
+#define FUEL_DRAW_BYTE			4
+#define ECU_DRAW_BYTE				6
+
+#define WTR_DRAW_BYTE				0
+#define FAN_DRAW_BYTE				2
+#define AUX_DRAW_BYTE				4
+#define PDLU_DRAW_BYTE			6
+
+#define PDLD_DRAW_BYTE			0
+#define B5V5_DRAW_BYTE			2
+#define VBAT_DRAW_BYTE			4
+
+#define STR0_DRAW_BYTE			0
+#define STR1_DRAW_BYTE			2
+#define STR2_DRAW_BYTE			4
+#define STR_DRAW_BYTE				6
+
+#define IGN_CUT_BYTE				0
+#define INJ_CUT_BYTE				2
+#define AUX_CUT_BYTE				4
+#define PDLU_CUT_BYTE				6
+
+#define PDLD_CUT_BYTE				0
+#define B5V5_CUT_BYTE				2
+#define BVBAT_CUT_BYTE			4
+
+#define STR0_CUT_BYTE				0
+#define STR1_CUT_BYTE				2
+#define STR2_CUT_BYTE				4
+
+#define FUEL_CUT_N_BYTE			0
+#define WTR_CUT_N_BYTE			2
+#define FAN_CUT_N_BYTE			4
+#define ECU_CUT_N_BYTE			6
+
+#define FUEL_CUT_P_BYTE			0
+#define WTR_CUT_P_BYTE			2
+#define FAN_CUT_P_BYTE			4
+#define ECU_CUT_P_BYTE			6
 
 //TODO: Sort/change these
 #define GDN_SPD_BYTE        0
@@ -107,6 +161,7 @@
 /**
  * Scalars for channels
  */
+// From Motec
 #define ENG_RPM_SCL					1.0
 #define THROTTLE_POS_SCL		0.1
 #define LAMBDA_SCL					0.001
@@ -141,6 +196,76 @@
 
 #define FUEL_INJ_DUTY_SCL		0.1
 #define FUEL_TRIM_SCL				0.1 //??
+
+// From PaddleShifting
+#define PADDLE_UPTIME_SCL		1
+#define PADDLE_TEMP_SCL			0.005
+#define QUEUE_NT_SCL       	1
+#define QUEUE_UP_SCL       	1
+#define QUEUE_DN_SCL       	1
+
+#define GEAR_VOLT_SCL      	0.0001
+#define GEAR_SCL           	1
+
+// From PDM
+#define PDM_UPTIME_SCL 			1
+#define PDM_PCB_TEMP_SCL 		0.005
+#define PDM_IC_TEMP_SCL			0.005
+#define TOTAL_CURRENT_SCL		0.01
+
+#define LOAD_ENABLITY_SCL  	1
+#define LOAD_PEAK_SCL				1
+#define PDM_SWITCH_SCL			1
+
+#define VBAT_RAIL_SCL				0.001
+#define V12_RAIL_SCL				0.001
+#define V5V5_RAIL_SCL				0.001
+#define V5_RAIL_SCL					0.001
+
+#define V3V3_RAIL_SCL				0.001
+
+#define IGN_DRAW_SCL				0.001
+#define INJ_DRAW_SCL				0.001
+#define FUEL_DRAW_SCL				0.001
+#define ECU_DRAW_SCL				0.001
+
+#define WTR_DRAW_SCL				0.001
+#define FAN_DRAW_SCL				0.001
+#define AUX_DRAW_SCL				0.001
+#define PDLU_DRAW_SCL				0.001
+
+#define PDLD_DRAW_SCL				0.001
+#define B5V5_DRAW_SCL				0.001
+#define BVBAT_DRAW_SCL			0.001
+
+#define STR0_DRAW_SCL				0.01
+#define STR1_DRAW_SCL				0.01
+#define STR2_DRAW_SCL				0.01
+#define STR_DRAW_SCL				0.01
+
+#define IGN_CUT_SCL					0.0025
+#define INJ_CUT_SCL					0.0025
+#define AUX_CUT_SCL					0.0025
+#define PDLU_CUT_SCL				0.0025
+
+#define PDLD_CUT_SCL				0.0025
+#define B5V5_CUT_SCL				0.0025
+#define BVBAT_CUT_SCL				0.0025
+
+#define STR0_CUT_SCL				0.0025
+#define STR1_CUT_SCL				0.0025
+#define STR2_CUT_SCL				0.0025
+
+#define FUEL_CUT_N_SCL			0.0025
+#define WTR_CUT_N_SCL				0.0025
+#define FAN_CUT_N_SCL				0.0025
+#define ECU_CUT_N_SCL				0.0025
+
+#define FUEL_CUT_P_SCL			0.0025
+#define WTR_CUT_P_SCL				0.0025
+#define FAN_CUT_P_SCL				0.0025
+#define ECU_CUT_P_SCL				0.0025
+
 /**
  * Masks for bitmaps
  */

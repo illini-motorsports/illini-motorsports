@@ -69,6 +69,9 @@ typedef struct {
 	uint8_t len;
 } screen;
 
+// Uptimes
+dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
+
 // Motec Data Stream
 dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress, 
 				batVoltage, wheelSpeedFL, wheelSpeedFR, wheelSpeedRL, wheelSpeedRR,
@@ -88,14 +91,14 @@ dataItem swTemp, swSW1, swSW2, swSW3, swSW4, swROT1, swROT2, swROT3, swTROT1,
 // PDM
 dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v,
 				pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, 
-				pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUcut, pdmWTRdraw, pdmWTRNcut, 
-				pdmWTRPcut, pdmFANNdraw, pdmFANPdraw, pdmFANcut, pdmAUXdraw, pdmAUXcut, 
-				pdmPLDUdraw, pdmPLDUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, 
+				pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUNcut, pdmECUPcut, pdmWTRdraw, pdmWTRNcut, 
+				pdmWTRPcut, pdmFANdraw, pdmFANNcut, pdmFANPcut, pdmAUXdraw, pdmAUXcut, 
+				pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, 
 				pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut, pdmSTR1draw, pdmSTR1cut, 
 				pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
 
 // Paddle Shifting
-dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue;
+dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage;
 
 void initDataItems(void);
 void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 

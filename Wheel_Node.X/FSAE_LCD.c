@@ -26,11 +26,8 @@ void initDataItems(void){
 	initDataItem(&rpm,0,0,1000,2,1);
 	initDataItem(&throtPos,0,0,1000,2,1);
 	initDataItem(&oilPress,0,0,1000,1,1);
-	oilPress.value = 3.5;
 	initDataItem(&oilTemp,0,0,1000,3,0);
-	oilTemp.value = 50;
 	initDataItem(&waterTemp,0,0,1000,3,0);
-	waterTemp.value = 95;
 	initDataItem(&lambda,0,0,1000,2,1);
 	initDataItem(&manifoldPress,0,0,1000,2,1);
 	initDataItem(&batVoltage,0,0,1000,2,1);
@@ -97,10 +94,10 @@ void initDataItems(void){
 	// Paddle Shifting
 	initDataItem(&paddleTemp,0,0,1000,2,1);
 	initDataItem(&gearPos,0,0,1000,1,0);
-	gearPos.value = 4;
 	initDataItem(&neutQueue,0,0,1000,2,1);
 	initDataItem(&upQueue,0,0,1000,2,1);
 	initDataItem(&downQueue,0,0,1000,2,1);
+	initDataItem(&gearVoltage,0,0,1000,2,1);
 
 	// PDM
 	initDataItem(&pdmTemp,0,0,1000,2,1);
@@ -119,17 +116,18 @@ void initDataItems(void){
 	initDataItem(&pdmFUELNcut,0,0,1000,2,1);
 	initDataItem(&pdmFUELPcut,0,0,1000,2,1);
 	initDataItem(&pdmECUdraw,0,0,1000,2,1);
-	initDataItem(&pdmECUcut,0,0,1000,2,1);
+	initDataItem(&pdmECUNcut,0,0,1000,2,1);
+	initDataItem(&pdmECUPcut,0,0,1000,2,1);
 	initDataItem(&pdmWTRdraw,0,0,1000,2,1);
 	initDataItem(&pdmWTRNcut,0,0,1000,2,1);
 	initDataItem(&pdmWTRPcut,0,0,1000,2,1);
-	initDataItem(&pdmFANNdraw,0,0,1000,2,1);
-	initDataItem(&pdmFANPdraw,0,0,1000,2,1);
-	initDataItem(&pdmFANcut,0,0,1000,2,1);
+	initDataItem(&pdmFANdraw,0,0,1000,2,1);
+	initDataItem(&pdmFANNcut,0,0,1000,2,1);
+	initDataItem(&pdmFANPcut,0,0,1000,2,1);
 	initDataItem(&pdmAUXdraw,0,0,1000,2,1);
 	initDataItem(&pdmAUXcut,0,0,1000,2,1);
-	initDataItem(&pdmPLDUdraw,0,0,1000,2,1);
-	initDataItem(&pdmPLDUcut,0,0,1000,2,1);
+	initDataItem(&pdmPDLUdraw,0,0,1000,2,1);
+	initDataItem(&pdmPDLUcut,0,0,1000,2,1);
 	initDataItem(&pdmPDLDdraw,0,0,1000,2,1);
 	initDataItem(&pdmPDLDcut,0,0,1000,2,1);
 	initDataItem(&pdm5v5draw,0,0,1000,2,1);
@@ -144,7 +142,11 @@ void initDataItems(void){
 	initDataItem(&pdmSTR2cut,0,0,1000,2,1);
 	initDataItem(&pdmSTRdraw,0,0,1000,2,1);
 
-	
+	// Uptimes
+	initDataItem(&paddleUptime,0,0,1000,2,1);
+	initDataItem(&loggerUptime,0,0,1000,2,1);
+	initDataItem(&swUptime,0,0,1000,2,1);
+	initDataItem(&pdmUptime,0,0,1000,2,1);
 }
 
 void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 

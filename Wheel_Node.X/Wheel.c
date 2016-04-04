@@ -124,7 +124,7 @@ void process_CAN_msg(CAN_message msg){
 			gpsAltitude.value = parseMsgMotec(&msg, GPS_ALT_BYTE, GPS_ALT_SCL);
 			break;
 		case MOTEC_ID + 5:
-			gpsLat.value = (double) ((msg.data[GPS_LAT_BYTE] << 24) | 
+			gpsLat.value = (double) ((msg.data[GPS_LAT_BYTE] << 24) |
 							(msg.data[GPS_LAT_BYTE+1] << 16) | (msg.data[GPS_LAT_BYTE+2] << 8) | 
 							msg.data[GPS_LAT_BYTE+3]) * GPS_LAT_SCL;
 			gpsLong.value = (double) ((msg.data[GPS_LONG_BYTE] << 24) | 
@@ -143,92 +143,90 @@ void process_CAN_msg(CAN_message msg){
 			fuelTrim.value = parseMsgMotec(&msg, FUEL_TRIM_BYTE, FUEL_TRIM_SCL);
 			break;
 		case PADDLE_ID:
-			neutQueue.value = 0;
-			upQueue.value = 0;
-			downQueue.value = 0;
+			paddleUptime.value = (double) ((uint16_t) msg.data[PADDLE_UPTIME_BYTE]) * 
+							PADDLE_UPTIME_SCL;
+			paddleTemp.value = (double) ((uint16_t) msg.data[PADDLE_TEMP_BYTE]) * 
+							PADDLE_TEMP_SCL;
+			neutQueue.value = msg.data[QUEUE_NT_BYTE] * QUEUE_NT_SCL;
+			upQueue.value = msg.data[QUEUE_UP_BYTE] * QUEUE_UP_SCL;
+			downQueue.value =  msg.data[QUEUE_DN_BYTE] * QUEUE_DN_SCL;
 			break;
 		case PADDLE_ID + 1:
+			gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE]) * 
+							GEAR_VOLT_SCL;
 			gearPos.value = msg.data[GEAR_BYTE];
 			break;
 		case PDM_ID:
-			// Uptime
-			// PCB Temp
-			// IC Temp
-			// Total Current
+			pdmUptime.value = (uint16_t) (msg.data[PDM_UPTIME_BYTE]) * PDM_UPTIME_SCL;
+			pdmTemp.value = (int16_t) (msg.data[PDM_PCB_TEMP_BYTE]) * PDM_PCB_TEMP_SCL;
+			pdmICTemp.value = (int16_t) (msg.data[PDM_IC_TEMP_BYTE]) * PDM_IC_TEMP_SCL;
+			pdmCurrentDraw.value = (uint16_t) (msg.data[TOTAL_CURRENT_BYTE]) * TOTAL_CURRENT_SCL;
 			break;
 		case PDM_ID + 1:
+			// TODO: Create special cases for Bitmaps
 			// Load Enability
 			// Load Peak Mode
 			// Switch Bitmap
 			break;
 		case PDM_ID + 2:
-			// VBAT Rail
-			// 12v Rail
-			// 5v5 Rail
-			// 5v Rail
+			pdmVBat.value = (uint16_t) (msg.data[VBAT_RAIL_BYTE]) * VBAT_RAIL_SCL;
+			pdm12v.value = (uint16_t) (msg.data[V12_RAIL_BYTE]) * V12_RAIL_SCL;
+			pdm5v5.value = (uint16_t) (msg.data[V5V5_RAIL_BYTE]) * V5V5_RAIL_SCL;
+			pdm5v.value = (uint16_t) (msg.data[V5_RAIL_BYTE]) * V5_RAIL_SCL;
 			break;
 		case PDM_ID + 3:
-			// 3v3 Rail
+			pdm3v3.value = (uint16_t) (msg.data[V3V3_RAIL_BYTE]) * V3V3_RAIL_SCL;
 			break;
 		case PDM_ID + 4:
-			// Current Draws
-			// IGN
-			// INJ
-			// FUEL
-			// ECU
+			pdmIGNdraw.value = (uint16_t) (msg.data[IGN_DRAW_BYTE]) * IGN_DRAW_SCL;
+			pdmINJdraw.value = (uint16_t) (msg.data[INJ_DRAW_BYTE]) * INJ_DRAW_SCL;
+			pdmFUELdraw.value = (uint16_t) (msg.data[FUEL_DRAW_BYTE]) * FUEL_DRAW_SCL;
+			pdmECUdraw.value = (uint16_t) (msg.data[ECU_DRAW_BYTE]) * ECU_DRAW_SCL;
 			break;
 		case PDM_ID + 5:
-			// Current Draws
-			// WTR
-			// FAN
-			// AUX
-			// PDLU
+			pdmWTRdraw.value = (uint16_t) (msg.data[WTR_DRAW_BYTE]) * WTR_DRAW_SCL;
+			pdmFANdraw.value = (uint16_t) (msg.data[FAN_DRAW_BYTE]) * FAN_DRAW_SCL;
+			pdmAUXdraw.value = (uint16_t) (msg.data[AUX_DRAW_BYTE]) * AUX_DRAW_SCL;
+			pdmPDLUdraw.value = (uint16_t) (msg.data[PDLU_DRAW_BYTE]) * PDLU_DRAW_SCL;
 			break;
 		case PDM_ID + 6:
-			// Current Draws
-			// PDLD
-			// B5v5
-			// BVBAT
+			pdmPDLDdraw.value = (uint16_t) (msg.data[PDLD_DRAW_BYTE]) * PDLD_DRAW_SCL;
+			pdm5v5draw.value = (uint16_t) (msg.data[B5V5_DRAW_BYTE]) * B5V5_DRAW_SCL;
+			pdmBATdraw.value = (uint16_t) (msg.data[VBAT_DRAW_BYTE]) * VBAT_DRAW_BYTE;
 			break;
 		case PDM_ID + 7:
-			// Current Draws
-			// STR0
-			// STR1
-			// STR2
-			// STR
+			pdmSTR0draw.value = (uint16_t) (msg.data[STR0_DRAW_BYTE]) * STR0_DRAW_SCL;
+			pdmSTR1draw.value = (uint16_t) (msg.data[STR1_DRAW_BYTE]) * STR1_DRAW_SCL;
+			pdmSTR2draw.value = (uint16_t) (msg.data[STR2_DRAW_BYTE]) * STR2_DRAW_SCL;
+			pdmSTRdraw.value = (uint16_t) (msg.data[STR_DRAW_BYTE]) * STR_DRAW_SCL;
 			break;
 		case PDM_ID + 8:
-			// Current Cutoff
-			// IGN
-			// INJ
-			// AUX
-			// PDLU
+			pdmIGNcut.value = (uint16_t) (msg.data[IGN_CUT_BYTE]) * IGN_CUT_SCL;
+			pdmINJcut.value = (uint16_t) (msg.data[INJ_CUT_BYTE]) * INJ_CUT_SCL;
+			pdmAUXcut.value = (uint16_t) (msg.data[AUX_CUT_BYTE]) * AUX_CUT_SCL;
+			pdmPDLUcut.value = (uint16_t) (msg.data[PDLU_CUT_BYTE]) * PDLU_CUT_SCL;
 			break;
 		case PDM_ID + 9:
-			// Current Cutoff
-			// PDLU
-			// B5v5
-			// BVBAT
+			pdmPDLDcut.value = (uint16_t) (msg.data[PDLD_CUT_BYTE]) * PDLD_CUT_SCL;
+			pdm5v5cut.value = (uint16_t) (msg.data[B5V5_CUT_BYTE]) * B5V5_CUT_SCL;
+			pdmBATcut.value = (uint16_t) (msg.data[BVBAT_CUT_BYTE]) * BVBAT_CUT_SCL;
 			break;
 		case PDM_ID + 10:
-			// Current Cutoff
-			// STR0
-			// STR1
-			// STR2
+			pdmSTR0cut.value = (uint16_t) (msg.data[STR0_CUT_BYTE]) * STR0_CUT_SCL;
+			pdmSTR1cut.value = (uint16_t) (msg.data[STR1_CUT_BYTE]) * STR1_CUT_SCL;
+			pdmSTR2cut.value = (uint16_t) (msg.data[STR2_CUT_BYTE]) * STR2_CUT_SCL;
 			break;
 		case PDM_ID + 11:
-			// Normal Current Cutoff
-			// FUEL
-			// WTR
-			// FAN
-			// ECU
+			pdmFUELNcut.value = (uint16_t) (msg.data[FUEL_CUT_N_BYTE]) * FUEL_CUT_N_SCL;
+			pdmWTRNcut.value = (uint16_t) (msg.data[WTR_CUT_N_BYTE]) * WTR_CUT_N_SCL;
+			pdmFANNcut.value = (uint16_t) (msg.data[FAN_CUT_N_BYTE]) * FAN_CUT_N_SCL;
+			pdmECUNcut.value = (uint16_t) (msg.data[ECU_CUT_N_BYTE]) * ECU_CUT_N_SCL;
 			break;
 		case PDM_ID + 12:
-			// Peak Current Cutoff
-			// FUEL
-			// WTR
-			// FAN
-			// ECU
+			pdmFUELPcut.value = (uint16_t) (msg.data[FUEL_CUT_P_BYTE]) * FUEL_CUT_P_SCL;
+			pdmWTRPcut.value = (uint16_t) (msg.data[WTR_CUT_P_BYTE]) * WTR_CUT_P_SCL;
+			pdmFANPcut.value = (uint16_t) (msg.data[FAN_CUT_P_BYTE]) * FAN_CUT_P_SCL;
+			pdmECUPcut.value = (uint16_t) (msg.data[ECU_CUT_P_BYTE]) * ECU_CUT_P_SCL;
 			break;
   }
 }
