@@ -3,7 +3,7 @@
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
- * Author:      Andrew Mass
+ * Author:      Jake Leonard
  * Created:     2015-2016
  */
 #ifndef WHEEL_H
@@ -31,5 +31,6 @@
 void main(void);
 void delay(uint32_t num);
 void process_CAN_msg(CAN_message msg);
+double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl);
 
 #endif /* WHEEL_H */

@@ -38,7 +38,8 @@ void initDataItems(void){
 	initDataItem(&wheelSpeedFR,0,0,1000,2,1);
 	initDataItem(&wheelSpeedRL,0,0,1000,2,1);
 	initDataItem(&wheelSpeedRR,0,0,1000,2,1);
-	initDataItem(&gps,0,0,1000,2,1);
+	initDataItem(&gpsLong,0,0,1000,2,1);
+	initDataItem(&gpsLat,0,0,1000,2,1);
 	initDataItem(&groundSpeed,0,0,1000,2,1);
 	initDataItem(&driveSpeed,0,0,1000,2,1);
 	initDataItem(&gpsSpeed,0,0,1000,2,1);
@@ -53,6 +54,11 @@ void initDataItems(void){
 	initDataItem(&lambda4,0,0,1000,2,1);
 	initDataItem(&lcEnablity,0,0,1000,2,1);
 	initDataItem(&fuelConsum,0,0,1000,2,1);
+	initDataItem(&gpsAltitude,0,0,1000,2,1);
+	initDataItem(&gpsTime,0,0,1000,2,1);
+	initDataItem(&runTime,0,0,1000,2,1);
+	initDataItem(&fuelInjDuty,0,0,1000,2,1);
+	initDataItem(&fuelTrim,0,0,1000,2,1);
 
 	// Tire Temps
 	initDataItem(&ttFL1,0,0,1000,2,1);
@@ -95,6 +101,50 @@ void initDataItems(void){
 	initDataItem(&neutQueue,0,0,1000,2,1);
 	initDataItem(&upQueue,0,0,1000,2,1);
 	initDataItem(&downQueue,0,0,1000,2,1);
+
+	// PDM
+	initDataItem(&pdmTemp,0,0,1000,2,1);
+	initDataItem(&pdmICTemp,0,0,1000,2,1);
+	initDataItem(&pdmCurrentDraw,0,0,1000,2,1);
+	initDataItem(&pdmVBat,0,0,1000,2,1);
+	initDataItem(&pdm12v,0,0,1000,2,1);
+	initDataItem(&pdm5v5,0,0,1000,2,1);
+	initDataItem(&pdm5v,0,0,1000,2,1);
+	initDataItem(&pdm3v3,0,0,1000,2,1);
+	initDataItem(&pdmIGNdraw,0,0,1000,2,1);
+	initDataItem(&pdmIGNcut,0,0,1000,2,1);
+	initDataItem(&pdmINJdraw,0,0,1000,2,1);
+	initDataItem(&pdmINJcut,0,0,1000,2,1);
+	initDataItem(&pdmFUELdraw,0,0,1000,2,1);
+	initDataItem(&pdmFUELNcut,0,0,1000,2,1);
+	initDataItem(&pdmFUELPcut,0,0,1000,2,1);
+	initDataItem(&pdmECUdraw,0,0,1000,2,1);
+	initDataItem(&pdmECUcut,0,0,1000,2,1);
+	initDataItem(&pdmWTRdraw,0,0,1000,2,1);
+	initDataItem(&pdmWTRNcut,0,0,1000,2,1);
+	initDataItem(&pdmWTRPcut,0,0,1000,2,1);
+	initDataItem(&pdmFANNdraw,0,0,1000,2,1);
+	initDataItem(&pdmFANPdraw,0,0,1000,2,1);
+	initDataItem(&pdmFANcut,0,0,1000,2,1);
+	initDataItem(&pdmAUXdraw,0,0,1000,2,1);
+	initDataItem(&pdmAUXcut,0,0,1000,2,1);
+	initDataItem(&pdmPLDUdraw,0,0,1000,2,1);
+	initDataItem(&pdmPLDUcut,0,0,1000,2,1);
+	initDataItem(&pdmPDLDdraw,0,0,1000,2,1);
+	initDataItem(&pdmPDLDcut,0,0,1000,2,1);
+	initDataItem(&pdm5v5draw,0,0,1000,2,1);
+	initDataItem(&pdm5v5cut,0,0,1000,2,1);
+	initDataItem(&pdmBATdraw,0,0,1000,2,1);
+	initDataItem(&pdmBATcut,0,0,1000,2,1);
+	initDataItem(&pdmSTR0draw,0,0,1000,2,1);
+	initDataItem(&pdmSTR0cut,0,0,1000,2,1);
+	initDataItem(&pdmSTR1draw,0,0,1000,2,1);
+	initDataItem(&pdmSTR1cut,0,0,1000,2,1);
+	initDataItem(&pdmSTR2draw,0,0,1000,2,1);
+	initDataItem(&pdmSTR2cut,0,0,1000,2,1);
+	initDataItem(&pdmSTRdraw,0,0,1000,2,1);
+
+	
 }
 
 void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 

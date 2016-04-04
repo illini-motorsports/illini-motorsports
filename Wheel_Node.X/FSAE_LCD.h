@@ -61,7 +61,6 @@ typedef struct {
 /*
  * Defines a screen
  * 
- * name - 		Screen Name
  * elements -	Array of screen Items that will be on that screen 
  * len - 			Length of element array
  */
@@ -73,9 +72,10 @@ typedef struct {
 // Motec Data Stream
 dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress, 
 				batVoltage, wheelSpeedFL, wheelSpeedFR, wheelSpeedRL, wheelSpeedRR,
-				gps, groundSpeed, driveSpeed, gpsSpeed, manifoldTemp, ambientTemp,
-				ambientPress, fuelTemp, fuelPress, lambda1, lambda2, lambda3, lambda4,
-				lcEnablity, fuelConsum;
+				gpsLat, gpsLong, groundSpeed, driveSpeed, gpsSpeed, manifoldTemp, 
+				ambientTemp, ambientPress, fuelTemp, fuelPress, lambda1, lambda2, 
+				lambda3, lambda4, lcEnablity, fuelConsum, gpsAltitude, gpsTime, runTime,
+				fuelInjDuty, fuelTrim;
 
 // Tire Temps
 dataItem ttFL1, ttFL2, ttFL3, ttFL4, ttFR1, ttFR2, ttFR3, ttFR4, ttRL1, ttRL2,

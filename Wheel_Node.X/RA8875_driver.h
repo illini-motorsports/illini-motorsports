@@ -3,7 +3,7 @@
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
- * Author:      Andrew Mass
+ * Author:      Jake Leonard
  * Created:     2015-2016
  */
 #ifndef RA8875_DRIVER_H

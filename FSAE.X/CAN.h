@@ -39,13 +39,43 @@
 #define ORIGIN_BYTE         0
 #define ERRNO_BYTE          2
 
+// *************************
 // From MoTeC
+// *************************
 #define ENG_RPM_BYTE        0
+#define THROTTLE_POS_BYTE   2
+#define LAMBDA_BYTE					4
 #define VOLT_ECU_BYTE       6
+
 #define ENG_TEMP_BYTE       0
 #define OIL_TEMP_BYTE       2
+#define MANIFOLD_TEMP_BYTE	4
+#define FUEL_TEMP_BYTE			6
+
+#define AMBIENT_PRES_BYTE		0
 #define OIL_PRES_BYTE       2
-#define THROTTLE_POS_BYTE   2
+#define MANIFOLD_PRES_BYTE	4
+#define FUEL_PRES_BYTE			6
+
+#define WHEELSPEED_FL_BYTE	0
+#define WHEELSPEED_FR_BYTE	2
+#define WHEELSPEED_RL_BYTE	4
+#define WHEELSPEED_RR_BYTE	6
+
+#define DRIVE_SPEED_BYTE		0
+#define GROUND_SPEED_BYTE		2
+#define GPS_SPEED_BYTE			4
+#define GPS_ALT_BYTE				6
+
+#define GPS_LAT_BYTE				0
+#define GPS_LONG_BYTE				4
+
+#define GPS_TIME_BYTE				0
+#define RUN_TIME_BYTE				4
+#define FUEL_USED_BYTE			6
+
+#define FUEL_INJ_DUTY_BYTE	0
+#define FUEL_TRIM_BYTE			2
 
 // From PaddleShifting
 #define GEAR_VOLT_BYTE      0
@@ -62,6 +92,14 @@
 #define PEAK_MODE_BYTE      1
 #define CUTOFF_SETTING_BYTE 2
 
+// ******************************
+// From PDM
+// ******************************
+#define PDM_UPTIME_BYTE 		0
+#define PDM_PCB_TEMP_BYTE 	2
+#define PDM_IC_TEMP_BYTE		4
+#define TOTAL_CURRENT_BYTE	6
+
 //TODO: Sort/change these
 #define GDN_SPD_BYTE        0
 #define LOGGING_BYTE        0
@@ -69,12 +107,40 @@
 /**
  * Scalars for channels
  */
-#define ENG_RPM_SCL  1.0
-#define ENG_TEMP_SCL 0.1
-#define OIL_PRES_SCL 0.001;
-#define OIL_TEMP_SCL 0.1
-#define VOLT_ECU_SCL 0.01
+#define ENG_RPM_SCL					1.0
+#define THROTTLE_POS_SCL		0.1
+#define LAMBDA_SCL					0.001
+#define VOLT_ECU_SCL				0.01
 
+#define ENG_TEMP_SCL				0.1
+#define OIL_TEMP_SCL				0.1
+#define MANIFOLD_TEMP_SCL		0.1
+#define FUEL_TEMP_SCL				0.1
+
+#define AMBIENT_PRES_SCL		0.001
+#define OIL_PRES_SCL       	0.001
+#define MANIFOLD_PRES_SCL		0.001
+#define FUEL_PRES_SCL				0.001
+
+#define WHEELSPEED_FL_SCL		0.1
+#define WHEELSPEED_FR_SCL		0.1
+#define WHEELSPEED_RL_SCL		0.1
+#define WHEELSPEED_RR_SCL		0.1
+
+#define DRIVE_SPEED_SCL			0.1
+#define GROUND_SPEED_SCL		0.1
+#define GPS_SPEED_SCL				0.1
+#define GPS_ALT_SCL					0.1 //??
+
+#define GPS_LAT_SCL					0.0000001
+#define GPS_LONG_SCL				0.0000001
+
+#define GPS_TIME_SCL				1 //??
+#define RUN_TIME_SCL				0.1
+#define FUEL_USED_SCL				0.1 //??
+
+#define FUEL_INJ_DUTY_SCL		0.1
+#define FUEL_TRIM_SCL				0.1 //??
 /**
  * Masks for bitmaps
  */
