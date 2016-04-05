@@ -14,39 +14,20 @@
  */
 void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t fg, uint16_t bg) {
   int mid = (w / 2) + x;
-  int i = 0;
-  for(;i<140;i+=20){
-	fillTriangle(x, y + h - (w/2) - i, x + w, y + h - (w/2) - i, mid, y + h - i, fg);
-  fillTriangle(x, y + h - (w/2) - 10 - i, x + w, y + h - (w/2) - 10 - i, mid, y + h - 10 - i, bg);
+	int spacing = (h-(w/2))/11;
+	int bgOffset = spacing/2;
+  int i;
+  for(i = 0;i<11;i++){
+		fillTriangle(x,y+h-(w/2)-(i*spacing),x+w,y+h-(w/2)-(i*spacing),
+						x+(w/2),y+h-(i*spacing),fg);
+		fillTriangle(x,y+h-(w/2)-(i*spacing)-bgOffset,x+w,y+h-(w/2)-(i*spacing)-bgOffset,
+						x+(w/2),y+h-(i*spacing)-bgOffset,bg);
   }
-  fillRect(x-1, y-1, 6, h + 1, bg);
-  fillRect(x+w-10, y-1, 11, h + 1, bg);
+  fillRect(x,y,w/10,h,bg);
+  fillRect(x+w-(w/10),y,w/10,h,bg);
+	fillTriangle(x,y,x+(w/2),y,x,y+(w/2),bg);
+	fillTriangle(x+w,y,x+(w/2),y,x+w,y+(w/2),bg);
 }
-
-void drawRaceScreen(double oil_temp, double oil_pres, double water_temp, int gear_pos){
-  	graphicsMode();
-
-	fillScreen(RA8875_WHITE);
-	// Big Gear	 
-    sevenSegmentDigit(200,20,75,RA8875_BLACK,gear_pos);
-	// Oil Pressure
-	sevenSegmentMultDigit(10, 50, 20, 2, RA8875_BLACK, (uint16_t) (oil_pres+0.5));
-  	// Oil Temp
-	sevenSegmentMultDigit(10, 175, 20, 3, RA8875_BLACK, (uint16_t) (oil_temp+0.5));
-	// Water Temp
-	sevenSegmentMultDigit(400, 100, 20, 3, RA8875_BLACK, (uint16_t) (water_temp+0.5));
-
-  textMode();
-  textTransparent(RA8875_BLACK);
-  textEnlarge(1);
-  textSetCursor(10, 10);
-  textWrite("OIL PRES", 8);
-  textSetCursor(10, 145);
-  textWrite("OIL TEMP", 8);
-  textSetCursor(350, 50);
-  textWrite("WTR TEMP", 8);
-  graphicsMode();
-  }
 
 // Displays a decimal number using the seven segment helper functions
 void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t decDigits, uint16_t color, double number){

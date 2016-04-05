@@ -69,6 +69,12 @@ typedef struct {
 	uint8_t len;
 } screen;
 
+screenItem raceScreenItems[5];
+screen raceScreen;
+screen* allScreens[1];
+
+uint8_t screenNumber;
+
 // Uptimes
 dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
 

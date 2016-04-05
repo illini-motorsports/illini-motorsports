@@ -27,6 +27,7 @@
 #define LCD_RST_TRIS TRISBbits.TRISB4
 #define LCD_RST_LAT  LATBbits.LATB4
 
+volatile uint32_t millis;
 // Function definitions
 void main(void);
 void delay(uint32_t num);
