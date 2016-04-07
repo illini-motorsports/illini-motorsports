@@ -57,8 +57,7 @@
 // Timing constants (ms)
 
 #define FUEL_PRIME_DUR     500
-//#define STR_MAX_DUR        4000
-//#define STR_PULSE_DUR      100
+#define STR_MAX_DUR        4000
 #define MAX_PDL_DUR        500
 
 #define BASIC_CONTROL_WAIT 1000
@@ -98,7 +97,7 @@
 #define PDLD_EN  (EN_PDLD_PORT == PWR_ON)
 #define B5V5_EN  (EN_B5V5_PORT == PWR_ON)
 #define BVBAT_EN (EN_BVBAT_PORT == PWR_ON)
-#define STR_EN   (STR_SW) //(EN_STR_PORT == PWR_ON || str_pulse_flag)
+#define STR_EN   (EN_STR_PORT == PWR_ON)
 
 // Definitions for interval override control
 #define OVERRIDE    1
@@ -263,7 +262,7 @@
 #define ADC_PDLD_CSS    ADCCSS1bits.CSS19
 #define ADC_B5V5_CSS    ADCCSS1bits.CSS14
 #define ADC_BVBAT_CSS   ADCCSS1bits.CSS13
-//#define ADC_STR0_CSS    ADCCSS1bits.CSS12
+#define ADC_STR0_CSS    ADCCSS1bits.CSS12
 //#define ADC_STR1_CSS    ADCCSS1bits.CSS11
 //#define ADC_STR2_CSS    ADCCSS1bits.CSS24
 #define ADC_3V3_CSS     ADCCSS1bits.CSS31
@@ -306,7 +305,7 @@
 #define ADC_PDLD_CHN    19
 #define ADC_B5V5_CHN    14
 #define ADC_BVBAT_CHN   13
-//#define ADC_STR0_CHN    12
+#define ADC_STR0_CHN    12
 //#define ADC_STR1_CHN    11
 //#define ADC_STR2_CHN    24
 #define ADC_3V3_CHN     31

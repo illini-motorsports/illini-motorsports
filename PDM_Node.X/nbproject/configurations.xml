@@ -261,7 +261,7 @@
         <property key="programoptions.pgmspeed" value="2"/>
         <property key="programoptions.preservedataflash" value="false"/>
         <property key="programoptions.preserveeeprom" value="false"/>
-        <property key="programoptions.preserveprogramrange" value="true"/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
         <property key="programoptions.preserveprogramrange.end" value="0x1d1fffff"/>
         <property key="programoptions.preserveprogramrange.start" value="0x1d1fe000"/>
         <property key="programoptions.preserveuserid" value="false"/>
