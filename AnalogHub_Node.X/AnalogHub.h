@@ -2,7 +2,7 @@
  * AnalogHub Header
  *
  * Processor:    PIC18F46K80
- * Complier:     Microchip C18
+ * Compiler:     Microchip C18
  * Author:       Andrew Mass
  * Date:         2015-2016
  */
@@ -51,7 +51,30 @@
 #define TERM_TRIS TRISCbits.TRISC6
 #define TERM_LAT  LATCbits.LATC6
 
-//TODO: Pin definitions for FRONT ADC channels
+// Pin definitions for FRONT ADC channels
+#define ADC_SPFL_TRIS  TRISBbits.TRISB0
+#define ADC_SPFR_TRIS  TRISBbits.TRISB4
+#define ADC_BPF_TRIS   TRISEbits.TRISE2
+#define ADC_BPR_TRIS   TRISBbits.TRISB1
+#define ADC_STRP_TRIS  TRISEbits.TRISE0
+#define ADC_APPS0_TRIS TRISAbits.TRISA2
+#define ADC_APPS1_TRIS TRISAbits.TRISA1
+#define ADC_PTDP_TRIS  TRISEbits.TRISE1
+#define ADC_UAN0_TRIS  TRISAbits.TRISA0
+#define ADC_UAN0_LAT   LATAbits.LATA0
+
+// Pin definitions for REAR ADC channels
+#define ADC_SPRL_TRIS TRISBbits.TRISB1
+#define ADC_SPRR_TRIS TRISEbits.TRISE2
+#define ADC_EOS_TRIS  TRISBbits.TRISB0
+#define ADC_BCD_TRIS  TRISAbits.TRISA3
+#define ADC_CTRI_TRIS TRISBbits.TRISB4
+#define ADC_CTRO_TRIS TRISEbits.TRISE1
+#define ADC_CTSP_TRIS TRISEbits.TRISE0
+#define ADC_FTFT_TRIS TRISAbits.TRISA1
+#define ADC_CPSP_TRIS TRISAbits.TRISA5
+#define ADC_FPFT_TRIS TRISAbits.TRISA0
+#define ADC_MCD_TRIS  TRISAbits.TRISA2
 
 // Pin definitions for RADIO channels
 #define RADIO0_TRIS TRISAbits.TRISA5

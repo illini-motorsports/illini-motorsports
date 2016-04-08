@@ -41,6 +41,29 @@
 #define ORIGIN_BYTE         0
 #define ERRNO_BYTE          2
 
+// From Rear AnalogHub
+#define SPRL_BYTE           0
+#define SPRR_BYTE           2
+#define EOS_BYTE            4
+#define BCD_BYTE            6
+#define CTRI_BYTE           0
+#define CTRO_BYTE           2
+#define CTSP_BYTE           4
+#define FTFT_BYTE           6
+#define CPSP_BYTE           0
+#define FPFT_BYTE           2
+#define MCD_BYTE            4
+
+// From Front AnalogHub
+#define SPFL_BYTE           0
+#define SPFR_BYTE           2
+#define BPF_BYTE            4
+#define BPR_BYTE            6
+#define STRP_BYTE           0
+#define APPS0_BYTE          2
+#define APPS1_BYTE          4
+#define PTDP_BYTE           6
+
 // From MoTeC
 #define ENG_RPM_BYTE        0
 #define THROTTLE_POS_BYTE   2

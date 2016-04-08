@@ -772,7 +772,7 @@ void sample_gear(void) {
   if(millis - gear_samp_tmr >= GEAR_SAMP_INTV) {
     uint16_t gear_samp = sample(ADC_GEAR_CHN);
     uint16_t gear_voltage = (uint16_t) (((((double) gear_samp) / 4095.0)
-        * 3.3) * 10000);
+        * 5.0) * 10000);
 
     //TODO: Apply linearization of sensor and CAN scalars to set value
     gear = GEAR_FAIL;
