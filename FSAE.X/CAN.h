@@ -41,9 +41,7 @@
 #define ORIGIN_BYTE         0
 #define ERRNO_BYTE          2
 
-// *************************
 // From MoTeC
-// *************************
 #define ENG_RPM_BYTE        0
 #define THROTTLE_POS_BYTE   2
 #define LAMBDA_BYTE					4
@@ -90,7 +88,11 @@
 #define GEAR_BYTE           2
 
 // From Wheel
-#define SWITCH_BITS_BYTE    6
+#define SWITCH_BITS_BYTE    0
+#define BUTTON_BITS_BYTE    0
+#define ROT1_BYTE           1
+#define ROT2_BYTE           1
+#define ROT3_BYTE           2
 
 // From PDM Programming
 #define LOAD_IDX_BYTE       0
@@ -156,13 +158,10 @@
 #define FAN_CUT_P_BYTE			4
 #define ECU_CUT_P_BYTE			6
 
-//TODO: Sort/change these
-#define GDN_SPD_BYTE        0
-#define LOGGING_BYTE        0
-
 /**
  * Scalars for channels
  */
+
 // From Motec
 #define ENG_RPM_SCL					1.0
 #define THROTTLE_POS_SCL		0.1
@@ -269,10 +268,17 @@
 #define ECU_CUT_P_SCL				0.0025
 
 /**
- * Masks for bitmaps
+ * Masks for bitmaps & packed messages
  */
-#define FAN_OVER_MASK 0x8
-#define WTR_OVER_MASK 0x4
+
+// From Wheel
+#define FAN_OVER_MASK  0x10
+#define WTR_OVER_MASK  0x20
+#define FUEL_OVER_MASK 0x40
+#define RADIO_BTN_MASK 0x01
+#define ROT1_MASK      0xF0
+#define ROT2_MASK      0x0F
+#define ROT3_MASK      0xF0
 
 /**
  * ADL definitions

@@ -89,6 +89,10 @@ volatile uint32_t seconds = 0; // Holds timer1 rollover count
 uint32_t fast_send_tmr, med_send_tmr, slow_send_tmr,
     diag_send_tmr = 0; // Various millis timers
 
+#if FRONT
+uint8_t radio_sw = 0; // State variable updated by PDM switch state CAN message
+#endif
+
 // ECAN variables
 uint32_t id = 0;             // Holds CAN msgID
 uint8_t data[8] = {0};			 // Holds CAN data bytes
@@ -115,8 +119,16 @@ void main(void) {
    * Initialize I/O pins
    */
 
+  // Init CAN termination pin
   TERM_TRIS = INPUT;
-  //TODO: Init ADC pins + radio pins
+
+  // Init RADIO pins
+#if FRONT
+  RADIO0_TRIS = INPUT;
+  RADIO1_TRIS = INPUT;
+#endif
+
+  //TODO: Init ADC pins
 
   /**
    * Setup Peripherals
@@ -156,6 +168,18 @@ void main(void) {
 
     // Send diagnostic CAN message
     send_diag_can();
+
+#if FRONT
+    if (radio_sw) {
+      RADIO0_TRIS = OUTPUT;
+      RADIO1_TRIS = OUTPUT;
+      RADIO0_LAT = 0;
+      RADIO1_LAT = 0;
+    } else {
+      RADIO0_TRIS = INPUT;
+      RADIO1_TRIS = INPUT;
+    }
+#endif
   }
 }
 
@@ -195,7 +219,15 @@ void high_isr(void) {
 		// Get data from receive buffer
 		ECANReceiveMessage(&id, data, &dataLen, &flags);
 
-    // TODO: Process can messages
+    switch (id) {
+
+#if FRONT
+      case WHEEL_ID + 1:
+        // Process radio_sw CAN message
+        radio_sw = data[BUTTON_BITS_BYTE] & RADIO_BTN_MASK;
+        break;
+#endif
+    }
   }
 }
 

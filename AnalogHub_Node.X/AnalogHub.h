@@ -53,7 +53,11 @@
 
 //TODO: Pin definitions for FRONT ADC channels
 
-//TODO: Pin definitions for RADIO channels
+// Pin definitions for RADIO channels
+#define RADIO0_TRIS TRISAbits.TRISA5
+#define RADIO1_TRIS TRISAbits.TRISA3
+#define RADIO0_LAT LATAbits.LATA5
+#define RADIO1_LAT LATAbits.LATA3
 
 // Function definitions
 void high_isr(void);
