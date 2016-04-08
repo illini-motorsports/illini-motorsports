@@ -33,7 +33,7 @@
 //#define GP_C3
 //#define GP_C4
 //#define GP_C5
-#define GP_C6 // termination
+#define GP_C6 // TERM
 //#define GP_C7
 
 //#define GP_D0

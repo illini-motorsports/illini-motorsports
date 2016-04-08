@@ -17,6 +17,8 @@
  * CAN message IDs
  */
 #define ERROR_ID        0x00F
+#define ANALOG_REAR_ID  0x050
+#define ANALOG_FRONT_ID 0x060
 #define MOTEC_ID        0x100
 #define PADDLE_ID       0x200
 #define LOGGER_ID       0X2AA

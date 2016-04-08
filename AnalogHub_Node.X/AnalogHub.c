@@ -1,16 +1,16 @@
 /**
  * AnalogHub
  *
- * Processor:       PIC18F46K80
- * Compiler:        Microchip C18
- * Author:          George Schwieters
- * Created:         2012-2013
+ * Processor:    PIC18F46K80
+ * Complier:     Microchip C18
+ * Author:       Andrew Mass
+ * Created:      2015-2016
  */
 
 #include "AnalogHub.h"
 
 /**
- *  PIC18F46K80 Configuration Bits
+ * PIC18F46K80 Configuration Bits Settings
  */
 
 // CONFIG1L
@@ -23,7 +23,7 @@
 #ifdef INTERNAL
 #pragma config FOSC = INTIO2    // Oscillator (Internal RC oscillator)
 #else
-#pragma config FOSC = HS1       // Oscillator (HS oscillator (Medium power, 4 MHz - 16 MHz))
+#pragma config FOSC = HS2       // Oscillator (HS oscillator (High power, 16MHz - 25MHz))
 #endif
 
 #pragma config PLLCFG = ON      // PLL x4 Enable bit (Enabled)
@@ -31,7 +31,7 @@
 #pragma config IESO = ON        // Internal External Oscillator Switch Over Mode (Enabled)
 
 // CONFIG2L
-#pragma config PWRTEN = OFF     // Power Up Timer (Disabled)
+#pragma config PWRTEN = OFF      // Power Up Timer (Disabled)
 #pragma config BOREN = OFF      // Brown Out Detect (Disabled in hardware, SBOREN disabled)
 #pragma config BORV = 3         // Brown-out Reset Voltage bits (1.8V)
 #pragma config BORPWR = ZPBORMV // BORMV Power level (ZPBORMV instead of BORMV is selected)
@@ -83,303 +83,186 @@
  * Global Variables
  */
 
-static volatile int millis; // Millisecond count
+volatile uint32_t millis = 0;  // Holds timer0 rollover count
+volatile uint32_t seconds = 0; // Holds timer1 rollover count
 
-#ifdef FRONT
-static volatile unsigned char RADIO_SW;
+uint32_t fast_send_tmr, med_send_tmr, slow_send_tmr,
+    diag_send_tmr = 0; // Various millis timers
 
 // ECAN variables
-static unsigned long id; // Holds CAN msgID
-static unsigned char data[8]; // Holds CAN data bytes
-static unsigned char dataLen; // Holds number of CAN data bytes
-static ECAN_RX_MSG_FLAGS flags; // Holds information about received message
-#endif
+uint32_t id = 0;             // Holds CAN msgID
+uint8_t data[8] = {0};			 // Holds CAN data bytes
+uint8_t dataLen = 0;				 // Holds number of CAN data bytes
+ECAN_RX_MSG_FLAGS flags = 0; // Holds information about recieved message
 
 /**
- * Interrupts
- */
-
-#pragma code high_vector = 0x08
-
-void high_vector(void) {
-  _asm goto high_isr _endasm
-}
-#pragma code
-
-/**
- * This interrupt will service all high priority interrupts. This section
- * should be as short as possible.
+ * void main(void)
  *
- * Input(s): none
- * Return Value(s): none
- * Side Effects: This will modify INTCON, TMR0L & PIR5. Also it modifies the
- *     ECAN global variables along with the millis, and RADIO_SW variables.
+ * Main program execution function
  */
-#pragma interrupt high_isr
-
-void high_isr(void) {
-
-  unsigned char data[8]; // Holds CAN data bytes
-
-  // Check for timer0 rollover indicating a millisecond has passed
-  if(INTCONbits.TMR0IF) {
-    INTCONbits.TMR0IF = 0;
-    TMR0L = TMR0_RELOAD; // Load timer registers (0xFF (max val) - 0x7D (125) = 0x82)
-    millis++;
-  }
-
-#ifdef FRONT
-  // Check for received CAN message
-  if(PIR5bits.RXB1IF) {
-    // Reset the flag
-    PIR5bits.RXB1IF = FALSE;
-    ECANReceiveMessage(&id, data, &dataLen, &flags);
-    if(id == RADIO_SW_ID) {
-      if(data[0] == RADIO_SW_BYTE0_ID)
-        RADIO_SW = data[RADIO_SW_BYTE];
-    }
-  }
-#endif
-
-#if (FAST_NUM != 0)
-  /*
-   * Wait until millisecond count is a multiple of the sample parameter for
-   * high frequency sampled sensors
-   */
-  if(!(millis % FAST_SAMPLE)) {
-
-    // Sample suspension pots
-    sample(data, SUS_L_BYTE, SUS_L);
-    sample(data, SUS_R_BYTE, SUS_R);
-
-    // Send the sampled values out on CAN
-    ECANSendMessage(FAST_ID, data, FAST_NUM * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_3);
-  }
-#endif
-
-#if (SLOW_NUM != 0)
-  /*
-   * Wait until millisecond count is a multiple of the sample parameter for
-   * low frequency sampled sensors
-   */
-  if(!(millis % SLOW_SAMPLE)) {
-
-#ifdef FRONT
-    // Sample the sensors
-    sample(data, BRAKE_R_P_BYTE, BRAKE_R_P);
-    sample(data, BRAKE_F_P_BYTE, BRAKE_F_P);
-#endif
-    // Send the sampled values out on CAN
-    ECANSendMessage(SLOW_ID, data, SLOW_NUM * 2, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_2);
-  }
-#endif
-}
-
 void main(void) {
 
   /**
-   * Variable Declarations
-   */
-#ifdef MOTEC_RESEND
-  unsigned long id; // Holds CAN msgID
-  unsigned char data_r[8]; // Holds CAN data bytes
-  unsigned char dataLen; // Holds number of CAN data bytes
-  ECAN_RX_MSG_FLAGS flags; // Holds information about received message
-
-  FLAGS Recieved;
-  unsigned char msg[8];
-  unsigned int adl_tmr;
-#endif
-
-  init_unused_pins(); // Assert values to unused pins
-
-  /**
-   * Variable Initialization
+   * General initialization
    */
 
-  TRISCbits.TRISC6 = OUTPUT; // Programmable termination
-  TERM_LAT = TRUE;
-
-#ifdef MOTEC_RESEND
-  // Initialize ADL message number
-  msg[0] = 0x02;
-  msg[1] = 0x00;
-  adl_tmr = 0;
-#endif
-
-#ifdef FRONT
-  RADIO_SW = FALSE;
-  RADIO_TRIS_1 = OUTPUT;
-  RADIO_TRIS_0 = OUTPUT;
-#endif
-
-  /**
-   * Peripheral Initialization
-   */
-
-  // Can use internal or external
+  init_unused_pins();
   init_oscillator();
-
-  // Setup milliseconds interrupt
   init_timer0();
+  init_timer1();
 
-  // Turn on and configure the A/D converter module
+  /**
+   * Initialize I/O pins
+   */
+
+  TERM_TRIS = INPUT;
+  //TODO: Init ADC pins + radio pins
+
+  /**
+   * Setup Peripherals
+   */
+
+#if FRONT
+  ANCON0 = 0b11100110; // All analog except for AN0, AN3, AN4
+  ANCON1 = 0b00000111; // All digital except for AN8, AN9, AN10
+#elif REAR
+  ANCON0 = 0b11111111; // All analog
+  ANCON1 = 0b00000111; // All digital except for AN8, AN9, AN10
+#endif
   init_ADC();
 
-#ifdef FRONT
-  ANCON0 = 0b00001111; // AN0 - AN3 are analog
-  ANCON1 = 0b00000000; // Rest are digital
-  TRISAbits.TRISA0 = INPUT; // AN0
-  TRISAbits.TRISA1 = INPUT; // AN1
-  TRISAbits.TRISA2 = INPUT; // AN2
-  TRISAbits.TRISA3 = INPUT; // AN3
-  TRISAbits.TRISA5 = OUTPUT; // AN4
-  LATAbits.LATA5 = 0;
-  TRISEbits.TRISE0 = OUTPUT; // AN5
-  LATEbits.LATE0 = 0;
-  TRISEbits.TRISE1 = OUTPUT; // AN6
-  LATEbits.LATE1 = 0;
-  TRISEbits.TRISE2 = OUTPUT; // AN7
-  LATEbits.LATE2 = 0;
-  TRISBbits.TRISB1 = OUTPUT; // AN8
-  LATBbits.LATB1 = 0;
-  TRISBbits.TRISB4 = OUTPUT; // AN9
-  LATBbits.LATB4 = 0;
-  TRISBbits.TRISB0 = OUTPUT; // AN10
-  LATBbits.LATB0 = 0;
-#elif REAR
-  ANCON0 = 0b00000110; // AN1 - AN2 are analog
-  ANCON1 = 0b00000000; // Rest are digital
-  TRISAbits.TRISA0 = OUTPUT; // AN0
-  LATAbits.LATA0 = 0;
-  TRISAbits.TRISA1 = INPUT; // AN1
-  TRISAbits.TRISA2 = INPUT; // AN2
-  TRISAbits.TRISA3 = OUTPUT; // AN3
-  LATAbits.LATA3 = 0;
-  TRISAbits.TRISA5 = OUTPUT; // AN4
-  LATAbits.LATA5 = 0;
-  TRISEbits.TRISE0 = OUTPUT; // AN5
-  LATEbits.LATE0 = 0;
-  TRISEbits.TRISE1 = OUTPUT; // AN6
-  LATEbits.LATE1 = 0;
-  TRISEbits.TRISE2 = OUTPUT; // AN7
-  LATEbits.LATE2 = 0;
-  TRISBbits.TRISB1 = OUTPUT; // AN8
-  LATBbits.LATB1 = 0;
-  TRISBbits.TRISB4 = OUTPUT; // AN9
-  LATBbits.LATB4 = 0;
-  TRISBbits.TRISB0 = OUTPUT; // AN10
-  LATBbits.LATB0 = 0;
-#endif
+  // Programmable termination
+  TERM_TRIS = OUTPUT;
+  TERM_LAT = 0; // Not terminating
 
-  ECANInitialize(); // Setup ECAN
+  ECANInitialize();
 
   // Interrupts setup
-  RCONbits.IPEN = 0; // Interrupt Priority Enable (1 enables)
-  STI();
+  INTCONbits.GIE = 1;		// Global Interrupt Enable (1 enables)
+  INTCONbits.PEIE = 1;	// Peripheral Interrupt Enable (1 enables)
+  RCONbits.IPEN = 0;		// Interrupt Priority Enable (1 enables)
 
-  /*
-   * All A/D operations are dealt with in the ISR that's triggered by the
-   * 1 ms rollover timer
-   */
+  // Main loop
   while(1) {
-#ifdef MOTEC_RESEND
-    // Poll for an accelerometer message (other messages are filtered out)
-    while(!ECANReceiveMessage(&id, data_r, &dataLen, &flags));
 
-    // Check which accelerometer message was received
-    if(id == Y_ID && !Recieved.Y_accel) {
-      // Process CAN bus data and put in ADL format
-      process_resend(data_r, msg, Y_BYTE, Y_OFFSET, ADL7_BYTE, INTEL);
-      Recieved.Y_accel = TRUE;
-    } else if(id == X_ID && !Recieved.X_accel) {
-      // Process CAN bus data and put in ADL format
-      process_resend(data_r, msg, X_BYTE, X_OFFSET, ADL8_BYTE, INTEL);
-      Recieved.X_accel = TRUE;
-    }
+    // Sample and send fast speed sensor channels on CAN
+    send_fast_can();
 
-    // Resend out data
-    if(Recieved.X_accel && Recieved.Y_accel) {
-      if(millis - adl_tmr > ADL_SAMPLE) {
-        adl_tmr = millis;
-        ECANSendMessage(ADL_ID, msg, ADL_DLC, ECAN_TX_STD_FRAME | ECAN_TX_NO_RTR_FRAME | ECAN_TX_PRIORITY_1);
-      }
-      Recieved.X_accel = FALSE;
-      Recieved.Y_accel = FALSE;
-    }
-#endif
+    // Sample and send medium speed sensor channels on CAN
+    send_med_can();
 
-#ifdef FRONT
-    if(RADIO_SW) {
-      RADIO_TRIS_0 = OUTPUT;
-      RADIO_TRIS_1 = OUTPUT;
-      RADIO_LAT_0 = FALSE;
-      RADIO_LAT_1 = FALSE;
-    } else {
-      RADIO_TRIS_0 = INPUT;
-      RADIO_TRIS_1 = INPUT;
-    }
-#endif
+    // Sample and send slow speed sensor channels on CAN
+    send_slow_can();
+
+    // Send diagnostic CAN message
+    send_diag_can();
   }
 }
 
 /**
- *  Local Functions
- */
-
-/**
- * This reads the analog voltage of a pin and then puts the value into the data
- * array that will be transmitted over CAN.
+ * void high_isr(void)
  *
- * Input(s): data - pointer to array of data bytes
- *     ch - which pin to sample
- *     byte - where to write the data in the passed array
- * Return Value(s): none
- * Side Effects: This modifies the memory pointed to by data.
+ * Function to service high-priority interrupts
  */
-void sample(unsigned char *data, const unsigned char byte, const unsigned char ch) {
+#pragma code high_vector = 0x08
+void high_vector(void) {
+    _asm goto high_isr _endasm
+}
+#pragma code
 
-  SelChanConvADC(ch); // Configure which pin you want to read and start A/D converter
+#pragma interrupt high_isr
+void high_isr(void) {
 
-  while(BusyADC()); // Wait for complete conversion
+  // Check for timer0 rollover indicating a millisecond has passed
+  if (INTCONbits.TMR0IF) {
+    INTCONbits.TMR0IF = 0;
+    TMR0L = 0x84; // Adjusted from TMR0_RELOAD experimentally
+    millis++;
+  }
 
-  // Put result in data array in accordance with specified byte location
-  ((unsigned int *) data)[byte / 2] = (unsigned int) ReadADC();
+  // Check for timer1 rollover
+  if (PIR1bits.TMR1IF) {
+    PIR1bits.TMR1IF = 0;
+    TMR1H = TMR1H_RELOAD;
+    TMR1L = TMR1L_RELOAD;
+    seconds++;
+  }
+
+	// Check for received CAN message
+	if (PIR5bits.RXB1IF) {
+		PIR5bits.RXB1IF = 0; // Reset the flag
+
+		// Get data from receive buffer
+		ECANReceiveMessage(&id, data, &dataLen, &flags);
+
+    // TODO: Process can messages
+  }
 }
 
 /**
- * This takes in incoming data and reformats it to be read by Motec as an ADL
- * CAN message.
+ * uint16_t sample(const uint8_t ch)
  *
- * Input(s): data - the data bytes from the received CAN message
- *     msg - the data bytes to be transmitted
- *     byte - the location of the received data within the received message
- *     offset - the offset to apply to the incoming data before getting transmitted
- *     ADL_ch - the ADL channel that we want the transmitted data to placed in
- *     order - the byte order of the incoming data (either INTEL or MOTOROLA)
- * Return Value(s): none
- * Side Effects: This modifies the memory pointed to by msg.
+ * This function reads the analog voltage of a pin and then returns the value
+ *
+ * @param ch - which pin to sample
  */
-void process_resend(const unsigned char *data, unsigned char *msg,
-    const unsigned char byte, const int offset, const unsigned char ADL_ch,
-    const unsigned char order) {
+uint16_t sample(const uint8_t ch) {
+  SelChanConvADC(ch); // Configure which pin you want to read and start A/D converter
+  while(BusyADC()); // Wait for complete conversion
+  return ReadADC();
+}
 
-  unsigned char temp;
+/**
+ * void send_diag_can(void)
+ *
+ * Sends the diagnostic CAN message if the interval has passed.
+ */
+void send_diag_can(void) {
+  if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
+    ((uint16_t*) data)[UPTIME_BYTE / 2] = seconds;
 
-  // Check which byte order we are dealing with
-  if(order == INTEL) {
-    // LSB byte comes first
-    ((int *) msg)[ADL_ch / 2] = data[byte + 1] * 256 + data[byte] - offset;
-    // Swap bytes to get into Motorola order
-    temp = msg[ADL_ch];
-    msg[ADL_ch] = msg[ADL_ch + 1];
-    msg[ADL_ch + 1] = temp;
-  } else {
-    // MSB byte comes first
-    ((int *) msg)[ADL_ch / 2] = data[byte + 1] + data[byte] * 256 - offset;
-    // Swap bytes to get into Motorola order
-    temp = msg[ADL_ch];
-    msg[ADL_ch] = msg[ADL_ch + 1];
-    msg[ADL_ch + 1] = temp;
+#if FRONT
+    ECANSendMessage(ANALOG_FRONT_ID + 0x0, data, 2, ECAN_TX_FLAGS);
+#elif REAR
+    ECANSendMessage(ANALOG_REAR_ID + 0x0, data, 2, ECAN_TX_FLAGS);
+#endif
+
+    diag_send_tmr = millis;
+  }
+}
+
+/**
+ * void send_fast_can(void)
+ *
+ * Samples and sends fast speed sensor channels on CAN if the interval has passed
+ */
+void send_fast_can(void) {
+  if (millis - fast_send_tmr >= FAST_MSG_SEND) {
+    //TODO: Sample and send fast sensor channels
+    fast_send_tmr = millis;
+  }
+}
+
+/**
+ * void send_med_can(void)
+ *
+ * Samples and sends medium speed sensor channels on CAN if the interval has passed
+ */
+void send_med_can(void) {
+  if (millis - med_send_tmr >= MED_MSG_SEND) {
+    //TODO: Sample and send med sensor channels
+    med_send_tmr = millis;
+  }
+}
+
+/**
+ * void send_slow_can(void)
+ *
+ * Samples and sends slow speed sensor channels on CAN if the interval has passed
+ */
+void send_slow_can(void) {
+  if (millis - slow_send_tmr >= SLOW_MSG_SEND) {
+    //TODO: Sample and send slow sensor channels
+    slow_send_tmr = millis;
   }
 }

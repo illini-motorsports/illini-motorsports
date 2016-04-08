@@ -1,131 +1,66 @@
 /**
  * AnalogHub Header
  *
- * Processor:       PIC18F46K80
- * Compiler:        Microchip C18
- * Author:          George Schwieters
- * Created:         2012-2013
+ * Processor:    PIC18F46K80
+ * Complier:     Microchip C18
+ * Author:       Andrew Mass
+ * Date:         2015-2016
  */
 
 #ifndef ANALOGHUB_H
 #define ANALOGHUB_H
 
+#include "p18f46k80.h"
+#include "GenericTypeDefs.h"
 #include "adc.h"
-#include "FSAE.h"
-#include "ECAN.h"
+#include "../ECAN.X/ECAN.h"
+#include "../FSAE.X/FSAE.h"
+#include "../FSAE.X/CAN.h"
+#include "../FSAE.X/errno.h"
 
-/**
- * Code Control
- */
+// Timing definitions (ms)
+#define DIAG_MSG_SEND  10
+#define FAST_MSG_SEND  2
+#define MED_MSG_SEND   20
+#define SLOW_MSG_SEND  500
 
-//#define INTERNAL
-//#define DEBUGGING
-#define MCHP_C18
+// ADC channel definitions for FRONT ADC channels
+#define ADC_SPFL_CHN  10
+#define ADC_SPFR_CHN  9
+#define ADC_BPF_CHN   7
+#define ADC_BPR_CHN   8
+#define ADC_STRP_CHN  5
+#define ADC_APPS0_CHN 2
+#define ADC_APPS1_CHN 1
+#define ADC_PTDP_CHN  6
 
-/**
- * Magic Numbers
- */
+// ADC channel definitions for REAR ADC channels
+#define ADC_SPRL_CHN 8
+#define ADC_SPRR_CHN 7
+#define ADC_EOS_CHN  10
+#define ADC_BCD_CHN  3
+#define ADC_CTRI_CHN 9
+#define ADC_CTRO_CHN 6
+#define ADC_CTSP_CHN 5
+#define ADC_FTFT_CHN 1
+#define ADC_CPSP_CHN 4
+#define ADC_FPFT_CHN 0
+#define ADC_MCD_CHN  2
 
-#define INPUT 1
-#define OUTPUT 0
-#define INTEL 2     // Least significant byte comes first
-#define MOTOROLA 3  // Most significant byte comes first
+// Pin definitions for TERM signal
+#define TERM_TRIS TRISCbits.TRISC6
+#define TERM_LAT  LATCbits.LATC6
 
-/*
- * Set the emission period (ms)
- * Both must be a power of two for consistent sampling
- */
-#define FAST_SAMPLE 2
-#define SLOW_SAMPLE 128
+//TODO: Pin definitions for FRONT ADC channels
 
-/**
- * Pin Definitions
- */
+//TODO: Pin definitions for RADIO channels
 
-#define TERM_LAT LATCbits.LATC6
-
-/**
- * FrontHub Specific Definitions
- */
-#ifdef FRONT
-
-// Msg IDs
-#define FAST_ID 0x060
-#define SLOW_ID 0x110
-
-// Number of sensors
-#define FAST_NUM 2
-#define SLOW_NUM 2
-
-// Sensor byte locations
-#define SUS_R_BYTE 0
-#define SUS_L_BYTE 2
-#define BRAKE_F_P_BYTE 0
-#define BRAKE_R_P_BYTE 2
-
-// Sensor pin location
-#define BRAKE_R_P ADC_CH3
-#define BRAKE_F_P ADC_CH2
-#define SUS_R ADC_CH1
-#define SUS_L ADC_CH0
-
-#define RADIO_LAT_0 LATEbits.LATE0
-#define RADIO_LAT_1 LATEbits.LATE1
-#define RADIO_TRIS_0 TRISEbits.TRISE0
-#define RADIO_TRIS_1 TRISEbits.TRISE1
-
-#define RADIO_SW_ID 0x500L
-#define RADIO_SW_BYTE0_ID 0x00
-#define RADIO_SW_BYTE 2
-
-/**
- * RearHub Specific Definitions
- */
-#elif REAR
-
-// Msg IDs
-#define FAST_ID 0x050
-#define SLOW_ID 0x100
-#define Y_ID 0x070
-#define X_ID 0x080
-
-// Number of slow sampled sensors
-#define FAST_NUM 2
-#define SLOW_NUM 0
-
-// Sensor byte locations
-#define SUS_R_BYTE 0
-#define SUS_L_BYTE 2
-
-// Sensor pin location
-#define SUS_R ADC_CH1
-#define SUS_L ADC_CH0
-
-// Motec ADL
-#define X_OFFSET 0x8000
-#define Y_OFFSET 0x8000
-#define X_BYTE 4
-#define Y_BYTE 4
-#define ADL_DLC 8
-#define ADL_SAMPLE 200
-#define Y_ID 0x070
-#define X_ID 0x080
-
-typedef struct {
-  unsigned X_accel : 1;
-  unsigned Y_accel : 1;
-} FLAGS;
-
-#endif
-
-/**
- * Function Definitions
- */
-
+// Function definitions
 void high_isr(void);
-void sample(unsigned char *data, const unsigned char byte, const unsigned char ch);
-void process_resend(const unsigned char *data, unsigned char *msg,
-    const unsigned char byte, const int offset, const unsigned char ADL_ch,
-    const unsigned char order);
+uint16_t sample(const uint8_t ch);
+void send_diag_can(void);
+void send_fast_can(void);
+void send_med_can(void);
+void send_slow_can(void);
 
-#endif
+#endif /* ANALOGHUB_H */
