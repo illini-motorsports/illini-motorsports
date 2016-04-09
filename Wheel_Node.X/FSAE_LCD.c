@@ -14,39 +14,41 @@
 // This fn must be run before CAN is initialized
 void initDataItems(void){
 	// Motec Vars
-	initDataItem(&rpm,0,0,1000,2,1);
-	initDataItem(&throtPos,0,0,1000,2,1);
-	initDataItem(&oilPress,0,0,1000,1,1);
+	// Refresh Intervals
+	// All Temp Channels - 500
+	initDataItem(&rpm,0,0,1000,5,0);
+	initDataItem(&throtPos,0,0,1000,3,1);
+	initDataItem(&oilPress,0,0,1000,1,2);
 	initDataItem(&oilTemp,0,0,1000,3,0);
 	initDataItem(&waterTemp,0,0,1000,3,0);
-	initDataItem(&lambda,0,0,1000,2,1);
-	initDataItem(&manifoldPress,0,0,1000,2,1);
-	initDataItem(&batVoltage,0,0,1000,2,1);
+	initDataItem(&lambda,0,0,1000,1,3);
+	initDataItem(&manifoldPress,0,0,1000,1,2);
+	initDataItem(&batVoltage,0,0,1000,2,2);
 	initDataItem(&wheelSpeedFL,0,0,1000,2,1);
 	initDataItem(&wheelSpeedFR,0,0,1000,2,1);
 	initDataItem(&wheelSpeedRL,0,0,1000,2,1);
 	initDataItem(&wheelSpeedRR,0,0,1000,2,1);
-	initDataItem(&gpsLong,0,0,1000,2,1);
-	initDataItem(&gpsLat,0,0,1000,2,1);
+	initDataItem(&gpsLong,0,0,1000,2,1); // Don't need
+	initDataItem(&gpsLat,0,0,1000,2,1); // Don't need
 	initDataItem(&groundSpeed,0,0,1000,2,1);
 	initDataItem(&driveSpeed,0,0,1000,2,1);
 	initDataItem(&gpsSpeed,0,0,1000,2,1);
-	initDataItem(&manifoldTemp,0,0,1000,2,1);
-	initDataItem(&ambientTemp,0,0,1000,2,1);
-	initDataItem(&ambientPress,0,0,1000,2,1);
-	initDataItem(&fuelTemp,0,0,1000,2,1);
-	initDataItem(&fuelPress,0,0,1000,2,1);
-	initDataItem(&lambda1,0,0,1000,2,1);
-	initDataItem(&lambda2,0,0,1000,2,1);
-	initDataItem(&lambda3,0,0,1000,2,1);
-	initDataItem(&lambda4,0,0,1000,2,1);
-	initDataItem(&lcEnablity,0,0,1000,2,1);
+	initDataItem(&manifoldTemp,0,0,1000,3,0);
+	initDataItem(&ambientTemp,0,0,1000,3,0);
+	initDataItem(&ambientPress,0,0,1000,1,2);
+	initDataItem(&fuelTemp,0,0,1000,3,0);
+	initDataItem(&fuelPress,0,0,1000,1,2);
+	initDataItem(&lambda1,0,0,1000,1,3);
+	initDataItem(&lambda2,0,0,1000,1,3);
+	initDataItem(&lambda3,0,0,1000,1,3);
+	initDataItem(&lambda4,0,0,1000,1,3);
+	initDataItem(&lcEnablity,0,0,1000,1,0);
 	initDataItem(&fuelConsum,0,0,1000,2,1);
-	initDataItem(&gpsAltitude,0,0,1000,2,1);
-	initDataItem(&gpsTime,0,0,1000,2,1);
-	initDataItem(&runTime,0,0,1000,2,1);
-	initDataItem(&fuelInjDuty,0,0,1000,2,1);
-	initDataItem(&fuelTrim,0,0,1000,2,1);
+	initDataItem(&gpsAltitude,0,0,1000,2,1); // ?
+	initDataItem(&gpsTime,0,0,1000,2,1); // ?
+	initDataItem(&runTime,0,0,1000,4,0);
+	initDataItem(&fuelInjDuty,0,0,1000,3,1);
+	initDataItem(&fuelTrim,0,0,1000,3,1);
 
 	// Tire Temps
 	initDataItem(&ttFL1,0,0,1000,2,1);
@@ -85,20 +87,22 @@ void initDataItems(void){
 	// Paddle Shifting
 	initDataItem(&paddleTemp,0,0,1000,2,1);
 	initDataItem(&gearPos,0,0,1000,1,0);
-	initDataItem(&neutQueue,0,0,1000,2,1);
-	initDataItem(&upQueue,0,0,1000,2,1);
-	initDataItem(&downQueue,0,0,1000,2,1);
-	initDataItem(&gearVoltage,0,0,1000,2,1);
+	initDataItem(&neutQueue,0,0,1000,1,0);
+	initDataItem(&upQueue,0,0,1000,1,0);
+	initDataItem(&downQueue,0,0,1000,1,0);
+	initDataItem(&gearVoltage,0,0,1000,1,2);
 
 	// PDM
 	initDataItem(&pdmTemp,0,0,1000,2,1);
 	initDataItem(&pdmICTemp,0,0,1000,2,1);
-	initDataItem(&pdmCurrentDraw,0,0,1000,2,1);
-	initDataItem(&pdmVBat,0,0,1000,2,1);
-	initDataItem(&pdm12v,0,0,1000,2,1);
-	initDataItem(&pdm5v5,0,0,1000,2,1);
-	initDataItem(&pdm5v,0,0,1000,2,1);
-	initDataItem(&pdm3v3,0,0,1000,2,1);
+	initDataItem(&pdmCurrentDraw,0,0,1000,3,1);
+	initDataItem(&pdmVBat,0,0,1000,2,2);
+	initDataItem(&pdm12v,0,0,1000,2,2);
+	initDataItem(&pdm5v5,0,0,1000,1,2);
+	initDataItem(&pdm5v,0,0,1000,1,2);
+	initDataItem(&pdm3v3,0,0,1000,1,2);
+	// Draw (^str) - 2,2
+	// Cut (^str)) - 3,1
 	initDataItem(&pdmIGNdraw,0,0,1000,2,1);
 	initDataItem(&pdmIGNcut,0,0,1000,2,1);
 	initDataItem(&pdmINJdraw,0,0,1000,2,1);
@@ -125,15 +129,16 @@ void initDataItems(void){
 	initDataItem(&pdm5v5cut,0,0,1000,2,1);
 	initDataItem(&pdmBATdraw,0,0,1000,2,1);
 	initDataItem(&pdmBATcut,0,0,1000,2,1);
-	initDataItem(&pdmSTR0draw,0,0,1000,2,1);
+	initDataItem(&pdmSTR0draw,0,0,1000,3,1);
 	initDataItem(&pdmSTR0cut,0,0,1000,2,1);
-	initDataItem(&pdmSTR1draw,0,0,1000,2,1);
+	initDataItem(&pdmSTR1draw,0,0,1000,3,1);
 	initDataItem(&pdmSTR1cut,0,0,1000,2,1);
-	initDataItem(&pdmSTR2draw,0,0,1000,2,1);
+	initDataItem(&pdmSTR2draw,0,0,1000,3,1);
 	initDataItem(&pdmSTR2cut,0,0,1000,2,1);
-	initDataItem(&pdmSTRdraw,0,0,1000,2,1);
+	initDataItem(&pdmSTRdraw,0,0,1000,3,1);
 
 	// Uptimes
+	// uptimes - 4,0
 	initDataItem(&paddleUptime,0,0,1000,2,1);
 	initDataItem(&loggerUptime,0,0,1000,2,1);
 	initDataItem(&swUptime,0,0,1000,2,1);
