@@ -16,6 +16,9 @@ void main(void) {
   init_oscillator();// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
   init_spi();// Initialize SPI interface
+	init_adc(initADCWheel);
+
+  ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
   STI();// Enable interrupts
   
 	// Init Relevant Pins
@@ -24,23 +27,26 @@ void main(void) {
   LCD_CS_LAT = 1;
   LCD_RST_TRIS = OUTPUT;
 	LCD_RST_LAT = 1;
+	SW1_TRIS = INPUT;
+	SW2_TRIS = INPUT;
+	SW3_TRIS = INPUT;
+	SW4_TRIS = INPUT;
+	MOM1_TRIS = INPUT;
+	MOM2_TRIS = INPUT;
+	MOM3_TRIS = INPUT;
+	MOM4_TRIS = INPUT;
   
 	// Initialize RA8875
   reset();
   initialize();
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
-	// Do we need this?
-  //PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
-  //PWM1out(255);
 	fillScreen(RA8875_WHITE);
-	drawChevron(150,15,100,200,RA8875_BLACK,RA8875_WHITE);
-	delay(200);
+	drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
 	
 	// Initialize All the data streams
 	initDataItems();
   init_can();
-
   initAllScreens();
 	changeScreen(RACE_SCREEN);
 	
@@ -56,6 +62,17 @@ void main(void) {
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
   millis++;// Increment millis count
+
+	// Should I be doing this every millisecond?
+	if (ADCCON2bits.EOSRDY) {
+    ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+  }
+
+	if (!(millis%25)){
+		updateSwVals();
+		CANswitchStates();
+	}
+
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
 
@@ -219,6 +236,69 @@ void process_CAN_msg(CAN_message msg){
   }
 }
 
+void CANswitchStates(void){
+	CAN_data switchData = {0};
+	switchData.byte0 = (swBitmask << 4) | momBitmask;
+	switchData.byte1 = (rotary[0] << 4) | rotary[2];
+	switchData.byte2 = rotary[3] << 4;
+	CAN_send_message(WHEEL_ID + 1,2,switchData);
+}
+
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl){
 	return ((double) ((msg->data[byte] << 8) | msg->data[byte + 1])) * scl;
 }
+
+void initADCWheel(void){
+	ROT1_TRIS = INPUT;
+	ROT2_TRIS = INPUT;
+	ROT3_TRIS = INPUT;
+	TROT1_TRIS = INPUT;
+	TROT2_TRIS = INPUT;
+	ROT1_ANSEL = AN_INPUT;
+	ROT2_ANSEL = AN_INPUT;
+	ROT3_ANSEL = AN_INPUT;
+	TROT1_ANSEL = AN_INPUT;
+	TROT2_ANSEL = AN_INPUT;
+	ROT1_CSS = 1;
+	ROT2_CSS = 1;
+	ROT3_CSS = 1;
+	TROT1_CSS = 1;
+	TROT2_CSS = 1;
+}
+
+void updateSwVals(void){
+	// Update Switches
+	swBitmask = 0;
+	if(SW1_PORT){swBitmask |= SW1_BIT;}
+	if(SW2_PORT){swBitmask |= SW2_BIT;}
+	if(SW3_PORT){swBitmask |= SW3_BIT;}
+	if(SW4_PORT){swBitmask |= SW4_BIT;}
+	// Update Momentaries
+	momBitmask = 0;
+	if(MOM1_PORT){momBitmask |= MOM1_BIT;}
+	if(MOM2_PORT){momBitmask |= MOM2_BIT;}
+	if(MOM3_PORT){momBitmask |= MOM3_BIT;}
+	if(MOM4_PORT){momBitmask |= MOM4_BIT;}
+	
+	// Update rotaries
+	rotary[0] = getRotaryPosition(read_adc_chn(ROT1_CHN));
+	rotary[1] = getRotaryPosition(read_adc_chn(ROT2_CHN));
+	rotary[2] = getRotaryPosition(read_adc_chn(ROT3_CHN));
+	tRotary[0] = getRotaryPosition(read_adc_chn(TROT1_CHN));
+	tRotary[1] = getRotaryPosition(read_adc_chn(TROT2_CHN));
+}
+
+// 10 is error
+uint8_t getRotaryPosition(uint32_t adcValue){
+	if(adcValue >= ROT_RANGE_LOW && adcValue < ROT_RANGE_0) {return 0;}
+	if(adcValue >= ROT_RANGE_0 && adcValue < ROT_RANGE_1) {return 1;}
+	if(adcValue >= ROT_RANGE_1 && adcValue < ROT_RANGE_2) {return 2;}
+	if(adcValue >= ROT_RANGE_2 && adcValue < ROT_RANGE_3) {return 3;}
+	if(adcValue >= ROT_RANGE_3 && adcValue < ROT_RANGE_4) {return 4;}
+	if(adcValue >= ROT_RANGE_4 && adcValue < ROT_RANGE_5) {return 5;}
+	if(adcValue >= ROT_RANGE_5 && adcValue < ROT_RANGE_6) {return 6;}
+	if(adcValue >= ROT_RANGE_6 && adcValue < ROT_RANGE_7) {return 7;}
+	if(adcValue >= ROT_RANGE_7 && adcValue < ROT_RANGE_8) {return 8;}
+	if(adcValue >= ROT_RANGE_8 && adcValue < ROT_RANGE_HIGH) {return 9;}
+	return 10;
+} 

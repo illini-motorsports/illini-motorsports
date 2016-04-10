@@ -14,12 +14,16 @@
 #include <sys/types.h>
 #include "RA8875_driver.h"
 
-#define BACKGROUND_COLOR 0x001F
-#define FOREGROUND_COLOR 0xFBE0
-#define WARNING_COLOR 0x001F
-#define ERROR_COLOR 0x001F
-#define NUM_SCREENS 1
-#define RACE_SCREEN 0
+#define BACKGROUND_COLOR 	RA8875_WHITE
+#define FOREGROUND_COLOR 	RA8875_BLACK
+#define WARNING_COLOR 		BACKGROUND_COLOR
+#define ERROR_COLOR 			BACKGROUND_COLOR
+#define NUM_SCREENS 			4
+#define RACE_SCREEN 			0
+#define PDM_DRAW_SCREEN 	1
+#define PDM_CUT_SCREEN  	2
+#define MOTEC_SCREEN			3
+#define MIN_REFRESH 			20
 
 /*
  * Defines a data stream that is relevant to one or more screens
@@ -69,9 +73,9 @@ typedef struct {
 	uint8_t len;
 } screen;
 
-screenItem raceScreenItems[5];
-screen raceScreen;
-screen* allScreens[1];
+screenItem raceScreenItems[5], pdmDrawItems[20], pdmCutItems[21], motecItems[30];
+screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen;
+screen* allScreens[4];
 
 uint8_t screenNumber;
 
@@ -87,8 +91,8 @@ dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress,
 				fuelInjDuty, fuelTrim;
 
 // Tire Temps
-dataItem ttFL1, ttFL2, ttFL3, ttFL4, ttFR1, ttFR2, ttFR3, ttFR4, ttRL1, ttRL2,
-				ttRL3, ttRL4, ttRR1, ttRR2, ttRR3, ttRR4;
+dataItem ttFL1, ttFL2, ttFL3, ttFL4, ttFL, ttFR1, ttFR2, ttFR3, ttFR4, ttFR, 
+				ttRL1, ttRL2, ttRL3, ttRL4, ttRL, ttRR1, ttRR2, ttRR3, ttRR4, ttRR;
 
 // Steering Wheel
 dataItem swTemp, swSW1, swSW2, swSW3, swSW4, swROT1, swROT2, swROT3, swTROT1,
@@ -97,14 +101,21 @@ dataItem swTemp, swSW1, swSW2, swSW3, swSW4, swROT1, swROT2, swROT3, swTROT1,
 // PDM
 dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v,
 				pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, 
-				pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUNcut, pdmECUPcut, pdmWTRdraw, pdmWTRNcut, 
-				pdmWTRPcut, pdmFANdraw, pdmFANNcut, pdmFANPcut, pdmAUXdraw, pdmAUXcut, 
-				pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, 
-				pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut, pdmSTR1draw, pdmSTR1cut, 
-				pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
+				pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUNcut, pdmECUPcut, 
+				pdmWTRdraw, pdmWTRNcut, pdmWTRPcut, pdmFANdraw, pdmFANNcut, pdmFANPcut,
+				pdmAUXdraw, pdmAUXcut, pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut,
+				pdm5v5draw, pdm5v5cut, pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut,
+				pdmSTR1draw, pdmSTR1cut, pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
 
 // Paddle Shifting
 dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage;
+
+// End Race Data
+dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempFR,
+				endTireTempRL, endTireTempRR, endAmbientTemp, endFuelConsum;
+
+dataItem lapTimeBuffer[20];
+uint8_t lapTimeHead, numLaps;
 
 void initDataItems(void);
 void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 
@@ -117,5 +128,7 @@ void changeScreen(uint8_t num);
 void refreshScreenItems(void);
 void redrawItem(screenItem * item);
 void clearScreen(void);
+double getMinLap(void);
+void endRace(void);
 
 #endif /* _FSAE_LCD_H */
