@@ -23,6 +23,7 @@
 #define PDM_DRAW_SCREEN 	1
 #define PDM_CUT_SCREEN  	2
 #define MOTEC_SCREEN			3
+#define END_RACE_SCREEN		4
 #define MIN_REFRESH 			20
 
 /*
@@ -73,9 +74,17 @@ typedef struct {
 	uint8_t len;
 } screen;
 
-screenItem raceScreenItems[5], pdmDrawItems[20], pdmCutItems[21], motecItems[30];
-screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen;
-screen* allScreens[4];
+typedef struct {
+	char * errText;
+	dataItem * item;
+	uint8_t priority;
+} errMsg;
+
+screenItem raceScreenItems[5], pdmDrawItems[20], pdmCutItems[21], 
+				motecItems[30], endRaceItems[9];
+screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen,
+				endRaceScreen;
+screen* allScreens[5];
 
 uint8_t screenNumber;
 
@@ -114,8 +123,12 @@ dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage;
 dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempFR,
 				endTireTempRL, endTireTempRR, endAmbientTemp, endFuelConsum;
 
+// Lap Time Ring Buffer
 dataItem lapTimeBuffer[20];
 uint8_t lapTimeHead, numLaps;
+
+errMsg errBuffer[20];
+uint8_t errBufferHead, errBufferTail;
 
 void initDataItems(void);
 void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 
@@ -130,5 +143,8 @@ void redrawItem(screenItem * item);
 void clearScreen(void);
 double getMinLap(void);
 void endRace(void);
+void displayNoErrors(void);
+void addError(char * errText, dataItem * item, uint8_t priority);
+uint16_t tempColor(uint8_t temp);
 
 #endif /* _FSAE_LCD_H */

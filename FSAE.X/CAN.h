@@ -28,6 +28,10 @@
 #define PDM_CONFIG_ID   0x620
 
 #define BEACON_ID       0x0E5
+#define TIRE_TEMP_FL_ID	0x001
+#define TIRE_TEMP_FR_ID	0x002
+#define TIRE_TEMP_RL_ID	0x003
+#define TIRE_TEMP_RR_ID	0x004
 
 /**
  * Byte position of channels in their CAN messages
@@ -181,6 +185,11 @@
 #define FAN_CUT_P_BYTE			4
 #define ECU_CUT_P_BYTE			6
 
+#define TIRE_TEMP_1_BYTE		0
+#define TIRE_TEMP_2_BYTE		2
+#define TIRE_TEMP_3_BYTE		4
+#define TIRE_TEMP_4_BYTE		6
+
 /**
  * Scalars for channels
  */
@@ -289,6 +298,8 @@
 #define WTR_CUT_P_SCL				0.0025
 #define FAN_CUT_P_SCL				0.0025
 #define ECU_CUT_P_SCL				0.0025
+
+#define TIRE_TEMP_SCL				0.1
 
 /**
  * Masks for bitmaps & packed messages

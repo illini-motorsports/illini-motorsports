@@ -233,6 +233,30 @@ void process_CAN_msg(CAN_message msg){
 			pdmFANPcut.value = (uint16_t) (msg.data[FAN_CUT_P_BYTE]) * FAN_CUT_P_SCL;
 			pdmECUPcut.value = (uint16_t) (msg.data[ECU_CUT_P_BYTE]) * ECU_CUT_P_SCL;
 			break;
+		case TIRE_TEMP_FL_ID:
+			ttFL1.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE]) * TIRE_TEMP_SCL);
+			ttFL2.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE]) * TIRE_TEMP_SCL);
+			ttFL3.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE]) * TIRE_TEMP_SCL);
+			ttFL4.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE]) * TIRE_TEMP_SCL);
+			ttFL.value = (ttFL1.value + ttFL2.value + ttFL3.value + ttFL4.value)/4.0;
+		case TIRE_TEMP_FR_ID:
+			ttFR1.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE]) * TIRE_TEMP_SCL);
+			ttFR2.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE]) * TIRE_TEMP_SCL);
+			ttFR3.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE]) * TIRE_TEMP_SCL);
+			ttFR4.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE]) * TIRE_TEMP_SCL);
+			ttFR.value = (ttFR1.value + ttFR2.value + ttFR3.value + ttFR4.value)/4.0;
+		case TIRE_TEMP_RL_ID:
+			ttRL1.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE]) * TIRE_TEMP_SCL);
+			ttRL2.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE]) * TIRE_TEMP_SCL);
+			ttRL3.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE]) * TIRE_TEMP_SCL);
+			ttRL4.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE]) * TIRE_TEMP_SCL);
+			ttRL.value = (ttRL1.value + ttRL2.value + ttRL3.value + ttRL4.value)/4.0;
+		case TIRE_TEMP_RR_ID:
+			ttRR1.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE]) * TIRE_TEMP_SCL);
+			ttRR2.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE]) * TIRE_TEMP_SCL);
+			ttRR3.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE]) * TIRE_TEMP_SCL);
+			ttRR4.value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE]) * TIRE_TEMP_SCL);
+			ttRR.value = (ttRR1.value + ttRR2.value + ttRR3.value + ttRR4.value)/4.0;
   }
 }
 

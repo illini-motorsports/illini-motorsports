@@ -270,6 +270,20 @@ void initAllScreens(void){
 	initScreenItem(&(motecScreen.items[30]), 10, 30, 20, &fuelInjDuty);
 	initScreenItem(&(motecScreen.items[31]), 10, 30, 20, &fuelTrim);
 
+	// End Race Screen
+	allScreens[END_RACE_SCREEN] = &endRaceScreen;
+	endRaceScreen.items = endRaceItems;
+	endRaceScreen.len = 9;
+	initScreenItem(&(endRaceScreen.items[0]), 10, 30, 20, &endLogNum);
+	initScreenItem(&(endRaceScreen.items[1]), 10, 30, 20, &endNumLaps);
+	initScreenItem(&(endRaceScreen.items[2]), 10, 30, 20, &endFastLap);
+	initScreenItem(&(endRaceScreen.items[3]), 10, 30, 20, &endTireTempFL);
+	initScreenItem(&(endRaceScreen.items[4]), 10, 30, 20, &endTireTempFR);
+	initScreenItem(&(endRaceScreen.items[5]), 10, 30, 20, &endTireTempRL);
+	initScreenItem(&(endRaceScreen.items[6]), 10, 30, 20, &endTireTempRR);
+	initScreenItem(&(endRaceScreen.items[7]), 10, 30, 20, &endAmbientTemp);
+	initScreenItem(&(endRaceScreen.items[8]), 10, 30, 20, &endFuelConsum);
+
 	// Lap Time Stuff
 	lapTimeHead = 0;
 	numLaps = 0;
@@ -277,6 +291,15 @@ void initAllScreens(void){
 	for(i=0;i<20;i++){ 
 		initDataItem(&(lapTimeBuffer[i]),0,0,1000,2,1);
 		lapTimeBuffer[i].value = -1;
+	}
+
+	// error Stuff
+	errBufferHead = 0;
+	errBufferTail = 0;
+	for(i=0;i<20;i++){
+		errBuffer[i].errText = 0x0;
+		errBuffer[i].item = 0x0;
+		errBuffer[i].priority = 0;
 	}
 }
 
@@ -391,4 +414,36 @@ void endRace(void){
 	endTireTempRR.value = ttRR.value; 
 	endAmbientTemp.value = ambientTemp.value;
 	endFuelConsum.value = fuelConsum.value;
+}
+
+// Error Handling Stuff
+void displayNoErrors(void){
+	// Reset error area
+	fillRect(0,200,WIDTH,HEIGHT-200,BACKGROUND_COLOR);
+	drawChevron(30, 210, 30, 50, FOREGROUND_COLOR, BACKGROUND_COLOR);
+	textMode();
+	textSetCursor(100, 210);
+	textTransparent(RA8875_BLACK);
+	textEnlarge(1);
+	textWrite("Illini Motorsports",0);
+	graphicsMode();
+}
+
+void addError(char * errText, dataItem * item, uint8_t priority){
+	errBufferHead = (errBufferHead + 1)%20;
+	if(errBufferHead == errBufferTail){
+		errBufferTail = (errBufferTail + 1)%20;
+	}
+	errBuffer[errBufferHead].errText = errText;
+	errBuffer[errBufferHead].item = item;
+	errBuffer[errBufferHead].priority = priority;
+}
+
+uint16_t tempColor(uint8_t temp){
+	return RA8875_RED;
+}
+
+// Page 123 of RA8875 Datasheet
+void drawTireTemps(void){
+	return;
 }
