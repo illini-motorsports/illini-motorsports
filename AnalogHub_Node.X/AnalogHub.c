@@ -120,7 +120,8 @@ void main(void) {
    */
 
   // Init CAN termination pin
-  TERM_TRIS = INPUT;
+  TERM_TRIS = OUTPUT;
+  TERM_LAT = 1; // Terminating
 
   // Init RADIO pins
 #if FRONT
@@ -148,10 +149,13 @@ void main(void) {
   ADC_CTRI_TRIS = INPUT;
   ADC_CTRO_TRIS = INPUT;
   ADC_CTSP_TRIS = INPUT;
-  ADC_FTFT_TRIS = INPUT;
   ADC_CPSP_TRIS = INPUT;
-  ADC_FPFT_TRIS = INPUT;
   ADC_MCD_TRIS = INPUT;
+
+  ADC_UAN0_TRIS = OUTPUT;
+  ADC_UAN0_LAT = 0;
+  ADC_UAN1_TRIS = OUTPUT;
+  ADC_UAN1_LAT = 0;
 #endif
 
   /**
@@ -166,10 +170,6 @@ void main(void) {
   ANCON1 = 0b00000111; // All digital except for AN8, AN9, AN10
 #endif
   init_ADC();
-
-  // Programmable termination
-  TERM_TRIS = OUTPUT;
-  TERM_LAT = 0; // Not terminating
 
   ECANInitialize();
 
@@ -391,18 +391,13 @@ void send_med_can(void) {
     uint16_t cpsp_volt = (uint16_t) (((((double) cpsp_samp) / 4095.0)
       * 5.0) * 10000.0);
 
-    uint16_t fpft_samp = sample(ADC_FPFT_CHN);
-    uint16_t fpft_volt = (uint16_t) (((((double) fpft_samp) / 4095.0)
-      * 5.0) * 10000.0);
-
     uint16_t mcd_samp = sample(ADC_MCD_CHN);
     uint16_t mcd_volt = (uint16_t) (((((double) mcd_samp) / 4095.0)
       * 5.0) * 10000.0);
 
     ((uint16_t*) data)[CPSP_BYTE / 2] = cpsp_volt;
-    ((uint16_t*) data)[FPFT_BYTE / 2] = fpft_volt;
     ((uint16_t*) data)[MCD_BYTE / 2] = mcd_volt;
-    ECANSendMessage(ANALOG_REAR_ID + 0x3, data, 6, ECAN_TX_FLAGS);
+    ECANSendMessage(ANALOG_REAR_ID + 0x3, data, 4, ECAN_TX_FLAGS);
 
 #endif
 
@@ -434,15 +429,10 @@ void send_slow_can(void) {
     uint16_t ctsp_volt = (uint16_t) (((((double) ctsp_samp) / 4095.0)
       * 5.0) * 10000.0);
 
-    uint16_t ftft_samp = sample(ADC_FTFT_CHN);
-    uint16_t ftft_volt = (uint16_t) (((((double) ftft_samp) / 4095.0)
-      * 5.0) * 10000.0);
-
     ((uint16_t*) data)[CTRI_BYTE / 2] = ctri_volt;
     ((uint16_t*) data)[CTRO_BYTE / 2] = ctro_volt;
     ((uint16_t*) data)[CTSP_BYTE / 2] = ctsp_volt;
-    ((uint16_t*) data)[FTFT_BYTE / 2] = ftft_volt;
-    ECANSendMessage(ANALOG_REAR_ID + 0x2, data, 8, ECAN_TX_FLAGS);
+    ECANSendMessage(ANALOG_REAR_ID + 0x2, data, 6, ECAN_TX_FLAGS);
 
 #endif
 

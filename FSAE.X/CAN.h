@@ -53,10 +53,8 @@
 #define CTRI_BYTE           0
 #define CTRO_BYTE           2
 #define CTSP_BYTE           4
-#define FTFT_BYTE           6
 #define CPSP_BYTE           0
-#define FPFT_BYTE           2
-#define MCD_BYTE            4
+#define MCD_BYTE            2
 
 // From Front AnalogHub
 #define SPFL_BYTE           0

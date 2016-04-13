@@ -19,7 +19,7 @@
 #include "../FSAE.X/errno.h"
 
 // Timing definitions (ms)
-#define DIAG_MSG_SEND  10
+#define DIAG_MSG_SEND  1000
 #define FAST_MSG_SEND  2
 #define MED_MSG_SEND   20
 #define SLOW_MSG_SEND  500
@@ -42,9 +42,7 @@
 #define ADC_CTRI_CHN 9
 #define ADC_CTRO_CHN 6
 #define ADC_CTSP_CHN 5
-#define ADC_FTFT_CHN 1
 #define ADC_CPSP_CHN 4
-#define ADC_FPFT_CHN 0
 #define ADC_MCD_CHN  2
 
 // Pin definitions for TERM signal
@@ -71,10 +69,12 @@
 #define ADC_CTRI_TRIS TRISBbits.TRISB4
 #define ADC_CTRO_TRIS TRISEbits.TRISE1
 #define ADC_CTSP_TRIS TRISEbits.TRISE0
-#define ADC_FTFT_TRIS TRISAbits.TRISA1
 #define ADC_CPSP_TRIS TRISAbits.TRISA5
-#define ADC_FPFT_TRIS TRISAbits.TRISA0
 #define ADC_MCD_TRIS  TRISAbits.TRISA2
+#define ADC_UAN1_TRIS  TRISAbits.TRISA1
+#define ADC_UAN1_LAT   LATAbits.LATA1
+#define ADC_UAN0_TRIS  TRISAbits.TRISA0
+#define ADC_UAN0_LAT   LATAbits.LATA0
 
 // Pin definitions for RADIO channels
 #define RADIO0_TRIS TRISAbits.TRISA5
