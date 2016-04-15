@@ -14,7 +14,7 @@
 #include "CAN.h"
 #include "../ECAN.X/ECAN.h"
 
-#define NUM_ERR 29
+#define NUM_ERR 33
 
 /**
  * Error Codes
@@ -31,6 +31,10 @@
 #define ERR_PDL_BADNEUT        26  // Prevented neutral shift from not 1st/2nd
 #define ERR_PDL_MAXRETRY       27  // Exceeded maximum number of retry shifts
 #define ERR_PDL_NOCAN          28  // CAN state variables are out-of-date
+#define ERR_PDL_LOCKOUT        29  // Shift queue prevented due to lockout timer
+#define ERR_PDL_MAXDUR         30  // Shift ended due to maximum duration timer
+#define ERR_PDL_MISSNEUT       31  // Neutral shift missed neutral gear
+#define ERR_PDL_GEARFAIL       32  // Gear sensor reading invalid
 
 // Defined in errno.c
 //TODO: Modify this for xc32 compiler?

@@ -287,6 +287,7 @@ void process_upshift_press(void) {
   }
 
   if (millis - lockout_tmr < LOCKOUT_DUR) {
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_LOCKOUT);
     return;
   }
 
@@ -341,6 +342,7 @@ void process_downshift_press(void) {
   }
 
   if (millis - lockout_tmr < LOCKOUT_DUR) {
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_LOCKOUT);
     return;
   }
 
@@ -565,15 +567,17 @@ void do_shift(uint8_t shift_enum) {
 
         relax_wait();
 
+        send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MAXDUR);
+
         if (SHIFT_UP && retry_up > MAX_RETRY) {
           queue_up = 0;
           retry_up = 0;
-          send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
+          send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MAXRETRY);
           send_diag_can(OVERRIDE); // Send new queue values on CAN
         } else if (SHIFT_DN && retry_dn > MAX_RETRY) {
           queue_dn = 0;
           retry_dn = 0;
-          send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
+          send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MAXRETRY);
           send_diag_can(OVERRIDE); // Send new queue values on CAN
         }
 
@@ -623,6 +627,8 @@ void do_shift(uint8_t shift_enum) {
           ACT_UP_LAT = ACT_OFF;
           relax_wait();
 
+          send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MAXDUR);
+
           retry_nt++;
           break;
         }
@@ -631,6 +637,8 @@ void do_shift(uint8_t shift_enum) {
         ACT_DN_LAT = ACT_OFF;
         ACT_UP_LAT = ACT_OFF;
         relax_wait();
+
+        send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MISSNEUT);
 
         retry_nt++;
         break;
@@ -643,7 +651,7 @@ void do_shift(uint8_t shift_enum) {
     if (retry_nt > MAX_RETRY) {
       queue_nt = 0;
       retry_nt = 0;
-      send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
+      send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MAXRETRY);
       send_diag_can(OVERRIDE); // Send new queue values on CAN
     }
   }
@@ -793,6 +801,12 @@ void sample_gear(void) {
 
     //TODO: Apply linearization of sensor and CAN scalars to set value
     gear = GEAR_FAIL;
+
+    /*
+    if (gear == GEAR_FAIL) {
+      send_errno_CAN_msg(PADDLE_ID, ERR_PDL_GEARFAIL);
+    }
+     */
 
     data[GEAR_BYTE] = gear;
     ((uint16_t*) data)[GEAR_VOLT_BYTE / 2] = gear_voltage;

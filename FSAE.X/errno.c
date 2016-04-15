@@ -41,7 +41,11 @@ const rom char* errno_msg[NUM_ERR] = {
   /*  25 */ "Shifting to nonexistant gear prevented",
   /*  26 */ "Neutral shift from 3rd or higher prevented",
   /*  27 */ "Exceeded maximum number of retry shifts",
-  /*  28 */ "CAN state variables are out-of-date"
+  /*  28 */ "CAN state variables are out-of-date",
+  /*  29 */ "Shift queue prevented due to lockout timer",
+  /*  30 */ "Shift killed due to maximum duration timer",
+  /*  31 */ "Neutral shift missed neutral gear",
+  /*  32 */ "Gear sensor reading invalid"
 };
 
 /**
