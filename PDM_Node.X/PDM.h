@@ -99,10 +99,6 @@
 #define BVBAT_EN (EN_BVBAT_PORT == PWR_ON)
 #define STR_EN   (EN_STR_PORT == PWR_ON)
 
-// Definitions for interval override control
-#define OVERRIDE    1
-#define NO_OVERRIDE 0
-
 // Pin definitions for EN signal bus
 #define EN_IGN_LAT    LATDbits.LATD15
 #define EN_INJ_LAT    LATCbits.LATC15

@@ -29,6 +29,10 @@
 #define TMR1H_RELOAD 0x80
 #define TMR1L_RELOAD 0x00
 
+// Definitions for interval override control
+#define OVERRIDE    1
+#define NO_OVERRIDE 0
+
 /**
  * Function Definitions
  */

@@ -194,7 +194,7 @@ void main(void) {
     sample_temp();
 
     // Send diagnostic CAN message
-    send_diag_can();
+    send_diag_can(NO_OVERRIDE);
   }
 }
 
@@ -306,22 +306,26 @@ void process_upshift_press(void) {
       queue_dn = 1;
       lockout_tmr = millis;
     }
+    send_diag_can(OVERRIDE); // Send new queue values on CAN
   } else { // Pressed while not holding the neutral button
     if (gear == GEAR_NEUT) {
       queue_dn = 1;
       lockout_tmr = millis;
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
     if (queue_dn > 0) {
       queue_dn = 0;
       queue_up = 0;
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
     if (gear == GEAR_FAIL || queue_up < 6 - gear) {
       queue_up++;
       lockout_tmr = millis;
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
     }
   }
 }
@@ -356,16 +360,19 @@ void process_downshift_press(void) {
       queue_dn = 1;
       lockout_tmr = millis;
     }
+    send_diag_can(OVERRIDE); // Send new queue values on CAN
   } else { // Pressed while not holding the neutral button
     if (queue_up > 0) {
       queue_dn = 0;
       queue_up = 0;
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
     if (gear == GEAR_FAIL || queue_dn + 1 < gear) {
       queue_dn++;
       lockout_tmr = millis;
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
     }
   }
 }
@@ -484,6 +491,7 @@ void do_shift(uint8_t shift_enum) {
           retry_dn = 0;
           break;
       }
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
@@ -498,9 +506,7 @@ void do_shift(uint8_t shift_enum) {
     // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
     ign_wait_tmr = millis;
     while (millis - ign_wait_tmr < IGN_CUT_WAIT) {
-      sample_gear();
-      sample_temp();
-      send_diag_can();
+      main_loop_misc();
     }
 
     // Fire actuator
@@ -537,6 +543,7 @@ void do_shift(uint8_t shift_enum) {
         } else if (SHIFT_DN){
           queue_dn--;
         }
+        send_diag_can(OVERRIDE); // Send new queue values on CAN
 
         return;
       }
@@ -562,18 +569,19 @@ void do_shift(uint8_t shift_enum) {
           queue_up = 0;
           retry_up = 0;
           send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
+          send_diag_can(OVERRIDE); // Send new queue values on CAN
         } else if (SHIFT_DN && retry_dn > MAX_RETRY) {
           queue_dn = 0;
           retry_dn = 0;
           send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
+          send_diag_can(OVERRIDE); // Send new queue values on CAN
         }
 
         return;
       }
 
       // Also do main loop functions during "busy" loop
-      sample_temp();
-      send_diag_can();
+      main_loop_misc();
     }
   } else if (SHIFT_NT) {
     /**
@@ -583,6 +591,7 @@ void do_shift(uint8_t shift_enum) {
     if (!check_shift_conditions(shift_enum)) {
       queue_nt = 0;
       retry_nt = 0;
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
@@ -605,6 +614,7 @@ void do_shift(uint8_t shift_enum) {
 
         retry_nt = 0;
         queue_nt = 0;
+        send_diag_can(OVERRIDE); // Send new queue values on CAN
         return;
       } else if (gear == orig_gear) {
         if (millis - act_tmr >= MAX_SHIFT_DUR) {
@@ -627,14 +637,14 @@ void do_shift(uint8_t shift_enum) {
       }
 
       // Do main loop functions while waiting
-      sample_temp();
-      send_diag_can();
+      main_loop_misc();
     }
 
     if (retry_nt > MAX_RETRY) {
       queue_nt = 0;
       retry_nt = 0;
       send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_MAXRETRY);
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
     }
   }
 }
@@ -672,6 +682,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
           retry_dn = 0;
           break;
       }
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
@@ -686,9 +697,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
     // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
     ign_wait_tmr = millis;
     while (millis - ign_wait_tmr < IGN_CUT_WAIT) {
-      sample_gear();
-      sample_temp();
-      send_diag_can();
+      main_loop_misc();
     }
 
     // Fire actuator
@@ -724,14 +733,13 @@ void do_shift_gear_fail(uint8_t shift_enum) {
         } else if (SHIFT_DN){
           queue_dn--;
         }
+        send_diag_can(OVERRIDE); // Send new queue values on CAN
 
         return;
       }
 
       // Also do main loop functions during "busy" loop
-      sample_gear();
-      sample_temp();
-      send_diag_can();
+      main_loop_misc();
     }
   } else if (SHIFT_NT) {
     /**
@@ -741,6 +749,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
     if (!check_shift_conditions(shift_enum)) {
       queue_nt = 0;
       retry_nt = 0;
+      send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
@@ -761,13 +770,12 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 
         retry_nt = 0;
         queue_nt = 0;
+        send_diag_can(OVERRIDE); // Send new queue values on CAN
         return;
       }
 
       // Do main loop functions while waiting
-      sample_gear();
-      sample_temp();
-      send_diag_can();
+      main_loop_misc();
     }
   }
 }
@@ -818,12 +826,14 @@ void sample_temp(void) {
 }
 
 /**
- * void send_diag_can(void)
+ * void send_diag_can(uint8_t override)
  *
  * Sends the diagnostic CAN message if the interval has passed.
+ *
+ * @param override - Whether to override the interval
  */
-void send_diag_can(void) {
-  if(millis - diag_send_tmr >= DIAG_MSG_SEND) {
+void send_diag_can(uint8_t override) {
+  if ((millis - diag_send_tmr >= DIAG_MSG_SEND) || override) {
     ((uint16_t*) data)[UPTIME_BYTE / 2] = seconds;
     ((int16_t*) data)[PCB_TEMP_BYTE / 2] = temp;
     data[QUEUE_NT_BYTE] = queue_nt;
@@ -844,8 +854,18 @@ void relax_wait(void) {
   // Wait for RELAX_WAIT millis and do main loop functions in the process
   uint32_t relax_wait_tmr = millis;
   while (millis - relax_wait_tmr < RELAX_WAIT) {
-    sample_gear();
-    sample_temp();
-    send_diag_can();
+    main_loop_misc();
   }
+}
+
+/**
+ * void main_loop_misc(void)
+ *
+ * Do non-shift logic main-loop functions. Typically run
+ * while waiting in a blocking section of the shifting logic.
+ */
+void main_loop_misc(void) {
+  sample_gear();
+  sample_temp();
+  send_diag_can(NO_OVERRIDE);
 }

@@ -28,7 +28,7 @@
 
 // Timing definitions (ms)
 #define LOCKOUT_DUR    200 //TODO: Tune this value
-#define DIAG_MSG_SEND  10
+#define DIAG_MSG_SEND  500
 #define TEMP_SAMP_INTV 333
 #define GEAR_SAMP_INTV 10
 #define MAX_SHIFT_DUR  250 //TODO: Tune this value
@@ -105,7 +105,8 @@ void do_shift(uint8_t shift_enum);
 void do_shift_gear_fail(uint8_t shift_enum);
 void sample_gear(void);
 void sample_temp(void);
-void send_diag_can(void);
+void send_diag_can(uint8_t override);
 void relax_wait(void);
+void main_loop_misc(void);
 
 #endif /* PADDLESHIFTING_H */

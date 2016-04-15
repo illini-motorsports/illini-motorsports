@@ -28,6 +28,10 @@
 #define OUTPUT 0
 #define INPUT 1
 
+// Definitions for interval override control
+#define OVERRIDE    1
+#define NO_OVERRIDE 0
+
 // Pin definitions for programmable termination
 #define TERM_TRIS TRISAbits.TRISA2
 #define TERM_LAT  LATAbits.LATA2
