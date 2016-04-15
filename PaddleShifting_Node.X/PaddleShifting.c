@@ -81,7 +81,6 @@
 
 //TODO: Send CAN message after successful shift
 //TODO: Send second diagnostic message
-//TODO: Prevent shifts while kill switch is in rather than engine on
 
 /**
  * Global Variables
@@ -91,7 +90,7 @@ volatile uint32_t millis = 0;  // Holds timer0 rollover count
 volatile uint32_t seconds = 0; // Holds timer1 rollover count
 
 volatile int16_t eng_rpm = 0;      // Engine RPM (from MoTeC)
-volatile int16_t bat_volt = 0;     //TODO: Battery voltage (from PDM/ECU?)
+volatile int16_t bat_volt = 0;     // Battery voltage from ECU
 volatile int16_t throttle_pos = 0; // Throttle position (from MoTeC)
 
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP
@@ -109,10 +108,13 @@ uint8_t retry_nt = 0; // Number of retried neutral shifts
 
 volatile uint8_t gear = GEAR_FAIL; // Current gear
 
+volatile uint8_t kill_sw = 0; // Holds state of KILL_SW from CAN
+
 volatile uint32_t lockout_tmr = 0; // Holds millis value of last lockout set
 uint32_t act_tmr = 0;              // Records the time the actuator was fired
 
 uint32_t diag_send_tmr, temp_samp_tmr, gear_samp_tmr = 0; // Various millis timers
+uint32_t CAN_recv_tmr = 0; // Record timestamp of latest received CAN message
 int16_t temp = 0; // PCB temperature reading in units of [C/0.005]
 
 // ECAN variables
@@ -252,6 +254,11 @@ void high_isr(void) {
 
       ((uint8_t*) &bat_volt)[0] = data[VOLT_ECU_BYTE + 1];
       ((uint8_t*) &bat_volt)[1] = data[VOLT_ECU_BYTE];
+
+      CAN_recv_tmr = millis;
+    } else if (id == PDM_ID + 0x1) {
+      uint8_t switch_bitmap = data[PDM_SWITCH_BYTE];
+      kill_sw = switch_bitmap & KILL_SW_MASK;
     }
   }
 }
@@ -365,17 +372,23 @@ void process_downshift_press(void) {
 
 /**
  * uint8_t check_shift_conditions(uint8_t shift_enum)
- * 
+ *
  * Checks various conditions and determines if the requested shift is allowable.
- * 
+ *
  * @param shift_enum - The type of shift being requested
  * @return 0 if restricted, 1 if allowable
  */
 uint8_t check_shift_conditions(uint8_t shift_enum) {
+  // Prevent shifting if CAN state variables aren't updated
+  if (millis - CAN_recv_tmr >= CAN_STATE_WAIT) {
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_NOCAN);
+    return 0;
+  }
+
   // Prevent shifting up past neutral on low voltage
   if (gear == 1 && shift_enum == SHIFT_ENUM_UP) {
     if (bat_volt != 0 && bat_volt < LOW_VOLT) {
-      send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_LOWVOLT);
+      send_errno_CAN_msg(PADDLE_ID, ERR_PDL_LOWVOLT);
       return 0;
     }
   }
@@ -383,42 +396,40 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
   // Prevent shifting down past neutral on low voltage
   if (gear == 2 && shift_enum == SHIFT_ENUM_DN) {
     if (bat_volt != 0 && bat_volt < LOW_VOLT) {
-      send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_LOWVOLT);
+      send_errno_CAN_msg(PADDLE_ID, ERR_PDL_LOWVOLT);
       return 0;
     }
   }
-  
+
   // Prevent any shifting on very low voltage
   if (bat_volt != 0 && bat_volt < LOWER_VOLT) {
-    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_LOWERVOLT);
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_LOWERVOLT);
     return 0;
   }
 
-  /*
-  // Prevent shifting while the engine is off
-  if (!ENG_ON) {
-    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_ENGOFF);
+  // Prevent shifting while the kill switch is pressed
+  if (kill_sw) {
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_KILLSW);
     return 0;
   }
-   */
 
   //TODO: Check for over/under rev
 
   // Prevent shifting past 6th gear
   if (gear == 6 && shift_enum == SHIFT_ENUM_UP) {
-    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_SHIFTPAST);
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_SHIFTPAST);
     return 0;
   }
 
   // Prevent shifting past 1st gear
   if (gear == 1 && shift_enum == SHIFT_ENUM_DN) {
-    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_SHIFTPAST);
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_SHIFTPAST);
     return 0;
   }
 
   // Prevent shifting into neutral from anything other than 1st or 2nd
   if (shift_enum == SHIFT_ENUM_NT && !(gear == 1 || gear == 2)) {
-    send_errno_CAN_msg(PADDLE_ID + 0x0, ERR_PDL_BADNEUT);
+    send_errno_CAN_msg(PADDLE_ID, ERR_PDL_BADNEUT);
     return 0;
   }
 
@@ -427,9 +438,9 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
 
 /**
  * void do_shift(uint8_t shift_enum)
- * 
+ *
  * Performs the requested shift sequence.
- * 
+ *
  * @param shift_enum The type of requested shift
  */
 void do_shift(uint8_t shift_enum) {
@@ -463,7 +474,7 @@ void do_shift(uint8_t shift_enum) {
      */
 
     if (!check_shift_conditions(shift_enum)) {
-      switch (shift_enum) { 
+      switch (shift_enum) {
         case SHIFT_ENUM_UP:
           queue_up = 0;
           retry_up = 0;
@@ -479,7 +490,6 @@ void do_shift(uint8_t shift_enum) {
     // Send ignition cut message to ECU if required
     if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
         (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
-      //TODO: Finalize this
       ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
       ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
       ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
@@ -495,7 +505,7 @@ void do_shift(uint8_t shift_enum) {
 
     // Fire actuator
     if (SHIFT_UP) {
-      ACT_UP_LAT = ACT_ON; 
+      ACT_UP_LAT = ACT_ON;
     } else if (SHIFT_DN) {
       ACT_DN_LAT = ACT_ON;
     }
@@ -507,7 +517,7 @@ void do_shift(uint8_t shift_enum) {
       if (gear == gear_target) {
         // Relax actuator
         if (SHIFT_UP) {
-          ACT_UP_LAT = ACT_OFF; 
+          ACT_UP_LAT = ACT_OFF;
           retry_up = 0;
         } else if (SHIFT_DN){
           ACT_DN_LAT = ACT_OFF;
@@ -518,7 +528,7 @@ void do_shift(uint8_t shift_enum) {
         ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
         ((int16_t*) data)[ADL10_BYTE / 2] = 0;
         ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-        
+
         relax_wait();
 
         // Decrement queued shifts value
@@ -534,13 +544,13 @@ void do_shift(uint8_t shift_enum) {
       if (millis - act_tmr >= MAX_SHIFT_DUR) {
         // Relax actuator
         if (SHIFT_UP) {
-          ACT_UP_LAT = ACT_OFF; 
+          ACT_UP_LAT = ACT_OFF;
           retry_up++;
         } else if (SHIFT_DN){
           ACT_DN_LAT = ACT_OFF;
           retry_dn++;
         }
-        
+
         // Send ignition cut finished message to ECU
         ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
         ((int16_t*) data)[ADL10_BYTE / 2] = 0;
@@ -578,28 +588,28 @@ void do_shift(uint8_t shift_enum) {
 
     // Fire actuator
     if (orig_gear == 1) {
-      ACT_UP_LAT = ACT_ON; 
+      ACT_UP_LAT = ACT_ON;
     } else if (orig_gear == 2) {
-      ACT_DN_LAT = ACT_ON; 
+      ACT_DN_LAT = ACT_ON;
     }
     act_tmr = millis;
-    
+
     while (1) {
       sample_gear();
-      
+
       if (gear == GEAR_NEUT) {
         // Relax actuator
-        ACT_DN_LAT = ACT_OFF; 
+        ACT_DN_LAT = ACT_OFF;
         ACT_UP_LAT = ACT_OFF;
         relax_wait();
-        
+
         retry_nt = 0;
         queue_nt = 0;
         return;
       } else if (gear == orig_gear) {
         if (millis - act_tmr >= MAX_SHIFT_DUR) {
           // Relax actuator
-          ACT_DN_LAT = ACT_OFF; 
+          ACT_DN_LAT = ACT_OFF;
           ACT_UP_LAT = ACT_OFF;
           relax_wait();
 
@@ -608,14 +618,14 @@ void do_shift(uint8_t shift_enum) {
         }
       } else {
         // Relax actuator
-        ACT_DN_LAT = ACT_OFF; 
+        ACT_DN_LAT = ACT_OFF;
         ACT_UP_LAT = ACT_OFF;
         relax_wait();
-        
+
         retry_nt++;
         break;
       }
-      
+
       // Do main loop functions while waiting
       sample_temp();
       send_diag_can();
@@ -631,12 +641,12 @@ void do_shift(uint8_t shift_enum) {
 
 /**
  * void do_shift_gear_fail(uint8_t shift_enum)
- * 
+ *
  * Performs the requested shift sequence in gear sensor
  * failure mode.
- * 
+ *
  * TODO: Combine this with normal do_shift function?
- * 
+ *
  * @param shift_enum The type of requested shift
  */
 void do_shift_gear_fail(uint8_t shift_enum) {
@@ -652,7 +662,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
      */
 
     if (!check_shift_conditions(shift_enum)) {
-      switch (shift_enum) { 
+      switch (shift_enum) {
         case SHIFT_ENUM_UP:
           queue_up = 0;
           retry_up = 0;
@@ -666,13 +676,12 @@ void do_shift_gear_fail(uint8_t shift_enum) {
     }
 
     // Send ignition cut message to ECU if required
-    //if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
-    //    (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
-      //TODO: Finalize this
+    if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
+        (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
       ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
       ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
       ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-    //}
+    }
 
     // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
     ign_wait_tmr = millis;
@@ -684,7 +693,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 
     // Fire actuator
     if (SHIFT_UP) {
-      ACT_UP_LAT = ACT_ON; 
+      ACT_UP_LAT = ACT_ON;
     } else if (SHIFT_DN) {
       ACT_DN_LAT = ACT_ON;
     }
@@ -695,7 +704,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
           (SHIFT_DN && millis - act_tmr >= DN_SHIFT_DUR)) {
         // Relax actuator
         if (SHIFT_UP) {
-          ACT_UP_LAT = ACT_OFF; 
+          ACT_UP_LAT = ACT_OFF;
           retry_up = 0;
         } else if (SHIFT_DN){
           ACT_DN_LAT = ACT_OFF;
@@ -706,7 +715,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
         ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
         ((int16_t*) data)[ADL10_BYTE / 2] = 0;
         ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-        
+
         relax_wait();
 
         // Decrement queued shifts value
@@ -737,24 +746,24 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 
     // Fire actuator
     if (gear_fail_nt_shift == SHIFT_ENUM_UP) {
-      ACT_UP_LAT = ACT_ON; 
+      ACT_UP_LAT = ACT_ON;
     } else if (gear_fail_nt_shift == SHIFT_ENUM_DN) {
-      ACT_DN_LAT = ACT_ON; 
+      ACT_DN_LAT = ACT_ON;
     }
     act_tmr = millis;
-    
+
     while (1) {
       if (millis - act_tmr >= NT_SHIFT_DUR) {
         // Relax actuator
-        ACT_DN_LAT = ACT_OFF; 
+        ACT_DN_LAT = ACT_OFF;
         ACT_UP_LAT = ACT_OFF;
         relax_wait();
-        
+
         retry_nt = 0;
         queue_nt = 0;
         return;
       }
-      
+
       // Do main loop functions while waiting
       sample_gear();
       sample_temp();
@@ -802,7 +811,7 @@ void sample_temp(void) {
      * Temp [C / 0.005] = 200 * ((temp_samp * 0.1221001221) - 75) [C / 0.005]
      * Temp [C / 0.005] = (temp_samp * 24.42002442) - 15000 [C / 0.005]
      */
-    
+
     temp = (((double) temp_samp) * 24.42002442) - 15000.0;
     temp_samp_tmr = millis;
   }
@@ -828,7 +837,7 @@ void send_diag_can(void) {
 
 /**
  * void relax_wait(void)
- * 
+ *
  * Waits for the actuator to return to the relaxed position
  */
 void relax_wait(void) {

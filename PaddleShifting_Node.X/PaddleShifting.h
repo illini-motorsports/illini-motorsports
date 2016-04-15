@@ -37,6 +37,7 @@
 #define UP_SHIFT_DUR   150 //TODO: Tune this value
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
+#define CAN_STATE_WAIT 1000
 
 // Definitions for error conditions
 //TODO: Decide on these values

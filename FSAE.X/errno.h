@@ -14,7 +14,7 @@
 #include "CAN.h"
 #include "../ECAN.X/ECAN.h"
 
-#define NUM_ERR 28
+#define NUM_ERR 29
 
 /**
  * Error Codes
@@ -24,12 +24,13 @@
 
 #define ERR_PDL_LOWVOLT        20  // Low voltage neutral shift prevented
 #define ERR_PDL_LOWERVOLT      21  // Lower voltage shift prevented
-#define ERR_PDL_ENGOFF         22  // Prevented shifting with engine not running
+#define ERR_PDL_KILLSW         22  // Prevented shifting when kill switch pressed
 #define ERR_PDL_UNDERREV       23  // Prevented shifting that would stall engine
 #define ERR_PDL_OVERREV        24  // Prevented shifting that would overrev engine
 #define ERR_PDL_SHIFTPAST      25  // Prevented shifting past 1st or 6th gear
 #define ERR_PDL_BADNEUT        26  // Prevented neutral shift from not 1st/2nd
 #define ERR_PDL_MAXRETRY       27  // Exceeded maximum number of retry shifts
+#define ERR_PDL_NOCAN          28  // CAN state variables are out-of-date
 
 // Defined in errno.c
 //TODO: Modify this for xc32 compiler?

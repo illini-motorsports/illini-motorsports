@@ -35,19 +35,20 @@ const rom char* errno_msg[NUM_ERR] = {
   /*  19 */ "Reserved",
   /*  20 */ "Shifting over neutral prevented due to low battery voltage",
   /*  21 */ "Shifting prevented due to very low battery voltage",
-  /*  22 */ "Shifting prevented due to engine not running",
+  /*  22 */ "Shifting prevented due to kill switch pressed",
   /*  23 */ "Shifting prevented due to stall protection",
   /*  24 */ "Shifting prevented due to overrev protection",
   /*  25 */ "Shifting to nonexistant gear prevented",
   /*  26 */ "Neutral shift from 3rd or higher prevented",
-  /*  27 */ "Exceeded maximum number of retry shifts"
+  /*  27 */ "Exceeded maximum number of retry shifts",
+  /*  28 */ "CAN state variables are out-of-date"
 };
 
 /**
  * void send_errno_CAN_msg(uint16_t origin_id, uint16_t errno)
- * 
+ *
  * Sends an CAN error message with the sender's node ID and the error number.
- * 
+ *
  * @param origin_id - Node ID of the sending node
  * @param errno - Error number of the error that occurred
  */

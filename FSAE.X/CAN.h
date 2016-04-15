@@ -312,6 +312,13 @@
 #define ROT2_MASK      0x0F
 #define ROT3_MASK      0xF0
 
+// From PDM
+#define KILL_SW_MASK   0x08
+#define ACT_DN_SW_MASK 0x10
+#define ACT_UP_SW_MASK 0x20
+#define ON_SW_MASK     0x40
+#define STR_SW_MASK    0x80
+
 /**
  * ADL definitions
  */
