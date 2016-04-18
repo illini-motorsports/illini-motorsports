@@ -9,6 +9,7 @@
 #include "Wheel.h"
 
 // Count number of milliseconds since start of code execution
+volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
 
 void main(void) {
   init_general();// Set general runtime configuration bits
@@ -23,10 +24,13 @@ void main(void) {
   
 	// Init Relevant Pins
 	millis = 0;
+	CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
   LCD_CS_TRIS = OUTPUT;
   LCD_CS_LAT = 1;
   LCD_RST_TRIS = OUTPUT;
 	LCD_RST_LAT = 1;
+	TRISEbits.TRISE8 = OUTPUT;
+	LATEbits.LATE8 = 0;
 	SW1_TRIS = INPUT;
 	SW2_TRIS = INPUT;
 	SW3_TRIS = INPUT;
@@ -41,8 +45,10 @@ void main(void) {
   initialize();
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
+	PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
+	PWM1out(255);
 	fillScreen(RA8875_WHITE);
-	drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
+	//drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
 	
 	// Initialize All the data streams
 	initDataItems();
@@ -51,6 +57,22 @@ void main(void) {
 	changeScreen(RACE_SCREEN);
 	
   while(1){
+		// Send CAN messages with the correct frequency
+		if(CANswStateMillis >= CAN_SW_STATE_FREQ){
+			CANswitchStates();
+			CANswStateMillis = 0;
+		}	
+		if(CANswADLMillis >= CAN_SW_ADL_FREQ){
+			CANswitchADL();
+			CANswADLMillis = 0;
+		}
+		if(CANdiagMillis >= CAN_DIAG_FREQ){
+			CANdiag();
+			CANdiagMillis = 0;
+		}
+		// Refresh Screen
+		delay(50);
+		oilPress.value += 0.01;
 		refreshScreenItems();
 	}
 }
@@ -62,6 +84,9 @@ void main(void) {
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
   millis++;// Increment millis count
+	CANswStateMillis++;
+	CANswADLMillis++;
+	CANdiagMillis++;
 
 	// Should I be doing this every millisecond?
 	if (ADCCON2bits.EOSRDY) {
@@ -265,7 +290,20 @@ void CANswitchStates(void){
 	switchData.byte0 = (swBitmask << 4) | momBitmask;
 	switchData.byte1 = (rotary[0] << 4) | rotary[2];
 	switchData.byte2 = rotary[3] << 4;
-	CAN_send_message(WHEEL_ID + 1,2,switchData);
+	CAN_send_message(WHEEL_ID + 1,3,switchData);
+}
+
+void CANswitchADL(void){
+	CAN_data rotaries = {0};
+	rotaries.halfword0 = 0x0000;
+	rotaries.halfword1 = rotary[0];
+	rotaries.halfword2 = rotary[1];
+	rotaries.halfword3 = rotary[2];
+	CAN_send_message(ADL_ID, 8, rotaries);
+}
+
+void CANdiag(void){
+	return;
 }
 
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl){

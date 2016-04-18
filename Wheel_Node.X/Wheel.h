@@ -86,6 +86,10 @@
 #define MOM3_BIT	0b100
 #define MOM4_BIT	0b1000
 
+#define CAN_SW_STATE_FREQ 	100
+#define CAN_SW_ADL_FREQ 		500
+#define CAN_DIAG_FREQ 			1000	
+
 volatile uint32_t millis;
 
 volatile uint8_t rotary[3], tRotary[2], swBitmask, momBitmask;
@@ -95,6 +99,8 @@ void delay(uint32_t num);
 void process_CAN_msg(CAN_message msg);
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl);
 void CANswitchStates(void);
+void CANswitchADL(void);
+void CANdiag(void);
 void initADCWheel(void);
 void updateSwVals(void);
 uint8_t getRotaryPosition(uint32_t adcValue);

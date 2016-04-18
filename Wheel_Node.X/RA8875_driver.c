@@ -47,9 +47,7 @@ void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t n
 	uint16_t offset = numWidth*1.2;
 	int i = 0;
 	for(;i<numNums;i++){
-		if(number != 0){
-			sevenSegmentDigit(x + (offset*(numNums - i - 1)), y, numWidth, color, number%10);
-		}
+		sevenSegmentDigit(x + (offset*(numNums - i - 1)), y, numWidth, color, number%10);
 		number /=10;
 	}
 }

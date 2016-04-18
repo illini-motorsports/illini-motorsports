@@ -43,6 +43,13 @@ typedef struct {
 	uint8_t decDigits;
 } dataItem;
 
+typedef struct {
+	uint16_t x;
+	uint16_t y;
+	uint16_t size;
+} screenItemInfo;
+
+
 /* 
  * Defines an item that will be displayed on a specific screen
  * 
@@ -55,12 +62,11 @@ typedef struct {
  * refreshTime -			Time that the value was previously refreshed
  */
 typedef struct {
-	uint16_t x;
-	uint16_t y;
-	uint16_t size;
 	double currentValue;
 	dataItem * data;
 	uint32_t refreshTime;
+	screenItemInfo info;
+	void (*redrawItem)(screenItemInfo *, dataItem *);
 } screenItem;
 
 /*
@@ -135,16 +141,19 @@ void initDataItem(dataItem* data, double warn, double err, uint32_t refresh,
 				uint8_t whole, uint8_t dec);
 void initAllScreens(void);
 void initScreen(uint8_t num);
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, 
-				dataItem* data);
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, dataItem *), dataItem* data);
 void changeScreen(uint8_t num);
 void refreshScreenItems(void);
-void redrawItem(screenItem * item);
+void redrawDigit(screenItemInfo * item, dataItem * data);
 void clearScreen(void);
 double getMinLap(void);
 void endRace(void);
 void displayNoErrors(void);
 void addError(char * errText, dataItem * item, uint8_t priority);
+
+
 uint16_t tempColor(uint8_t temp);
+void drawTireTemps(void);
+void drawSuspensionPos(void);
 
 #endif /* _FSAE_LCD_H */
