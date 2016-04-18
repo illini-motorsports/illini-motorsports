@@ -322,6 +322,10 @@ void fillCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t short
   curveHelper(xCenter, yCenter, longAxis, shortAxis, curvePart, color, 1);
 }
 
+void fillCircleSquare(int16_t x, int16_t y, int16_t w, int16_t h, int16_t corner, uint16_t color){
+	circleSquareHelper(x,y,w,h,corner,color,1);
+}
+
 /****************** Graphics Helpers ***********************
  **********************************************************/
 
@@ -346,7 +350,7 @@ void rectHelper(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint
   // Begin Coordinates
   writeCoordinates(RA8875_RECT_X0_0, x, y);
   
-  // End Coordinates Coordinates
+  // End Coordinates
   writeCoordinates(RA8875_RECT_X1_0, w, h);
   
   /* Set Color */
@@ -362,6 +366,26 @@ void rectHelper(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint
   
   /* Wait for the command to finish */
   waitPoll(RA8875_DCR, RA8875_DCR_LINESQUTRI_STATUS);
+}
+
+void circleSquareHelper(int16_t x, int16_t y, int16_t w, int16_t h, int16_t corner, uint16_t color, uint8_t filled){
+	// Begin Coordinates
+	writeCoordinates(RA8875_CIRC_SQUARE_X0, x, y);
+	// End Coordinates
+	writeCoordinates(RA8875_CIRC_SQUARE_X1, w, h);
+	// Circle Corners
+	writeCoordinates(RA8875_CIRC_SQUARE_CORN, corner, corner);
+	// Set Color
+	setColor(color, 1);
+	// Draw
+	if(filled){
+		writeReg(RA8875_CIRC_SQUARE_DCR, RA8875_CIRC_SQUARE_STRT | RA8875_CIRC_SQUARE_FILL);
+	}
+	else{
+		writeReg(RA8875_CIRC_SQUARE_DCR, RA8875_CIRC_SQUARE_STRT);
+	}
+	// Wait till it's done
+	waitPoll(RA8875_CIRC_SQUARE_DCR, RA8875_CIRC_SQUARE_STAT);
 }
 
 void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t filled) {

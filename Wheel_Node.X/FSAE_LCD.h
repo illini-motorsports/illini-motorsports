@@ -18,13 +18,17 @@
 #define FOREGROUND_COLOR 	RA8875_BLACK
 #define WARNING_COLOR 		BACKGROUND_COLOR
 #define ERROR_COLOR 			BACKGROUND_COLOR
-#define NUM_SCREENS 			4
+#define NUM_SCREENS 			6
 #define RACE_SCREEN 			0
 #define PDM_DRAW_SCREEN 	1
 #define PDM_CUT_SCREEN  	2
 #define MOTEC_SCREEN			3
 #define END_RACE_SCREEN		4
+#define CHASSIS_SCREEN		5
 #define MIN_REFRESH 			20
+
+#define MIN_SUS_POS				5
+#define MAX_SUS_POS				20
 
 /*
  * Defines a data stream that is relevant to one or more screens
@@ -42,6 +46,7 @@ typedef struct {
 	uint8_t wholeDigits;
 	uint8_t decDigits;
 } dataItem;
+
 
 typedef struct {
 	uint16_t x;
@@ -87,10 +92,10 @@ typedef struct {
 } errMsg;
 
 screenItem raceScreenItems[5], pdmDrawItems[20], pdmCutItems[21], 
-				motecItems[30], endRaceItems[9];
+				motecItems[30], endRaceItems[9], chassisItems[20];
 screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen,
-				endRaceScreen;
-screen* allScreens[5];
+				endRaceScreen, chassisScreen;
+screen* allScreens[6];
 
 uint8_t screenNumber;
 
@@ -144,16 +149,20 @@ void initScreen(uint8_t num);
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, dataItem *), dataItem* data);
 void changeScreen(uint8_t num);
 void refreshScreenItems(void);
-void redrawDigit(screenItemInfo * item, dataItem * data);
 void clearScreen(void);
 double getMinLap(void);
 void endRace(void);
 void displayNoErrors(void);
 void addError(char * errText, dataItem * item, uint8_t priority);
 
+void redrawDigit(screenItemInfo * item, dataItem * data);
+void redrawGearPos(screenItemInfo * item, dataItem * data);
+void redrawFanSw(screenItemInfo * item, dataItem * data);
+void redrawPumpSw(screenItemInfo * item, dataItem * data);
+void redrawLCSw(screenItemInfo * item, dataItem * data);
+void redrawTireTemp(screenItemInfo * item, dataItem * data);
+void redrawSPBar(screenItemInfo * item, dataItem * data);
 
 uint16_t tempColor(uint8_t temp);
-void drawTireTemps(void);
-void drawSuspensionPos(void);
 
 #endif /* _FSAE_LCD_H */

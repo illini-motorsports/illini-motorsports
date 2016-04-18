@@ -63,6 +63,7 @@ void drawEllipse(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t sho
 void fillEllipse(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint16_t color);
 void drawCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color);
 void fillCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color);
+void fillCircleSquare(int16_t x, int16_t y, int16_t w, int16_t h, int16_t corner, uint16_t color);
 void setColor(uint16_t color, uint8_t isForeground);
 void writeCoordinates(uint8_t s_reg, uint16_t x, uint16_t y);
 
@@ -102,6 +103,7 @@ void rectHelper(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color, uint
 void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, uint8_t filled);
 void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint16_t color, uint8_t filled);
 void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color, uint8_t filled);
+void circleSquareHelper(int16_t x, int16_t y, int16_t w, int16_t h, int16_t corner, uint16_t color, uint8_t filled);
 
 uint8_t _cs, _rst;
 uint16_t _width, _height;
@@ -119,6 +121,8 @@ uint8_t _textScale;
 #define SEVEN_SEG_7 		0x70
 #define SEVEN_SEG_8 		0x7F
 #define SEVEN_SEG_9 		0x7B
+#define SEVEN_SEG_N			0x54
+#define SEVEN_SEG_E			0x79
 
 // Rectangle Coordinates
 #define RA8875_RECT_X0_0				0x91
@@ -137,6 +141,15 @@ uint8_t _textScale;
 #define RA8875_CIRC_Y_0					0x9b
 #define RA8875_CIRC_Y_1					0x9c
 #define RA8875_CIRC_RAD					0x9d
+
+//Circle Square Coordinates
+#define RA8875_CIRC_SQUARE_X0		0x91
+#define RA8875_CIRC_SQUARE_X1		0x95
+#define RA8875_CIRC_SQUARE_CORN	0xA1
+#define RA8875_CIRC_SQUARE_DCR	0xA0
+#define RA8875_CIRC_SQUARE_STRT 0xA0
+#define RA8875_CIRC_SQUARE_FILL	0x40
+#define RA8875_CIRC_SQUARE_STAT 0x80
 
 // Background Color Registers
 #define RA8875_BGCR_RED 				0x60
