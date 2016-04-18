@@ -796,20 +796,33 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 void sample_gear(void) {
   if(millis - gear_samp_tmr >= GEAR_SAMP_INTV) {
     uint16_t gear_samp = sample(ADC_GEAR_CHN);
-    uint16_t gear_voltage = (uint16_t) (((((double) gear_samp) / 4095.0)
-        * 5.0) * 10000);
+    double gear_voltage =  ((((double) gear_samp) / 4095.0) * 5.0);
+    uint16_t gear_voltage_can = (uint16_t) (gear_voltage * 10000.0);
 
-    //TODO: Apply linearization of sensor and CAN scalars to set value
-    gear = GEAR_FAIL;
+    if (abs(gear_voltage - 0.595) <= GEAR_VOLT_RIPPLE) {
+      gear = 1;
+    } else if (abs(gear_voltage - 1.05) <= GEAR_VOLT_RIPPLE) {
+      gear = GEAR_NEUT;
+    } else if (abs(gear_voltage - 1.58) <= GEAR_VOLT_RIPPLE) {
+      gear = 2;
+    } else if (abs(gear_voltage - 2.32) <= GEAR_VOLT_RIPPLE) {
+      gear = 3;
+    } else if (abs(gear_voltage - 3.16) <= GEAR_VOLT_RIPPLE) {
+      gear = 4;
+    } else if (abs(gear_voltage - 4.12) <= GEAR_VOLT_RIPPLE) {
+      gear = 5;
+    } else if (abs(gear_voltage - 4.81) <= GEAR_VOLT_RIPPLE) {
+      gear = 6;
+    } else {
+      gear = GEAR_FAIL;
+    }
 
-    /*
     if (gear == GEAR_FAIL) {
       send_errno_CAN_msg(PADDLE_ID, ERR_PDL_GEARFAIL);
     }
-     */
 
     data[GEAR_BYTE] = gear;
-    ((uint16_t*) data)[GEAR_VOLT_BYTE / 2] = gear_voltage;
+    ((uint16_t*) data)[GEAR_VOLT_BYTE / 2] = gear_voltage_can;
     ECANSendMessage(PADDLE_ID + 0x1, data, 4, ECAN_TX_FLAGS);
 
     gear_samp_tmr = millis;

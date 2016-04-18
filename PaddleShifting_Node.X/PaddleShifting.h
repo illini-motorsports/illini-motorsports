@@ -18,6 +18,8 @@
 #include "../FSAE.X/CAN.h"
 #include "../FSAE.X/errno.h"
 
+#define abs(n) ( ((n) >= 0) ? (n) : -(n) )
+
 // State variable definitions
 #define SHIFT_UP_SW (!SHIFT_UP_PORT)
 #define SHIFT_DN_SW (!SHIFT_DN_PORT)
@@ -49,6 +51,7 @@
 // Thresholds
 #define RPM_ON_THRESHOLD 600.0 // rpm
 #define MAX_RETRY        2
+#define GEAR_VOLT_RIPPLE 0.1   // V
 
 // Miscellaneous definitions
 #define IGN_CUT_SPOOF 10000 // Value for "spoofed" gear shift force sensor
