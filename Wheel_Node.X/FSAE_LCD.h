@@ -68,10 +68,10 @@ typedef struct {
  */
 typedef struct {
 	double currentValue;
-	dataItem * data;
+	volatile dataItem * data;
 	uint32_t refreshTime;
 	screenItemInfo info;
-	void (*redrawItem)(screenItemInfo *, dataItem *);
+	void (*redrawItem)(screenItemInfo *, volatile dataItem *);
 } screenItem;
 
 /*
@@ -91,7 +91,7 @@ typedef struct {
 	uint8_t priority;
 } errMsg;
 
-screenItem raceScreenItems[5], pdmDrawItems[20], pdmCutItems[21], 
+screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], 
 				motecItems[30], endRaceItems[9], chassisItems[20];
 screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen,
 				endRaceScreen, chassisScreen;
@@ -100,53 +100,45 @@ screen* allScreens[6];
 uint8_t screenNumber;
 
 // Uptimes
-dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
+volatile dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
 
 // Motec Data Stream
-dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress, 
-				batVoltage, wheelSpeedFL, wheelSpeedFR, wheelSpeedRL, wheelSpeedRR,
-				gpsLat, gpsLong, groundSpeed, driveSpeed, gpsSpeed, manifoldTemp, 
-				ambientTemp, ambientPress, fuelTemp, fuelPress, lambda1, lambda2, 
-				lambda3, lambda4, lcEnablity, fuelConsum, gpsAltitude, gpsTime, runTime,
-				fuelInjDuty, fuelTrim;
+volatile dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress, batVoltage, wheelSpeedFL, wheelSpeedFR, wheelSpeedRL, wheelSpeedRR, gpsLat, gpsLong, groundSpeed, driveSpeed, gpsSpeed, manifoldTemp, ambientTemp, ambientPress, fuelTemp, fuelPress, lambda1, lambda2, lambda3, lambda4, lcEnablity, fuelConsum, gpsAltitude, gpsTime, runTime, fuelInjDuty, fuelTrim;
 
 // Tire Temps
-dataItem ttFL1, ttFL2, ttFL3, ttFL4, ttFL, ttFR1, ttFR2, ttFR3, ttFR4, ttFR, 
-				ttRL1, ttRL2, ttRL3, ttRL4, ttRL, ttRR1, ttRR2, ttRR3, ttRR4, ttRR;
+volatile dataItem ttFL1, ttFL2, ttFL3, ttFL4, ttFL, ttFR1, ttFR2, ttFR3, ttFR4, ttFR, ttRL1, ttRL2, ttRL3, ttRL4, ttRL, ttRR1, ttRR2, ttRR3, ttRR4, ttRR; 
 
 // Steering Wheel
-dataItem swTemp, swSW1, swSW2, swSW3, swSW4, swROT1, swROT2, swROT3, swTROT1,
-				swTROT2, swBUT1, swBUT2, swBUT3, swBUT4;
+volatile dataItem swTemp, swSW1, swSW2, swSW3, swSW4, swROT1, swROT2, swROT3, swTROT1, swTROT2, swBUT1, swBUT2, swBUT3, swBUT4;
 
 // PDM
-dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v,
-				pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, 
-				pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUNcut, pdmECUPcut, 
-				pdmWTRdraw, pdmWTRNcut, pdmWTRPcut, pdmFANdraw, pdmFANNcut, pdmFANPcut,
-				pdmAUXdraw, pdmAUXcut, pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut,
-				pdm5v5draw, pdm5v5cut, pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut,
-				pdmSTR1draw, pdmSTR1cut, pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
+volatile dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v, pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUNcut, pdmECUPcut, pdmWTRdraw, pdmWTRNcut, pdmWTRPcut, pdmFANdraw, pdmFANNcut, pdmFANPcut, pdmAUXdraw, pdmAUXcut, pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut, pdmSTR1draw, pdmSTR1cut, pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
+
+// Rear Analog Hub
+volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radOutputTemp, swirlTemp, swirlPress;
+
+// Front Analog Hub
+volatile dataItem susPosFR, susPosFL, brakePressFront, brakePressRear, steeringAngle, accelPedalPos0, accelPedalPos1;
 
 // Paddle Shifting
-dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage;
+volatile dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage; 
 
 // End Race Data
-dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempFR,
-				endTireTempRL, endTireTempRR, endAmbientTemp, endFuelConsum;
+volatile dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempFR, endTireTempRL, endTireTempRR, endAmbientTemp, endFuelConsum;
 
 // Lap Time Ring Buffer
-dataItem lapTimeBuffer[20];
+volatile dataItem lapTimeBuffer[20];
 uint8_t lapTimeHead, numLaps;
 
 errMsg errBuffer[20];
 uint8_t errBufferHead, errBufferTail;
 
 void initDataItems(void);
-void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 
+void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, 
 				uint8_t whole, uint8_t dec);
 void initAllScreens(void);
 void initScreen(uint8_t num);
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, dataItem *), dataItem* data);
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *), volatile dataItem* data);
 void changeScreen(uint8_t num);
 void refreshScreenItems(void);
 void clearScreen(void);
@@ -155,13 +147,13 @@ void endRace(void);
 void displayNoErrors(void);
 void addError(char * errText, dataItem * item, uint8_t priority);
 
-void redrawDigit(screenItemInfo * item, dataItem * data);
-void redrawGearPos(screenItemInfo * item, dataItem * data);
-void redrawFanSw(screenItemInfo * item, dataItem * data);
-void redrawPumpSw(screenItemInfo * item, dataItem * data);
-void redrawLCSw(screenItemInfo * item, dataItem * data);
-void redrawTireTemp(screenItemInfo * item, dataItem * data);
-void redrawSPBar(screenItemInfo * item, dataItem * data);
+void redrawDigit(screenItemInfo * item, volatile dataItem * data);
+void redrawGearPos(screenItemInfo * item, volatile dataItem * data);
+void redrawFanSw(screenItemInfo * item, volatile dataItem * data);
+void redrawPumpSw(screenItemInfo * item, volatile dataItem * data);
+void redrawLCSw(screenItemInfo * item, volatile dataItem * data);
+void redrawTireTemp(screenItemInfo * item, volatile dataItem * data);
+void redrawSPBar(screenItemInfo * item, volatile dataItem * data);
 
 uint16_t tempColor(uint8_t temp);
 

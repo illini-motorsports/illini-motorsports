@@ -92,7 +92,7 @@
 
 volatile uint32_t millis;
 
-volatile uint8_t rotary[3], tRotary[2], swBitmask, momBitmask;
+volatile dataItem rotary[3], tRotary[2], switches[4], momentaries[4];
 // Function definitions
 void main(void);
 void delay(uint32_t num);

@@ -141,6 +141,25 @@ void initDataItems(void){
 	initDataItem(&pdmSTR2cut,0,0,MIN_REFRESH,2,1);
 	initDataItem(&pdmSTRdraw,0,0,MIN_REFRESH,3,1);
 
+	// Rear Analog Hub
+	initDataItem(&susPosRR,0,0,MIN_REFRESH,2,1);
+	initDataItem(&susPosRL,0,0,MIN_REFRESH,2,1);
+	initDataItem(&engOutput,0,0,MIN_REFRESH,2,1);
+	initDataItem(&battCurrent,0,0,MIN_REFRESH,2,1);
+	initDataItem(&radInputTemp,0,0,MIN_REFRESH,2,1);
+	initDataItem(&radOutputTemp,0,0,MIN_REFRESH,2,1);
+	initDataItem(&swirlTemp,0,0,MIN_REFRESH,2,1);
+	initDataItem(&swirlPress,0,0,MIN_REFRESH,2,1);
+
+	// Front Analog Hub
+	initDataItem(&susPosFR,0,0,MIN_REFRESH,2,1);
+	initDataItem(&susPosFL,0,0,MIN_REFRESH,2,1);
+	initDataItem(&brakePressFront,0,0,MIN_REFRESH,2,1);
+	initDataItem(&brakePressRear,0,0,MIN_REFRESH,2,1);
+	initDataItem(&steeringAngle,0,0,MIN_REFRESH,2,1);
+	initDataItem(&accelPedalPos0,0,0,MIN_REFRESH,2,1);
+	initDataItem(&accelPedalPos1,0,0,MIN_REFRESH,2,1);
+
 	// Uptimes
 	// uptimes - 4,0
 	initDataItem(&paddleUptime,0,0,MIN_REFRESH,2,1);
@@ -158,9 +177,25 @@ void initDataItems(void){
 	initDataItem(&endTireTempRR,0,0,1000,2,1);
 	initDataItem(&endAmbientTemp,0,0,1000,2,1);
 	initDataItem(&endFuelConsum,0,0,1000,2,1);
+
+	//Switches and Rotaries
+	initDataItem(&rotary[0],0,0,MIN_REFRESH,1,0);
+	initDataItem(&rotary[1],0,0,MIN_REFRESH,1,0);
+	initDataItem(&rotary[2],0,0,MIN_REFRESH,1,0);
+	initDataItem(&tRotary[0],0,0,MIN_REFRESH,1,0);
+	initDataItem(&tRotary[1],0,0,MIN_REFRESH,1,0);
+	initDataItem(&tRotary[2],0,0,MIN_REFRESH,1,0);
+	initDataItem(&switches[0],0,0,MIN_REFRESH,1,0);
+	initDataItem(&switches[1],0,0,MIN_REFRESH,1,0);
+	initDataItem(&switches[2],0,0,MIN_REFRESH,1,0);
+	initDataItem(&switches[3],0,0,MIN_REFRESH,1,0);
+	initDataItem(&momentaries[0],0,0,MIN_REFRESH,1,0);
+	initDataItem(&momentaries[1],0,0,MIN_REFRESH,1,0);
+	initDataItem(&momentaries[2],0,0,MIN_REFRESH,1,0);
+	initDataItem(&momentaries[3],0,0,MIN_REFRESH,1,0);
 }
 
-void initDataItem(dataItem* data, double warn, double err, uint32_t refresh, 
+void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, 
 				uint8_t whole, uint8_t dec){
 	data->value = 2;
 	data->warnThreshold = warn;
@@ -176,12 +211,15 @@ void initAllScreens(void){
 	// Race Screen Stuff
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
-	raceScreen.len = 5;
-	initScreenItem(&raceScreen.items[0], 20, 30, 30, redrawDigit, &oilTemp);
-	initScreenItem(&raceScreen.items[1], 330, 30, 30, redrawDigit, &waterTemp);
-	initScreenItem(&raceScreen.items[2], 20, 150, 30, redrawDigit, &oilPress);
-	initScreenItem(&raceScreen.items[3], 330, 180, 30, redrawDigit, 0x0);
-	initScreenItem(&raceScreen.items[4], 170, 50, 100, redrawDigit, &gearPos);
+	raceScreen.len = 8;
+	initScreenItem(&raceScreen.items[0], 20, 30, 30, redrawFanSw, &switches[0]);
+	initScreenItem(&raceScreen.items[1], 20, 30, 30, redrawPumpSw, &switches[1]);
+	initScreenItem(&raceScreen.items[2], 20, 30, 30, redrawLCSw, &switches[2]);
+	initScreenItem(&raceScreen.items[3], 20, 30, 30, redrawDigit, &oilTemp);
+	initScreenItem(&raceScreen.items[4], 330, 30, 30, redrawDigit, &waterTemp);
+	initScreenItem(&raceScreen.items[5], 20, 150, 30, redrawDigit, &oilPress);
+	initScreenItem(&raceScreen.items[6], 330, 180, 30, redrawDigit, 0x0);
+	initScreenItem(&raceScreen.items[7], 170, 50, 100, redrawDigit, &gearPos);
 	
 	// PDM stuff
 	allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
@@ -319,7 +357,7 @@ void initAllScreens(void){
 	}
 }
 
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, dataItem *), dataItem* data){
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *), volatile dataItem* data){
 	item->info.x = x;
 	item->info.y = y;
 	item->info.size = size;
@@ -373,7 +411,7 @@ void refreshScreenItems(void){
 }
 
 // Redraw Helper Function
-void redrawDigit(screenItemInfo * item, dataItem * data){
+void redrawDigit(screenItemInfo * item, volatile dataItem * data){
 	uint16_t fillColor;
 	if(data->value >= data->warnThreshold){
 		if(data->value >= data->errThreshold){
@@ -395,7 +433,7 @@ void redrawDigit(screenItemInfo * item, dataItem * data){
 	sevenSegmentDecimal(item->x, item->y, item->size, wholeNums + decNums, decNums, FOREGROUND_COLOR, data->value);
 }
 
-void redrawGearPos(screenItemInfo * item, dataItem * data){
+void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
 	fillRect(item->x, item->y, item->size, item->size * 1.75, BACKGROUND_COLOR);
 	if(data->value == 0){
 		sevenSegment(item->x, item->y, item->size, FOREGROUND_COLOR, SEVEN_SEG_N);
@@ -408,7 +446,7 @@ void redrawGearPos(screenItemInfo * item, dataItem * data){
 	}
 }
 
-void redrawFanSw(screenItemInfo * item, dataItem * data){
+void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
@@ -417,7 +455,7 @@ void redrawFanSw(screenItemInfo * item, dataItem * data){
 	}
 }
 
-void redrawPumpSw(screenItemInfo * item, dataItem * data){
+void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
 	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
@@ -426,7 +464,7 @@ void redrawPumpSw(screenItemInfo * item, dataItem * data){
 	}
 }
 
-void redrawLCSw(screenItemInfo * item, dataItem * data){
+void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
 	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
@@ -435,12 +473,12 @@ void redrawLCSw(screenItemInfo * item, dataItem * data){
 	}
 }
 
-void redrawTireTemp(screenItemInfo * item, dataItem * data){
+void redrawTireTemp(screenItemInfo * item, volatile dataItem * data){
 	uint16_t fillColor = tempColor(data->value);
 	fillCircleSquare(item->x, item->y, item->size, item->size*1.75, item->size/10, fillColor);
 }
 
-void redrawSPBar(screenItemInfo * item, dataItem * data){
+void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
 	fillRect(item->x, item->y, item->size, item->size * 5, BACKGROUND_COLOR);
 	if(data->value > MIN_SUS_POS){
 		uint16_t height = ((item->size * 5)/(MAX_SUS_POS - MIN_SUS_POS))*(data->value - MIN_SUS_POS);

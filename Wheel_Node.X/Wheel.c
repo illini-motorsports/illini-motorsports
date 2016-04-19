@@ -154,12 +154,6 @@ void process_CAN_msg(CAN_message msg){
 			gpsAltitude.value = parseMsgMotec(&msg, GPS_ALT_BYTE, GPS_ALT_SCL);
 			break;
 		case MOTEC_ID + 5:
-			gpsLat.value = (double) ((msg.data[GPS_LAT_BYTE] << 24) |
-							(msg.data[GPS_LAT_BYTE+1] << 16) | (msg.data[GPS_LAT_BYTE+2] << 8) | 
-							msg.data[GPS_LAT_BYTE+3]) * GPS_LAT_SCL;
-			gpsLong.value = (double) ((msg.data[GPS_LONG_BYTE] << 24) | 
-							(msg.data[GPS_LONG_BYTE+1] << 16) | (msg.data[GPS_LONG_BYTE+2] << 8) | 
-							msg.data[GPS_LONG_BYTE+3]) * GPS_LONG_SCL;
 			break;
 		case MOTEC_ID + 6:
 			gpsTime.value = (double) ((msg.data[GPS_TIME_BYTE] << 24) | 
@@ -287,18 +281,22 @@ void process_CAN_msg(CAN_message msg){
 
 void CANswitchStates(void){
 	CAN_data switchData = {0};
-	switchData.byte0 = (swBitmask << 4) | momBitmask;
-	switchData.byte1 = (rotary[0] << 4) | rotary[2];
-	switchData.byte2 = rotary[3] << 4;
+	uint8_t bitMask = (uint8_t)momentaries[0].value|(uint8_t)momentaries[1].value << 1|
+					(uint8_t)momentaries[2].value << 2|(uint8_t)momentaries[3].value << 3|
+					(uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5| 
+					(uint8_t)switches[2].value << 6|(uint8_t)switches[3].value << 7;
+	switchData.byte0 = bitMask;
+	switchData.byte1 = ((uint8_t)rotary[0].value << 4) | (uint8_t)rotary[1].value;
+	switchData.byte2 = (uint8_t)rotary[2].value << 4;
 	CAN_send_message(WHEEL_ID + 1,3,switchData);
 }
 
 void CANswitchADL(void){
 	CAN_data rotaries = {0};
 	rotaries.halfword0 = 0x0000;
-	rotaries.halfword1 = rotary[0];
-	rotaries.halfword2 = rotary[1];
-	rotaries.halfword3 = rotary[2];
+	rotaries.halfword1 = (uint16_t) rotary[0].value;
+	rotaries.halfword2 = (uint16_t) rotary[1].value;
+	rotaries.halfword3 = (uint16_t) rotary[2].value;
 	CAN_send_message(ADL_ID, 8, rotaries);
 }
 
@@ -330,24 +328,22 @@ void initADCWheel(void){
 
 void updateSwVals(void){
 	// Update Switches
-	swBitmask = 0;
-	if(SW1_PORT){swBitmask |= SW1_BIT;}
-	if(SW2_PORT){swBitmask |= SW2_BIT;}
-	if(SW3_PORT){swBitmask |= SW3_BIT;}
-	if(SW4_PORT){swBitmask |= SW4_BIT;}
+	switches[0].value = SW1_PORT;
+	switches[1].value = SW2_PORT;
+	switches[2].value = SW3_PORT;
+	switches[3].value = SW4_PORT;
 	// Update Momentaries
-	momBitmask = 0;
-	if(MOM1_PORT){momBitmask |= MOM1_BIT;}
-	if(MOM2_PORT){momBitmask |= MOM2_BIT;}
-	if(MOM3_PORT){momBitmask |= MOM3_BIT;}
-	if(MOM4_PORT){momBitmask |= MOM4_BIT;}
+	momentaries[0].value = MOM1_PORT;
+	momentaries[1].value = MOM2_PORT;
+	momentaries[2].value = MOM3_PORT;
+	momentaries[3].value = MOM4_PORT;
 	
 	// Update rotaries
-	rotary[0] = getRotaryPosition(read_adc_chn(ROT1_CHN));
-	rotary[1] = getRotaryPosition(read_adc_chn(ROT2_CHN));
-	rotary[2] = getRotaryPosition(read_adc_chn(ROT3_CHN));
-	tRotary[0] = getRotaryPosition(read_adc_chn(TROT1_CHN));
-	tRotary[1] = getRotaryPosition(read_adc_chn(TROT2_CHN));
+	rotary[0].value = getRotaryPosition(read_adc_chn(ROT1_CHN));
+	rotary[1].value = getRotaryPosition(read_adc_chn(ROT2_CHN));
+	rotary[2].value = getRotaryPosition(read_adc_chn(ROT3_CHN));
+	tRotary[0].value = getRotaryPosition(read_adc_chn(TROT1_CHN));
+	tRotary[1].value = getRotaryPosition(read_adc_chn(TROT2_CHN));
 }
 
 // 10 is error
