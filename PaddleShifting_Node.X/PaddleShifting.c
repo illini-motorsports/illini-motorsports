@@ -113,7 +113,8 @@ volatile uint8_t kill_sw = 0; // Holds state of KILL_SW from CAN
 volatile uint32_t lockout_tmr = 0; // Holds millis value of last lockout set
 uint32_t act_tmr = 0;              // Records the time the actuator was fired
 
-uint32_t diag_send_tmr, temp_samp_tmr, gear_samp_tmr = 0; // Various millis timers
+uint32_t diag_send_tmr, temp_samp_tmr, gear_samp_tmr,
+    switch_send_tmr = 0; // Various millis timers
 uint32_t CAN_recv_tmr = 0; // Record timestamp of latest received CAN message
 int16_t temp = 0; // PCB temperature reading in units of [C/0.005]
 
@@ -173,7 +174,7 @@ void main(void) {
   while(1) {
 
     // Sample GEAR_POS signal
-    sample_gear();
+    sample_gear(NOT_SHIFTING);
 
     // Do upshift sequence if queued
     if(queue_up > 0) {
@@ -195,6 +196,9 @@ void main(void) {
 
     // Send diagnostic CAN message
     send_diag_can(NO_OVERRIDE);
+
+    // Send switch state CAN message
+    send_switch_can(NO_OVERRIDE);
   }
 }
 
@@ -216,6 +220,11 @@ void high_isr(void) {
     INTCONbits.TMR0IF = 0;
     TMR0L = 0x84; // Adjusted from TMR0_RELOAD experimentally
     millis++;
+
+    if (SHIFT_UP_SW != prev_switch_up ||
+        SHIFT_DN_SW != prev_switch_dn) {
+      send_switch_can(OVERRIDE);
+    }
 
     // Check for a new shift_up switch press
     if(SHIFT_UP_SW && !prev_switch_up) {
@@ -472,7 +481,7 @@ void do_shift(uint8_t shift_enum) {
   if (SHIFT_UP) {
     gear_target = gear + 1;
   } else if (SHIFT_DN) {
-    gear_target = gear - 1;
+    gear_target = (gear == GEAR_NEUT) ? 1 : gear - 1;
   } else if (SHIFT_NT) {
     gear_target = GEAR_NEUT;
   }
@@ -520,7 +529,7 @@ void do_shift(uint8_t shift_enum) {
     act_tmr = millis;
 
     while (1) {
-      sample_gear();
+      sample_gear(SHIFTING);
 
       if (gear == gear_target) {
         // Relax actuator
@@ -608,7 +617,7 @@ void do_shift(uint8_t shift_enum) {
     act_tmr = millis;
 
     while (1) {
-      sample_gear();
+      sample_gear(SHIFTING);
 
       if (gear == GEAR_NEUT) {
         // Relax actuator
@@ -792,8 +801,10 @@ void do_shift_gear_fail(uint8_t shift_enum) {
  * void sample_gear(void)
  *
  * Samples the gear position sensor and updates variables if the interval has passed.
+ * 
+ * @param is_shifting- Whether or not the car is currently mid-shift
  */
-void sample_gear(void) {
+void sample_gear(uint8_t is_shifting) {
   if(millis - gear_samp_tmr >= GEAR_SAMP_INTV) {
     uint16_t gear_samp = sample(ADC_GEAR_CHN);
     double gear_voltage =  ((((double) gear_samp) / 4095.0) * 5.0);
@@ -817,7 +828,8 @@ void sample_gear(void) {
       gear = GEAR_FAIL;
     }
 
-    if (gear == GEAR_FAIL) {
+    // Only send gear failure error message if we aren't shifting
+    if (!is_shifting && gear == GEAR_FAIL) {
       send_errno_CAN_msg(PADDLE_ID, ERR_PDL_GEARFAIL);
     }
 
@@ -873,6 +885,24 @@ void send_diag_can(uint8_t override) {
 }
 
 /**
+ * void send_switch_can(uint8_t override)
+ *
+ * Sends the switch-state CAN message if the interval has passed.
+ *
+ * @param override - Whether to override the interval
+ */
+void send_switch_can(uint8_t override) {
+  if ((millis - switch_send_tmr >= SWT_MSG_SEND) || override) {
+    data[PDL_SWITCH_BYTE] = 0x0 |
+        (1 - SHIFT_NT_PORT) << 2 |
+        (1 - SHIFT_DN_PORT) << 1 |
+        (1 - SHIFT_UP_PORT);
+    ECANSendMessage(PADDLE_ID + 0x2, data, 2, ECAN_TX_FLAGS);
+    switch_send_tmr = millis;
+  }
+}
+
+/**
  * void relax_wait(void)
  *
  * Waits for the actuator to return to the relaxed position
@@ -892,7 +922,8 @@ void relax_wait(void) {
  * while waiting in a blocking section of the shifting logic.
  */
 void main_loop_misc(void) {
-  sample_gear();
+  sample_gear(SHIFTING);
   sample_temp();
   send_diag_can(NO_OVERRIDE);
+  send_switch_can(NO_OVERRIDE);
 }

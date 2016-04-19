@@ -29,12 +29,13 @@
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
 
 // Timing definitions (ms)
-#define LOCKOUT_DUR    200 //TODO: Tune this value
+#define LOCKOUT_DUR    50 
 #define DIAG_MSG_SEND  500
+#define SWT_MSG_SEND   500
 #define TEMP_SAMP_INTV 333
-#define GEAR_SAMP_INTV 10
+#define GEAR_SAMP_INTV 5
 #define MAX_SHIFT_DUR  250 //TODO: Tune this value
-#define RELAX_WAIT     20  //TODO: Tune this value
+#define RELAX_WAIT     25  //TODO: Tune this value
 #define IGN_CUT_WAIT   10  //TODO: Tune this value
 #define UP_SHIFT_DUR   150 //TODO: Tune this value
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
@@ -57,6 +58,8 @@
 #define IGN_CUT_SPOOF 10000 // Value for "spoofed" gear shift force sensor
 #define ACT_ON  0
 #define ACT_OFF 1
+#define NOT_SHIFTING 0
+#define SHIFTING 1
 
 // Definitions for gear position variable
 #define GEAR_NEUT 0
@@ -106,9 +109,10 @@ void process_downshift_press(void);
 uint8_t check_shift_conditions(uint8_t shift_enum);
 void do_shift(uint8_t shift_enum);
 void do_shift_gear_fail(uint8_t shift_enum);
-void sample_gear(void);
+void sample_gear(uint8_t is_shifting);
 void sample_temp(void);
 void send_diag_can(uint8_t override);
+void send_switch_can(uint8_t override);
 void relax_wait(void);
 void main_loop_misc(void);
 

@@ -112,6 +112,8 @@
 #define GEAR_VOLT_BYTE      0
 #define GEAR_BYTE           2
 
+#define PDL_SWITCH_BYTE     0
+
 // From Wheel
 #define SWITCH_BITS_BYTE    0
 #define BUTTON_BITS_BYTE    0
