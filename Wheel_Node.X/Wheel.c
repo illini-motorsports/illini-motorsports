@@ -113,11 +113,9 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
   if (C1INTbits.RBIF) {
     CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
   }
-  
   if (C1INTbits.RBOVIF) {
     CAN_rx_ovf++;
   }
-  
   IFS4CLR = _IFS4_CAN1IF_MASK; // Clear CAN1 Interrupt Flag
 }
 

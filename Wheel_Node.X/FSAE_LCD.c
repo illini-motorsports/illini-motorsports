@@ -212,12 +212,12 @@ void initAllScreens(void){
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
 	raceScreen.len = 8;
-	initScreenItem(&raceScreen.items[0], 20, 30, 30, redrawFanSw, &switches[0]);
-	initScreenItem(&raceScreen.items[1], 20, 30, 30, redrawPumpSw, &switches[1]);
-	initScreenItem(&raceScreen.items[2], 20, 30, 30, redrawLCSw, &switches[2]);
-	initScreenItem(&raceScreen.items[3], 20, 30, 30, redrawDigit, &oilTemp);
-	initScreenItem(&raceScreen.items[4], 330, 30, 30, redrawDigit, &waterTemp);
-	initScreenItem(&raceScreen.items[5], 20, 150, 30, redrawDigit, &oilPress);
+	initScreenItem(&raceScreen.items[0], 120, 20, 15, redrawFanSw, &switches[0]);
+	initScreenItem(&raceScreen.items[1], 240, 20, 15, redrawPumpSw, &switches[1]);
+	initScreenItem(&raceScreen.items[2], 360, 20, 15, redrawLCSw, &switches[2]);
+	initScreenItem(&raceScreen.items[3], 20, 70, 30, redrawDigit, &oilTemp);
+	initScreenItem(&raceScreen.items[4], 330, 70, 30, redrawDigit, &waterTemp);
+	initScreenItem(&raceScreen.items[5], 20, 190, 30, redrawDigit, &oilPress);
 	initScreenItem(&raceScreen.items[6], 330, 180, 30, redrawDigit, 0x0);
 	initScreenItem(&raceScreen.items[7], 170, 50, 100, redrawDigit, &gearPos);
 	
@@ -371,13 +371,13 @@ void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, voi
 void initScreen(uint8_t num){
 	if(num == RACE_SCREEN){
 		textMode();
-		textSetCursor(0, 0);
+		textSetCursor(0, 40);
 		textTransparent(FOREGROUND_COLOR);
 		textEnlarge(0);
 		textWrite("OIL TEMP", 0);
-		textSetCursor(0, 100);
+		textSetCursor(0, 140);
 		textWrite("OIL PRESS", 0);
-		textSetCursor(330, 0);
+		textSetCursor(330, 40);
 		textWrite("WTR TMP", 0);
 		graphicsMode();
 	}
