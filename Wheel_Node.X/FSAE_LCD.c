@@ -197,7 +197,7 @@ void initDataItems(void){
 
 void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, 
 				uint8_t whole, uint8_t dec){
-	data->value = 2;
+	data->value = 0;
 	data->warnThreshold = warn;
 	data->errThreshold = err;
 	data->refreshInterval = refresh;
@@ -447,7 +447,7 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
 }
 
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
-	if(data->value){
+	if(!data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
@@ -456,7 +456,7 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 }
 
 void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
-	if(data->value){
+	if(!data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
@@ -465,7 +465,7 @@ void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
 }
 
 void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
-	if(data->value){
+	if(!data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{

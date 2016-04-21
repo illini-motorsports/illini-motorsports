@@ -71,8 +71,6 @@ void main(void) {
 			CANdiagMillis = 0;
 		}
 		// Refresh Screen
-		delay(50);
-		oilPress.value += 0.01;
 		refreshScreenItems();
 	}
 }
