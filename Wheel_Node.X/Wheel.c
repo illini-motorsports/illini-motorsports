@@ -279,12 +279,13 @@ void CANswitchStates(void){
 	CAN_data switchData = {0};
 	uint8_t bitMask = (uint8_t)momentaries[0].value|(uint8_t)momentaries[1].value << 1|
 					(uint8_t)momentaries[2].value << 2|(uint8_t)momentaries[3].value << 3|
-					(uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5| 
+					(uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5|
 					(uint8_t)switches[2].value << 6|(uint8_t)switches[3].value << 7;
 	switchData.byte0 = bitMask;
 	switchData.byte1 = ((uint8_t)rotary[0].value << 4) | (uint8_t)rotary[1].value;
-	switchData.byte2 = (uint8_t)rotary[2].value << 4;
-	CAN_send_message(WHEEL_ID + 1,3,switchData);
+	switchData.byte2 = ((uint8_t)rotary[2].value << 4) | (uint8_t)tRotary[0].value;
+	switchData.byte3 = (uint8_t)tRotary[1].value << 4;
+	CAN_send_message(WHEEL_ID + 0x1, 4, switchData);
 }
 
 void CANswitchADL(void){
@@ -324,16 +325,16 @@ void initADCWheel(void){
 
 void updateSwVals(void){
 	// Update Switches
-	switches[0].value = SW1_PORT;
-	switches[1].value = SW2_PORT;
-	switches[2].value = SW3_PORT;
-	switches[3].value = SW4_PORT;
+	switches[0].value = !SW1_PORT;
+	switches[1].value = !SW2_PORT;
+	switches[2].value = !SW3_PORT;
+	switches[3].value = !SW4_PORT;
 	// Update Momentaries
-	momentaries[0].value = MOM1_PORT;
-	momentaries[1].value = MOM2_PORT;
-	momentaries[2].value = MOM3_PORT;
-	momentaries[3].value = MOM4_PORT;
-	
+	momentaries[0].value = !MOM1_PORT;
+	momentaries[1].value = !MOM2_PORT;
+	momentaries[2].value = !MOM3_PORT;
+	momentaries[3].value = !MOM4_PORT;
+
 	// Update rotaries
 	rotary[0].value = getRotaryPosition(read_adc_chn(ROT1_CHN));
 	rotary[1].value = getRotaryPosition(read_adc_chn(ROT2_CHN));

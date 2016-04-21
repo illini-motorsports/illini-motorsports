@@ -36,7 +36,7 @@ int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
 uint16_t total_current_draw = 0;
-uint8_t wtr_override_sw, fan_override_sw = 0;
+uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr, motec2_recv_tmr = 0;
@@ -457,7 +457,7 @@ void main(void) {
       }
 
       // FUEL
-      if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN)) {
+      if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN || fuel_override_sw)) {
         // Enable FUEL if not already enabled
         if (!FUEL_EN) {
           uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
@@ -724,10 +724,11 @@ void process_CAN_msg(CAN_message msg) {
       set_current_cutoff(load_idx, peak_mode, cutoff);
       break;
 
-    case WHEEL_ID:
-      switch_bitmap = (msg.data[SWITCH_BITS_BYTE] >> 4) | 0xF;
+    case WHEEL_ID + 0x1:
+      switch_bitmap = msg.data[SWITCH_BITS_BYTE];
       fan_override_sw = switch_bitmap & FAN_OVER_MASK;
       wtr_override_sw = switch_bitmap & WTR_OVER_MASK;
+      fuel_override_sw = switch_bitmap & FUEL_OVER_MASK;
       break;
   }
 }
