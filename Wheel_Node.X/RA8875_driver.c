@@ -289,7 +289,7 @@ void fillCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t short
 }
 
 void fillCircleSquare(int16_t x, int16_t y, int16_t w, int16_t h, int16_t corner, uint16_t color){
-	circleSquareHelper(x,y,w,h,corner,color,1);
+	circleSquareHelper(x,y,x+w,y+h,corner,color,1);
 }
 
 /*

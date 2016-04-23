@@ -108,7 +108,7 @@ volatile dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
 volatile dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress, batVoltage, wheelSpeedFL, wheelSpeedFR, wheelSpeedRL, wheelSpeedRR, gpsLat, gpsLong, groundSpeed, driveSpeed, gpsSpeed, manifoldTemp, ambientTemp, ambientPress, fuelTemp, fuelPress, lambda1, lambda2, lambda3, lambda4, lcEnablity, fuelConsum, gpsAltitude, gpsTime, runTime, fuelInjDuty, fuelTrim;
 
 // Tire Temps
-volatile dataItem ttFL1, ttFL2, ttFL3, ttFL4, ttFL, ttFR1, ttFR2, ttFR3, ttFR4, ttFR, ttRL1, ttRL2, ttRL3, ttRL4, ttRL, ttRR1, ttRR2, ttRR3, ttRR4, ttRR; 
+volatile dataItem ttFLA[4], ttFL, ttFRA[4], ttFR, ttRLA[4], ttRL, ttRRA[4], ttRR;
 
 // Steering Wheel
 volatile dataItem swTemp, swSW1, swSW2, swSW3, swSW4, swROT1, swROT2, swROT3, swTROT1, swTROT2, swBUT1, swBUT2, swBUT3, swBUT4;

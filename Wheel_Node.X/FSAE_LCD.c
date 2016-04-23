@@ -51,25 +51,25 @@ void initDataItems(void){
 	initDataItem(&fuelTrim,0,0,MIN_REFRESH,3,1);
 
 	// Tire Temps
-	initDataItem(&ttFL1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttFL2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttFL3,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttFL4,0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFLA[0],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFLA[1],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFLA[2],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFLA[3],0,0,MIN_REFRESH,2,1);
 	initDataItem(&ttFL,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttFR1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttFR2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttFR3,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttFR4,0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFRA[0],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFRA[1],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFRA[2],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttFRA[3],0,0,MIN_REFRESH,2,1);
 	initDataItem(&ttFR,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRL1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRL2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRL3,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRL4,0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRLA[0],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRLA[1],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRLA[2],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRLA[3],0,0,MIN_REFRESH,2,1);
 	initDataItem(&ttRL,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRR1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRR2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRR3,0,0,MIN_REFRESH,2,1);
-	initDataItem(&ttRR4,0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRRA[0],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRRA[1],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRRA[2],0,0,MIN_REFRESH,2,1);
+	initDataItem(&ttRRA[3],0,0,MIN_REFRESH,2,1);
 	initDataItem(&ttRR,0,0,MIN_REFRESH,2,1);
 
 	// Steering Wheel
@@ -335,10 +335,10 @@ void initAllScreens(void){
 	initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttFR);
 	initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttRL);
 	initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttRR);
-	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, &ttFL);
-	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, &ttFR);
-	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, &ttRL);
-	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, &ttRR);
+	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttFLA);
+	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttFRA);
+	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRLA);
+	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRRA);
 
 	// Lap Time Stuff
 	lapTimeHead = 0;
@@ -479,7 +479,14 @@ void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
 
 void redrawTireTemp(screenItemInfo * item, volatile dataItem * data){
 	uint16_t fillColor = tempColor(data->value);
-	fillCircleSquare(item->x, item->y, item->size, item->size*1.75, item->size/10, fillColor);
+	uint16_t x = item->x;
+	uint16_t y = item->y;
+	uint16_t width = item->size / 4;
+	uint16_t height = item->size * 2;
+	fillCircleSquare(x,y,width*2,height,width,tempColor(data[0].value));
+	fillCircleSquare(x+(2*width),y,width*2,height,width,tempColor(data[3].value));
+	fillRect(x+width,y,width,height,tempColor(data[1].value));
+	fillRect(x+(2*width),y,width,height,tempColor(data[2].value));
 }
 
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
