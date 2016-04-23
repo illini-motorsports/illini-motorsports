@@ -21,7 +21,7 @@
 #define TERMINATING 1
 
 // Determines whether the internal or external clock source is used
-#define INTERNAL_CLK 1
+#define INTERNAL_CLK 0
 
 /*
 #define LCD_CS_TRIS TRISGbits.TRISG9
@@ -83,14 +83,6 @@
 #define MOM2_PORT	PORTDbits.RD4
 #define MOM3_PORT	PORTDbits.RD13
 #define MOM4_PORT	PORTDbits.RD12
-#define SW1_BIT		0b1
-#define SW2_BIT		0b10
-#define SW3_BIT		0b100
-#define SW4_BIT		0b1000
-#define MOM1_BIT	0b1
-#define MOM2_BIT	0b10
-#define MOM3_BIT	0b100
-#define MOM4_BIT	0b1000
 
 #define CAN_SW_STATE_FREQ 	100
 #define CAN_SW_ADL_FREQ 		500
@@ -98,8 +90,6 @@
 
 volatile uint32_t millis;
 
-volatile dataItem rotary[3], tRotary[2], switches[4], momentaries[4];
-// Function definitions
 void main(void);
 void delay(uint32_t num);
 void process_CAN_msg(CAN_message msg);

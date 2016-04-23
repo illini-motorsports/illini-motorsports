@@ -47,8 +47,8 @@ void main(void) {
   initialize();
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
-	PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
-	PWM1out(255);
+	//PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
+	//PWM1out(255);
 	fillScreen(RA8875_WHITE);
 	//drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
 	
@@ -60,19 +60,17 @@ void main(void) {
 	
   while(1){
 		// Send CAN messages with the correct frequency
-		if(CANswStateMillis >= CAN_SW_STATE_FREQ){
+		if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
 			CANswitchStates();
-			CANswStateMillis = 0;
+			CANswStateMillis = millis;
 		}	
-		if(CANswADLMillis >= CAN_SW_ADL_FREQ){
+		if(millis - CANswADLMillis >= CAN_SW_ADL_FREQ){
 			CANswitchADL();
-			CANswADLMillis = 0;
+			CANswADLMillis = millis;
 		}
-		if(CANdiagMillis >= CAN_DIAG_FREQ){
+		if(millis - CANdiagMillis >= CAN_DIAG_FREQ){
 			CANdiag();
-			CANdiagMillis = 0;
-			//nightMode(darkState);
-			//darkState = !darkState;
+			CANdiagMillis = millis;
 		}
 		// Refresh Screen
 		refreshScreenItems();
@@ -86,26 +84,15 @@ void main(void) {
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
   millis++;// Increment millis count
-	CANswStateMillis++;
-	CANswADLMillis++;
-	CANdiagMillis++;
-
-	// Should I be doing this every millisecond?
-	if (ADCCON2bits.EOSRDY) {
-    ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
-  }
 
 	if (!(millis%25)){
+		if (ADCCON2bits.EOSRDY) {
+ 	  	ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+  	}
 		updateSwVals();
 		CANswitchStates();
 	}
-
-	/*
-	if(!(millis%1000)){
-		changeScreen(RACE_SCREEN);
-	}
-	 */ 
-
+	
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
 
@@ -162,9 +149,7 @@ void process_CAN_msg(CAN_message msg){
 		case MOTEC_ID + 5:
 			break;
 		case MOTEC_ID + 6:
-			gpsTime.value = (double) ((msg.data[GPS_TIME_BYTE] << 24) | 
-							(msg.data[GPS_TIME_BYTE+1] << 16) | (msg.data[GPS_TIME_BYTE+2] << 8) | 
-							msg.data[GPS_TIME_BYTE+3]) * GPS_TIME_SCL;
+			gpsTime.value = (double) ((msg.data[GPS_TIME_BYTE] << 24)|(msg.data[GPS_TIME_BYTE+1] << 16)|(msg.data[GPS_TIME_BYTE+2] << 8)|msg.data[GPS_TIME_BYTE+3]) * GPS_TIME_SCL;
 			runTime.value = parseMsgMotec(&msg, RUN_TIME_BYTE, RUN_TIME_SCL);
 			fuelConsum.value = parseMsgMotec(&msg, FUEL_USED_BYTE, FUEL_USED_SCL);
 			break;
@@ -173,17 +158,14 @@ void process_CAN_msg(CAN_message msg){
 			fuelTrim.value = parseMsgMotec(&msg, FUEL_TRIM_BYTE, FUEL_TRIM_SCL);
 			break;
 		case PADDLE_ID:
-			paddleUptime.value = (double) ((uint16_t) msg.data[PADDLE_UPTIME_BYTE]) * 
-							PADDLE_UPTIME_SCL;
-			paddleTemp.value = (double) ((uint16_t) msg.data[PADDLE_TEMP_BYTE]) * 
-							PADDLE_TEMP_SCL;
+			paddleUptime.value = (double) ((uint16_t) msg.data[PADDLE_UPTIME_BYTE])*PADDLE_UPTIME_SCL;
+			paddleTemp.value = (double) ((uint16_t) msg.data[PADDLE_TEMP_BYTE])*PADDLE_TEMP_SCL;
 			neutQueue.value = msg.data[QUEUE_NT_BYTE] * QUEUE_NT_SCL;
 			upQueue.value = msg.data[QUEUE_UP_BYTE] * QUEUE_UP_SCL;
 			downQueue.value =  msg.data[QUEUE_DN_BYTE] * QUEUE_DN_SCL;
 			break;
 		case PADDLE_ID + 1:
-			gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE]) * 
-							GEAR_VOLT_SCL;
+			gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE])*GEAR_VOLT_SCL;
 			gearPos.value = msg.data[GEAR_BYTE];
 			break;
 		case PDM_ID:
@@ -287,10 +269,7 @@ void process_CAN_msg(CAN_message msg){
 
 void CANswitchStates(void){
 	CAN_data switchData = {0};
-	uint8_t bitMask = (uint8_t)momentaries[0].value|(uint8_t)momentaries[1].value << 1|
-					(uint8_t)momentaries[2].value << 2|(uint8_t)momentaries[3].value << 3|
-					(uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5|
-					(uint8_t)switches[2].value << 6|(uint8_t)switches[3].value << 7;
+	uint8_t bitMask = (uint8_t)momentaries[0].value|(uint8_t)momentaries[1].value << 1|(uint8_t)momentaries[2].value << 2|(uint8_t)momentaries[3].value << 3|(uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5|(uint8_t)switches[2].value << 6|(uint8_t)switches[3].value << 7;
 	switchData.byte0 = bitMask;
 	switchData.byte1 = ((uint8_t)rotary[0].value << 4) | (uint8_t)rotary[1].value;
 	switchData.byte2 = ((uint8_t)rotary[2].value << 4) | (uint8_t)tRotary[0].value;
@@ -344,7 +323,6 @@ void updateSwVals(void){
 	momentaries[1].value = !MOM2_PORT;
 	momentaries[2].value = !MOM3_PORT;
 	momentaries[3].value = !MOM4_PORT;
-
 	// Update rotaries
 	rotary[0].value = getRotaryPosition(read_adc_chn(ROT1_CHN));
 	rotary[1].value = getRotaryPosition(read_adc_chn(ROT2_CHN));

@@ -72,22 +72,6 @@ void initDataItems(void){
 	initDataItem(&ttRRA[3],0,0,MIN_REFRESH,2,1);
 	initDataItem(&ttRR,0,0,MIN_REFRESH,2,1);
 
-	// Steering Wheel
-	initDataItem(&swTemp,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swSW1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swSW2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swSW3,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swSW4,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swROT1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swROT2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swROT3,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swTROT1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swTROT2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swBUT1,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swBUT2,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swBUT3,0,0,MIN_REFRESH,2,1);
-	initDataItem(&swBUT4,0,0,MIN_REFRESH,2,1);
-
 	// Paddle Shifting
 	initDataItem(&paddleTemp,0,0,MIN_REFRESH,2,1);
 	initDataItem(&gearPos,0,0,MIN_REFRESH,1,0);
@@ -195,8 +179,7 @@ void initDataItems(void){
 	initDataItem(&momentaries[3],0,0,MIN_REFRESH,1,0);
 }
 
-void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, 
-				uint8_t whole, uint8_t dec){
+void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, uint8_t whole, uint8_t dec){
 	data->value = 0;
 	data->warnThreshold = warn;
 	data->errThreshold = err;
@@ -208,9 +191,12 @@ void initDataItem(volatile dataItem* data, double warn, double err, uint32_t ref
 // Initializes all the screen and screenitem variables in all
 // the screens that might be displayed
 void initAllScreens(void){
-	// Race Screen Stuff
+	// Initialize colors
 	backgroundColor = RA8875_WHITE;
 	foregroundColor = RA8875_BLACK;
+	warningColor = errorColor = backgroundColor;
+
+	// Race Screen Stuff
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
 	raceScreen.len = 8;
@@ -399,23 +385,24 @@ void changeScreen(uint8_t num){
 // A number will only be redrawn if its dataItem value has changed, and it 
 // has surpassed its refresh interval
 void refreshScreenItems(void){
+	// change night mode if the switch was toggled
 	nightMode(switches[3].value);
+
 	screen *currScreen = allScreens[screenNumber];
 	int i;
 	for(i = 0;i<currScreen->len;i++){
-		if(currScreen->items[i].data == 0x0){
-			continue;
-		}
-		if((currScreen->items[i]).currentValue != (currScreen->items[i]).data->value && millis - (currScreen->items[i]).refreshTime >= (currScreen->items[i]).data->refreshInterval){
-			currScreen->items[i].redrawItem(&(currScreen->items[i].info), currScreen->items[i].data);
-			currScreen->items[i].currentValue = currScreen->items[i].data->value;
-			currScreen->items[i].refreshTime = millis;
+		screenItem * currItem = &currScreen->items[i];
+		if(currItem->data && currItem->currentValue != currItem->data->value && millis - currItem->refreshTime >= currItem->data->refreshInterval){
+			currItem->redrawItem(&currItem->info, currItem->data);
+			currItem->currentValue = currItem->data->value;
+			currItem->refreshTime = millis;
 		}
 	}
 }
 
-// Redraw Helper Function
+// Redraw General Data
 void redrawDigit(screenItemInfo * item, volatile dataItem * data){
+	// Set Backround Color
 	uint16_t fillColor;
 	if(data->value >= data->warnThreshold){
 		if(data->value >= data->errThreshold){
@@ -426,17 +413,19 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data){
 	}else{
 		fillColor = backgroundColor;
 	}
+	// Calculate Fill Rectangle width
 	uint16_t wholeNums, decNums;
 	wholeNums = data->wholeDigits;
 	decNums = data->decDigits;
-	uint16_t fillWidth = (item->size)*(wholeNums + decNums) + (item->size)*0.2*(wholeNums + decNums - 1);
+	uint16_t fillWidth = (item->size)*(wholeNums+decNums)+(item->size)*0.2*(wholeNums+decNums-1);
 	if(decNums){
 		fillWidth += (item->size)/5;
 	}
 	fillRect(item->x, item->y, fillWidth, (item->size)*1.75, fillColor);
-	sevenSegmentDecimal(item->x, item->y, item->size, wholeNums + decNums, decNums, foregroundColor, data->value);
+	sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,foregroundColor,data->value);
 }
 
+// For Single Digits with Error and Neutral Displays
 void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
 	fillRect(item->x, item->y, item->size, item->size * 1.75, backgroundColor);
 	if(data->value == 0){
@@ -450,6 +439,7 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
 	}
 }
 
+// For Fan Override Indicator
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 	if(!data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
@@ -459,6 +449,7 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 	}
 }
 
+// For Water Pump Override Indicator
 void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
 	if(!data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
@@ -468,6 +459,7 @@ void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
 	}
 }
 
+// For Launch Control Override Indicator
 void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
 	if(!data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
@@ -477,6 +469,7 @@ void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
 	}
 }
 
+// Uses the 4 Tire Temp sensors to draw a color gradient tire
 void redrawTireTemp(screenItemInfo * item, volatile dataItem * data){
 	uint16_t fillColor = tempColor(data->value);
 	uint16_t x = item->x;
@@ -489,14 +482,15 @@ void redrawTireTemp(screenItemInfo * item, volatile dataItem * data){
 	fillRect(x+(2*width),y,width,height,tempColor(data[2].value));
 }
 
+// Draws a bar with a height proportional to the suspension position
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
 	fillRect(item->x, item->y, item->size, item->size * 5, backgroundColor);
 	if(data->value > MIN_SUS_POS){
-		uint16_t height = ((item->size * 5)/(MAX_SUS_POS - MIN_SUS_POS))*(data->value - MIN_SUS_POS);
+		uint16_t height = ((item->size*5)/(MAX_SUS_POS-MIN_SUS_POS))*(data->value-MIN_SUS_POS);
 		if(height > MAX_SUS_POS){
 			height = MAX_SUS_POS;
 		}
-		fillRect(item->x, item->y - (item->size * 5) + height, item->size, height, RA8875_RED);
+		fillRect(item->x,item->y-(item->size*5)+height,item->size,height,RA8875_RED);
 	}
 }
 
@@ -504,6 +498,8 @@ void clearScreen(void){
 	fillScreen(backgroundColor);
 }
 
+// Resets the current value of all screen items on a screen
+// This means the 
 void resetScreenItems(void){
 	int i = 0;
 	screen *currScreen = allScreens[screenNumber];
@@ -514,6 +510,7 @@ void resetScreenItems(void){
 	}
 }
 
+// Immediantly returns if 
 void nightMode(uint8_t on){
 	if(on){
 		if(backgroundColor == RA8875_BLACK){
