@@ -350,20 +350,6 @@
 // Constant used to check whether the NVM has been initialized
 #define NVM_WPR_CONSTANT 0xDEADBEEF
 
-/**
- * Functions to convert a wiper value to the expected resistance of the rheostat
- * and vice versa.
- *
- * Luckily, the conversion is mostly linear, so a linear regression approximates
- * the value well. These values were determined experimentally and should give a
- * good general idea of the FB pin resistance, but there will be some error. The
- * error between measured and calculated current cut-off due to this error is
- * limited to ~0.5A worst case, and this is at the high end of the cut-off range.
- * So, the error should not be a problem. Refer to the "Digital Rheostat V+
- * Selection" tab of the "PCB Info" document for more info.
- */
-#define WPR_TO_RES(wpr) ((19.11639223 * (wpr)) + 256.6676635)
-#define RES_TO_WPR(res) (0.0523111 * ((res) - 256.6676635))
 
 /**
  * Struct representing the layout of wiper value data in non-volatile memory. The
@@ -408,5 +394,7 @@ void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 void init_adc_pdm(void);
 void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff);
+double wpr_to_res(uint8_t wpr);
+uint8_t res_to_wpr(double res);
 
 #endif /* PDM_H */

@@ -54,6 +54,12 @@ uint32_t temp_samp_tmr, current_samp_tmr = 0;
  */
 uint8_t ign_enabled = 0;
 
+// Initial overcurrent thresholds to use for all the loads
+const double load_cutoff[NUM_LOADS] = {20.0, 5.0, 10.0, 10.0, 15.0, 20.0, 2.0,
+                                       60.0, 60.0, 2.0, 2.0, 5.0, 2.0, 2.0};
+const double load_peak_cutoff[NUM_LOADS] = {0.0, 0.0, 40.0, 60.0, 40.0, 100.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
 /**
  * Main function
  */
@@ -153,11 +159,32 @@ void main(void) {
 
   // Check to see if the wiper data in NVM has been initialized
   if(data.key != NVM_WPR_CONSTANT) {
-    // Initialize normal and peak wiper values to 300Ohm
+    // Initialize normal and peak wiper values to general settings
     uint32_t i;
     for (i = 0; i < NUM_LOADS; i++) {
-      wiper_values[i] = RES_TO_WPR(300);
-      peak_wiper_values[i] = RES_TO_WPR(300);
+      double ratio = 0;
+
+      switch (i) {
+        case IGN_IDX: ratio = IGN_RATIO; break;
+        case INJ_IDX: ratio = INJ_RATIO; break;
+        case FUEL_IDX: ratio = FUEL_RATIO; break;
+        case ECU_IDX: ratio = ECU_RATIO; break;
+        case WTR_IDX: ratio = WTR_RATIO; break;
+        case FAN_IDX: ratio = FAN_RATIO; break;
+        case AUX_IDX: ratio = AUX_RATIO; break;
+        case PDLU_IDX: ratio = PDLU_RATIO; break;
+        case PDLD_IDX: ratio = PDLD_RATIO; break;
+        case B5V5_IDX: ratio = B5V5_RATIO; break;
+        case BVBAT_IDX: ratio = BVBAT_RATIO; break;
+        case STR0_IDX: ratio = STR0_RATIO; break;
+        case STR1_IDX: ratio = STR1_RATIO; break;
+        case STR2_IDX: ratio = STR2_RATIO; break;
+      }
+
+      double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0 : (ratio * 4.7) / load_cutoff[i];
+      wiper_values[i] = res_to_wpr(fb_resistance);
+      fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0 : (ratio * 4.7) / load_peak_cutoff[i];
+      peak_wiper_values[i] = res_to_wpr(fb_resistance);
     }
 
     // Store default wiper data struct in NVM
@@ -206,7 +233,7 @@ void main(void) {
   for (i = 0; i < NUM_LOADS; i++) {
     set_rheo(i, wiper_values[i]);
     peak_state[i] = 0;
-    fb_resistances[i] = WPR_TO_RES(wiper_values[i]);
+    fb_resistances[i] = wpr_to_res(wiper_values[i]);
   }
 
   // Turn on state-independent loads
@@ -216,7 +243,7 @@ void main(void) {
 
   // Turn on ECU (state-independent)
   set_rheo(ECU_IDX, peak_wiper_values[ECU_IDX]);
-  fb_resistances[ECU_IDX] = WPR_TO_RES(peak_wiper_values[ECU_IDX]);
+  fb_resistances[ECU_IDX] = wpr_to_res(peak_wiper_values[ECU_IDX]);
   peak_state[ECU_IDX] = 1;
   EN_ECU_LAT = PWR_ON;
   ecu_peak_tmr = millis;
@@ -339,7 +366,7 @@ void main(void) {
         if (!FUEL_EN) {
           uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
           set_rheo(FUEL_IDX, peak_wpr_val);
-          fb_resistances[FUEL_IDX] = WPR_TO_RES(peak_wpr_val);
+          fb_resistances[FUEL_IDX] = wpr_to_res(peak_wpr_val);
           peak_state[FUEL_IDX] = 1;
           EN_FUEL_LAT = PWR_ON;
           fuel_peak_tmr = millis;
@@ -367,7 +394,7 @@ void main(void) {
           if (!WTR_EN) {
             uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
             set_rheo(WTR_IDX, peak_wpr_val);
-            fb_resistances[WTR_IDX] = WPR_TO_RES(peak_wpr_val);
+            fb_resistances[WTR_IDX] = wpr_to_res(peak_wpr_val);
             peak_state[WTR_IDX] = 1;
             EN_WTR_LAT = PWR_ON;
             wtr_peak_tmr = millis;
@@ -378,7 +405,7 @@ void main(void) {
           if (!FAN_EN) {
             uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
             set_rheo(FAN_IDX, peak_wpr_val);
-            fb_resistances[FAN_IDX] = WPR_TO_RES(peak_wpr_val);
+            fb_resistances[FAN_IDX] = wpr_to_res(peak_wpr_val);
             peak_state[FAN_IDX] = 1;
             EN_FAN_LAT = PWR_ON;
             fan_peak_tmr = millis;
@@ -462,7 +489,7 @@ void main(void) {
         if (!FUEL_EN) {
           uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
           set_rheo(FUEL_IDX, peak_wpr_val);
-          fb_resistances[FUEL_IDX] = WPR_TO_RES(peak_wpr_val);
+          fb_resistances[FUEL_IDX] = wpr_to_res(peak_wpr_val);
           peak_state[FUEL_IDX] = 1;
           EN_FUEL_LAT = PWR_ON;
           fuel_peak_tmr = millis;
@@ -484,7 +511,7 @@ void main(void) {
         if (!WTR_EN) {
           uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
           set_rheo(WTR_IDX, peak_wpr_val);
-          fb_resistances[WTR_IDX] = WPR_TO_RES(peak_wpr_val);
+          fb_resistances[WTR_IDX] = wpr_to_res(peak_wpr_val);
           peak_state[WTR_IDX] = 1;
           EN_WTR_LAT = PWR_ON;
           wtr_peak_tmr = millis;
@@ -505,7 +532,7 @@ void main(void) {
         if (!FAN_EN) {
           uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
           set_rheo(FAN_IDX, peak_wpr_val);
-          fb_resistances[FAN_IDX] = WPR_TO_RES(peak_wpr_val);
+          fb_resistances[FAN_IDX] = wpr_to_res(peak_wpr_val);
           peak_state[FAN_IDX] = 1;
           EN_FAN_LAT = PWR_ON;
           fan_peak_tmr = millis;
@@ -548,7 +575,7 @@ void main(void) {
     if (FUEL_EN && peak_state[FUEL_IDX] && (millis - fuel_peak_tmr > FUEL_PEAK_DUR)) {
       uint16_t wpr_val = wiper_values[FUEL_IDX];
       set_rheo(FUEL_IDX, wpr_val);
-      fb_resistances[FUEL_IDX] = WPR_TO_RES(wpr_val);
+      fb_resistances[FUEL_IDX] = wpr_to_res(wpr_val);
       peak_state[FUEL_IDX] = 0;
       load_state_changed = 1;
     }
@@ -557,7 +584,7 @@ void main(void) {
     if (WTR_EN && peak_state[WTR_IDX] && (millis - wtr_peak_tmr > WTR_PEAK_DUR)) {
       uint16_t wpr_val = wiper_values[WTR_IDX];
       set_rheo(WTR_IDX, wpr_val);
-      fb_resistances[WTR_IDX] = WPR_TO_RES(wpr_val);
+      fb_resistances[WTR_IDX] = wpr_to_res(wpr_val);
       peak_state[WTR_IDX] = 0;
       load_state_changed = 1;
     }
@@ -566,7 +593,7 @@ void main(void) {
     if (FAN_EN && peak_state[FAN_IDX] && (millis - fan_peak_tmr > FAN_PEAK_DUR)) {
       uint16_t wpr_val = wiper_values[FAN_IDX];
       set_rheo(FAN_IDX, wpr_val);
-      fb_resistances[FAN_IDX] = WPR_TO_RES(wpr_val);
+      fb_resistances[FAN_IDX] = wpr_to_res(wpr_val);
       peak_state[FAN_IDX] = 0;
       load_state_changed = 1;
     }
@@ -574,7 +601,7 @@ void main(void) {
     //ECU
     if (ECU_EN && peak_state[ECU_IDX] && (millis - ecu_peak_tmr > ECU_PEAK_DUR)) {
       set_rheo(ECU_IDX, wiper_values[ECU_IDX]);
-      fb_resistances[ECU_IDX] = WPR_TO_RES(wiper_values[ECU_IDX]);
+      fb_resistances[ECU_IDX] = wpr_to_res(wiper_values[ECU_IDX]);
       peak_state[ECU_IDX] = 0;
       load_state_changed = 1;
     }
@@ -956,16 +983,16 @@ void send_rail_volt_can(void) {
  */
 void send_cutoff_values_can(uint8_t override) {
   if ((millis - cutoff_send_tmr >= CUTOFF_VAL_SEND) || override) {
-    double ign_cutoff = (4.7 / WPR_TO_RES(wiper_values[IGN_IDX])) * IGN_RATIO;
+    double ign_cutoff = (4.7 / wpr_to_res(wiper_values[IGN_IDX])) * IGN_RATIO;
     uint16_t ign_cutoff_scl = (uint16_t) (ign_cutoff * CUT_SCLINV);
 
-    double inj_cutoff = (4.7 / WPR_TO_RES(wiper_values[INJ_IDX])) * INJ_RATIO;
+    double inj_cutoff = (4.7 / wpr_to_res(wiper_values[INJ_IDX])) * INJ_RATIO;
     uint16_t inj_cutoff_scl = (uint16_t) (inj_cutoff * CUT_SCLINV);
 
-    double aux_cutoff = (4.7 / WPR_TO_RES(wiper_values[AUX_IDX])) * AUX_RATIO;
+    double aux_cutoff = (4.7 / wpr_to_res(wiper_values[AUX_IDX])) * AUX_RATIO;
     uint16_t aux_cutoff_scl = (uint16_t) (aux_cutoff * CUT_SCLINV);
 
-    double pdlu_cutoff = (4.7 / WPR_TO_RES(wiper_values[PDLU_IDX])) * PDLU_RATIO;
+    double pdlu_cutoff = (4.7 / wpr_to_res(wiper_values[PDLU_IDX])) * PDLU_RATIO;
     uint16_t pdlu_cutoff_scl = (uint16_t) (pdlu_cutoff * CUT_SCLINV);
 
     CAN_data cutoff_value_data = {0};
@@ -975,13 +1002,13 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword3 = pdlu_cutoff_scl;
     CAN_send_message(PDM_ID + 0x8, 8, cutoff_value_data);
 
-    double pdld_cutoff = (4.7 / WPR_TO_RES(wiper_values[PDLD_IDX])) * PDLD_RATIO;
+    double pdld_cutoff = (4.7 / wpr_to_res(wiper_values[PDLD_IDX])) * PDLD_RATIO;
     uint16_t pdld_cutoff_scl = (uint16_t) (pdld_cutoff * CUT_SCLINV);
 
-    double b5v5_cutoff = (4.7 / WPR_TO_RES(wiper_values[B5V5_IDX])) * B5V5_RATIO;
+    double b5v5_cutoff = (4.7 / wpr_to_res(wiper_values[B5V5_IDX])) * B5V5_RATIO;
     uint16_t b5v5_cutoff_scl = (uint16_t) (b5v5_cutoff * CUT_SCLINV);
 
-    double bvbat_cutoff = (4.7 / WPR_TO_RES(wiper_values[BVBAT_IDX])) * BVBAT_RATIO;
+    double bvbat_cutoff = (4.7 / wpr_to_res(wiper_values[BVBAT_IDX])) * BVBAT_RATIO;
     uint16_t bvbat_cutoff_scl = (uint16_t) (bvbat_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = pdld_cutoff_scl;
@@ -989,13 +1016,13 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword2 = bvbat_cutoff_scl;
     CAN_send_message(PDM_ID + 0x9, 6, cutoff_value_data);
 
-    double str0_cutoff = (4.7 / WPR_TO_RES(wiper_values[STR0_IDX])) * STR0_RATIO;
+    double str0_cutoff = (4.7 / wpr_to_res(wiper_values[STR0_IDX])) * STR0_RATIO;
     uint16_t str0_cutoff_scl = (uint16_t) (str0_cutoff * CUT_SCLINV);
 
-    double str1_cutoff = (4.7 / WPR_TO_RES(wiper_values[STR1_IDX])) * STR1_RATIO;
+    double str1_cutoff = (4.7 / wpr_to_res(wiper_values[STR1_IDX])) * STR1_RATIO;
     uint16_t str1_cutoff_scl = (uint16_t) (str1_cutoff * CUT_SCLINV);
 
-    double str2_cutoff = (4.7 / WPR_TO_RES(wiper_values[STR2_IDX])) * STR2_RATIO;
+    double str2_cutoff = (4.7 / wpr_to_res(wiper_values[STR2_IDX])) * STR2_RATIO;
     uint16_t str2_cutoff_scl = (uint16_t) (str2_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = str0_cutoff_scl;
@@ -1003,16 +1030,16 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword2 = str2_cutoff_scl;
     CAN_send_message(PDM_ID + 0xA, 6, cutoff_value_data);
 
-    double fuel_cutoff = (4.7 / WPR_TO_RES(wiper_values[FUEL_IDX])) * FUEL_RATIO;
+    double fuel_cutoff = (4.7 / wpr_to_res(wiper_values[FUEL_IDX])) * FUEL_RATIO;
     uint16_t fuel_cutoff_scl = (uint16_t) (fuel_cutoff * CUT_SCLINV);
 
-    double wtr_cutoff = (4.7 / WPR_TO_RES(wiper_values[WTR_IDX])) * WTR_RATIO;
+    double wtr_cutoff = (4.7 / wpr_to_res(wiper_values[WTR_IDX])) * WTR_RATIO;
     uint16_t wtr_cutoff_scl = (uint16_t) (wtr_cutoff * CUT_SCLINV);
 
-    double fan_cutoff = (4.7 / WPR_TO_RES(wiper_values[FAN_IDX])) * FAN_RATIO;
+    double fan_cutoff = (4.7 / wpr_to_res(wiper_values[FAN_IDX])) * FAN_RATIO;
     uint16_t fan_cutoff_scl = (uint16_t) (fan_cutoff * CUT_SCLINV);
 
-    double ecu_cutoff = (4.7 / WPR_TO_RES(wiper_values[ECU_IDX])) * ECU_RATIO;
+    double ecu_cutoff = (4.7 / wpr_to_res(wiper_values[ECU_IDX])) * ECU_RATIO;
     uint16_t ecu_cutoff_scl = (uint16_t) (ecu_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = fuel_cutoff_scl;
@@ -1021,16 +1048,16 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword3 = ecu_cutoff_scl;
     CAN_send_message(PDM_ID + 0xB, 8, cutoff_value_data);
 
-    double fuel_peak_cutoff = (4.7 / WPR_TO_RES(peak_wiper_values[FUEL_IDX])) * FUEL_RATIO;
+    double fuel_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FUEL_IDX])) * FUEL_RATIO;
     uint16_t fuel_peak_cutoff_scl = (uint16_t) (fuel_peak_cutoff * CUT_SCLINV);
 
-    double wtr_peak_cutoff = (4.7 / WPR_TO_RES(peak_wiper_values[WTR_IDX])) * WTR_RATIO;
+    double wtr_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[WTR_IDX])) * WTR_RATIO;
     uint16_t wtr_peak_cutoff_scl = (uint16_t) (wtr_peak_cutoff * CUT_SCLINV);
 
-    double fan_peak_cutoff = (4.7 / WPR_TO_RES(peak_wiper_values[FAN_IDX])) * FAN_RATIO;
+    double fan_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FAN_IDX])) * FAN_RATIO;
     uint16_t fan_peak_cutoff_scl = (uint16_t) (fan_peak_cutoff * CUT_SCLINV);
 
-    double ecu_peak_cutoff = (4.7 / WPR_TO_RES(peak_wiper_values[ECU_IDX])) * ECU_RATIO;
+    double ecu_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[ECU_IDX])) * ECU_RATIO;
     uint16_t ecu_peak_cutoff_scl = (uint16_t) (ecu_peak_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = fuel_peak_cutoff_scl;
@@ -1315,22 +1342,22 @@ void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
   }
 
   // Calculate FB pin resistance needed for the requested current cutoff
-  double fb_resistance = (ratio * 4.7) / cutoff;
+  double fb_resistance = (cutoff == 0.0) ? 5000.0 : (ratio * 4.7) / cutoff;
 
   // Store the desired peak or normal mode wiper setting
   if (peak_mode) {
-    peak_wiper_values[load_idx] = RES_TO_WPR(fb_resistance);
+    peak_wiper_values[load_idx] = res_to_wpr(fb_resistance);
   } else {
-    wiper_values[load_idx] = RES_TO_WPR(fb_resistance);
+    wiper_values[load_idx] = res_to_wpr(fb_resistance);
   }
 
   // Set the rheostat wiper setting to the new value
   if (peak_state[load_idx]) {
     set_rheo(load_idx, peak_wiper_values[load_idx]);
-    fb_resistances[load_idx] = WPR_TO_RES(peak_wiper_values[load_idx]);
+    fb_resistances[load_idx] = wpr_to_res(peak_wiper_values[load_idx]);
   } else {
     set_rheo(load_idx, wiper_values[load_idx]);
-    fb_resistances[load_idx] = WPR_TO_RES(wiper_values[load_idx]);
+    fb_resistances[load_idx] = wpr_to_res(wiper_values[load_idx]);
   }
 
   send_cutoff_values_can(OVERRIDE);
@@ -1356,4 +1383,40 @@ void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
   data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
   data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
   write_nvm_data(&data, sizeof(Wiper_nvm_data));
+}
+
+/**
+ * Functions to convert a wiper value to the expected resistance of the rheostat
+ * and vice versa.
+ *
+ * Luckily, the conversion is mostly linear, so a linear regression approximates
+ * the value well. These values were determined experimentally and should give a
+ * good general idea of the FB pin resistance, but there will be some error. The
+ * error between measured and calculated current cut-off due to this error is
+ * limited to ~0.5A worst case, and this is at the high end of the cut-off range.
+ * So, the error should not be a problem. Refer to the "Digital Rheostat V+
+ * Selection" tab of the "PCB Info" document for more info.
+ */
+
+/**
+ * Converts a wiper value to the expected resistance of the rheostat.
+ *
+ * @param wpr The wiper value to convert
+ * @return The expected resistance
+ */
+double wpr_to_res(uint8_t wpr) {
+  return (19.11639223 * wpr) + 256.6676635;
+}
+
+/**
+ * Converts a rheostat resistance to the wiper value.
+ *
+ * @param res The resistance to convert
+ * @return The wiper value of the rheostat
+ */
+uint8_t res_to_wpr(double res) {
+  double wiper = 0.0523111 * (res - 256.6676635);
+  wiper = (wiper < 0) ? 0 : wiper;
+  wiper = (wiper > 255) ? 255 : wiper;
+  return ((uint8_t) wiper);
 }
