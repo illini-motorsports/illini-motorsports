@@ -10,6 +10,7 @@
 
 // Count number of milliseconds since start of code execution
 volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
+volatile uint8_t darkState;
 
 void main(void) {
   init_general();// Set general runtime configuration bits
@@ -22,6 +23,7 @@ void main(void) {
   ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
   STI();// Enable interrupts
   
+	darkState = 0;
 	// Init Relevant Pins
 	millis = 0;
 	CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
@@ -69,6 +71,8 @@ void main(void) {
 		if(CANdiagMillis >= CAN_DIAG_FREQ){
 			CANdiag();
 			CANdiagMillis = 0;
+			//nightMode(darkState);
+			//darkState = !darkState;
 		}
 		// Refresh Screen
 		refreshScreenItems();
@@ -95,6 +99,12 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 		updateSwVals();
 		CANswitchStates();
 	}
+
+	/*
+	if(!(millis%1000)){
+		changeScreen(RACE_SCREEN);
+	}
+	 */ 
 
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }

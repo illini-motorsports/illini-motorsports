@@ -25,7 +25,7 @@
 #define MOTEC_SCREEN			3
 #define END_RACE_SCREEN		4
 #define CHASSIS_SCREEN		5
-#define MIN_REFRESH 			20
+#define MIN_REFRESH 			100
 
 #define MIN_SUS_POS				5
 #define MAX_SUS_POS				20
@@ -99,6 +99,8 @@ screen* allScreens[6];
 
 uint8_t screenNumber;
 
+volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
+
 // Uptimes
 volatile dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
 
@@ -142,6 +144,8 @@ void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, voi
 void changeScreen(uint8_t num);
 void refreshScreenItems(void);
 void clearScreen(void);
+void resetScreenItems(void);
+void nightMode(uint8_t on);
 double getMinLap(void);
 void endRace(void);
 void displayNoErrors(void);

@@ -209,6 +209,8 @@ void initDataItem(volatile dataItem* data, double warn, double err, uint32_t ref
 // the screens that might be displayed
 void initAllScreens(void){
 	// Race Screen Stuff
+	backgroundColor = RA8875_WHITE;
+	foregroundColor = RA8875_BLACK;
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
 	raceScreen.len = 8;
@@ -372,7 +374,7 @@ void initScreen(uint8_t num){
 	if(num == RACE_SCREEN){
 		textMode();
 		textSetCursor(0, 40);
-		textTransparent(FOREGROUND_COLOR);
+		textTransparent(foregroundColor);
 		textEnlarge(0);
 		textWrite("OIL TEMP", 0);
 		textSetCursor(0, 140);
@@ -389,6 +391,7 @@ void changeScreen(uint8_t num){
 	screenNumber = num;
 	clearScreen();
 	initScreen(num);
+	resetScreenItems();
 	refreshScreenItems();
 }
 
@@ -396,6 +399,7 @@ void changeScreen(uint8_t num){
 // A number will only be redrawn if its dataItem value has changed, and it 
 // has surpassed its refresh interval
 void refreshScreenItems(void){
+	nightMode(switches[3].value);
 	screen *currScreen = allScreens[screenNumber];
 	int i;
 	for(i = 0;i<currScreen->len;i++){
@@ -415,12 +419,12 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data){
 	uint16_t fillColor;
 	if(data->value >= data->warnThreshold){
 		if(data->value >= data->errThreshold){
-			fillColor = ERROR_COLOR;
+			fillColor = errorColor;
 		}else{
-			fillColor = WARNING_COLOR;
+			fillColor = warningColor;
 		}
 	}else{
-		fillColor = BACKGROUND_COLOR;
+		fillColor = backgroundColor;
 	}
 	uint16_t wholeNums, decNums;
 	wholeNums = data->wholeDigits;
@@ -430,19 +434,19 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data){
 		fillWidth += (item->size)/5;
 	}
 	fillRect(item->x, item->y, fillWidth, (item->size)*1.75, fillColor);
-	sevenSegmentDecimal(item->x, item->y, item->size, wholeNums + decNums, decNums, FOREGROUND_COLOR, data->value);
+	sevenSegmentDecimal(item->x, item->y, item->size, wholeNums + decNums, decNums, foregroundColor, data->value);
 }
 
 void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
-	fillRect(item->x, item->y, item->size, item->size * 1.75, BACKGROUND_COLOR);
+	fillRect(item->x, item->y, item->size, item->size * 1.75, backgroundColor);
 	if(data->value == 0){
-		sevenSegment(item->x, item->y, item->size, FOREGROUND_COLOR, SEVEN_SEG_N);
+		sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_N);
 	}
 	else if(data->value == 7){
-		sevenSegment(item->x, item->y, item->size, FOREGROUND_COLOR, SEVEN_SEG_E);
+		sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_E);
 	}
 	else{
-		sevenSegmentDigit(item->x, item->y, item->size, FOREGROUND_COLOR, data->value);
+		sevenSegmentDigit(item->x, item->y, item->size, foregroundColor, data->value);
 	}
 }
 
@@ -451,7 +455,7 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
-		fillCircle(item->x, item->y, item->size, BACKGROUND_COLOR);
+		fillCircle(item->x, item->y, item->size, backgroundColor);
 	}
 }
 
@@ -460,7 +464,7 @@ void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
-		fillCircle(item->x, item->y, item->size, BACKGROUND_COLOR);
+		fillCircle(item->x, item->y, item->size, backgroundColor);
 	}
 }
 
@@ -469,7 +473,7 @@ void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
-		fillCircle(item->x, item->y, item->size, BACKGROUND_COLOR);
+		fillCircle(item->x, item->y, item->size, backgroundColor);
 	}
 }
 
@@ -479,7 +483,7 @@ void redrawTireTemp(screenItemInfo * item, volatile dataItem * data){
 }
 
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
-	fillRect(item->x, item->y, item->size, item->size * 5, BACKGROUND_COLOR);
+	fillRect(item->x, item->y, item->size, item->size * 5, backgroundColor);
 	if(data->value > MIN_SUS_POS){
 		uint16_t height = ((item->size * 5)/(MAX_SUS_POS - MIN_SUS_POS))*(data->value - MIN_SUS_POS);
 		if(height > MAX_SUS_POS){
@@ -490,7 +494,36 @@ void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
 }
 
 void clearScreen(void){
-	fillScreen(BACKGROUND_COLOR);
+	fillScreen(backgroundColor);
+}
+
+void resetScreenItems(void){
+	int i = 0;
+	screen *currScreen = allScreens[screenNumber];
+	for(;i<currScreen->len;i++){
+		if(currScreen->items[i].data){
+			currScreen->items[i].currentValue = !(currScreen->items[i].data->value);
+		}
+	}
+}
+
+void nightMode(uint8_t on){
+	if(on){
+		if(backgroundColor == RA8875_BLACK){
+			return;
+		}
+		backgroundColor = RA8875_BLACK;
+		foregroundColor = RA8875_WHITE;
+	}
+	else{
+		if(backgroundColor == RA8875_WHITE){
+			return;
+		}
+		backgroundColor = RA8875_WHITE;
+		foregroundColor = RA8875_BLACK;
+	}
+	warningColor = errorColor = backgroundColor;
+	changeScreen(screenNumber);
 }
 
 void addLap(double lapTime){
@@ -528,8 +561,8 @@ void endRace(void){
 // Error Handling Stuff
 void displayNoErrors(void){
 	// Reset error area
-	fillRect(0,200,WIDTH,HEIGHT-200,BACKGROUND_COLOR);
-	drawChevron(30, 210, 30, 50, FOREGROUND_COLOR, BACKGROUND_COLOR);
+	fillRect(0,200,WIDTH,HEIGHT-200,backgroundColor);
+	drawChevron(30, 210, 30, 50, foregroundColor, backgroundColor);
 	textMode();
 	textSetCursor(100, 210);
 	textTransparent(RA8875_BLACK);
@@ -551,4 +584,3 @@ void addError(char * errText, dataItem * item, uint8_t priority){
 uint16_t tempColor(uint8_t temp){
 	return RA8875_RED;
 }
-
