@@ -25,6 +25,7 @@
 #define MOTEC_SCREEN			3
 #define END_RACE_SCREEN		4
 #define CHASSIS_SCREEN		5
+#define GENERAL_SCREEN		6
 #define MIN_REFRESH 			100
 
 #define MIN_SUS_POS				5
@@ -91,11 +92,9 @@ typedef struct {
 	uint8_t priority;
 } errMsg;
 
-screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], 
-				motecItems[30], endRaceItems[9], chassisItems[20];
-screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen,
-				endRaceScreen, chassisScreen;
-screen* allScreens[6];
+screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[6];
+screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
+screen* allScreens[7];
 
 uint8_t screenNumber;
 
@@ -158,6 +157,7 @@ void redrawPumpSw(screenItemInfo * item, volatile dataItem * data);
 void redrawLCSw(screenItemInfo * item, volatile dataItem * data);
 void redrawTireTemp(screenItemInfo * item, volatile dataItem * data);
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data);
+void redrawRotary(screenItemInfo * item, volatile dataItem * data);
 
 uint16_t tempColor(uint8_t temp);
 

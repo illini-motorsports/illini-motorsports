@@ -196,105 +196,116 @@ void initAllScreens(void){
 	foregroundColor = RA8875_BLACK;
 	warningColor = errorColor = backgroundColor;
 
+	// All Screens Stuff
+	allScreens[GENERAL_SCREEN] = &generalScreen;
+	generalScreen.items = generalItems;
+	generalScreen.len = 6;
+	initScreenItem(&generalItems[0], 20, 30, 15, redrawRotary, &rotary[0]);
+	initScreenItem(&generalItems[1], 20, 30, 15, redrawRotary, &rotary[1]);
+	initScreenItem(&generalItems[2], 20, 30, 15, redrawRotary, &rotary[2]);
+	initScreenItem(&generalItems[3], 20, 30, 15, redrawFanSw, &switches[0]);
+	initScreenItem(&generalItems[4], 20, 30, 15, redrawPumpSw, &switches[1]);
+	initScreenItem(&generalItems[5], 20, 30, 15, redrawLCSw, &switches[2]);
+	
 	// Race Screen Stuff
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
 	raceScreen.len = 8;
-	initScreenItem(&raceScreen.items[0], 120, 20, 15, redrawFanSw, &switches[0]);
-	initScreenItem(&raceScreen.items[1], 240, 20, 15, redrawPumpSw, &switches[1]);
-	initScreenItem(&raceScreen.items[2], 360, 20, 15, redrawLCSw, &switches[2]);
-	initScreenItem(&raceScreen.items[3], 20, 70, 30, redrawDigit, &oilTemp);
-	initScreenItem(&raceScreen.items[4], 330, 70, 30, redrawDigit, &waterTemp);
-	initScreenItem(&raceScreen.items[5], 20, 190, 30, redrawDigit, &oilPress);
-	initScreenItem(&raceScreen.items[6], 330, 180, 30, redrawDigit, 0x0);
-	initScreenItem(&raceScreen.items[7], 170, 50, 100, redrawDigit, &gearPos);
+	initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, &switches[0]);
+	initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawPumpSw, &switches[1]);
+	initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawLCSw, &switches[2]);
+	initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &oilTemp);
+	initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &waterTemp);
+	initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
+	initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, 0x0);
+	initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawDigit, &gearPos);
 	
 	// PDM stuff
 	allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
 	pdmDrawScreen.items = pdmDrawItems;
 	pdmDrawScreen.len = 20;
-	initScreenItem(&pdmDrawScreen.items[0], 10, 30, 20, redrawDigit, &pdmCurrentDraw);
-	initScreenItem(&pdmDrawScreen.items[1], 10, 30, 20, redrawDigit, &pdmIGNdraw);
-	initScreenItem(&pdmDrawScreen.items[2], 10, 30, 20, redrawDigit, &pdmINJdraw);
-	initScreenItem(&pdmDrawScreen.items[3], 10, 30, 20, redrawDigit, &pdmFUELdraw);
-	initScreenItem(&pdmDrawScreen.items[4], 10, 30, 20, redrawDigit, &pdmECUdraw);
-	initScreenItem(&pdmDrawScreen.items[5], 10, 30, 20, redrawDigit, &pdmWTRdraw);
-	initScreenItem(&pdmDrawScreen.items[6], 10, 30, 20, redrawDigit, &pdmFANdraw);
-	initScreenItem(&pdmDrawScreen.items[7], 10, 30, 20, redrawDigit, &pdmAUXdraw);
-	initScreenItem(&pdmDrawScreen.items[8], 10, 30, 20, redrawDigit, &pdmPDLUdraw);
-	initScreenItem(&pdmDrawScreen.items[9], 10, 30, 20, redrawDigit, &pdmPDLDdraw);
-	initScreenItem(&pdmDrawScreen.items[10], 10, 30, 20, redrawDigit, &pdm5v5draw);
-	initScreenItem(&pdmDrawScreen.items[11], 10, 30, 20, redrawDigit, &pdmBATdraw);
-	initScreenItem(&pdmDrawScreen.items[12], 10, 30, 20, redrawDigit, &pdmSTR0draw);
-	initScreenItem(&pdmDrawScreen.items[13], 10, 30, 20, redrawDigit, &pdmSTR1draw);
-	initScreenItem(&pdmDrawScreen.items[14], 10, 30, 20, redrawDigit, &pdmSTR2draw);
-	initScreenItem(&pdmDrawScreen.items[15], 10, 30, 20, redrawDigit, &pdmSTRdraw);
-	initScreenItem(&pdmDrawScreen.items[16], 10, 30, 20, redrawDigit, &pdmFUELPcut);
-	initScreenItem(&pdmDrawScreen.items[17], 10, 30, 20, redrawDigit, &pdmECUPcut);
-	initScreenItem(&pdmDrawScreen.items[18], 10, 30, 20, redrawDigit, &pdmWTRPcut);
-	initScreenItem(&pdmDrawScreen.items[19], 10, 30, 20, redrawDigit, &pdmFANPcut);
+	initScreenItem(&pdmDrawItems[0], 10, 30, 20, redrawDigit, &pdmCurrentDraw);
+	initScreenItem(&pdmDrawItems[1], 10, 30, 20, redrawDigit, &pdmIGNdraw);
+	initScreenItem(&pdmDrawItems[2], 10, 30, 20, redrawDigit, &pdmINJdraw);
+	initScreenItem(&pdmDrawItems[3], 10, 30, 20, redrawDigit, &pdmFUELdraw);
+	initScreenItem(&pdmDrawItems[4], 10, 30, 20, redrawDigit, &pdmECUdraw);
+	initScreenItem(&pdmDrawItems[5], 10, 30, 20, redrawDigit, &pdmWTRdraw);
+	initScreenItem(&pdmDrawItems[6], 10, 30, 20, redrawDigit, &pdmFANdraw);
+	initScreenItem(&pdmDrawItems[7], 10, 30, 20, redrawDigit, &pdmAUXdraw);
+	initScreenItem(&pdmDrawItems[8], 10, 30, 20, redrawDigit, &pdmPDLUdraw);
+	initScreenItem(&pdmDrawItems[9], 10, 30, 20, redrawDigit, &pdmPDLDdraw);
+	initScreenItem(&pdmDrawItems[10], 10, 30, 20, redrawDigit, &pdm5v5draw);
+	initScreenItem(&pdmDrawItems[11], 10, 30, 20, redrawDigit, &pdmBATdraw);
+	initScreenItem(&pdmDrawItems[12], 10, 30, 20, redrawDigit, &pdmSTR0draw);
+	initScreenItem(&pdmDrawItems[13], 10, 30, 20, redrawDigit, &pdmSTR1draw);
+	initScreenItem(&pdmDrawItems[14], 10, 30, 20, redrawDigit, &pdmSTR2draw);
+	initScreenItem(&pdmDrawItems[15], 10, 30, 20, redrawDigit, &pdmSTRdraw);
+	initScreenItem(&pdmDrawItems[16], 10, 30, 20, redrawDigit, &pdmFUELPcut);
+	initScreenItem(&pdmDrawItems[17], 10, 30, 20, redrawDigit, &pdmECUPcut);
+	initScreenItem(&pdmDrawItems[18], 10, 30, 20, redrawDigit, &pdmWTRPcut);
+	initScreenItem(&pdmDrawItems[19], 10, 30, 20, redrawDigit, &pdmFANPcut);
 	
 	allScreens[PDM_CUT_SCREEN] = &pdmCutScreen;
 	pdmCutScreen.items = pdmCutItems;
 	pdmCutScreen.len = 21;
-	initScreenItem(&pdmDrawScreen.items[0], 10, 30, 20, redrawDigit, &pdmTemp);
-	initScreenItem(&pdmDrawScreen.items[1], 10, 30, 20, redrawDigit, &pdmICTemp);
-	initScreenItem(&pdmDrawScreen.items[2], 10, 30, 20, redrawDigit, &pdmVBat);
-	initScreenItem(&pdmDrawScreen.items[3], 10, 30, 20, redrawDigit, &pdm12v);
-	initScreenItem(&pdmDrawScreen.items[4], 10, 30, 20, redrawDigit, &pdm5v5);
-	initScreenItem(&pdmDrawScreen.items[5], 10, 30, 20, redrawDigit, &pdm5v);
-	initScreenItem(&pdmDrawScreen.items[6], 10, 30, 20, redrawDigit, &pdm3v3);
-	initScreenItem(&pdmDrawScreen.items[7], 10, 30, 20, redrawDigit, &pdmIGNcut);
-	initScreenItem(&pdmDrawScreen.items[8], 10, 30, 20, redrawDigit, &pdmINJcut);
-	initScreenItem(&pdmDrawScreen.items[9], 10, 30, 20, redrawDigit, &pdmFUELNcut);
-	initScreenItem(&pdmDrawScreen.items[10], 10, 30, 20, redrawDigit, &pdmECUNcut);
-	initScreenItem(&pdmDrawScreen.items[11], 10, 30, 20, redrawDigit, &pdmWTRNcut);
-	initScreenItem(&pdmDrawScreen.items[12], 10, 30, 20, redrawDigit, &pdmFANNcut);
-	initScreenItem(&pdmDrawScreen.items[13], 10, 30, 20, redrawDigit, &pdmAUXcut);
-	initScreenItem(&pdmDrawScreen.items[14], 10, 30, 20, redrawDigit, &pdmPDLUcut);
-	initScreenItem(&pdmDrawScreen.items[15], 10, 30, 20, redrawDigit, &pdmPDLDcut);
-	initScreenItem(&pdmDrawScreen.items[16], 10, 30, 20, redrawDigit, &pdm5v5cut);
-	initScreenItem(&pdmDrawScreen.items[17], 10, 30, 20, redrawDigit, &pdmBATcut);
-	initScreenItem(&pdmDrawScreen.items[18], 10, 30, 20, redrawDigit, &pdmSTR0cut);
-	initScreenItem(&pdmDrawScreen.items[19], 10, 30, 20, redrawDigit, &pdmSTR1cut);
-	initScreenItem(&pdmDrawScreen.items[20], 10, 30, 20, redrawDigit, &pdmSTR2cut);
+	initScreenItem(&pdmCutItems[0], 10, 30, 20, redrawDigit, &pdmTemp);
+	initScreenItem(&pdmCutItems[1], 10, 30, 20, redrawDigit, &pdmICTemp);
+	initScreenItem(&pdmCutItems[2], 10, 30, 20, redrawDigit, &pdmVBat);
+	initScreenItem(&pdmCutItems[3], 10, 30, 20, redrawDigit, &pdm12v);
+	initScreenItem(&pdmCutItems[4], 10, 30, 20, redrawDigit, &pdm5v5);
+	initScreenItem(&pdmCutItems[5], 10, 30, 20, redrawDigit, &pdm5v);
+	initScreenItem(&pdmCutItems[6], 10, 30, 20, redrawDigit, &pdm3v3);
+	initScreenItem(&pdmCutItems[7], 10, 30, 20, redrawDigit, &pdmIGNcut);
+	initScreenItem(&pdmCutItems[8], 10, 30, 20, redrawDigit, &pdmINJcut);
+	initScreenItem(&pdmCutItems[9], 10, 30, 20, redrawDigit, &pdmFUELNcut);
+	initScreenItem(&pdmCutItems[10], 10, 30, 20, redrawDigit, &pdmECUNcut);
+	initScreenItem(&pdmCutItems[11], 10, 30, 20, redrawDigit, &pdmWTRNcut);
+	initScreenItem(&pdmCutItems[12], 10, 30, 20, redrawDigit, &pdmFANNcut);
+	initScreenItem(&pdmCutItems[13], 10, 30, 20, redrawDigit, &pdmAUXcut);
+	initScreenItem(&pdmCutItems[14], 10, 30, 20, redrawDigit, &pdmPDLUcut);
+	initScreenItem(&pdmCutItems[15], 10, 30, 20, redrawDigit, &pdmPDLDcut);
+	initScreenItem(&pdmCutItems[16], 10, 30, 20, redrawDigit, &pdm5v5cut);
+	initScreenItem(&pdmCutItems[17], 10, 30, 20, redrawDigit, &pdmBATcut);
+	initScreenItem(&pdmCutItems[18], 10, 30, 20, redrawDigit, &pdmSTR0cut);
+	initScreenItem(&pdmCutItems[19], 10, 30, 20, redrawDigit, &pdmSTR1cut);
+	initScreenItem(&pdmCutItems[20], 10, 30, 20, redrawDigit, &pdmSTR2cut);
 
 	// MoTec Stuff
 	allScreens[MOTEC_SCREEN] = &motecScreen;
 	motecScreen.items = motecItems;
 	motecScreen.len = 30;
-	initScreenItem(&motecScreen.items[0], 10, 30, 20, redrawDigit, &rpm);
-	initScreenItem(&motecScreen.items[1], 10, 30, 20, redrawDigit, &throtPos);
-	initScreenItem(&motecScreen.items[2], 10, 30, 20, redrawDigit, &oilPress);
-	initScreenItem(&motecScreen.items[3], 10, 30, 20, redrawDigit, &oilTemp);
-	initScreenItem(&motecScreen.items[4], 10, 30, 20, redrawDigit, &waterTemp);
-	initScreenItem(&motecScreen.items[5], 10, 30, 20, redrawDigit, &lambda);
-	initScreenItem(&motecScreen.items[6], 10, 30, 20, redrawDigit, &manifoldPress);
-	initScreenItem(&motecScreen.items[7], 10, 30, 20, redrawDigit, &batVoltage);
-	initScreenItem(&motecScreen.items[8], 10, 30, 20, redrawDigit, &wheelSpeedFL);
-	initScreenItem(&motecScreen.items[9], 10, 30, 20, redrawDigit, &wheelSpeedFR);
-	initScreenItem(&motecScreen.items[10], 10, 30, 20, redrawDigit, &wheelSpeedRL);
-	initScreenItem(&motecScreen.items[11], 10, 30, 20, redrawDigit, &wheelSpeedRR);
-	initScreenItem(&motecScreen.items[12], 10, 30, 20, redrawDigit, &gpsLat);
-	initScreenItem(&motecScreen.items[13], 10, 30, 20, redrawDigit, &gpsLong);
-	initScreenItem(&motecScreen.items[14], 10, 30, 20, redrawDigit, &groundSpeed);
-	initScreenItem(&motecScreen.items[15], 10, 30, 20, redrawDigit, &driveSpeed);
-	initScreenItem(&motecScreen.items[16], 10, 30, 20, redrawDigit, &gpsSpeed);
-	initScreenItem(&motecScreen.items[17], 10, 30, 20, redrawDigit, &manifoldTemp);
-	initScreenItem(&motecScreen.items[18], 10, 30, 20, redrawDigit, &ambientTemp);
-	initScreenItem(&motecScreen.items[19], 10, 30, 20, redrawDigit, &ambientPress);
-	initScreenItem(&motecScreen.items[20], 10, 30, 20, redrawDigit, &fuelTemp);
-	initScreenItem(&motecScreen.items[21], 10, 30, 20, redrawDigit, &fuelPress);
-	initScreenItem(&motecScreen.items[22], 10, 30, 20, redrawDigit, &lambda1);
-	initScreenItem(&motecScreen.items[23], 10, 30, 20, redrawDigit, &lambda2);
-	initScreenItem(&motecScreen.items[24], 10, 30, 20, redrawDigit, &lambda3);
-	initScreenItem(&motecScreen.items[25], 10, 30, 20, redrawDigit, &lambda4);
-	initScreenItem(&motecScreen.items[26], 10, 30, 20, redrawDigit, &lcEnablity);
-	initScreenItem(&motecScreen.items[27], 10, 30, 20, redrawDigit, &fuelConsum);
-	initScreenItem(&motecScreen.items[28], 10, 30, 20, redrawDigit, &gpsAltitude);
-	initScreenItem(&motecScreen.items[29], 10, 30, 20, redrawDigit, &gpsTime);
-	initScreenItem(&motecScreen.items[30], 10, 30, 20, redrawDigit, &fuelInjDuty);
-	initScreenItem(&motecScreen.items[31], 10, 30, 20, redrawDigit, &fuelTrim);
+	initScreenItem(&motecItems[0], 10, 30, 20, redrawDigit, &rpm);
+	initScreenItem(&motecItems[1], 10, 30, 20, redrawDigit, &throtPos);
+	initScreenItem(&motecItems[2], 10, 30, 20, redrawDigit, &oilPress);
+	initScreenItem(&motecItems[3], 10, 30, 20, redrawDigit, &oilTemp);
+	initScreenItem(&motecItems[4], 10, 30, 20, redrawDigit, &waterTemp);
+	initScreenItem(&motecItems[5], 10, 30, 20, redrawDigit, &lambda);
+	initScreenItem(&motecItems[6], 10, 30, 20, redrawDigit, &manifoldPress);
+	initScreenItem(&motecItems[7], 10, 30, 20, redrawDigit, &batVoltage);
+	initScreenItem(&motecItems[8], 10, 30, 20, redrawDigit, &wheelSpeedFL);
+	initScreenItem(&motecItems[9], 10, 30, 20, redrawDigit, &wheelSpeedFR);
+	initScreenItem(&motecItems[10], 10, 30, 20, redrawDigit, &wheelSpeedRL);
+	initScreenItem(&motecItems[11], 10, 30, 20, redrawDigit, &wheelSpeedRR);
+	initScreenItem(&motecItems[12], 10, 30, 20, redrawDigit, &gpsLat);
+	initScreenItem(&motecItems[13], 10, 30, 20, redrawDigit, &gpsLong);
+	initScreenItem(&motecItems[14], 10, 30, 20, redrawDigit, &groundSpeed);
+	initScreenItem(&motecItems[15], 10, 30, 20, redrawDigit, &driveSpeed);
+	initScreenItem(&motecItems[16], 10, 30, 20, redrawDigit, &gpsSpeed);
+	initScreenItem(&motecItems[17], 10, 30, 20, redrawDigit, &manifoldTemp);
+	initScreenItem(&motecItems[18], 10, 30, 20, redrawDigit, &ambientTemp);
+	initScreenItem(&motecItems[19], 10, 30, 20, redrawDigit, &ambientPress);
+	initScreenItem(&motecItems[20], 10, 30, 20, redrawDigit, &fuelTemp);
+	initScreenItem(&motecItems[21], 10, 30, 20, redrawDigit, &fuelPress);
+	initScreenItem(&motecItems[22], 10, 30, 20, redrawDigit, &lambda1);
+	initScreenItem(&motecItems[23], 10, 30, 20, redrawDigit, &lambda2);
+	initScreenItem(&motecItems[24], 10, 30, 20, redrawDigit, &lambda3);
+	initScreenItem(&motecItems[25], 10, 30, 20, redrawDigit, &lambda4);
+	initScreenItem(&motecItems[26], 10, 30, 20, redrawDigit, &lcEnablity);
+	initScreenItem(&motecItems[27], 10, 30, 20, redrawDigit, &fuelConsum);
+	initScreenItem(&motecItems[28], 10, 30, 20, redrawDigit, &gpsAltitude);
+	initScreenItem(&motecItems[29], 10, 30, 20, redrawDigit, &gpsTime);
+	initScreenItem(&motecItems[30], 10, 30, 20, redrawDigit, &fuelInjDuty);
+	initScreenItem(&motecItems[31], 10, 30, 20, redrawDigit, &fuelTrim);
 
 	// End Race Screen
 	allScreens[END_RACE_SCREEN] = &endRaceScreen;
@@ -492,6 +503,11 @@ void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
 		}
 		fillRect(item->x,item->y-(item->size*5)+height,item->size,height,RA8875_RED);
 	}
+}
+
+void redrawRotary(screenItemInfo * item, volatile dataItem * data){
+	fillCircle(item->x, item->y, item->size, RA8875_RED);
+	sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
 }
 
 void clearScreen(void){
