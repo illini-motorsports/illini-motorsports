@@ -513,7 +513,11 @@ void textEnlarge(uint8_t scale) {
  * ************ SPI and Direct Read/Write Functions ****************************
  */
 
-void textWrite(const char* buffer, uint16_t len) {
+void textWrite(const char* buffer){
+	textWriteHelper(buffer, 0);
+}
+	
+void textWriteHelper(const char* buffer, uint16_t len) {
   if (len == 0) len = strlen(buffer);
   writeCommand(RA8875_MRWC);
   uint16_t i = 0;

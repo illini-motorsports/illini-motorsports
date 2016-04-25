@@ -30,7 +30,8 @@ void textSetCursor(uint16_t x, uint16_t y);
 void textColor(uint16_t foreColor, uint16_t bgColor);
 void textTransparent(uint16_t foreColor);
 void textEnlarge(uint8_t scale);
-void textWrite(const char* buffer, uint16_t len);
+void textWrite(const char* buffer);
+void textWriteHelper(const char* buffer, uint16_t len);
 
 /* Formula Specific Functions*/
 void drawRaceScreen(double oil_temp, double oil_pres, double water_temp, int gear_pos);
