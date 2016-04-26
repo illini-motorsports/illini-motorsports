@@ -19,11 +19,11 @@ void main(void) {
   init_timer2();// Initialize timer2 (millis)
   init_spi();// Initialize SPI interface
 	init_adc(initADCWheel);
+	
 
   ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
   STI();// Enable interrupts
   
-	darkState = 0;
 	// Init Relevant Pins
 	millis = 0;
 	CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
@@ -41,20 +41,21 @@ void main(void) {
 	MOM2_TRIS = INPUT;
 	MOM3_TRIS = INPUT;
 	MOM4_TRIS = INPUT;
-  
-	// Initialize RA8875
+
+  // Initialize RA8875
   reset();
   initialize();
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
 	//PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
 	//PWM1out(255);
-	fillScreen(RA8875_WHITE);
+	//fillScreen(RA8875_WHITE);
 	//drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
 	
 	// Initialize All the data streams
 	initDataItems();
   init_can();
+	updateSwVals();
   initAllScreens();
 	changeScreen(RACE_SCREEN);
 	

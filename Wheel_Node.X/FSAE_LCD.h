@@ -144,6 +144,7 @@ void changeScreen(uint8_t num);
 void refreshScreenItems(void);
 void clearScreen(void);
 void resetScreenItems(void);
+uint8_t initNightMode(uint8_t on);
 void nightMode(uint8_t on);
 double getMinLap(void);
 void endRace(void);

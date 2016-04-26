@@ -194,7 +194,7 @@ void initAllScreens(void){
 	// Initialize colors
 	backgroundColor = RA8875_WHITE;
 	foregroundColor = RA8875_BLACK;
-	warningColor = errorColor = backgroundColor;
+	initNightMode(switches[3].value);	
 
 	// All Screens Stuff
 	allScreens[GENERAL_SCREEN] = &generalScreen;
@@ -217,7 +217,7 @@ void initAllScreens(void){
 	initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &oilTemp);
 	initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &waterTemp);
 	initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
-	initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, 0x0);
+	initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &batVoltage);
 	initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawDigit, &gearPos);
 	
 	// PDM stuff
@@ -371,14 +371,16 @@ void initScreen(uint8_t num){
 	switch(num){
 		case RACE_SCREEN:
 			textMode();
-			textSetCursor(0, 40);
-			textTransparent(foregroundColor);
 			textEnlarge(0);
+			textTransparent(foregroundColor);
+			textSetCursor(0, 40);
 			textWrite("OIL TEMP");
 			textSetCursor(0, 140);
 			textWrite("OIL PRESS");
 			textSetCursor(330, 40);
 			textWrite("WTR TMP");
+			textSetCursor(330,140);
+			textWrite("BAT V");
 			graphicsMode();
 		break;
 		case PDM_DRAW_SCREEN:
@@ -561,7 +563,7 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
 
 // For Fan Override Indicator
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
-	if(!data->value){
+	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
@@ -571,7 +573,7 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 
 // For Water Pump Override Indicator
 void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
-	if(!data->value){
+	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
@@ -581,7 +583,7 @@ void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
 
 // For Launch Control Override Indicator
 void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
-	if(!data->value){
+	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
 	else{
@@ -636,23 +638,31 @@ void resetScreenItems(void){
 }
 
 // Immediantly returns if 
-void nightMode(uint8_t on){
+uint8_t initNightMode(uint8_t on){
 	if(on){
 		if(backgroundColor == RA8875_BLACK){
-			return;
+			warningColor = errorColor = backgroundColor;
+			return 0;
 		}
 		backgroundColor = RA8875_BLACK;
 		foregroundColor = RA8875_WHITE;
 	}
 	else{
 		if(backgroundColor == RA8875_WHITE){
-			return;
+			warningColor = errorColor = backgroundColor;
+			return 0;
 		}
 		backgroundColor = RA8875_WHITE;
 		foregroundColor = RA8875_BLACK;
 	}
 	warningColor = errorColor = backgroundColor;
-	changeScreen(screenNumber);
+	return 1;
+}
+
+void nightMode(uint8_t on){
+	if(initNightMode(on)){
+		changeScreen(screenNumber);
+	}
 }
 
 void addLap(double lapTime){
