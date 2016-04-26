@@ -502,8 +502,8 @@ void textEnlarge(uint8_t scale) {
   writeCommand(0x22);
   uint8_t temp = readData();
   temp &= ~(0xF); // Clears bits 0..3
-  temp |= 0x5;
-  temp |= 0b01000000;
+  temp |= scale << 2;
+  temp |= scale;
   writeData(temp);
   
   _textScale = scale;
@@ -523,7 +523,9 @@ void textWriteHelper(const char* buffer, uint16_t len) {
   uint16_t i = 0;
   for (;i < len;i++) {
     writeData(buffer[i]);
-	delay(1);
+		if(_textScale >= 1){
+			delay(1);
+		}
   }
 }
 

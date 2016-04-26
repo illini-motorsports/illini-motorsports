@@ -32,7 +32,7 @@
 #define LCD_CS_LAT  LATBbits.LATB8
 #define LCD_RST_TRIS TRISBbits.TRISB11
 #define LCD_RST_LAT  LATBbits.LATB11
-*/
+ */
 
 #define ROT1_TRIS 	TRISCbits.TRISC4
 #define ROT2_TRIS 	TRISCbits.TRISC3

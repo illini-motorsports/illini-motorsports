@@ -123,7 +123,7 @@ uint8_t _textScale;
 #define SEVEN_SEG_8 		0x7F
 #define SEVEN_SEG_9 		0x7B
 #define SEVEN_SEG_N			0x54
-#define SEVEN_SEG_E			0x79
+#define SEVEN_SEG_E			0x4F
 
 // Rectangle Coordinates
 #define RA8875_RECT_X0_0				0x91

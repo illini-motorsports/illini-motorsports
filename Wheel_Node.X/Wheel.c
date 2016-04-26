@@ -47,8 +47,8 @@ void main(void) {
   initialize();
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
-	//PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
-	//PWM1out(255);
+	PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
+	PWM1out(255);
 	//fillScreen(RA8875_WHITE);
 	//drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
 	
@@ -57,7 +57,7 @@ void main(void) {
   init_can();
 	updateSwVals();
   initAllScreens();
-	changeScreen(RACE_SCREEN);
+	changeScreen(PDM_CUT_SCREEN);
 	
   while(1){
 		// Send CAN messages with the correct frequency
@@ -74,6 +74,15 @@ void main(void) {
 			CANdiagMillis = millis;
 		}
 		// Refresh Screen
+		if(tRotary[1].value == 1 && screenNumber != PDM_DRAW_SCREEN){
+			changeScreen(PDM_DRAW_SCREEN);
+		}
+		else if(tRotary[1].value == 2 && screenNumber != PDM_CUT_SCREEN){
+			changeScreen(PDM_CUT_SCREEN);
+		}
+		else if(tRotary[1].value != 2 && tRotary[1].value != 1 && screenNumber != RACE_SCREEN){
+			changeScreen(RACE_SCREEN);
+		}
 		refreshScreenItems();
 	}
 }
@@ -116,6 +125,7 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
 }
 
 void process_CAN_msg(CAN_message msg){
+	uint16_t * lsbArray = (uint16_t *) msg.data;
   switch (msg.id) {
     case MOTEC_ID + 0:
 			rpm.value = parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL);
@@ -182,64 +192,64 @@ void process_CAN_msg(CAN_message msg){
 			// Switch Bitmap
 			break;
 		case PDM_ID + 2:
-			pdmVBat.value = (uint16_t) (msg.data[VBAT_RAIL_BYTE]) * VBAT_RAIL_SCL;
-			pdm12v.value = (uint16_t) (msg.data[V12_RAIL_BYTE]) * V12_RAIL_SCL;
-			pdm5v5.value = (uint16_t) (msg.data[V5V5_RAIL_BYTE]) * V5V5_RAIL_SCL;
-			pdm5v.value = (uint16_t) (msg.data[V5_RAIL_BYTE]) * V5_RAIL_SCL;
+			pdmVBat.value = (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL;
+			pdm12v.value = (uint16_t) (lsbArray[V12_RAIL_BYTE/2]) * V12_RAIL_SCL;
+			pdm5v5.value = (uint16_t) (lsbArray[V5V5_RAIL_BYTE/2]) * V5V5_RAIL_SCL;
+			pdm5v.value = (uint16_t) (lsbArray[V5_RAIL_BYTE/2]) * V5_RAIL_SCL;
 			break;
 		case PDM_ID + 3:
-			pdm3v3.value = (uint16_t) (msg.data[V3V3_RAIL_BYTE]) * V3V3_RAIL_SCL;
+			pdm3v3.value = (uint16_t) (lsbArray[V3V3_RAIL_BYTE/2]) * V3V3_RAIL_SCL;
 			break;
 		case PDM_ID + 4:
-			pdmIGNdraw.value = (uint16_t) (msg.data[IGN_DRAW_BYTE]) * IGN_DRAW_SCL;
-			pdmINJdraw.value = (uint16_t) (msg.data[INJ_DRAW_BYTE]) * INJ_DRAW_SCL;
-			pdmFUELdraw.value = (uint16_t) (msg.data[FUEL_DRAW_BYTE]) * FUEL_DRAW_SCL;
-			pdmECUdraw.value = (uint16_t) (msg.data[ECU_DRAW_BYTE]) * ECU_DRAW_SCL;
+			pdmIGNdraw.value = (uint16_t) (lsbArray[IGN_DRAW_BYTE/2]) * IGN_DRAW_SCL;
+			pdmINJdraw.value = (uint16_t) (lsbArray[INJ_DRAW_BYTE/2]) * INJ_DRAW_SCL;
+			pdmFUELdraw.value = (uint16_t) (lsbArray[FUEL_DRAW_BYTE/2]) * FUEL_DRAW_SCL;
+			pdmECUdraw.value = (uint16_t) (lsbArray[ECU_DRAW_BYTE/2]) * ECU_DRAW_SCL;
 			break;
 		case PDM_ID + 5:
-			pdmWTRdraw.value = (uint16_t) (msg.data[WTR_DRAW_BYTE]) * WTR_DRAW_SCL;
-			pdmFANdraw.value = (uint16_t) (msg.data[FAN_DRAW_BYTE]) * FAN_DRAW_SCL;
-			pdmAUXdraw.value = (uint16_t) (msg.data[AUX_DRAW_BYTE]) * AUX_DRAW_SCL;
-			pdmPDLUdraw.value = (uint16_t) (msg.data[PDLU_DRAW_BYTE]) * PDLU_DRAW_SCL;
+			pdmWTRdraw.value = (uint16_t) (lsbArray[WTR_DRAW_BYTE/2]) * WTR_DRAW_SCL;
+			pdmFANdraw.value = (uint16_t) (lsbArray[FAN_DRAW_BYTE/2]) * FAN_DRAW_SCL;
+			pdmAUXdraw.value = (uint16_t) (lsbArray[AUX_DRAW_BYTE/2]) * AUX_DRAW_SCL;
+			pdmPDLUdraw.value = (uint16_t) (lsbArray[PDLU_DRAW_BYTE/2]) * PDLU_DRAW_SCL;
 			break;
 		case PDM_ID + 6:
-			pdmPDLDdraw.value = (uint16_t) (msg.data[PDLD_DRAW_BYTE]) * PDLD_DRAW_SCL;
-			pdm5v5draw.value = (uint16_t) (msg.data[B5V5_DRAW_BYTE]) * B5V5_DRAW_SCL;
-			pdmBATdraw.value = (uint16_t) (msg.data[VBAT_DRAW_BYTE]) * VBAT_DRAW_BYTE;
+			pdmPDLDdraw.value = (uint16_t) (lsbArray[PDLD_DRAW_BYTE/2]) * PDLD_DRAW_SCL;
+			pdm5v5draw.value = (uint16_t) (lsbArray[B5V5_DRAW_BYTE/2]) * B5V5_DRAW_SCL;
+			pdmBATdraw.value = (uint16_t) (lsbArray[VBAT_DRAW_BYTE/2]) * VBAT_DRAW_BYTE;
 			break;
 		case PDM_ID + 7:
-			pdmSTR0draw.value = (uint16_t) (msg.data[STR0_DRAW_BYTE]) * STR0_DRAW_SCL;
-			pdmSTR1draw.value = (uint16_t) (msg.data[STR1_DRAW_BYTE]) * STR1_DRAW_SCL;
-			pdmSTR2draw.value = (uint16_t) (msg.data[STR2_DRAW_BYTE]) * STR2_DRAW_SCL;
-			pdmSTRdraw.value = (uint16_t) (msg.data[STR_DRAW_BYTE]) * STR_DRAW_SCL;
+			pdmSTR0draw.value = (uint16_t) (lsbArray[STR0_DRAW_BYTE/2]) * STR0_DRAW_SCL;
+			pdmSTR1draw.value = (uint16_t) (lsbArray[STR1_DRAW_BYTE/2]) * STR1_DRAW_SCL;
+			pdmSTR2draw.value = (uint16_t) (lsbArray[STR2_DRAW_BYTE/2]) * STR2_DRAW_SCL;
+			pdmSTRdraw.value = (uint16_t) (lsbArray[STR_DRAW_BYTE/2]) * STR_DRAW_SCL;
 			break;
 		case PDM_ID + 8:
-			pdmIGNcut.value = (uint16_t) (msg.data[IGN_CUT_BYTE]) * IGN_CUT_SCL;
-			pdmINJcut.value = (uint16_t) (msg.data[INJ_CUT_BYTE]) * INJ_CUT_SCL;
-			pdmAUXcut.value = (uint16_t) (msg.data[AUX_CUT_BYTE]) * AUX_CUT_SCL;
-			pdmPDLUcut.value = (uint16_t) (msg.data[PDLU_CUT_BYTE]) * PDLU_CUT_SCL;
+			pdmIGNcut.value = (uint16_t) (lsbArray[IGN_CUT_BYTE/2]) * IGN_CUT_SCL;
+			pdmINJcut.value = (uint16_t) (lsbArray[INJ_CUT_BYTE/2]) * INJ_CUT_SCL;
+			pdmAUXcut.value = (uint16_t) (lsbArray[AUX_CUT_BYTE/2]) * AUX_CUT_SCL;
+			pdmPDLUcut.value = (uint16_t) (lsbArray[PDLU_CUT_BYTE/2]) * PDLU_CUT_SCL;
 			break;
 		case PDM_ID + 9:
-			pdmPDLDcut.value = (uint16_t) (msg.data[PDLD_CUT_BYTE]) * PDLD_CUT_SCL;
-			pdm5v5cut.value = (uint16_t) (msg.data[B5V5_CUT_BYTE]) * B5V5_CUT_SCL;
-			pdmBATcut.value = (uint16_t) (msg.data[BVBAT_CUT_BYTE]) * BVBAT_CUT_SCL;
+			pdmPDLDcut.value = (uint16_t) (lsbArray[PDLD_CUT_BYTE/2]) * PDLD_CUT_SCL;
+			pdm5v5cut.value = (uint16_t) (lsbArray[B5V5_CUT_BYTE/2]) * B5V5_CUT_SCL;
+			pdmBATcut.value = (uint16_t) (lsbArray[BVBAT_CUT_BYTE/2]) * BVBAT_CUT_SCL;
 			break;
 		case PDM_ID + 10:
-			pdmSTR0cut.value = (uint16_t) (msg.data[STR0_CUT_BYTE]) * STR0_CUT_SCL;
-			pdmSTR1cut.value = (uint16_t) (msg.data[STR1_CUT_BYTE]) * STR1_CUT_SCL;
-			pdmSTR2cut.value = (uint16_t) (msg.data[STR2_CUT_BYTE]) * STR2_CUT_SCL;
+			pdmSTR0cut.value = (uint16_t) (lsbArray[STR0_CUT_BYTE/2]) * STR0_CUT_SCL;
+			pdmSTR1cut.value = (uint16_t) (lsbArray[STR1_CUT_BYTE/2]) * STR1_CUT_SCL;
+			pdmSTR2cut.value = (uint16_t) (lsbArray[STR2_CUT_BYTE/2]) * STR2_CUT_SCL;
 			break;
 		case PDM_ID + 11:
-			pdmFUELNcut.value = (uint16_t) (msg.data[FUEL_CUT_N_BYTE]) * FUEL_CUT_N_SCL;
-			pdmWTRNcut.value = (uint16_t) (msg.data[WTR_CUT_N_BYTE]) * WTR_CUT_N_SCL;
-			pdmFANNcut.value = (uint16_t) (msg.data[FAN_CUT_N_BYTE]) * FAN_CUT_N_SCL;
-			pdmECUNcut.value = (uint16_t) (msg.data[ECU_CUT_N_BYTE]) * ECU_CUT_N_SCL;
+			pdmFUELNcut.value = (uint16_t) (lsbArray[FUEL_CUT_N_BYTE/2]) * FUEL_CUT_N_SCL;
+			pdmWTRNcut.value = (uint16_t) (lsbArray[WTR_CUT_N_BYTE/2]) * WTR_CUT_N_SCL;
+			pdmFANNcut.value = (uint16_t) (lsbArray[FAN_CUT_N_BYTE/2]) * FAN_CUT_N_SCL;
+			pdmECUNcut.value = (uint16_t) (lsbArray[ECU_CUT_N_BYTE/2]) * ECU_CUT_N_SCL;
 			break;
 		case PDM_ID + 12:
-			pdmFUELPcut.value = (uint16_t) (msg.data[FUEL_CUT_P_BYTE]) * FUEL_CUT_P_SCL;
-			pdmWTRPcut.value = (uint16_t) (msg.data[WTR_CUT_P_BYTE]) * WTR_CUT_P_SCL;
-			pdmFANPcut.value = (uint16_t) (msg.data[FAN_CUT_P_BYTE]) * FAN_CUT_P_SCL;
-			pdmECUPcut.value = (uint16_t) (msg.data[ECU_CUT_P_BYTE]) * ECU_CUT_P_SCL;
+			pdmFUELPcut.value = (uint16_t) (lsbArray[FUEL_CUT_P_BYTE/2]) * FUEL_CUT_P_SCL;
+			pdmWTRPcut.value = (uint16_t) (lsbArray[WTR_CUT_P_BYTE/2]) * WTR_CUT_P_SCL;
+			pdmFANPcut.value = (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL;
+			pdmECUPcut.value = (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL;
 			break;
 		case TIRE_TEMP_FL_ID:
 			ttFLA[0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
