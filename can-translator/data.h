@@ -104,6 +104,11 @@ class AppData : public QObject {
     vector< vector<double> > latestValues;
 
     /**
+     * Holds the latest values for the timestamp of the message
+     */
+    QString latestTimestamp;
+
+    /**
      * Converts data from our custom uSD logging protocol. Opens up a data
      * file and iterates through it, converting the raw data to a format that
      * can be imported into Darab.

@@ -208,9 +208,12 @@ void AppData::writeLine() {
 
   for(unsigned int i = 0; i < latestValues.size(); i++) {
     for(unsigned int j = 0; j < latestValues[i].size(); j++) {
-      if(i != 0) {
+      if (i == 0) {
+        this->outFile << latestTimestamp.toStdString();
+      } else {
         this->outFile << " ";
       }
+
       this->outFile << latestValues[i][j];
     }
   }
@@ -429,7 +432,7 @@ void AppData::processLine(QString line) {
     j++;
   }
 
-  latestValues[0][0] = sections[0].toDouble();
+  latestTimestamp = sections[0];
 
   writeLine();
 }
