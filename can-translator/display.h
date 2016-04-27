@@ -124,31 +124,31 @@ class AppDisplay : public QWidget {
      */
     void readData(bool isVectorFile);
 
-    AppConfig config;
-    AppData data;
+    AppConfig* config;
+    AppData* data;
 
-    QVBoxLayout layout;
-    QVBoxLayout layout_headers;
-    QHBoxLayout layout_reads;
-    QHBoxLayout layout_main;
-    QVBoxLayout layout_config;
-    QVBoxLayout layout_progress;
+    QVBoxLayout* layout;
+    QVBoxLayout* layout_headers;
+    QHBoxLayout* layout_reads;
+    QHBoxLayout* layout_main;
+    QVBoxLayout* layout_config;
+    QVBoxLayout* layout_progress;
 
-    QScrollArea area_config;
-    QWidget area_config_helper;
+    QScrollArea* area_config;
+    QWidget* area_config_helper;
 
-    QLabel lbl_header;
-    QLabel lbl_subheader;
-    QLabel lbl_keymaps;
+    QLabel* lbl_header;
+    QLabel* lbl_subheader;
+    QLabel* lbl_keymaps;
 
-    QPushButton btn_read_custom;
-    QPushButton btn_read_vector;
-    QPushButton btn_coalesce;
+    QPushButton* btn_read_custom;
+    QPushButton* btn_read_vector;
+    QPushButton* btn_coalesce;
 
-    QProgressBar bar_convert;
+    QProgressBar* bar_convert;
 
-    ComputeThread computeThread;
-    CoalesceComputeThread coalesceComputeThread;
+    ComputeThread* computeThread;
+    CoalesceComputeThread* coalesceComputeThread;
 };
 
 #endif // APP_DISPLAY_H

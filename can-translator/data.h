@@ -142,6 +142,11 @@ class AppData : public QObject {
      * Stores the scanned CAN spec configuration.
      */
     map<uint16_t, Message> messages;
+
+    /**
+     * Stores the open handle to the output file.
+     */
+    ofstream outFile;
 };
 
 #endif // DATA_H

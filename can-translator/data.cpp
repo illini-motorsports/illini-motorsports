@@ -9,7 +9,20 @@
 #include "data.h"
 
 bool AppData::readData(bool isVectorFile) {
-  return isVectorFile ? readDataVector() : readDataCustom();
+  QString outFilename = this->filename;
+  outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
+  outFilename.replace(".asc", ".out.txt", Qt::CaseInsensitive);
+  this->outFile.open(outFilename.toLocal8Bit().data(), ios::out | ios::app);
+
+  if (!(this->outFile && this->outFile.good())) {
+    emit error(QString("Problem opening output file."));
+  }
+
+  bool success = isVectorFile ? readDataVector() : readDataCustom();
+
+  this->outFile.close();
+
+  return success;
 }
 
 bool AppData::readDataCustom() {
@@ -91,9 +104,9 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
 
   QString outFilename = QString("%1coalesce-%2-%3.txt").arg(directory)
     .arg(firstFileNum).arg(lastFileNum);
-  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::trunc);
+  ofstream outFileCoal(outFilename.toLocal8Bit().data(), ios::out | ios::trunc);
 
-  if(outFile && outFile.good()) {
+  if(outFileCoal && outFileCoal.good()) {
     QString header;
     QFile firstFile(filenames.at(0));
     if(firstFile.open(QIODevice::ReadOnly)) {
@@ -101,7 +114,7 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
       header = inputStream.readLine();
       QString adjHeader = QString("%1  %2  %3").arg(header.section("  ", 0, 0)).arg("Logfile [file]")
         .arg(header.section("  ", 1));
-      outFile << adjHeader.toLocal8Bit().data() << '\n';
+      outFileCoal << adjHeader.toLocal8Bit().data() << '\n';
       firstFile.close();
     }
 
@@ -119,7 +132,7 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
 
         if(QString::compare(header, inputStream.readLine())) {
           emit error("Header mismatch. All logfiles must have the same headers.");
-          outFile.close();
+          outFileCoal.close();
           return false;
         }
 
@@ -131,7 +144,7 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
         double firstTimestamp = firstLine.section(" ", 0, 0).toDouble();
 
         firstLine = QString("0.0 %1 %2").arg(logNum).arg(firstLine.section(" ", 1));
-        outFile << firstLine.toLocal8Bit().data() << '\n';
+        outFileCoal << firstLine.toLocal8Bit().data() << '\n';
 
         latestTimestamp += LOGFILE_COALESCE_SEPARATION;
         double timestampOffset = latestTimestamp;
@@ -141,7 +154,7 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
           double timestamp = line.section(" ", 0, 0).toDouble();
           latestTimestamp  = timestamp - firstTimestamp + timestampOffset;
           line = QString("%1 %2 %3").arg(latestTimestamp).arg(logNum).arg(line.section(" ", 1));
-          outFile << line.toLocal8Bit().data() << '\n';
+          outFileCoal << line.toLocal8Bit().data() << '\n';
         }
       }
     }
@@ -151,77 +164,55 @@ bool AppData::coalesceLogfiles(QStringList filenames) {
     return false;
   }
 
-  outFile.close();
+  outFileCoal.close();
   return true;
 }
 
 bool AppData::writeAxis() {
-  QString outFilename = this->filename;
-  outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
-  outFilename.replace(".asc", ".out.txt", Qt::CaseInsensitive);
-  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::trunc);
+  this->outFile << "xtime [s]";
 
-  if(outFile && outFile.good()) {
-    outFile << "xtime [s]";
+  latestValues.clear();
+  messageIndices.clear();
 
-    latestValues.clear();
-    messageIndices.clear();
+  vector<double> vec_time;
+  vec_time.push_back(0.0);
+  latestValues.push_back(vec_time);
 
-    vector<double> vec_time;
-    vec_time.push_back(0.0);
-    latestValues.push_back(vec_time);
+  AppConfig config;
+  map<unsigned short, Message> messages = config.getMessages();
 
-    AppConfig config;
-    map<unsigned short, Message> messages = config.getMessages();
+  int indexCounter = 1;
 
-    int indexCounter = 1;
+  typedef map<unsigned short, Message>::iterator it_msg;
+  for(it_msg msgIt = messages.begin(); msgIt != messages.end(); msgIt++) {
+    Message msg = msgIt->second;
 
-    typedef map<unsigned short, Message>::iterator it_msg;
-    for(it_msg msgIt = messages.begin(); msgIt != messages.end(); msgIt++) {
-      Message msg = msgIt->second;
+    vector<double> vec_msg;
 
-      vector<double> vec_msg;
-
-      for(int i = 0; i < msg.sigs.size(); i++) {
-        Signal sig = msg.sigs[i];
-        outFile << "  " << sig.title.toStdString() << " [" << sig.units.toStdString() << "]";
-        vec_msg.push_back(0.0);
-      }
-
-      latestValues.push_back(vec_msg);
-      messageIndices[msg.id] = indexCounter;
-      indexCounter++;
+    for(int i = 0; i < msg.sigs.size(); i++) {
+      Signal sig = msg.sigs[i];
+      this->outFile << "  " << sig.title.toStdString() << " [" << sig.units.toStdString() << "]";
+      vec_msg.push_back(0.0);
     }
 
-    outFile.close();
-    return true;
-  } else {
-    emit error("Problem opening output file.");
-    return false;
+    latestValues.push_back(vec_msg);
+    messageIndices[msg.id] = indexCounter;
+    indexCounter++;
   }
+
+  return true;
 }
 
 void AppData::writeLine() {
-  QString outFilename = this->filename;
-  outFilename.replace(".txt", ".out.txt", Qt::CaseInsensitive);
-  outFilename.replace(".asc", ".out.txt", Qt::CaseInsensitive);
-  ofstream outFile(outFilename.toLocal8Bit().data(), ios::out | ios::app);
+  this->outFile << endl;
 
-  if(outFile && outFile.good()) {
-    outFile << endl;
-
-    for(unsigned int i = 0; i < latestValues.size(); i++) {
-      for(unsigned int j = 0; j < latestValues[i].size(); j++) {
-        if(i != 0) {
-          outFile << " ";
-        }
-        outFile << latestValues[i][j];
+  for(unsigned int i = 0; i < latestValues.size(); i++) {
+    for(unsigned int j = 0; j < latestValues[i].size(); j++) {
+      if(i != 0) {
+        this->outFile << " ";
       }
+      this->outFile << latestValues[i][j];
     }
-
-    outFile.close();
-  } else {
-    emit error(QString("Problem opening output file."));
   }
 }
 
