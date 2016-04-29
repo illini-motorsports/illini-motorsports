@@ -88,6 +88,41 @@
 #define CAN_SW_ADL_FREQ 	500
 #define CAN_DIAG_FREQ 		1000
 
+//PDM Bitmask bits
+#define STR_ENBL_BIT		0x10
+#define BVBAT_ENBL_BIT		0x20
+#define B5v5_ENBL_BIT		0x40
+#define PDLD_ENBL_BIT		0x80
+#define PDLU_ENBL_BIT		0x100
+#define AUX_ENBL_BIT		0x200
+#define FAN_ENBL_BIT		0x400
+#define WTR_ENBL_BIT		0x800
+#define ECU_ENBL_BIT		0x1000
+#define FUEL_ENBL_BIT		0x2000
+#define INJ_ENBL_BIT		0x4000
+#define IGN_ENBL_BIT		0x8000
+
+#define STR2_PEAKM_BIT		0x4
+#define STR1_PEAKM_BIT		0x8
+#define STR0_PEAKM_BIT		0x10
+#define BVBAT_PEAKM_BIT		0x20
+#define B5v5_PEAKM_BIT		0x40
+#define PDLD_PEAKM_BIT		0x80
+#define PDLU_PEAKM_BIT		0x100
+#define AUX_PEAKM_BIT		0x200
+#define FAN_PEAKM_BIT		0x400
+#define WTR_PEAKM_BIT		0x800
+#define ECU_PEAKM_BIT		0x1000
+#define FUEL_PEAKM_BIT		0x2000
+#define INJ_PEAKM_BIT		0x4000
+#define IGN_PEAKM_BIT		0x8000
+
+#define KILL_PDM_SW_BIT		0x8
+#define ACT_DN_PDM_SW_BIT	0x10
+#define ACT_UP_PDM_SW_BIT	0x20
+#define ON_PDM_SW_BIT		0x40
+#define STR_PDM_SW_BIT		0x80
+
 volatile uint32_t millis;
 
 void main(void);

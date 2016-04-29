@@ -115,6 +115,9 @@ volatile dataItem rotary[3], tRotary[2], switches[4], momentaries[4];
 // PDM
 volatile dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v, pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUNcut, pdmECUPcut, pdmWTRdraw, pdmWTRNcut, pdmWTRPcut, pdmFANdraw, pdmFANNcut, pdmFANPcut, pdmAUXdraw, pdmAUXcut, pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut, pdmSTR1draw, pdmSTR1cut, pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
 
+// PDM Bitmaps
+volatile dataItem STRenabl, BVBATenabl, B5V5enabl, PDLDenabl, PDLUenabl, AUXenabl, FANenabl, WTRenabl, ECUenabl, FUELenabl, INJenabl, IGNenabl, STR2pm, STR1pm, STR0pm, BVBATpm, B5V5pm, PDLDpm, PDLUpm, AUXpm, FANpm, WTRpm, ECUpm, FUELpm, INJpm, IGNpm, KILLpdmSw, ACT_DNpdmSw, ACT_UPpdmSw, ONpdmSw, STRpdmSw;
+
 // Rear Analog Hub
 volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radOutputTemp, swirlTemp, swirlPress;
 
@@ -154,8 +157,8 @@ void addError(char * errText, dataItem * item, uint8_t priority);
 void redrawDigit(screenItemInfo * item, volatile dataItem * data);
 void redrawGearPos(screenItemInfo * item, volatile dataItem * data);
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data);
-void redrawPumpSw(screenItemInfo * item, volatile dataItem * data);
-void redrawLCSw(screenItemInfo * item, volatile dataItem * data);
+void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data);
+void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data);
 void redrawTireTemp(screenItemInfo * item, volatile dataItem * data);
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data);
 void redrawRotary(screenItemInfo * item, volatile dataItem * data);

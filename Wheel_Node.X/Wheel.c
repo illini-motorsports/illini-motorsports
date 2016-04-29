@@ -126,6 +126,8 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
 void process_CAN_msg(CAN_message msg){
 	uint16_t * lsbArray = (uint16_t *) msg.data;
 	switch (msg.id) {
+
+		/*Motec Paddle Shifting*/
 		case MOTEC_ID + 0:
 			rpm.value = parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL);
 			throtPos.value = parseMsgMotec(&msg, THROTTLE_POS_BYTE, THROTTLE_POS_SCL);
@@ -167,6 +169,8 @@ void process_CAN_msg(CAN_message msg){
 			fuelInjDuty.value = parseMsgMotec(&msg, FUEL_INJ_DUTY_BYTE, FUEL_INJ_DUTY_SCL);
 			fuelTrim.value = parseMsgMotec(&msg, FUEL_TRIM_BYTE, FUEL_TRIM_SCL);
 			break;
+
+		/*Paddle Shifting ID's*/
 		case PADDLE_ID:
 			paddleUptime.value = (double) ((uint16_t) msg.data[PADDLE_UPTIME_BYTE])*PADDLE_UPTIME_SCL;
 			paddleTemp.value = (double) ((uint16_t) msg.data[PADDLE_TEMP_BYTE])*PADDLE_TEMP_SCL;
@@ -178,6 +182,8 @@ void process_CAN_msg(CAN_message msg){
 			gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE])*GEAR_VOLT_SCL;
 			gearPos.value = msg.data[GEAR_BYTE];
 			break;
+
+		/*PDM ID's*/
 		case PDM_ID:
 			pdmUptime.value = (uint16_t) (msg.data[PDM_UPTIME_BYTE]) * PDM_UPTIME_SCL;
 			pdmTemp.value = (int16_t) (msg.data[PDM_PCB_TEMP_BYTE]) * PDM_PCB_TEMP_SCL;
@@ -185,10 +191,37 @@ void process_CAN_msg(CAN_message msg){
 			pdmCurrentDraw.value = (uint16_t) (msg.data[TOTAL_CURRENT_BYTE]) * TOTAL_CURRENT_SCL;
 			break;
 		case PDM_ID + 1:
-			// TODO: Create special cases for Bitmaps
-			// Load Enability
-			// Load Peak Mode
-			// Switch Bitmap
+			STRenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & STR_ENBL_BIT;
+			BVBATenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & BVBAT_ENBL_BIT;
+			B5V5enabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & B5v5_ENBL_BIT;
+			PDLDenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLD_ENBL_BIT;
+			PDLUenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLU_ENBL_BIT;
+			AUXenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & AUX_ENBL_BIT;
+			FANenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & FAN_ENBL_BIT;
+			WTRenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & WTR_ENBL_BIT;
+			ECUenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & ECU_ENBL_BIT;
+			FUELenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & FUEL_ENBL_BIT;
+			INJenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & INJ_ENBL_BIT;
+			IGNenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & IGN_ENBL_BIT;
+			STR2pm.value = lsbArray[LOAD_PEAK_BYTE/2] & STR2_PEAKM_BIT;
+			STR1pm.value = lsbArray[LOAD_PEAK_BYTE/2] & STR1_PEAKM_BIT;
+			STR0pm.value = lsbArray[LOAD_PEAK_BYTE/2] & STR0_PEAKM_BIT;
+			BVBATpm.value = lsbArray[LOAD_PEAK_BYTE/2] & BVBAT_PEAKM_BIT;
+			B5V5pm.value = lsbArray[LOAD_PEAK_BYTE/2] & B5v5_PEAKM_BIT;
+			PDLDpm.value = lsbArray[LOAD_PEAK_BYTE/2] & PDLD_PEAKM_BIT;
+			PDLUpm.value = lsbArray[LOAD_PEAK_BYTE/2] & PDLU_PEAKM_BIT;
+			AUXpm.value = lsbArray[LOAD_PEAK_BYTE/2] & AUX_PEAKM_BIT;
+			FANpm.value = lsbArray[LOAD_PEAK_BYTE/2] & FAN_PEAKM_BIT;
+			WTRpm.value = lsbArray[LOAD_PEAK_BYTE/2] & WTR_PEAKM_BIT;
+			ECUpm.value = lsbArray[LOAD_PEAK_BYTE/2] & ECU_PEAKM_BIT;
+			FUELpm.value = lsbArray[LOAD_PEAK_BYTE/2] & FUEL_PEAKM_BIT;
+			INJpm.value = lsbArray[LOAD_PEAK_BYTE/2] & INJ_PEAKM_BIT;
+			IGNpm.value = lsbArray[LOAD_PEAK_BYTE/2] & IGN_PEAKM_BIT;
+			KILLpdmSw.value = msg.data[PDM_SWITCH_BYTE] & KILL_PDM_SW_BIT;
+			ACT_DNpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ACT_DN_PDM_SW_BIT;
+			ACT_UPpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ACT_UP_PDM_SW_BIT;
+			ONpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ON_PDM_SW_BIT;
+			STRpdmSw.value = msg.data[PDM_SWITCH_BYTE] & STR_PDM_SW_BIT;
 			break;
 		case PDM_ID + 2:
 			pdmVBat.value = (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL;
@@ -250,6 +283,8 @@ void process_CAN_msg(CAN_message msg){
 			pdmFANPcut.value = (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL;
 			pdmECUPcut.value = (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL;
 			break;
+
+		/*Tire Temps*/
 		case TIRE_TEMP_FL_ID:
 			ttFLA[0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
 			ttFLA[1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);

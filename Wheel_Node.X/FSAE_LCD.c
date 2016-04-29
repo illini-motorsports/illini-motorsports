@@ -124,6 +124,39 @@ void initDataItems(void){
 	initDataItem(&pdmSTR2draw,0,0,MIN_REFRESH,3,1);
 	initDataItem(&pdmSTR2cut,0,0,MIN_REFRESH,2,1);
 	initDataItem(&pdmSTRdraw,0,0,MIN_REFRESH,3,1);
+	
+	// PDM Bitmaps
+	initDataItem(&STRenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&BVBATenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&B5V5enabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&PDLDenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&PDLUenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&AUXenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&FANenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&WTRenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&ECUenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&FUELenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&INJenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&IGNenabl,0,0,MIN_REFRESH,1,0);
+	initDataItem(&STR2pm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&STR1pm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&STR0pm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&BVBATpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&B5V5pm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&PDLDpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&PDLUpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&AUXpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&FANpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&WTRpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&ECUpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&FUELpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&INJpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&IGNpm,0,0,MIN_REFRESH,1,0);
+	initDataItem(&KILLpdmSw,0,0,MIN_REFRESH,1,0);
+	initDataItem(&ACT_DNpdmSw,0,0,MIN_REFRESH,1,0);
+	initDataItem(&ACT_UPpdmSw,0,0,MIN_REFRESH,1,0);
+	initDataItem(&ONpdmSw,0,0,MIN_REFRESH,1,0);
+	initDataItem(&STRpdmSw,0,0,MIN_REFRESH,1,0);
 
 	// Rear Analog Hub
 	initDataItem(&susPosRR,0,0,MIN_REFRESH,2,1);
@@ -204,16 +237,16 @@ void initAllScreens(void){
 	initScreenItem(&generalItems[1], 20, 30, 15, redrawRotary, &rotary[1]);
 	initScreenItem(&generalItems[2], 20, 30, 15, redrawRotary, &rotary[2]);
 	initScreenItem(&generalItems[3], 20, 30, 15, redrawFanSw, &switches[0]);
-	initScreenItem(&generalItems[4], 20, 30, 15, redrawPumpSw, &switches[1]);
-	initScreenItem(&generalItems[5], 20, 30, 15, redrawLCSw, &switches[2]);
+	initScreenItem(&generalItems[4], 20, 30, 15, redrawFUELPumpSw, &switches[1]);
+	initScreenItem(&generalItems[5], 20, 30, 15, redrawWTRPumpSw, &switches[2]);
 
 	// Race Screen Stuff
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
 	raceScreen.len = 8;
 	initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, &switches[0]);
-	initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawPumpSw, &switches[1]);
-	initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawLCSw, &switches[2]);
+	initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw, &switches[1]);
+	initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, &switches[2]);
 	initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &oilTemp);
 	initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &waterTemp);
 	initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
@@ -577,7 +610,7 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 }
 
 // For Water Pump Override Indicator
-void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
+void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data){
 	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
@@ -587,7 +620,7 @@ void redrawPumpSw(screenItemInfo * item, volatile dataItem * data){
 }
 
 // For Launch Control Override Indicator
-void redrawLCSw(screenItemInfo * item, volatile dataItem * data){
+void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data){
 	if(data->value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
