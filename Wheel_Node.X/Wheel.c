@@ -13,23 +13,22 @@ volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
 volatile uint8_t darkState;
 
 void main(void) {
-  init_general();// Set general runtime configuration bits
-  init_gpio_pins();// Set all I/O pins to low outputs
-  init_oscillator();// Initialize oscillator configuration bits
-  init_timer2();// Initialize timer2 (millis)
-  init_spi();// Initialize SPI interface
+	init_general();// Set general runtime configuration bits
+	init_gpio_pins();// Set all I/O pins to low outputs
+	init_oscillator();// Initialize oscillator configuration bits
+	init_timer2();// Initialize timer2 (millis)
+	init_spi();// Initialize SPI interface
 	init_adc(initADCWheel);
-	
 
-  ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
-  STI();// Enable interrupts
-  
+	ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
+	STI();// Enable interrupts
+
 	// Init Relevant Pins
 	millis = 0;
 	CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
-  LCD_CS_TRIS = OUTPUT;
-  LCD_CS_LAT = 1;
-  LCD_RST_TRIS = OUTPUT;
+	LCD_CS_TRIS = OUTPUT;
+	LCD_CS_LAT = 1;
+	LCD_RST_TRIS = OUTPUT;
 	LCD_RST_LAT = 1;
 	TRISEbits.TRISE8 = OUTPUT;
 	LATEbits.LATE8 = 0;
@@ -42,29 +41,29 @@ void main(void) {
 	MOM3_TRIS = INPUT;
 	MOM4_TRIS = INPUT;
 
-  // Initialize RA8875
-  reset();
-  initialize();
-  displayOn(1);
-  GPIOX(1);// Enable TFT - display enable tied to GPIOX
+	// Initialize RA8875
+	reset();
+	initialize();
+	displayOn(1);
+	GPIOX(1);// Enable TFT - display enable tied to GPIOX
 	PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
 	PWM1out(255);
 	//fillScreen(RA8875_WHITE);
 	//drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
-	
+
 	// Initialize All the data streams
 	initDataItems();
-  init_can();
+	init_can();
 	updateSwVals();
-  initAllScreens();
+	initAllScreens();
 	changeScreen(PDM_CUT_SCREEN);
-	
-  while(1){
+
+	while(1){
 		// Send CAN messages with the correct frequency
 		if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
 			CANswitchStates();
 			CANswStateMillis = millis;
-		}	
+		}
 		if(millis - CANswADLMillis >= CAN_SW_ADL_FREQ){
 			CANswitchADL();
 			CANswADLMillis = millis;
@@ -93,58 +92,58 @@ void main(void) {
  * Fires once every millisecond.
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
-  millis++;// Increment millis count
+	millis++;// Increment millis count
 
 	if (!(millis%25)){
 		if (ADCCON2bits.EOSRDY) {
- 	  	ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
-  	}
+			ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
+		}
 		updateSwVals();
 		CANswitchStates();
 	}
-	
-  IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
+
+	IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
 
 void delay(uint32_t num) {
-  uint32_t start = millis;
-  while (millis - start < num);
+	uint32_t start = millis;
+	while (millis - start < num);
 }
 
 /**
  * CAN1 Interrupt Handler
  */
 void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) {
-  if (C1INTbits.RBIF) {
-    CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
-  }
-  if (C1INTbits.RBOVIF) {
-    CAN_rx_ovf++;
-  }
-  IFS4CLR = _IFS4_CAN1IF_MASK; // Clear CAN1 Interrupt Flag
+	if (C1INTbits.RBIF) {
+		CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
+	}
+	if (C1INTbits.RBOVIF) {
+		CAN_rx_ovf++;
+	}
+	IFS4CLR = _IFS4_CAN1IF_MASK; // Clear CAN1 Interrupt Flag
 }
 
 void process_CAN_msg(CAN_message msg){
 	uint16_t * lsbArray = (uint16_t *) msg.data;
-  switch (msg.id) {
-    case MOTEC_ID + 0:
+	switch (msg.id) {
+		case MOTEC_ID + 0:
 			rpm.value = parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL);
 			throtPos.value = parseMsgMotec(&msg, THROTTLE_POS_BYTE, THROTTLE_POS_SCL);
 			lambda.value = parseMsgMotec(&msg, LAMBDA_BYTE, LAMBDA_SCL);
-      batVoltage.value = parseMsgMotec(&msg, VOLT_ECU_BYTE, VOLT_ECU_SCL);
-      break;
-    case MOTEC_ID + 1:
-      waterTemp.value = parseMsgMotec(&msg, ENG_TEMP_BYTE, ENG_TEMP_SCL);
-      oilTemp.value = parseMsgMotec(&msg, OIL_TEMP_BYTE, OIL_TEMP_SCL);
+			batVoltage.value = parseMsgMotec(&msg, VOLT_ECU_BYTE, VOLT_ECU_SCL);
+			break;
+		case MOTEC_ID + 1:
+			waterTemp.value = parseMsgMotec(&msg, ENG_TEMP_BYTE, ENG_TEMP_SCL);
+			oilTemp.value = parseMsgMotec(&msg, OIL_TEMP_BYTE, OIL_TEMP_SCL);
 			manifoldTemp.value = parseMsgMotec(&msg, MANIFOLD_TEMP_BYTE, MANIFOLD_TEMP_SCL);
 			fuelTemp.value = parseMsgMotec(&msg, FUEL_TEMP_BYTE, FUEL_TEMP_SCL);
-      break;
-    case MOTEC_ID + 2:
+			break;
+		case MOTEC_ID + 2:
 			ambientPress.value = parseMsgMotec(&msg, AMBIENT_PRES_BYTE, AMBIENT_PRES_SCL);
-      oilPress.value = parseMsgMotec(&msg, OIL_PRES_BYTE, OIL_PRES_SCL);
+			oilPress.value = parseMsgMotec(&msg, OIL_PRES_BYTE, OIL_PRES_SCL);
 			manifoldPress.value = parseMsgMotec(&msg, MANIFOLD_TEMP_BYTE, MANIFOLD_TEMP_SCL);
 			fuelPress.value = parseMsgMotec(&msg, FUEL_PRES_BYTE, FUEL_PRES_SCL);
-      break;
+			break;
 		case MOTEC_ID + 3:
 			wheelSpeedFL.value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
 			wheelSpeedFR.value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
@@ -275,7 +274,7 @@ void process_CAN_msg(CAN_message msg){
 			ttRRA[2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
 			ttRRA[3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
 			ttRR.value = (ttRRA[0].value+ttRRA[1].value+ttRRA[2].value+ttRRA[3].value)/4.0;
-  }
+	}
 }
 
 void CANswitchStates(void){
@@ -355,4 +354,4 @@ uint8_t getRotaryPosition(uint32_t adcValue){
 	if(adcValue >= ROT_RANGE_7 && adcValue < ROT_RANGE_8) {return 8;}
 	if(adcValue >= ROT_RANGE_8 && adcValue < ROT_RANGE_HIGH) {return 9;}
 	return 10;
-} 
+}

@@ -194,7 +194,7 @@ void initAllScreens(void){
 	// Initialize colors
 	backgroundColor = RA8875_WHITE;
 	foregroundColor = RA8875_BLACK;
-	initNightMode(switches[3].value);	
+	initNightMode(switches[3].value);
 
 	// All Screens Stuff
 	allScreens[GENERAL_SCREEN] = &generalScreen;
@@ -206,7 +206,7 @@ void initAllScreens(void){
 	initScreenItem(&generalItems[3], 20, 30, 15, redrawFanSw, &switches[0]);
 	initScreenItem(&generalItems[4], 20, 30, 15, redrawPumpSw, &switches[1]);
 	initScreenItem(&generalItems[5], 20, 30, 15, redrawLCSw, &switches[2]);
-	
+
 	// Race Screen Stuff
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
@@ -219,7 +219,7 @@ void initAllScreens(void){
 	initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
 	initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &batVoltage);
 	initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gearPos);
-	
+
 	// PDM stuff
 	allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
 	pdmDrawScreen.items = pdmDrawItems;
@@ -245,7 +245,7 @@ void initAllScreens(void){
 	initScreenItem(&pdmDrawItems[15], 280, 200, 15, redrawDigit, &pdmSTRdraw);
 	initScreenItem(&pdmDrawItems[0], 370, 200, 15, redrawDigit, &pdmCurrentDraw);
 
-	
+
 	allScreens[PDM_CUT_SCREEN] = &pdmCutScreen;
 	pdmCutScreen.items = pdmCutItems;
 	pdmCutScreen.len = 21;
@@ -345,7 +345,7 @@ void initAllScreens(void){
 	lapTimeHead = 0;
 	numLaps = 0;
 	int i;
-	for(i=0;i<20;i++){ 
+	for(i=0;i<20;i++){
 		initDataItem(&(lapTimeBuffer[i]),0,0,1000,2,1);
 		lapTimeBuffer[i].value = -1;
 	}
@@ -387,7 +387,7 @@ void initScreen(uint8_t num){
 			textWrite("BAT V");
 			textEnlarge(0);
 			graphicsMode();
-		break;
+			break;
 		case PDM_DRAW_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
@@ -432,7 +432,7 @@ void initScreen(uint8_t num){
 			textSetCursor(370, 180);
 			textWrite("TOT DRW");
 			graphicsMode();
-		break;
+			break;
 		case PDM_CUT_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
@@ -479,22 +479,22 @@ void initScreen(uint8_t num){
 			textSetCursor(160, 180);
 			textWrite("STR2 CUT");
 			graphicsMode();
-		break;
+			break;
 		case MOTEC_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
 			graphicsMode();
-		break;
+			break;
 		case END_RACE_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
 			graphicsMode();
-		break;
+			break;
 		case CHASSIS_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
 			graphicsMode();
-		break;
+			break;
 	}
 }
 
@@ -509,7 +509,7 @@ void changeScreen(uint8_t num){
 }
 
 // Function to asynchronously update all the items currently being displayed
-// A number will only be redrawn if its dataItem value has changed, and it 
+// A number will only be redrawn if its dataItem value has changed, and it
 // has surpassed its refresh interval
 void refreshScreenItems(void){
 	// change night mode if the switch was toggled
@@ -631,7 +631,7 @@ void clearScreen(void){
 }
 
 // Resets the current value of all screen items on a screen
-// This means the 
+// This means the
 void resetScreenItems(void){
 	int i = 0;
 	screen *currScreen = allScreens[screenNumber];
@@ -642,7 +642,7 @@ void resetScreenItems(void){
 	}
 }
 
-// Immediantly returns if 
+// Immediantly returns if
 uint8_t initNightMode(uint8_t on){
 	if(on){
 		if(backgroundColor == RA8875_BLACK){
@@ -697,7 +697,7 @@ void endRace(void){
 	endTireTempFL.value = ttFL.value;
 	endTireTempFR.value = ttFR.value;
 	endTireTempRL.value = ttRL.value;
-	endTireTempRR.value = ttRR.value; 
+	endTireTempRR.value = ttRR.value;
 	endAmbientTemp.value = ambientTemp.value;
 	endFuelConsum.value = fuelConsum.value;
 }

@@ -17,23 +17,23 @@
 #define BACKGROUND_COLOR 	RA8875_WHITE
 #define FOREGROUND_COLOR 	RA8875_BLACK
 #define WARNING_COLOR 		BACKGROUND_COLOR
-#define ERROR_COLOR 			BACKGROUND_COLOR
-#define NUM_SCREENS 			6
-#define RACE_SCREEN 			0
+#define ERROR_COLOR 		BACKGROUND_COLOR
+#define NUM_SCREENS 		6
+#define RACE_SCREEN 		0
 #define PDM_DRAW_SCREEN 	1
 #define PDM_CUT_SCREEN  	2
-#define MOTEC_SCREEN			3
+#define MOTEC_SCREEN		3
 #define END_RACE_SCREEN		4
 #define CHASSIS_SCREEN		5
 #define GENERAL_SCREEN		6
-#define MIN_REFRESH 			100
+#define MIN_REFRESH 		100
 
-#define MIN_SUS_POS				5
-#define MAX_SUS_POS				20
+#define MIN_SUS_POS			5
+#define MAX_SUS_POS			20
 
 /*
  * Defines a data stream that is relevant to one or more screens
- * 
+ *
  * value - 					double value of stream
  * warnThreshold - 	Value where data will enter a warning state
  * errThreshold - 	Value where data will enter an error state
@@ -56,7 +56,7 @@ typedef struct {
 } screenItemInfo;
 
 
-/* 
+/*
  * Defines an item that will be displayed on a specific screen
  * 
  * x - 							X coordinate
@@ -136,7 +136,7 @@ uint8_t errBufferHead, errBufferTail;
 
 void initDataItems(void);
 void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, 
-				uint8_t whole, uint8_t dec);
+		uint8_t whole, uint8_t dec);
 void initAllScreens(void);
 void initScreen(uint8_t num);
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *), volatile dataItem* data);

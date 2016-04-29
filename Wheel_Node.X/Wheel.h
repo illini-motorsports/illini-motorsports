@@ -23,27 +23,27 @@
 // Determines whether the internal or external clock source is used
 #define INTERNAL_CLK 0
 
-#define LCD_CS_TRIS TRISGbits.TRISG9
-#define LCD_CS_LAT  LATGbits.LATG9
-#define LCD_RST_TRIS TRISBbits.TRISB4
-#define LCD_RST_LAT  LATBbits.LATB4
+#define LCD_CS_TRIS		TRISGbits.TRISG9
+#define LCD_CS_LAT		LATGbits.LATG9
+#define LCD_RST_TRIS	TRISBbits.TRISB4
+#define LCD_RST_LAT		LATBbits.LATB4
 /*
 #define LCD_CS_TRIS TRISBbits.TRISB8
 #define LCD_CS_LAT  LATBbits.LATB8
 #define LCD_RST_TRIS TRISBbits.TRISB11
 #define LCD_RST_LAT  LATBbits.LATB11
- */
+*/
 
-#define ROT1_TRIS 	TRISCbits.TRISC4
-#define ROT2_TRIS 	TRISCbits.TRISC3
-#define ROT3_TRIS 	TRISCbits.TRISC2
-#define TROT1_TRIS 	TRISCbits.TRISC1
-#define TROT2_TRIS	TRISEbits.TRISE7
-#define ROT1_ANSEL	ANSELCbits.ANSC4
-#define ROT2_ANSEL	ANSELCbits.ANSC3
-#define ROT3_ANSEL	ANSELCbits.ANSC2
-#define TROT1_ANSEL	ANSELCbits.ANSC1
-#define TROT2_ANSEL ANSELEbits.ANSE7
+#define ROT1_TRIS		TRISCbits.TRISC4
+#define ROT2_TRIS 		TRISCbits.TRISC3
+#define ROT3_TRIS 		TRISCbits.TRISC2
+#define TROT1_TRIS 		TRISCbits.TRISC1
+#define TROT2_TRIS		TRISEbits.TRISE7
+#define ROT1_ANSEL		ANSELCbits.ANSC4
+#define ROT2_ANSEL		ANSELCbits.ANSC3
+#define ROT3_ANSEL		ANSELCbits.ANSC2
+#define TROT1_ANSEL		ANSELCbits.ANSC1
+#define TROT2_ANSEL 	ANSELEbits.ANSE7
 #define ROT1_CSS		ADCCSS1bits.CSS19
 #define ROT2_CSS		ADCCSS1bits.CSS20
 #define ROT3_CSS		ADCCSS1bits.CSS21
@@ -55,17 +55,17 @@
 #define TROT1_CHN		22
 #define TROT2_CHN		15
 
-#define ROT_RANGE_LOW 0
-#define ROT_RANGE_0 409
-#define ROT_RANGE_1 819
-#define ROT_RANGE_2 1228
-#define ROT_RANGE_3 1638
-#define ROT_RANGE_4 2048
-#define ROT_RANGE_5 2457
-#define ROT_RANGE_6 2867
-#define ROT_RANGE_7 3276
-#define ROT_RANGE_8 3686
-#define ROT_RANGE_HIGH 4096
+#define ROT_RANGE_LOW	0
+#define ROT_RANGE_0		409
+#define ROT_RANGE_1 	819
+#define ROT_RANGE_2 	1228
+#define ROT_RANGE_3 	1638
+#define ROT_RANGE_4 	2048
+#define ROT_RANGE_5 	2457
+#define ROT_RANGE_6 	2867
+#define ROT_RANGE_7 	3276
+#define ROT_RANGE_8 	3686
+#define ROT_RANGE_HIGH	4096
 
 #define SW1_TRIS 	TRISGbits.TRISG0
 #define SW2_TRIS 	TRISGbits.TRISG1
@@ -85,8 +85,8 @@
 #define MOM4_PORT	PORTDbits.RD12
 
 #define CAN_SW_STATE_FREQ 	100
-#define CAN_SW_ADL_FREQ 		500
-#define CAN_DIAG_FREQ 			1000	
+#define CAN_SW_ADL_FREQ 	500
+#define CAN_DIAG_FREQ 		1000
 
 volatile uint32_t millis;
 

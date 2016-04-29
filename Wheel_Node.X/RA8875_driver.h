@@ -13,8 +13,8 @@
 #include <sys/types.h>
 #include <math.h>
 
-#define WIDTH 480
-#define HEIGHT 272
+#define WIDTH		480
+#define HEIGHT		272
 #define LCD_WAIT	PORTFbits.RF12
 
 // Formula Defined Functions
@@ -144,8 +144,8 @@ uint8_t _textScale;
 #define RA8875_CIRC_RAD					0x9d
 
 //Circle Square Coordinates
-#define RA8875_CIRC_SQUARE_X0		0x91
-#define RA8875_CIRC_SQUARE_X1		0x95
+#define RA8875_CIRC_SQUARE_X0	0x91
+#define RA8875_CIRC_SQUARE_X1	0x95
 #define RA8875_CIRC_SQUARE_CORN	0xA1
 #define RA8875_CIRC_SQUARE_DCR	0xA0
 #define RA8875_CIRC_SQUARE_STRT 0xA0
@@ -153,14 +153,14 @@ uint8_t _textScale;
 #define RA8875_CIRC_SQUARE_STAT 0x80
 
 // Background Color Registers
-#define RA8875_BGCR_RED 				0x60
-#define RA8875_BGCR_GREEN 			0x61
-#define RA8875_BGCR_BLUE 				0x62
+#define RA8875_BGCR_RED 		0x60
+#define RA8875_BGCR_GREEN 		0x61
+#define RA8875_BGCR_BLUE 		0x62
 
 // Foreground Color Registers
-#define RA8875_FGCR_RED 				0x63
-#define RA8875_FGCR_GREEN 			0x64
-#define RA8875_FGCR_BLUE 				0x65
+#define RA8875_FGCR_RED 		0x63
+#define RA8875_FGCR_GREEN 		0x64
+#define RA8875_FGCR_BLUE 		0x65
 
 
 // Colors (RGB565)
