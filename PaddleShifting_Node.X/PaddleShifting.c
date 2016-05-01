@@ -303,6 +303,8 @@ void process_upshift_press(void) {
   if (SHIFT_NT_BT) { // Pressed while holding the neutral button
     if (gear == GEAR_NEUT) {
       queue_nt = 0;
+      queue_up = 0;
+      queue_dn = 1;
     } else if (gear == 1 || gear == 2) {
       queue_nt = 1;
       queue_up = 0;
@@ -319,7 +321,7 @@ void process_upshift_press(void) {
     send_diag_can(OVERRIDE); // Send new queue values on CAN
   } else { // Pressed while not holding the neutral button
     if (gear == GEAR_NEUT) {
-      queue_dn = 1;
+      queue_up = 1;
       lockout_tmr = millis;
       send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
@@ -380,7 +382,7 @@ void process_downshift_press(void) {
       return;
     }
 
-    if (gear == GEAR_FAIL || queue_dn + 1 < gear) {
+    if (gear == GEAR_FAIL || gear == GEAR_NEUT || queue_dn + 1 < gear) {
       queue_dn++;
       lockout_tmr = millis;
       send_diag_can(OVERRIDE); // Send new queue values on CAN
@@ -479,7 +481,7 @@ void do_shift(uint8_t shift_enum) {
 
   // Store the target gear
   if (SHIFT_UP) {
-    gear_target = gear + 1;
+    gear_target = (gear == GEAR_NEUT) ? 2 : gear + 1;
   } else if (SHIFT_DN) {
     gear_target = (gear == GEAR_NEUT) ? 1 : gear - 1;
   } else if (SHIFT_NT) {

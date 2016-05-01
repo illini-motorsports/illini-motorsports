@@ -285,7 +285,7 @@ void main(void) {
      */
 
     // PDLU
-    if (ACT_UP_SW && !ACT_DN_SW && (millis - pdlu_tmr < MAX_PDL_DUR)) {
+    if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW && (millis - pdlu_tmr < MAX_PDL_DUR)) {
       // Enable PDLU
       if (!PDLU_EN) {
         EN_PDLU_LAT = PWR_ON;
@@ -305,7 +305,7 @@ void main(void) {
     }
 
     // PDLD
-    if (ACT_DN_SW && !ACT_UP_SW && (millis - pdld_tmr < MAX_PDL_DUR)) {
+    if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW && (millis - pdld_tmr < MAX_PDL_DUR)) {
       // Enable PDLD
       if (!PDLD_EN) {
         EN_PDLD_LAT = PWR_ON;
