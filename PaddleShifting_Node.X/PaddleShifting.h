@@ -41,6 +41,7 @@
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
 #define CAN_STATE_WAIT 1000
+#define ADL_SEND_WAIT  50
 
 // Definitions for error conditions
 //TODO: Decide on these values
@@ -114,6 +115,7 @@ void sample_temp(void);
 void send_diag_can(uint8_t override);
 void send_switch_can(uint8_t override);
 void relax_wait(void);
+void send_ign_cut(int16_t shift_force_spoof, uint32_t tmr_wait);
 void main_loop_misc(void);
 
 #endif /* PADDLESHIFTING_H */

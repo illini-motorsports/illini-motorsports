@@ -92,6 +92,7 @@ volatile uint32_t seconds = 0; // Holds timer1 rollover count
 volatile int16_t eng_rpm = 0;      // Engine RPM (from MoTeC)
 volatile int16_t bat_volt = 0;     // Battery voltage from ECU
 volatile int16_t throttle_pos = 0; // Throttle position (from MoTeC)
+volatile int16_t shift_force = 0;  // Spoofed shift force (from MoTeC)
 
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
@@ -112,6 +113,7 @@ volatile uint8_t kill_sw = 0; // Holds state of KILL_SW from CAN
 
 volatile uint32_t lockout_tmr = 0; // Holds millis value of last lockout set
 uint32_t act_tmr = 0;              // Records the time the actuator was fired
+uint32_t ign_cut_tmr;              // Records when the ignition cut was initiated
 
 uint32_t diag_send_tmr, temp_samp_tmr, gear_samp_tmr,
     switch_send_tmr = 0; // Various millis timers
@@ -265,6 +267,9 @@ void high_isr(void) {
       ((uint8_t*) &bat_volt)[1] = data[VOLT_ECU_BYTE];
 
       CAN_recv_tmr = millis;
+    } else if (id == MOTEC_ID + 0x7) {
+      ((uint8_t*) &shift_force)[0] = data[SHIFT_FORCE_BYTE + 1];
+      ((uint8_t*) &shift_force)[1] = data[SHIFT_FORCE_BYTE];
     } else if (id == PDM_ID + 0x1) {
       uint8_t switch_bitmap = data[PDM_SWITCH_BYTE];
       kill_sw = switch_bitmap & KILL_SW_MASK;
@@ -468,8 +473,6 @@ void do_shift(uint8_t shift_enum) {
   const uint8_t SHIFT_DN = shift_enum == SHIFT_ENUM_DN;
   const uint8_t SHIFT_NT = shift_enum == SHIFT_ENUM_NT;
 
-  uint32_t ign_wait_tmr;
-
   uint8_t orig_gear = gear;
   uint8_t gear_target;
 
@@ -511,15 +514,7 @@ void do_shift(uint8_t shift_enum) {
     // Send ignition cut message to ECU if required
     if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
         (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
-      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
-      ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
-      ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-    }
-
-    // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
-    ign_wait_tmr = millis;
-    while (millis - ign_wait_tmr < IGN_CUT_WAIT) {
-      main_loop_misc();
+      send_ign_cut(IGN_CUT_SPOOF, IGN_CUT_WAIT);
     }
 
     // Fire actuator
@@ -544,11 +539,7 @@ void do_shift(uint8_t shift_enum) {
         }
 
         // Send ignition cut finished message to ECU
-        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
-        ((int16_t*) data)[ADL10_BYTE / 2] = 0;
-        ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-
-        relax_wait();
+        send_ign_cut(0, RELAX_WAIT);
 
         // Decrement queued shifts value
         if (SHIFT_UP) {
@@ -572,11 +563,7 @@ void do_shift(uint8_t shift_enum) {
         }
 
         // Send ignition cut finished message to ECU
-        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
-        ((int16_t*) data)[ADL10_BYTE / 2] = 0;
-        ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-
-        relax_wait();
+        send_ign_cut(0, RELAX_WAIT);
 
         send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MAXDUR);
 
@@ -683,7 +670,6 @@ void do_shift_gear_fail(uint8_t shift_enum) {
   const uint8_t SHIFT_DN = shift_enum == SHIFT_ENUM_DN;
   const uint8_t SHIFT_NT = shift_enum == SHIFT_ENUM_NT;
 
-  uint32_t ign_wait_tmr;
 
   if (SHIFT_UP || SHIFT_DN) {
     /**
@@ -708,15 +694,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
     // Send ignition cut message to ECU if required
     if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
         (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
-      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
-      ((int16_t*) data)[ADL10_BYTE / 2] = IGN_CUT_SPOOF;
-      ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-    }
-
-    // Wait IGN_CUT_WAIT millis and do main loop functions in the meantime
-    ign_wait_tmr = millis;
-    while (millis - ign_wait_tmr < IGN_CUT_WAIT) {
-      main_loop_misc();
+      send_ign_cut(IGN_CUT_SPOOF, IGN_CUT_WAIT);
     }
 
     // Fire actuator
@@ -740,11 +718,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
         }
 
         // Send ignition cut finished message to ECU
-        ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
-        ((int16_t*) data)[ADL10_BYTE / 2] = 0;
-        ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-
-        relax_wait();
+        send_ign_cut(0, RELAX_WAIT);
 
         // Decrement queued shifts value
         if (SHIFT_UP) {
@@ -803,7 +777,7 @@ void do_shift_gear_fail(uint8_t shift_enum) {
  * void sample_gear(void)
  *
  * Samples the gear position sensor and updates variables if the interval has passed.
- * 
+ *
  * @param is_shifting- Whether or not the car is currently mid-shift
  */
 void sample_gear(uint8_t is_shifting) {
@@ -913,6 +887,49 @@ void relax_wait(void) {
   // Wait for RELAX_WAIT millis and do main loop functions in the process
   uint32_t relax_wait_tmr = millis;
   while (millis - relax_wait_tmr < RELAX_WAIT) {
+    main_loop_misc();
+  }
+}
+
+/**
+ * void send_ign_cut(int16_t shift_force_spoof, uint32_t tmr_wait)
+ *
+ * This function sends an ADL CAN message to MoTeC spoofing the gear shift
+ * force sensor channel. It will continue attempting to send this message
+ * every millisecond until it reads the requested value on MoTeC's CAN output.
+ *
+ * This resending will be limited to a short duration to ensure we don't get
+ * stuck here forever if a CAN error is present. Typically, the ignition cut
+ * messages need to be followed by a wait period (tmr_wait), so the function
+ * waits this amount of time at the minimum. After this timer expires, the
+ * function will return as soon as it detects a positive confirmation of the
+ * requested gear shift force sensor channel.
+ *
+ * Note: The function assumes the (tmr_wait) value is smaller (10~25ms) than
+ * the wait period of ADL sending confirmation (50ms)
+ *
+ * @param shift_force_spoof- The gear shift force level to spoof to MoTeC via
+ *     the ADL CAN interface
+ * @param tmr_wait- Minimum number of seconds needed to wait before proceeding
+ *     to the next logic block
+ */
+void send_ign_cut(int16_t shift_force_spoof, uint32_t tmr_wait) {
+  uint32_t last_send_tmr = 0;
+  ign_cut_tmr = millis;
+
+  while (shift_force != shift_force_spoof &&
+      millis - ign_cut_tmr < ADL_SEND_WAIT) {
+    if (last_send_tmr != millis) {
+      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
+      ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
+      ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
+      last_send_tmr = millis;
+    }
+    main_loop_misc();
+  }
+
+  // Wait tmr_wait millis at the minimum
+  while (millis - ign_cut_tmr < tmr_wait) {
     main_loop_misc();
   }
 }

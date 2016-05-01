@@ -101,6 +101,7 @@
 
 #define FUEL_INJ_DUTY_BYTE	0
 #define FUEL_TRIM_BYTE			2
+#define SHIFT_FORCE_BYTE    4
 
 // From PaddleShifting
 #define PADDLE_UPTIME_BYTE	0
@@ -229,6 +230,7 @@
 
 #define FUEL_INJ_DUTY_SCL		0.1
 #define FUEL_TRIM_SCL				0.1 //??
+#define SHIFT_FORCE_SCL     1.0 //??
 
 // From PaddleShifting
 #define PADDLE_UPTIME_SCL		1
