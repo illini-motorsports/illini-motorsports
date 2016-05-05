@@ -69,10 +69,10 @@
 #define CUTOFF_VAL_SEND    1000
 #define LOAD_STATUS_SEND   500
 
-#define FUEL_PEAK_DUR      100
-#define WTR_PEAK_DUR       100
-#define FAN_PEAK_DUR       100
-#define ECU_PEAK_DUR       20
+#define FUEL_PEAK_DUR      150
+#define WTR_PEAK_DUR       250
+#define FAN_PEAK_DUR       2000
+#define ECU_PEAK_DUR       2
 
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)

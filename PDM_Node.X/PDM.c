@@ -48,6 +48,11 @@ uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
 uint32_t temp_samp_tmr, current_samp_tmr = 0;
 
+uint32_t b5v5_overcurrent_tmr = 0;
+uint32_t b5v5_overcurrent_flag = 0;
+uint32_t bvbat_overcurrent_tmr = 0;
+uint32_t bvbat_overcurrent_flag = 0;
+
 /**
  * For whatever reason, reading from EN_IGN_PORT does not work. Instead, we'll
  * keep track of the value with a global variable.
@@ -55,8 +60,8 @@ uint32_t temp_samp_tmr, current_samp_tmr = 0;
 uint8_t ign_enabled = 0;
 
 // Initial overcurrent thresholds to use for all the loads
-const double load_cutoff[NUM_LOADS] = {20.0, 5.0, 10.0, 10.0, 15.0, 20.0, 2.0,
-                                       60.0, 60.0, 2.0, 2.0, 5.0, 2.0, 2.0};
+const double load_cutoff[NUM_LOADS] = {100.0, 100.0, 10.0, 20.0, 15.0, 20.0, 2.0,
+                                       60.0, 60.0, 10.0, 10.0, 5.0, 2.0, 2.0};
 const double load_peak_cutoff[NUM_LOADS] = {0.0, 0.0, 40.0, 60.0, 40.0, 100.0, 0.0,
                                             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -891,6 +896,34 @@ void sample_load_current(void) {
  */
 void check_load_overcurrent(void) {
   //TODO: Do overcurrent check for all loads
+
+  if (b5v5_overcurrent_flag) {
+    if (millis - b5v5_overcurrent_tmr > 1) {
+      EN_B5V5_LAT = PWR_ON;
+      b5v5_overcurrent_flag = 0;
+    }
+
+  } else {
+    if (load_current[B5V5_IDX] < 0.01) {
+      b5v5_overcurrent_flag = 1;
+      b5v5_overcurrent_tmr = millis;
+      EN_B5V5_LAT = PWR_OFF;
+    }
+  }
+
+  if (bvbat_overcurrent_flag) {
+    if (millis - bvbat_overcurrent_tmr > 1) {
+      EN_BVBAT_LAT = PWR_ON;
+      bvbat_overcurrent_flag = 0;
+    }
+
+  } else {
+    if (load_current[BVBAT_IDX] < 0.01) {
+      bvbat_overcurrent_flag = 1;
+      bvbat_overcurrent_tmr = millis;
+      EN_BVBAT_LAT = PWR_OFF;
+    }
+  }
 }
 
 /**

@@ -193,13 +193,13 @@
 #define ECAN_RXF1_MASK_VAL ECAN_RXM0
 //
 // RXF2 Filter Enable/Disable
-#define ECAN_RXF2_MODE_VAL ECAN_RXFn_ENABLE
+#define ECAN_RXF2_MODE_VAL ECAN_RXFn_DISABLE
 //
 // RXF2 Filter Type
 #define ECAN_RXF2_MSG_TYPE_VAL ECAN_MSG_STD
 //
 // RXF2 Value
-#define ECAN_RXF2_VAL 0x0L
+#define ECAN_RXF2_VAL 0x0
 //
 // RXF2 Buffer Link
 #define ECAN_RXF2_BUFFER_VAL B2
@@ -406,7 +406,7 @@
 #define ECAN_RXM0_MSG_TYPE ECAN_MSG_STD
 //
 // RXM0 Value
-#define ECAN_RXM0_VAL 0xEFFL
+#define ECAN_RXM0_VAL 0xEF0L
 //
 // RXM1 Type
 #define ECAN_RXM1_MSG_TYPE ECAN_MSG_STD

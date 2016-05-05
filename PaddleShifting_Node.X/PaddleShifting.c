@@ -281,8 +281,7 @@ void high_isr(void) {
 
       CAN_recv_tmr = millis;
     } else if (id == MOTEC_ID + 0x7) {
-      ((uint8_t*) &shift_force)[0] = data[SHIFT_FORCE_BYTE + 1];
-      ((uint8_t*) &shift_force)[1] = data[SHIFT_FORCE_BYTE];
+      shift_force = ((uint16_t*) data)[SHIFT_FORCE_BYTE / 2];
     } else if (id == PDM_ID + 0x1) {
       uint8_t switch_bitmap = data[PDM_SWITCH_BYTE];
       kill_sw = switch_bitmap & KILL_SW_MASK;
@@ -695,7 +694,6 @@ void do_shift_gear_fail(uint8_t shift_enum) {
   const uint8_t SHIFT_DN = shift_enum == SHIFT_ENUM_DN;
   const uint8_t SHIFT_NT = shift_enum == SHIFT_ENUM_NT;
 
-
   if (SHIFT_UP || SHIFT_DN) {
     /**
      * Perform an upshift/downshift
@@ -752,7 +750,6 @@ void do_shift_gear_fail(uint8_t shift_enum) {
         ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
         ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
         ign_cut_retry_tmr = millis;
-
 
         // Decrement queued shifts value
         if (SHIFT_UP) {

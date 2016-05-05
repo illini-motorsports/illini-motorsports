@@ -56,7 +56,7 @@
 #define GEAR_VOLT_RIPPLE 0.1   // V
 
 // Miscellaneous definitions
-#define IGN_CUT_SPOOF 10000 // Value for "spoofed" gear shift force sensor
+#define IGN_CUT_SPOOF 0xE803 // Value for "spoofed" gear shift force sensor
 #define ACT_ON  0
 #define ACT_OFF 1
 #define NOT_SHIFTING 0
