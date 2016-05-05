@@ -29,7 +29,7 @@
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
 
 // Timing definitions (ms)
-#define LOCKOUT_DUR    50 
+#define LOCKOUT_DUR    50
 #define DIAG_MSG_SEND  500
 #define SWT_MSG_SEND   500
 #define TEMP_SAMP_INTV 333
@@ -41,7 +41,7 @@
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
 #define CAN_STATE_WAIT 1000
-#define ADL_SEND_WAIT  50
+#define CUT_RETRY_WAIT 1
 
 // Definitions for error conditions
 //TODO: Decide on these values
@@ -115,7 +115,6 @@ void sample_temp(void);
 void send_diag_can(uint8_t override);
 void send_switch_can(uint8_t override);
 void relax_wait(void);
-void send_ign_cut(int16_t shift_force_spoof, uint32_t tmr_wait);
 void main_loop_misc(void);
 
 #endif /* PADDLESHIFTING_H */
