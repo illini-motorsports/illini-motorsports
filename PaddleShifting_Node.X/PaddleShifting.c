@@ -319,34 +319,31 @@ void process_upshift_press(void) {
 
   if (SHIFT_NT_BT) { // Pressed while holding the neutral button
     if (gear == GEAR_NEUT) {
-      queue_nt = 0;
-      queue_up = 0;
       queue_dn = 1;
+      queue_nt = queue_up = 0;
     } else if (gear == 1 || gear == 2) {
       queue_nt = 1;
-      queue_up = 0;
-      queue_dn = 0;
+      queue_up = queue_dn = 0;
     } else if (gear == GEAR_FAIL) {
       queue_nt = 1;
-      queue_up = 0;
-      queue_dn = 0;
+      queue_up = queue_dn = 0;
       gear_fail_nt_shift = SHIFT_ENUM_UP;
     } else {
       queue_dn = 1;
-      lockout_tmr = millis;
     }
+    lockout_tmr = millis;
     send_diag_can(OVERRIDE); // Send new queue values on CAN
   } else { // Pressed while not holding the neutral button
     if (gear == GEAR_NEUT) {
       queue_up = 1;
+      queue_dn = queue_nt = 0;
       lockout_tmr = millis;
       send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
 
-    if (queue_dn > 0) {
-      queue_dn = 0;
-      queue_up = 0;
+    if (queue_dn > 0 || queue_nt > 0) {
+      queue_dn = queue_up = queue_nt = 0;
       send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
@@ -379,22 +376,20 @@ void process_downshift_press(void) {
       queue_nt = 0;
     } else if (gear == 1 || gear == 2) {
       queue_nt = 1;
-      queue_up = 0;
-      queue_dn = 0;
+      queue_up = queue_dn = 0;
     } else if (gear == GEAR_FAIL) {
       queue_nt = 1;
-      queue_up = 0;
-      queue_dn = 0;
+      queue_up = queue_dn = 0;
       gear_fail_nt_shift = SHIFT_ENUM_DN;
     } else {
       queue_dn = 1;
-      lockout_tmr = millis;
+      queue_up = queue_nt = 0;
     }
+    lockout_tmr = millis;
     send_diag_can(OVERRIDE); // Send new queue values on CAN
   } else { // Pressed while not holding the neutral button
-    if (queue_up > 0) {
-      queue_dn = 0;
-      queue_up = 0;
+    if (queue_up > 0 || queue_nt > 0) {
+      queue_dn = queue_up = queue_nt = 0;
       send_diag_can(OVERRIDE); // Send new queue values on CAN
       return;
     }
@@ -561,6 +556,8 @@ void do_shift(uint8_t shift_enum) {
         ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
         ign_cut_retry_tmr = millis;
 
+        relax_wait();
+
         // Decrement queued shifts value
         if (SHIFT_UP) {
           queue_up--;
@@ -588,6 +585,8 @@ void do_shift(uint8_t shift_enum) {
         ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
         ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
         ign_cut_retry_tmr = millis;
+
+        relax_wait();
 
         send_errno_CAN_msg(PADDLE_ID, ERR_PDL_MAXDUR);
 
@@ -750,6 +749,8 @@ void do_shift_gear_fail(uint8_t shift_enum) {
         ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
         ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
         ign_cut_retry_tmr = millis;
+
+        relax_wait();
 
         // Decrement queued shifts value
         if (SHIFT_UP) {

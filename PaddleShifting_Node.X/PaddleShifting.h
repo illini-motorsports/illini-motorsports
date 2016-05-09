@@ -34,8 +34,8 @@
 #define SWT_MSG_SEND   500
 #define TEMP_SAMP_INTV 333
 #define GEAR_SAMP_INTV 5
-#define MAX_SHIFT_DUR  250 //TODO: Tune this value
-#define RELAX_WAIT     25  //TODO: Tune this value
+#define MAX_SHIFT_DUR  150
+#define RELAX_WAIT     10  //TODO: Tune this value
 #define IGN_CUT_WAIT   10  //TODO: Tune this value
 #define UP_SHIFT_DUR   150 //TODO: Tune this value
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
