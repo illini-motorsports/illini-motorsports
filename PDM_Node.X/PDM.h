@@ -29,6 +29,11 @@
 #define PWR_ON  1
 #define PWR_OFF 0
 
+// Definitions for overcurrent state
+#define NO_OVERCRT    0
+#define OVERCRT       1
+#define OVERCRT_RESET 2
+
 // Define for the number of MOSFET control circuits
 #define NUM_LOADS 14
 
@@ -53,6 +58,7 @@
 #define RPM_ON_THRESHOLD 200.0 // rpm
 #define FAN_THRESHOLD_H  90.0  // C
 #define FAN_THRESHOLD_L  84.0  // C
+#define OVERCRT_DETECT   0.01  // A
 
 // Timing constants (ms)
 
@@ -63,11 +69,14 @@
 #define BASIC_CONTROL_WAIT 1000
 #define TEMP_SAMP_INTV     333
 #define CURRENT_SAMP_INTV  5
+#define OVERCRT_WAIT       25
+
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10
 #define RAIL_VOLT_SEND     50
 #define CUTOFF_VAL_SEND    1000
 #define LOAD_STATUS_SEND   500
+#define OVERCRT_COUNT_SEND 500
 
 #define FUEL_PEAK_DUR      150
 #define WTR_PEAK_DUR       250
@@ -390,11 +399,14 @@ void send_load_current_can(void);
 void send_rail_volt_can(void);
 void send_cutoff_values_can(uint8_t override);
 void send_load_status_can(uint8_t override);
+void send_overcrt_count_can(uint8_t override);
 void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 void init_adc_pdm(void);
 void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff);
 double wpr_to_res(uint8_t wpr);
 uint8_t res_to_wpr(double res);
+void set_load(uint8_t load_idx, uint8_t load_state);
+uint8_t load_enabled(uint8_t load_idx);
 
 #endif /* PDM_H */

@@ -28,6 +28,11 @@ double fb_resistances[NUM_LOADS] = {0.0};
 // Stores the sampled current draw values for each load
 uint16_t load_current[NUM_LOADS] = {0};
 
+// Stores the overcurrent state of each load
+uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT};
+uint8_t overcurrent_count[NUM_LOADS] = {0};
+uint32_t overcurrent_tmr[NUM_LOADS] = {0};
+
 // Recorded values from temperature sensors
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
@@ -43,15 +48,10 @@ volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr, motec2_recv_tm
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
-    cutoff_send_tmr, load_status_send_tmr = 0;
+    cutoff_send_tmr, load_status_send_tmr, overcrt_count_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
 uint32_t temp_samp_tmr, current_samp_tmr = 0;
-
-uint32_t b5v5_overcurrent_tmr = 0;
-uint32_t b5v5_overcurrent_flag = 0;
-uint32_t bvbat_overcurrent_tmr = 0;
-uint32_t bvbat_overcurrent_flag = 0;
 
 /**
  * For whatever reason, reading from EN_IGN_PORT does not work. Instead, we'll
@@ -60,10 +60,14 @@ uint32_t bvbat_overcurrent_flag = 0;
 uint8_t ign_enabled = 0;
 
 // Initial overcurrent thresholds to use for all the loads
-const double load_cutoff[NUM_LOADS] = {100.0, 100.0, 10.0, 20.0, 15.0, 20.0, 2.0,
-                                       60.0, 60.0, 10.0, 10.0, 5.0, 2.0, 2.0};
-const double load_peak_cutoff[NUM_LOADS] = {0.0, 0.0, 40.0, 60.0, 40.0, 100.0, 0.0,
-                                            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+const double load_cutoff[NUM_LOADS] = {100.0 /*IGN*/, 100.0 /*INJ*/,
+10.0 /*FUEL*/, 20.0 /*ECU*/, 15.0 /*WTR*/, 20.0 /*FAN*/, 2.0 /*AUX*/,
+60.0 /*PDLU*/, 60.0 /*PDLD*/, 10.0 /*B5V5*/, 10.0 /*BVBAT*/,
+5.0 /*STR0*/, 2.0 /*STR1*/, 2.0 /*STR2*/};
+const double load_peak_cutoff[NUM_LOADS] = {0.0 /*IGN*/, 0.0 /*INJ*/,
+40.0 /*FUEL*/, 60.0 /*ECU*/, 40.0 /*WTR*/, 100.0 /*FAN*/, 0.0 /*AUX*/,
+0.0 /*PDLU*/, 0.0 /*PDLD*/, 0.0 /*B5V5*/, 0.0 /*BVBAT*/,
+0.0 /*STR0*/, 0.0 /*STR1*/, 0.0 /*STR2*/};
 
 /**
  * Main function
@@ -292,7 +296,7 @@ void main(void) {
     // PDLU
     if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW && (millis - pdlu_tmr < MAX_PDL_DUR)) {
       // Enable PDLU
-      if (!PDLU_EN) {
+      if (!PDLU_EN && overcurrent_flag[PDLU_IDX] != OVERCRT_RESET) {
         EN_PDLU_LAT = PWR_ON;
         pdlu_tmr = millis;
         load_state_changed = 1;
@@ -312,7 +316,7 @@ void main(void) {
     // PDLD
     if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW && (millis - pdld_tmr < MAX_PDL_DUR)) {
       // Enable PDLD
-      if (!PDLD_EN) {
+      if (!PDLD_EN && overcurrent_flag[PDLD_IDX] != OVERCRT_RESET) {
         EN_PDLD_LAT = PWR_ON;
         pdld_tmr = millis;
         load_state_changed = 1;
@@ -355,20 +359,20 @@ void main(void) {
 
       if (ON_SW && !KILL_SW) {
         // Enable IGN
-        if (!IGN_EN) {
+        if (!IGN_EN && overcurrent_flag[IGN_IDX] != OVERCRT_RESET) {
           EN_IGN_LAT = PWR_ON;
           load_state_changed = 1;
           ign_enabled = 1;
         }
 
         // Enable INJ
-        if (!INJ_EN) {
+        if (!INJ_EN && overcurrent_flag[INJ_IDX] != OVERCRT_RESET) {
           EN_INJ_LAT = PWR_ON;
           load_state_changed = 1;
         }
 
         // Enable FUEL
-        if (!FUEL_EN) {
+        if (!FUEL_EN && overcurrent_flag[FUEL_IDX] != OVERCRT_RESET) {
           uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
           set_rheo(FUEL_IDX, peak_wpr_val);
           fb_resistances[FUEL_IDX] = wpr_to_res(peak_wpr_val);
@@ -396,7 +400,7 @@ void main(void) {
           }
         } else {
           // Enable WTR
-          if (!WTR_EN) {
+          if (!WTR_EN && overcurrent_flag[WTR_IDX] != OVERCRT_RESET) {
             uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
             set_rheo(WTR_IDX, peak_wpr_val);
             fb_resistances[WTR_IDX] = wpr_to_res(peak_wpr_val);
@@ -407,7 +411,7 @@ void main(void) {
           }
 
           // Enable FAN
-          if (!FAN_EN) {
+          if (!FAN_EN && overcurrent_flag[FAN_IDX] != OVERCRT_RESET) {
             uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
             set_rheo(FAN_IDX, peak_wpr_val);
             fb_resistances[FAN_IDX] = wpr_to_res(peak_wpr_val);
@@ -462,14 +466,14 @@ void main(void) {
       //TODO: Determine less dangerous way of keeping these loads on than ENG_ON?
       if(ON_SW && !KILL_SW && (ENG_ON || STR_EN)) {
         // Enable IGN if not already enabled
-        if (!IGN_EN) {
+        if (!IGN_EN && overcurrent_flag[IGN_IDX] != OVERCRT_RESET) {
           EN_IGN_LAT = PWR_ON;
           load_state_changed = 1;
           ign_enabled = 1;
         }
 
         // Enable INJ if not already enabled
-        if (!INJ_EN) {
+        if (!INJ_EN && overcurrent_flag[INJ_IDX] != OVERCRT_RESET) {
           EN_INJ_LAT = PWR_ON;
           load_state_changed = 1;
         }
@@ -491,7 +495,7 @@ void main(void) {
       // FUEL
       if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN || fuel_override_sw)) {
         // Enable FUEL if not already enabled
-        if (!FUEL_EN) {
+        if (!FUEL_EN && overcurrent_flag[FUEL_IDX] != OVERCRT_RESET) {
           uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
           set_rheo(FUEL_IDX, peak_wpr_val);
           fb_resistances[FUEL_IDX] = wpr_to_res(peak_wpr_val);
@@ -513,7 +517,7 @@ void main(void) {
       // WTR
       if((ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw) && !STR_EN) {
         // Enable WTR if not already enabled
-        if (!WTR_EN) {
+        if (!WTR_EN && overcurrent_flag[WTR_IDX] != OVERCRT_RESET) {
           uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
           set_rheo(WTR_IDX, peak_wpr_val);
           fb_resistances[WTR_IDX] = wpr_to_res(peak_wpr_val);
@@ -534,7 +538,7 @@ void main(void) {
       // FAN
       if((over_temp_flag || fan_override_sw) && !STR_EN) {
         // Enable FAN if not already enabled
-        if (!FAN_EN) {
+        if (!FAN_EN && overcurrent_flag[FAN_IDX] != OVERCRT_RESET) {
           uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
           set_rheo(FAN_IDX, peak_wpr_val);
           fb_resistances[FAN_IDX] = wpr_to_res(peak_wpr_val);
@@ -555,7 +559,7 @@ void main(void) {
 
     // STR
     if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
-      if (!STR_EN) {
+      if (!STR_EN && overcurrent_flag[STR_IDX] != OVERCRT_RESET) {
         EN_STR_LAT = PWR_ON;
         str_en_tmr = millis;
         load_state_changed = 1;
@@ -654,6 +658,11 @@ void main(void) {
      * Send current values of peak and normal mode current cutoffs
      */
     send_cutoff_values_can(NO_OVERRIDE);
+
+    /**
+     * Send overcurrent count of each load on CAN
+     */
+    send_overcrt_count_can(NO_OVERRIDE);
   }
 }
 
@@ -895,33 +904,41 @@ void sample_load_current(void) {
  * the enable pin of the relevant MOSFET to reset the load.
  */
 void check_load_overcurrent(void) {
-  //TODO: Do overcurrent check for all loads
+  uint32_t load_idx;
+  for (load_idx = 0; load_idx < NUM_LOADS - 2; load_idx++) {
+    switch (overcurrent_flag[load_idx]) {
 
-  if (b5v5_overcurrent_flag) {
-    if (millis - b5v5_overcurrent_tmr > 1) {
-      EN_B5V5_LAT = PWR_ON;
-      b5v5_overcurrent_flag = 0;
-    }
+      case NO_OVERCRT:
+        if (load_enabled(load_idx) &&
+            load_current[load_idx] < OVERCRT_DETECT) {
+          overcurrent_flag[load_idx] = OVERCRT;
+          overcurrent_tmr[load_idx] = millis;
+        }
+        break;
 
-  } else {
-    if (load_current[B5V5_IDX] < 0.01) {
-      b5v5_overcurrent_flag = 1;
-      b5v5_overcurrent_tmr = millis;
-      EN_B5V5_LAT = PWR_OFF;
-    }
-  }
+      case OVERCRT:
+        if (load_enabled(load_idx) &&
+            load_current[load_idx] < OVERCRT_DETECT) {
+          if (millis - overcurrent_tmr[load_idx] >= OVERCRT_WAIT) {
+            set_load(load_idx, PWR_OFF);
+            overcurrent_flag[load_idx] = OVERCRT_RESET;
+            overcurrent_tmr[load_idx] = millis;
+            overcurrent_count[load_idx]++;
+            send_overcrt_count_can(OVERRIDE);
+            send_load_status_can(OVERRIDE);
+          }
+        } else {
+          overcurrent_flag[load_idx] = NO_OVERCRT;
+        }
+        break;
 
-  if (bvbat_overcurrent_flag) {
-    if (millis - bvbat_overcurrent_tmr > 1) {
-      EN_BVBAT_LAT = PWR_ON;
-      bvbat_overcurrent_flag = 0;
-    }
-
-  } else {
-    if (load_current[BVBAT_IDX] < 0.01) {
-      bvbat_overcurrent_flag = 1;
-      bvbat_overcurrent_tmr = millis;
-      EN_BVBAT_LAT = PWR_OFF;
+      case OVERCRT_RESET:
+        if (millis != overcurrent_tmr[load_idx]) {
+          set_load(load_idx, PWR_ON);
+          overcurrent_flag[load_idx] = NO_OVERCRT;
+          send_load_status_can(OVERRIDE);
+        }
+        break;
     }
   }
 }
@@ -1155,6 +1172,38 @@ void send_load_status_can(uint8_t override) {
 
     CAN_send_message(PDM_ID + 0x1, 6, data);
     load_status_send_tmr = millis;
+  }
+}
+
+/**
+ * void send_overcrt_count_can(void)
+ *
+ * If the interval has passed or the caller overrode the check, send out the
+ * overcurrent count of all loads on CAN.
+ *
+ * @param override - Whether to override the interval
+ */
+void send_overcrt_count_can(uint8_t override) {
+  if ((millis - overcrt_count_send_tmr >= OVERCRT_COUNT_SEND) || override) {
+    CAN_data data = {0};
+
+    data.byte0 = overcurrent_count[IGN_IDX];
+    data.byte1 = overcurrent_count[INJ_IDX];
+    data.byte2 = overcurrent_count[FUEL_IDX];
+    data.byte3 = overcurrent_count[ECU_IDX];
+    data.byte4 = overcurrent_count[WTR_IDX];
+    data.byte5 = overcurrent_count[FAN_IDX];
+    data.byte6 = overcurrent_count[AUX_IDX];
+    data.byte7 = overcurrent_count[PDLU_IDX];
+    CAN_send_message(PDM_ID + 0xD, 8, data);
+
+    data.byte0 = overcurrent_count[PDLD_IDX];
+    data.byte1 = overcurrent_count[B5V5_IDX];
+    data.byte2 = overcurrent_count[BVBAT_IDX];
+    data.byte3 = overcurrent_count[STR_IDX];
+    CAN_send_message(PDM_ID + 0xE, 4, data);
+
+    overcrt_count_send_tmr = millis;
   }
 }
 
@@ -1452,4 +1501,60 @@ uint8_t res_to_wpr(double res) {
   wiper = (wiper < 0) ? 0 : wiper;
   wiper = (wiper > 255) ? 255 : wiper;
   return ((uint8_t) wiper);
+}
+
+/**
+ * void set_load(uint8_t load_idx, uint8_t load_state)
+ *
+ * Sets the specified load to the specified enablity state
+ *
+ * @param load_idx- The load to set
+ * @param load_state- The new state
+ */
+void set_load(uint8_t load_idx, uint8_t load_state) {
+  switch (load_idx) {
+    case IGN_IDX: EN_IGN_LAT = load_state; break;
+    case INJ_IDX: EN_INJ_LAT = load_state; break;
+    case FUEL_IDX: EN_FUEL_LAT = load_state; break;
+    case ECU_IDX: EN_ECU_LAT = load_state; break;
+    case WTR_IDX: EN_WTR_LAT = load_state; break;
+    case FAN_IDX: EN_FAN_LAT = load_state; break;
+    case AUX_IDX: EN_AUX_LAT = load_state; break;
+    case PDLU_IDX: EN_PDLU_LAT = load_state; break;
+    case PDLD_IDX: EN_PDLD_LAT = load_state; break;
+    case B5V5_IDX: EN_B5V5_LAT = load_state; break;
+    case BVBAT_IDX: EN_BVBAT_LAT = load_state; break;
+    case STR0_IDX: EN_STR_LAT = load_state; break;
+    case STR1_IDX: EN_STR_LAT = load_state; break;
+    case STR2_IDX: EN_STR_LAT = load_state; break;
+    default: return;
+  }
+}
+
+/**
+ * uint8_t load_enabled(uint8_t load_idx)
+ *
+ * Returns whether or not the specified load is enabled.
+ *
+ * @param load_idx- Index of the load to get the enablity for
+ * @return Whether or not the specified load is enabled
+ */
+uint8_t load_enabled(uint8_t load_idx) {
+  switch (load_idx) {
+    case IGN_IDX: return IGN_EN;
+    case INJ_IDX: return INJ_EN;
+    case FUEL_IDX: return FUEL_EN;
+    case ECU_IDX: return ECU_EN;
+    case WTR_IDX: return WTR_EN;
+    case FAN_IDX: return FAN_EN;
+    case AUX_IDX: return AUX_EN;
+    case PDLU_IDX: return PDLU_EN;
+    case PDLD_IDX: return PDLD_EN;
+    case B5V5_IDX: return B5V5_EN;
+    case BVBAT_IDX: return BVBAT_EN;
+    case STR0_IDX: return STR_EN;
+    case STR1_IDX: return STR_EN;
+    case STR2_IDX: return STR_EN;
+    default: return 0;
+  }
 }
