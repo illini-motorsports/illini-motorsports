@@ -428,6 +428,7 @@ void initScreen(uint8_t num){
 			textEnlarge(0);
 			graphicsMode();
 			break;
+
 		case PDM_DRAW_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
@@ -473,6 +474,7 @@ void initScreen(uint8_t num){
 			textWrite("TOT DRW");
 			graphicsMode();
 			break;
+
 		case PDM_CUT_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
@@ -520,6 +522,7 @@ void initScreen(uint8_t num){
 			textWrite("STR2 CUT");
 			graphicsMode();
 			break;
+
 		case MOTEC_SCREEN:
 			textMode();
 			textTransparent(foregroundColor);
@@ -535,6 +538,38 @@ void initScreen(uint8_t num){
 			textTransparent(foregroundColor);
 			graphicsMode();
 			break;
+	}
+}
+
+void changeAUXType(uint8_t num){
+	if(num != auxNumber && screenNumber == RACE_SCREEN){
+		fillRect(330, 140, 149, 35, backgroundColor);
+		textMode();
+		textTransparent(foregroundColor);
+		textEnlarge(1);
+		textSetCursor(330, 140);
+		switch(num) {
+			// Battery Voltage
+			case 0:
+				textWrite("BAT V");
+				raceScreenItems[6].data = &batVoltage;
+			break;
+			
+			// Lambda
+			case 1:
+				textWrite("LAMBDA");
+				raceScreenItems[6].data = &lambda;
+			break;
+
+			// RPM
+			case 2:
+				textWrite("RPM");
+				raceScreenItems[6].data = &rpm;
+			break;
+		}
+		textEnlarge(0);
+		graphicsMode();
+		auxNumber = num;
 	}
 }
 

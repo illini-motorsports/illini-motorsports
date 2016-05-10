@@ -82,6 +82,12 @@ void main(void) {
 		else if(tRotary[1].value != 2 && tRotary[1].value != 1 && screenNumber != RACE_SCREEN){
 			changeScreen(RACE_SCREEN);
 		}
+		// Change AUX State
+		if(tRotary[0].value > 2){
+			changeAUXType(0);
+		} else{
+			changeAUXType(tRotary[0].value);
+		}
 		refreshScreenItems();
 	}
 }

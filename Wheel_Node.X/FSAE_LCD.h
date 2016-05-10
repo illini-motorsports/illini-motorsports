@@ -96,7 +96,7 @@ screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], motecItems[30]
 screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
 screen* allScreens[7];
 
-uint8_t screenNumber;
+uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
@@ -146,6 +146,7 @@ void initDataItem(volatile dataItem* data, double warn, double err, uint32_t ref
 void initAllScreens(void);
 void initScreen(uint8_t num);
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *), volatile dataItem* data);
+void changeAUXType(uint8_t num);
 void changeScreen(uint8_t num);
 void refreshScreenItems(void);
 void clearScreen(void);
