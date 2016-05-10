@@ -100,6 +100,9 @@ uint8_t screenNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
+// General Items
+volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
+
 // Uptimes
 volatile dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
 

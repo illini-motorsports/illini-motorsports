@@ -172,6 +172,7 @@ uint8_t _textScale;
 #define RA8875_MAGENTA          0xF81F
 #define RA8875_YELLOW           0xFFE0
 #define RA8875_WHITE            0xFFFF
+#define RA8875_GREY				0x7A0F
 
 // Command/Data pins for SPI
 #define RA8875_DATAWRITE        0x00

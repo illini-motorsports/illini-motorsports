@@ -124,7 +124,7 @@ void initDataItems(void){
 	initDataItem(&pdmSTR2draw,0,0,MIN_REFRESH,3,1);
 	initDataItem(&pdmSTR2cut,0,0,MIN_REFRESH,2,1);
 	initDataItem(&pdmSTRdraw,0,0,MIN_REFRESH,3,1);
-	
+
 	// PDM Bitmaps
 	initDataItem(&STRenabl,0,0,MIN_REFRESH,1,0);
 	initDataItem(&BVBATenabl,0,0,MIN_REFRESH,1,0);
@@ -210,6 +210,13 @@ void initDataItems(void){
 	initDataItem(&momentaries[1],0,0,MIN_REFRESH,1,0);
 	initDataItem(&momentaries[2],0,0,MIN_REFRESH,1,0);
 	initDataItem(&momentaries[3],0,0,MIN_REFRESH,1,0);
+
+	fanSw[0] = &switches[0];
+	fanSw[1] = &FANenabl;
+	fuelSw[0] = &switches[1];
+	fuelSw[1] = &FUELenabl;
+	wtrSw[0] = &switches[2];
+	wtrSw[1] = &WTRenabl;
 }
 
 void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, uint8_t whole, uint8_t dec){
@@ -244,9 +251,9 @@ void initAllScreens(void){
 	allScreens[RACE_SCREEN] = &raceScreen;
 	raceScreen.items = raceScreenItems;
 	raceScreen.len = 8;
-	initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, &switches[0]);
-	initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw, &switches[1]);
-	initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, &switches[2]);
+	initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
+	initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
+	initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
 	initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &oilTemp);
 	initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &waterTemp);
 	initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
@@ -601,31 +608,49 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
 
 // For Fan Override Indicator
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
-	if(data->value){
+	// Override
+	if(data[0].value){
+		fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+	}
+	// Fan On, Switch Not toggled
+	else if(data[1].value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
+	// Load off, switch off
 	else{
-		fillCircle(item->x, item->y, item->size, backgroundColor);
+		fillCircle(item->x, item->y, item->size, RA8875_GREY);
 	}
 }
 
 // For Water Pump Override Indicator
 void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data){
-	if(data->value){
+	// Override
+	if(data[0].value){
+		fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+	}
+	// WTR On, Switch Not toggled
+	else if(data[1].value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
+	// Load off, switch off
 	else{
-		fillCircle(item->x, item->y, item->size, backgroundColor);
+		fillCircle(item->x, item->y, item->size, RA8875_GREY);
 	}
 }
 
 // For Launch Control Override Indicator
 void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data){
-	if(data->value){
+	// Override
+	if(data[0].value){
+		fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+	}
+	// FUEL On, Switch Not toggled
+	else if(data[1].value){
 		fillCircle(item->x, item->y, item->size, RA8875_RED);
 	}
+	// Load off, switch off
 	else{
-		fillCircle(item->x, item->y, item->size, backgroundColor);
+		fillCircle(item->x, item->y, item->size, RA8875_GREY);
 	}
 }
 
