@@ -18,6 +18,8 @@ bool AppData::readData(bool isVectorFile) {
     emit error(QString("Problem opening output file."));
   }
 
+  writeAxis();
+
   bool success = isVectorFile ? readDataVector() : readDataCustom();
 
   this->outFile.close();
@@ -428,7 +430,7 @@ void AppData::processLine(QString line) {
       }
     }
 
-    latestValues[messageIndices[msg.id]][j] = (value - sig.offset) * sig.scalar;
+    latestValues[messageIndices[msg.id]][j] = (value * sig.scalar) + sig.offset;
     j++;
   }
 

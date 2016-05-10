@@ -197,10 +197,6 @@ Signal AppConfig::getSignal(QString signalDef) {
   }
 
   sig.units = sections[6].replace("\"", "");
-  if (sig.units.length() > 4) {
-    emit error(QString("Units length too long for signal with title: %1").arg(sig.title));
-    return Signal();
-  }
 
   QString startBitInfo = sections[3].split("@")[0].split("|")[0];
   sig.startBit = startBitInfo.toUShort(&successful);
