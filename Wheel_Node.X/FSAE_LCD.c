@@ -400,7 +400,7 @@ void initAllScreens(void){
 	}
 }
 
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *), volatile dataItem* data){
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data){
 	item->info.x = x;
 	item->info.y = y;
 	item->info.size = size;
@@ -596,8 +596,8 @@ void refreshScreenItems(void){
 	int i;
 	for(i = 0;i<currScreen->len;i++){
 		screenItem * currItem = &currScreen->items[i];
-		if(currItem->data && currItem->currentValue != currItem->data->value && millis - currItem->refreshTime >= currItem->data->refreshInterval){
-			currItem->redrawItem(&currItem->info, currItem->data);
+		if(currItem->data && millis - currItem->refreshTime >= currItem->data->refreshInterval){
+			currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
 			currItem->currentValue = currItem->data->value;
 			currItem->refreshTime = millis;
 		}
@@ -605,7 +605,10 @@ void refreshScreenItems(void){
 }
 
 // Redraw General Data
-void redrawDigit(screenItemInfo * item, volatile dataItem * data){
+void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
+	if(data->value == currentValue){
+		return;
+	}
 	// Set Backround Color
 	uint16_t fillColor;
 	if(data->value >= data->warnThreshold){
@@ -630,7 +633,10 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data){
 }
 
 // For Single Digits with Error and Neutral Displays
-void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
+void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue){
+	if(data->value == currentValue){
+		return;
+	}
 	fillRect(item->x, item->y, item->size, item->size * 1.75, backgroundColor);
 	if(data->value == 0){
 		sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_N);
@@ -644,7 +650,7 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data){
 }
 
 // For Fan Override Indicator
-void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
+void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
 	// Override
 	if(data[0].value){
 		fillCircle(item->x, item->y, item->size, RA8875_GREEN);
@@ -660,7 +666,7 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data){
 }
 
 // For Water Pump Override Indicator
-void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data){
+void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
 	// Override
 	if(data[0].value){
 		fillCircle(item->x, item->y, item->size, RA8875_GREEN);
@@ -676,7 +682,7 @@ void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data){
 }
 
 // For Launch Control Override Indicator
-void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data){
+void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
 	// Override
 	if(data[0].value){
 		fillCircle(item->x, item->y, item->size, RA8875_GREEN);
@@ -692,7 +698,7 @@ void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data){
 }
 
 // Uses the 4 Tire Temp sensors to draw a color gradient tire
-void redrawTireTemp(screenItemInfo * item, volatile dataItem * data){
+void redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue){
 	uint16_t fillColor = tempColor(data->value);
 	uint16_t x = item->x;
 	uint16_t y = item->y;
@@ -705,7 +711,10 @@ void redrawTireTemp(screenItemInfo * item, volatile dataItem * data){
 }
 
 // Draws a bar with a height proportional to the suspension position
-void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
+void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
+	if(data->value == currentValue){
+		return;
+	}
 	fillRect(item->x, item->y, item->size, item->size * 5, backgroundColor);
 	if(data->value > MIN_SUS_POS){
 		uint16_t height = ((item->size*5)/(MAX_SUS_POS-MIN_SUS_POS))*(data->value-MIN_SUS_POS);
@@ -716,8 +725,11 @@ void redrawSPBar(screenItemInfo * item, volatile dataItem * data){
 	}
 }
 
-void redrawRotary(screenItemInfo * item, volatile dataItem * data){
+void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue){
 	fillCircle(item->x, item->y, item->size, RA8875_RED);
+	if(data->value == currentValue){
+		return;
+	}
 	sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
 }
 

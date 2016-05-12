@@ -72,7 +72,7 @@ typedef struct {
 	volatile dataItem * data;
 	uint32_t refreshTime;
 	screenItemInfo info;
-	void (*redrawItem)(screenItemInfo *, volatile dataItem *);
+	void (*redrawItem)(screenItemInfo *, volatile dataItem *, double);
 } screenItem;
 
 /*
@@ -145,7 +145,7 @@ void initDataItem(volatile dataItem* data, double warn, double err, uint32_t ref
 		uint8_t whole, uint8_t dec);
 void initAllScreens(void);
 void initScreen(uint8_t num);
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *), volatile dataItem* data);
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data);
 void changeAUXType(uint8_t num);
 void changeScreen(uint8_t num);
 void refreshScreenItems(void);
@@ -158,14 +158,14 @@ void endRace(void);
 void displayNoErrors(void);
 void addError(char * errText, dataItem * item, uint8_t priority);
 
-void redrawDigit(screenItemInfo * item, volatile dataItem * data);
-void redrawGearPos(screenItemInfo * item, volatile dataItem * data);
-void redrawFanSw(screenItemInfo * item, volatile dataItem * data);
-void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data);
-void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data);
-void redrawTireTemp(screenItemInfo * item, volatile dataItem * data);
-void redrawSPBar(screenItemInfo * item, volatile dataItem * data);
-void redrawRotary(screenItemInfo * item, volatile dataItem * data);
+void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
 uint16_t tempColor(uint8_t temp);
 
