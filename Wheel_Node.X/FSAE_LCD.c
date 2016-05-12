@@ -543,7 +543,7 @@ void initScreen(uint8_t num){
 
 void changeAUXType(uint8_t num){
 	if(num != auxNumber && screenNumber == RACE_SCREEN){
-		fillRect(330, 140, 149, 35, backgroundColor);
+		fillRect(300, 140, 179, 135, backgroundColor);
 		textMode();
 		textTransparent(foregroundColor);
 		textEnlarge(1);
@@ -553,6 +553,7 @@ void changeAUXType(uint8_t num){
 			case 0:
 				textWrite("BAT V");
 				raceScreenItems[6].data = &batVoltage;
+				raceScreenItems[6].info.x += 30;
 			break;
 			
 			// Lambda
@@ -565,6 +566,7 @@ void changeAUXType(uint8_t num){
 			case 2:
 				textWrite("RPM");
 				raceScreenItems[6].data = &rpm;
+				raceScreenItems[6].info.x -= 30;
 			break;
 		}
 		textEnlarge(0);

@@ -11,6 +11,7 @@
 // Count number of milliseconds since start of code execution
 volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
 volatile uint8_t darkState;
+volatile uint8_t auxState;
 
 void main(void) {
 	init_general();// Set general runtime configuration bits
@@ -26,6 +27,8 @@ void main(void) {
 	// Init Relevant Pins
 	millis = 0;
 	CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
+	auxState = 0;
+	auxNumber = 0;
 	LCD_CS_TRIS = OUTPUT;
 	LCD_CS_LAT = 1;
 	LCD_RST_TRIS = OUTPUT;
@@ -82,12 +85,22 @@ void main(void) {
 		else if(tRotary[1].value != 2 && tRotary[1].value != 1 && screenNumber != RACE_SCREEN){
 			changeScreen(RACE_SCREEN);
 		}
+
 		// Change AUX State
+		if(auxState != momentaries[0].value){
+			if(momentaries[0].value == 1){
+				changeAUXType((auxNumber+1)%3);
+			}
+			auxState = momentaries[0].value;
+		}
+
+		/*
 		if(tRotary[0].value > 2){
 			changeAUXType(0);
 		} else{
 			changeAUXType(tRotary[0].value);
 		}
+		*/
 		refreshScreenItems();
 	}
 }
