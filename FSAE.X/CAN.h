@@ -195,6 +195,16 @@
  * Scalars for channels
  */
 
+// From Analog Hubs
+#define SUS_POT_SCL         0.025
+#define BRK_PRS_SCL         0.005
+#define CUR_DRAW_SCL        0.01
+#define PTDP_SCL            0.0005
+#define APPS_SCL            0.01
+#define STRP_SCL            0.01
+#define CPSP_SCL            0.001
+#define TEMP_SCL            0.01
+
 // From Motec
 #define ENG_RPM_SCL					1.0
 #define THROTTLE_POS_SCL		0.1

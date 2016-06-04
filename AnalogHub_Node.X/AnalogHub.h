@@ -13,6 +13,7 @@
 #include "p18f46k80.h"
 #include "GenericTypeDefs.h"
 #include "adc.h"
+#include "math.h"
 #include "../ECAN.X/ECAN.h"
 #include "../FSAE.X/FSAE.h"
 #include "../FSAE.X/CAN.h"
@@ -23,6 +24,10 @@
 #define FAST_MSG_SEND  2
 #define MED_MSG_SEND   20
 #define SLOW_MSG_SEND  500
+
+// Thermister coefficients for various NTC sensors
+#define M12H_COEFF     3607.84
+#define PSTF_COEFF     3577.65
 
 // ADC channel definitions for FRONT ADC channels
 #define ADC_SPFL_CHN  ADC_CH10
@@ -89,5 +94,6 @@ void send_diag_can(void);
 void send_fast_can(void);
 void send_med_can(void);
 void send_slow_can(void);
+double convert_ntc_res(double voltage, double COEFFICIENT);
 
 #endif /* ANALOGHUB_H */

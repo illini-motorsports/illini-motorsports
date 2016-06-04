@@ -291,58 +291,54 @@ void send_diag_can(void) {
  * void send_fast_can(void)
  *
  * Samples and sends fast speed sensor channels on CAN if the interval has passed
- *
- * TODO: Apply correct scaling rather than default of 0.0001 (V)
  */
 void send_fast_can(void) {
   if (millis - fast_send_tmr >= FAST_MSG_SEND) {
 
 #if FRONT // Sample and send FRONT fast speed sensor channels
 
-    uint16_t spfl_samp = sample(ADC_SPFL_CHN);
-    uint16_t spfl_volt = (uint16_t) (((((double) spfl_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double spfl_samp = (double) sample(ADC_SPFL_CHN);
+    uint16_t spfl = (uint16_t) ((10.0 * (5.0 - ((spfl_samp / 4095.0) * 5.0))) /
+        SUS_POT_SCL);
 
-    uint16_t spfr_samp = sample(ADC_SPFR_CHN);
-    uint16_t spfr_volt = (uint16_t) (((((double) spfr_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double spfr_samp = (double) sample(ADC_SPFR_CHN);
+    uint16_t spfr = (uint16_t) ((10.0 * (5.0 - ((spfr_samp / 4095.0) * 5.0))) /
+        SUS_POT_SCL);
 
-    uint16_t bpf_samp = sample(ADC_BPF_CHN);
-    uint16_t bpf_volt = (uint16_t) (((((double) bpf_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double bpf_samp = (double) sample(ADC_BPF_CHN);
+    uint16_t bpf = (uint16_t) (((62.5 * ((bpf_samp / 4095.0) * 5.0)) -
+        31.25) / BRK_PRS_SCL);
 
-    uint16_t bpr_samp = sample(ADC_BPR_CHN);
-    uint16_t bpr_volt = (uint16_t) (((((double) bpr_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double bpr_samp = (double) sample(ADC_BPR_CHN);
+    uint16_t bpr = (uint16_t) (((62.5 * ((bpr_samp / 4095.0) * 5.0)) -
+        31.25) / BRK_PRS_SCL);
 
-    ((uint16_t*) data)[SPFL_BYTE / 2] = spfl_volt;
-    ((uint16_t*) data)[SPFR_BYTE / 2] = spfr_volt;
-    ((uint16_t*) data)[BPF_BYTE / 2] = bpf_volt;
-    ((uint16_t*) data)[BPR_BYTE / 2] = bpr_volt;
+    ((uint16_t*) data)[SPFL_BYTE / 2] = spfl;
+    ((uint16_t*) data)[SPFR_BYTE / 2] = spfr;
+    ((uint16_t*) data)[BPF_BYTE / 2] = bpf;
+    ((uint16_t*) data)[BPR_BYTE / 2] = bpr;
     ECANSendMessage(ANALOG_FRONT_ID + 0x1, data, 8, ECAN_TX_FLAGS);
 
 #elif REAR // Sample and send REAR fast speed sensor channels
 
-    uint16_t sprl_samp = sample(ADC_SPRL_CHN);
-    uint16_t sprl_volt = (uint16_t) (((((double) sprl_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double sprl_samp = (double) sample(ADC_SPRL_CHN);
+    uint16_t sprl = (uint16_t) ((10.0 * (5.0 - ((sprl_samp / 4095.0) * 5.0))) /
+        SUS_POT_SCL);
 
-    uint16_t sprr_samp = sample(ADC_SPRR_CHN);
-    uint16_t sprr_volt = (uint16_t) (((((double) sprr_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double sprr_samp = (double) sample(ADC_SPRR_CHN);
+    uint16_t sprr = (uint16_t) ((10.0 * (5.0 - ((sprr_samp / 4095.0) * 5.0))) /
+        SUS_POT_SCL);
 
-    uint16_t eos_samp = sample(ADC_EOS_CHN);
-    uint16_t eos_volt = (uint16_t) (((((double) eos_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    uint16_t eos = 0; //TODO
 
-    uint16_t bcd_samp = sample(ADC_BCD_CHN);
-    uint16_t bcd_volt = (uint16_t) (((((double) bcd_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double bcd_samp = (double) sample(ADC_BCD_CHN);
+    uint16_t bcd = (uint16_t) (((187.5 * ((bcd_samp / 4095.0) * 5.0)) -
+        468.75) / CUR_DRAW_SCL);
 
-    ((uint16_t*) data)[SPRL_BYTE / 2] = sprl_volt;
-    ((uint16_t*) data)[SPRR_BYTE / 2] = sprr_volt;
-    ((uint16_t*) data)[EOS_BYTE / 2] = eos_volt;
-    ((uint16_t*) data)[BCD_BYTE / 2] = bcd_volt;
+    ((uint16_t*) data)[SPRL_BYTE / 2] = sprl;
+    ((uint16_t*) data)[SPRR_BYTE / 2] = sprr;
+    ((uint16_t*) data)[EOS_BYTE / 2] = eos;
+    ((uint16_t*) data)[BCD_BYTE / 2] = bcd;
     ECANSendMessage(ANALOG_REAR_ID + 0x1, data, 8, ECAN_TX_FLAGS);
 
 #endif
@@ -355,48 +351,46 @@ void send_fast_can(void) {
  * void send_med_can(void)
  *
  * Samples and sends medium speed sensor channels on CAN if the interval has passed
- *
- * TODO: Apply correct scaling rather than default of 0.0001 (V)
  */
 void send_med_can(void) {
   if (millis - med_send_tmr >= MED_MSG_SEND) {
 
 #if FRONT // Sample and send FRONT medium speed sensor channels
 
-    uint16_t strp_samp = sample(ADC_STRP_CHN);
-    uint16_t strp_volt = (uint16_t) (((((double) strp_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double strp_samp = (double) sample(ADC_STRP_CHN);
+    uint16_t strp = (uint16_t) (((90.0 * ((strp_samp / 4095.0) * 5.0)) -
+        45.0) / STRP_SCL);
 
-    uint16_t apps0_samp = sample(ADC_APPS0_CHN);
-    uint16_t apps0_volt = (uint16_t) (((((double) apps0_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double apps0_samp = (double) sample(ADC_APPS0_CHN);
+    uint16_t apps0 = (uint16_t) (((25.0 * ((apps0_samp / 4095.0) * 5.0)) -
+        12.5) / APPS_SCL);
 
-    uint16_t apps1_samp = sample(ADC_APPS1_CHN);
-    uint16_t apps1_volt = (uint16_t) (((((double) apps1_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double apps1_samp = (double) sample(ADC_APPS1_CHN);
+    uint16_t apps1 = (uint16_t) (((25.0 * ((apps1_samp / 4095.0) * 5.0)) -
+        12.5) / APPS_SCL);
 
-    uint16_t ptdp_samp = sample(ADC_PTDP_CHN);
-    uint16_t ptdp_volt = (uint16_t) (((((double) ptdp_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double ptdp_samp = (double) sample(ADC_PTDP_CHN);
+    uint16_t ptdp = (uint16_t) (((3.06458 * ((ptdp_samp / 4095.0) * 5.0)) -
+        1.53229) / PTDP_SCL);
 
-    ((uint16_t*) data)[STRP_BYTE / 2] = strp_volt;
-    ((uint16_t*) data)[APPS0_BYTE / 2] = apps0_volt;
-    ((uint16_t*) data)[APPS1_BYTE / 2] = apps1_volt;
-    ((uint16_t*) data)[PTDP_BYTE / 2] = ptdp_volt;
+    ((uint16_t*) data)[STRP_BYTE / 2] = strp;
+    ((uint16_t*) data)[APPS0_BYTE / 2] = apps0;
+    ((uint16_t*) data)[APPS1_BYTE / 2] = apps1;
+    ((uint16_t*) data)[PTDP_BYTE / 2] = ptdp;
     ECANSendMessage(ANALOG_FRONT_ID + 0x2, data, 8, ECAN_TX_FLAGS);
 
 #elif REAR // Sample and send REAR medium speed sensor channels
 
-    uint16_t cpsp_samp = sample(ADC_CPSP_CHN);
-    uint16_t cpsp_volt = (uint16_t) (((((double) cpsp_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double cpsp_samp = (double) sample(ADC_CPSP_CHN);
+    uint16_t cpsp = (uint16_t) (((1.37552 * ((cpsp_samp / 4095.0) * 5.0)) -
+        0.18707) / CPSP_SCL);
 
     uint16_t mcd_samp = sample(ADC_MCD_CHN);
-    uint16_t mcd_volt = (uint16_t) (((((double) mcd_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    uint16_t mcd = (uint16_t) (((187.5 * ((mcd_samp / 4095.0) * 5.0)) -
+        468.75) / CUR_DRAW_SCL);
 
-    ((uint16_t*) data)[CPSP_BYTE / 2] = cpsp_volt;
-    ((uint16_t*) data)[MCD_BYTE / 2] = mcd_volt;
+    ((uint16_t*) data)[CPSP_BYTE / 2] = cpsp;
+    ((uint16_t*) data)[MCD_BYTE / 2] = mcd;
     ECANSendMessage(ANALOG_REAR_ID + 0x3, data, 4, ECAN_TX_FLAGS);
 
 #endif
@@ -409,33 +403,51 @@ void send_med_can(void) {
  * void send_slow_can(void)
  *
  * Samples and sends slow speed sensor channels on CAN if the interval has passed
- *
- * TODO: Apply correct scaling rather than default of 0.0001 (V)
  */
 void send_slow_can(void) {
   if (millis - slow_send_tmr >= SLOW_MSG_SEND) {
 
 #if REAR // Sample and send REAR slow speed sensor channels
 
-    uint16_t ctri_samp = sample(ADC_CTRI_CHN);
-    uint16_t ctri_volt = (uint16_t) (((((double) ctri_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double ctri_samp = (double) sample(ADC_CTRI_CHN);
+    double ctri_volt = ((ctri_samp / 4095.0) * 5.0);
+    int16_t ctri = (int16_t) (convert_ntc_res(ctri_volt, M12H_COEFF) / TEMP_SCL);
 
-    uint16_t ctro_samp = sample(ADC_CTRO_CHN);
-    uint16_t ctro_volt = (uint16_t) (((((double) ctro_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double ctro_samp = (double) sample(ADC_CTRO_CHN);
+    double ctro_volt = ((ctro_samp / 4095.0) * 5.0);
+    int16_t ctro = (int16_t) (convert_ntc_res(ctro_volt, M12H_COEFF) / TEMP_SCL);
 
-    uint16_t ctsp_samp = sample(ADC_CTSP_CHN);
-    uint16_t ctsp_volt = (uint16_t) (((((double) ctsp_samp) / 4095.0)
-      * 5.0) * 10000.0);
+    double ctsp_samp = (double) sample(ADC_CTSP_CHN);
+    double ctsp_volt = ((ctsp_samp / 4095.0) * 5.0);
+    int16_t ctsp = (int16_t) (convert_ntc_res(ctsp_volt, PSTF_COEFF) / TEMP_SCL);
 
-    ((uint16_t*) data)[CTRI_BYTE / 2] = ctri_volt;
-    ((uint16_t*) data)[CTRO_BYTE / 2] = ctro_volt;
-    ((uint16_t*) data)[CTSP_BYTE / 2] = ctsp_volt;
+    ((int16_t*) data)[CTRI_BYTE / 2] = ctri;
+    ((int16_t*) data)[CTRO_BYTE / 2] = ctro;
+    ((int16_t*) data)[CTSP_BYTE / 2] = ctsp;
     ECANSendMessage(ANALOG_REAR_ID + 0x2, data, 6, ECAN_TX_FLAGS);
 
 #endif
 
     slow_send_tmr = millis;
   }
+}
+
+/**
+ * double convert_ntc_res(double voltage, double COEFFICIENT)
+ *
+ * Converts a voltage reading from a pulled up NTC resistor into a temperature
+ * in degrees Celsius.
+ *
+ * Note: These equations assume the following:
+ *   - 2500 Ohms at 20C
+ *   - 3.1kOhm pull-up resistor
+ *   - 5V applied across the voltage divider circuit
+ *
+ * @param voltage- Sampled voltage from the output of the voltage divider
+ * @param COEFFICIENT- B-value coefficient for the particular NTC element
+ * @return The temperature in degrees Celsius read by the NTC element
+ */
+double convert_ntc_res(double voltage, double COEFFICIENT) {
+  double resistance = 3100 / ((5.0 / voltage) - 1.0);
+  return (1.0 / ((log(resistance / 2500.0) / COEFFICIENT) + 0.00341122)) - 273.15;
 }
