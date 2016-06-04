@@ -25,25 +25,25 @@
 #define SLOW_MSG_SEND  500
 
 // ADC channel definitions for FRONT ADC channels
-#define ADC_SPFL_CHN  10
-#define ADC_SPFR_CHN  9
-#define ADC_BPF_CHN   7
-#define ADC_BPR_CHN   8
-#define ADC_STRP_CHN  5
-#define ADC_APPS0_CHN 2
-#define ADC_APPS1_CHN 1
-#define ADC_PTDP_CHN  6
+#define ADC_SPFL_CHN  ADC_CH10
+#define ADC_SPFR_CHN  ADC_CH9
+#define ADC_BPF_CHN   ADC_CH7
+#define ADC_BPR_CHN   ADC_CH8
+#define ADC_STRP_CHN  ADC_CH5
+#define ADC_APPS0_CHN ADC_CH2
+#define ADC_APPS1_CHN ADC_CH1
+#define ADC_PTDP_CHN  ADC_CH6
 
 // ADC channel definitions for REAR ADC channels
-#define ADC_SPRL_CHN 8
-#define ADC_SPRR_CHN 7
-#define ADC_EOS_CHN  10
-#define ADC_BCD_CHN  3
-#define ADC_CTRI_CHN 9
-#define ADC_CTRO_CHN 6
-#define ADC_CTSP_CHN 5
-#define ADC_CPSP_CHN 4
-#define ADC_MCD_CHN  2
+#define ADC_SPRL_CHN ADC_CH8
+#define ADC_SPRR_CHN ADC_CH7
+#define ADC_EOS_CHN  ADC_CH10
+#define ADC_BCD_CHN  ADC_CH3
+#define ADC_CTRI_CHN ADC_CH9
+#define ADC_CTRO_CHN ADC_CH6
+#define ADC_CTSP_CHN ADC_CH5
+#define ADC_CPSP_CHN ADC_CH4
+#define ADC_MCD_CHN  ADC_CH2
 
 // Pin definitions for TERM signal
 #define TERM_TRIS TRISCbits.TRISC6
