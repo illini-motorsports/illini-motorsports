@@ -36,7 +36,6 @@
 #define GEAR_SAMP_INTV 5
 #define MAX_SHIFT_DUR  150
 #define RELAX_WAIT     10  //TODO: Tune this value
-#define IGN_CUT_WAIT   10  //TODO: Tune this value
 #define UP_SHIFT_DUR   150 //TODO: Tune this value
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
@@ -47,8 +46,6 @@
 //TODO: Decide on these values
 #define LOW_VOLT    1000 // 10.00V
 #define LOWER_VOLT  900  // 9.00V
-#define IGN_CUT_RPM 2500 // 2500rpm
-#define IGN_CUT_TPS 750  // 75.0%
 
 // Thresholds
 #define RPM_ON_THRESHOLD 600.0 // rpm

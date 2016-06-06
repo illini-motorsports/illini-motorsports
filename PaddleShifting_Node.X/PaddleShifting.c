@@ -518,15 +518,12 @@ void do_shift(uint8_t shift_enum) {
       return;
     }
 
-    // Send ignition cut message to ECU if required
-    if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
-        (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
-      shift_force_spoof = IGN_CUT_SPOOF;
-      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
-      ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
-      ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-      ign_cut_retry_tmr = millis;
-    }
+    // Send ignition cut message to ECU
+    shift_force_spoof = IGN_CUT_SPOOF;
+    ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
+    ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
+    ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
+    ign_cut_retry_tmr = millis;
 
     // Fire actuator
     if (SHIFT_UP) {
@@ -713,15 +710,12 @@ void do_shift_gear_fail(uint8_t shift_enum) {
       return;
     }
 
-    // Send ignition cut message to ECU if required
-    if ((SHIFT_UP && eng_rpm > IGN_CUT_RPM) ||
-        (SHIFT_DN && throttle_pos > IGN_CUT_TPS)) {
-      shift_force_spoof = IGN_CUT_SPOOF;
-      ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
-      ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
-      ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
-      ign_cut_retry_tmr = millis;
-    }
+    // Send ignition cut message to ECU
+    shift_force_spoof = IGN_CUT_SPOOF;
+    ((uint16_t*) data)[ADL_IDX_BYTE / 2] = ADL_IDX_10_12;
+    ((int16_t*) data)[ADL10_BYTE / 2] = shift_force_spoof;
+    ECANSendMessage(ADL_ID, data, 4, ECAN_TX_FLAGS);
+    ign_cut_retry_tmr = millis;
 
     // Fire actuator
     if (SHIFT_UP) {
