@@ -89,7 +89,7 @@
 
 // Function definitions
 void high_isr(void);
-uint16_t sample(const uint8_t ch);
+double sample(const uint8_t ch);
 void send_diag_can(void);
 void send_fast_can(void);
 void send_med_can(void);
