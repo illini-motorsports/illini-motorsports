@@ -176,14 +176,19 @@ void initDataItems(void){
 	initDataItem(&steeringAngle,0,0,MIN_REFRESH,2,1);
 	initDataItem(&accelPedalPos0,0,0,MIN_REFRESH,2,1);
 	initDataItem(&accelPedalPos1,0,0,MIN_REFRESH,2,1);
-
 	// Uptimes
 	// uptimes - 4,0
 	initDataItem(&paddleUptime,0,0,MIN_REFRESH,2,1);
 	initDataItem(&loggerUptime,0,0,MIN_REFRESH,2,1);
 	initDataItem(&swUptime,0,0,MIN_REFRESH,2,1);
 	initDataItem(&pdmUptime,0,0,MIN_REFRESH,2,1);
-
+    initDataItem(&brakeMinFront,0,0,MIN_REFRESH,2,1);
+    initDataItem(&brakeMaxFront,0,0,MIN_REFRESH,2,1);
+    initDataItem(&brakeMinRear,0,0,MIN_REFRESH,2,1);
+    initDataItem(&brakeMaxRear,0,0,MIN_REFRESH,2,1);
+    brakeMinFront.value = 100;
+    brakeMinRear.value = 100;
+    
 	// EndRace
 	initDataItem(&endLogNum,0,0,1000,2,1);
 	initDataItem(&endNumLaps,0,0,1000,2,1);
@@ -308,8 +313,13 @@ void initAllScreens(void){
 	initScreenItem(&pdmCutItems[16], 310, 150, 15, redrawDigit, &pdm5v5cut);
 	initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmBATcut);
 	initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit, &pdmSTR0cut);
-	initScreenItem(&pdmCutItems[19], 85, 200, 15, redrawDigit, &pdmSTR1cut);
-	initScreenItem(&pdmCutItems[20], 160, 200, 15, redrawDigit, &pdmSTR2cut);
+	//initScreenItem(&pdmCutItems[19], 85, 200, 15, redrawDigit, &pdmSTR1cut);
+	//initScreenItem(&pdmCutItems[20], 160, 200, 15, redrawDigit, &pdmSTR2cut);
+    
+    //brake pressure 
+    initScreenItem(&pdmCutItems[19], 85, 200, 15, redrawDigit,&brakePressFront);
+    initScreenItem(&pdmCutItems[20], 160, 200, 15, redrawDigit, &brakePressRear);
+    
 	initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmVBat);
 	initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdm12v);
 
@@ -380,6 +390,20 @@ void initAllScreens(void){
 	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttFRA);
 	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRLA);
 	initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRRA);
+    
+    //brake screen
+    allScreens[BRAKE_SCREEN] = &brakeScreen;
+    brakeScreen.items = brakeItems;
+    brakeScreen.len = 8;
+    initScreenItem(&brakeItems[0], 20, 180, 30, redrawDigit, &brakePressFront);
+    initScreenItem(&brakeItems[1], 360, 180, 30, redrawDigit, &brakePressRear);
+    initScreenItem(&brakeItems[2], 80, 60, 20, redrawDigit, &brakeMinFront);
+    initScreenItem(&brakeItems[3], 80, 100, 20, redrawDigit, &brakeMaxFront);
+    initScreenItem(&brakeItems[4],360, 60, 20, redrawDigit, &brakeMinRear);
+    initScreenItem(&brakeItems[5], 360, 100, 20, redrawDigit, &brakeMaxRear);
+    initScreenItem(&brakeItems[6], 190, 40, 20, redrawBrakeBar, &brakePressFront);
+    initScreenItem(&brakeItems[7], 250, 40, 20, redrawBrakeBar, &brakePressRear);
+    
 
 	// Lap Time Stuff
 	lapTimeHead = 0;
@@ -517,9 +541,9 @@ void initScreen(uint8_t num){
 			textSetCursor(10, 180);
 			textWrite("STR0 CUT");
 			textSetCursor(85, 180);
-			textWrite("STR1 CUT");
+			textWrite("BRK F");
 			textSetCursor(160, 180);
-			textWrite("STR2 CUT");
+			textWrite("BRK R");
 			graphicsMode();
 			break;
 
@@ -538,6 +562,26 @@ void initScreen(uint8_t num){
 			textTransparent(foregroundColor);
 			graphicsMode();
 			break;
+            
+        case BRAKE_SCREEN:
+            textMode();
+            textTransparent(foregroundColor);
+            textEnlarge(1);
+            textSetCursor(20, 235);
+            textWrite("BRK F");
+            textSetCursor(360, 235);
+            textWrite("BRK R");
+            textSetCursor(20,60);
+            textWrite("MIN F:");
+            textSetCursor(20,100);
+            textWrite("MAX F:");
+            textSetCursor(300,60);
+            textWrite("MIN R:");
+            textSetCursor(300,100);
+            textWrite("MAX R:");
+            graphicsMode();
+            textEnlarge(0);
+            break;
 	}
 }
 
@@ -724,6 +768,26 @@ void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double current
 		fillRect(item->x,item->y-(item->size*5)+height,item->size,height,RA8875_RED);
 	}
 }
+
+//Draw a bar with height proportional to the brake pressure
+void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
+	if(data->value == currentValue){
+		return;
+	}
+	fillRect(item->x, item->y, item->size, item->size * 10, backgroundColor);
+	if(data->value > MIN_BRAKE_PRESS){
+		uint16_t height = ((item->size*10)/(MAX_BRAKE_PRESS-MIN_BRAKE_PRESS))*(data->value-MIN_BRAKE_PRESS);
+		if(height > MAX_BRAKE_PRESS){
+			height = MAX_BRAKE_PRESS;
+		}
+		fillRect(item->x,item->y-(item->size*10)+height,item->size,height,RA8875_RED);
+	}
+}
+
+
+
+    
+
 
 void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue){
 	fillCircle(item->x, item->y, item->size, RA8875_RED);

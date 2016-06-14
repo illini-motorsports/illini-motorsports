@@ -82,9 +82,12 @@ void main(void) {
 		else if(tRotary[1].value == 2 && screenNumber != PDM_CUT_SCREEN){
 			changeScreen(PDM_CUT_SCREEN);
 		}
-		else if(tRotary[1].value != 2 && tRotary[1].value != 1 && screenNumber != RACE_SCREEN){
+		else if(tRotary[1].value == 3 && screenNumber != RACE_SCREEN){
 			changeScreen(RACE_SCREEN);
 		}
+        else if(tRotary[1].value == 4 && screenNumber != BRAKE_SCREEN){
+            changeScreen(BRAKE_SCREEN);
+        }
 
 		// Change AUX State
 		if(auxState != momentaries[0].value){
@@ -328,6 +331,27 @@ void process_CAN_msg(CAN_message msg){
 			ttRRA[2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
 			ttRRA[3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
 			ttRR.value = (ttRRA[0].value+ttRRA[1].value+ttRRA[2].value+ttRRA[3].value)/4.0;
+            
+        /*Front Analog Hub*/
+        case ANALOG_FRONT_ID + 1:
+            brakePressFront.value = (double) ((uint16_t) (lsbArray[BPF_BYTE/2]) * BRK_PRS_SCL);
+            if(brakePressFront.value > brakeMaxFront.value)
+            {
+                brakeMaxFront.value = brakePressFront.value;
+            }
+            if (brakePressFront.value < brakeMinFront.value)
+            {
+                brakeMinFront.value = brakePressFront.value;
+            }
+            brakePressRear.value = (double) ((uint16_t) (lsbArray[BPR_BYTE/2]) * BRK_PRS_SCL);
+            if(brakePressRear.value > brakeMaxRear.value)
+            {
+                brakeMaxRear.value = brakePressRear.value;
+            }
+            if (brakePressRear.value < brakeMinRear.value)
+            {
+                brakeMinRear.value = brakePressRear.value;
+            }
 	}
 }
 

@@ -18,7 +18,7 @@
 #define FOREGROUND_COLOR 	RA8875_BLACK
 #define WARNING_COLOR 		BACKGROUND_COLOR
 #define ERROR_COLOR 		BACKGROUND_COLOR
-#define NUM_SCREENS 		6
+#define NUM_SCREENS 		8
 #define RACE_SCREEN 		0
 #define PDM_DRAW_SCREEN 	1
 #define PDM_CUT_SCREEN  	2
@@ -26,10 +26,14 @@
 #define END_RACE_SCREEN		4
 #define CHASSIS_SCREEN		5
 #define GENERAL_SCREEN		6
+#define BRAKE_SCREEN        7
 #define MIN_REFRESH 		100
 
 #define MIN_SUS_POS			5
 #define MAX_SUS_POS			20
+
+#define MIN_BRAKE_PRESS     0
+#define MAX_BRAKE_PRESS     250
 
 /*
  * Defines a data stream that is relevant to one or more screens
@@ -92,9 +96,9 @@ typedef struct {
 	uint8_t priority;
 } errMsg;
 
-screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[6];
-screen raceScreen, pdmDrawScreen, pdmCutScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
-screen* allScreens[7];
+screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], brakeItems[8],motecItems[30], endRaceItems[9], chassisItems[20], generalItems[6];
+screen raceScreen, pdmDrawScreen, pdmCutScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
+screen* allScreens[8];
 
 uint8_t screenNumber, auxNumber;
 
@@ -125,7 +129,7 @@ volatile dataItem STRenabl, BVBATenabl, B5V5enabl, PDLDenabl, PDLUenabl, AUXenab
 volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radOutputTemp, swirlTemp, swirlPress;
 
 // Front Analog Hub
-volatile dataItem susPosFR, susPosFL, brakePressFront, brakePressRear, steeringAngle, accelPedalPos0, accelPedalPos1;
+volatile dataItem susPosFR, susPosFL, brakePressFront, brakePressRear, brakeMaxFront, brakeMinFront,brakeMaxRear, brakeMinRear, steeringAngle, accelPedalPos0, accelPedalPos1;
 
 // Paddle Shifting
 volatile dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage; 
@@ -165,6 +169,7 @@ void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double cu
 void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
 uint16_t tempColor(uint8_t temp);
