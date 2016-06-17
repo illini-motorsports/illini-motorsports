@@ -95,5 +95,6 @@ void send_fast_can(void);
 void send_med_can(void);
 void send_slow_can(void);
 double convert_ntc_res(double voltage, double COEFFICIENT);
+uint16_t clamp(double value, double min, double max, double scalar);
 
 #endif /* ANALOGHUB_H */

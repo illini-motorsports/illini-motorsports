@@ -298,16 +298,16 @@ void send_fast_can(void) {
 #if FRONT // Sample and send FRONT fast speed sensor channels
 
     double spfl_samp = sample(ADC_SPFL_CHN);
-    uint16_t spfl = (uint16_t) ((15.0 * (5.0 - spfl_samp)) / SUS_POT_SCL);
+    uint16_t spfl = clamp((15.0 * (5.0 - spfl_samp)), 0, 75, SUS_POT_SCL);
 
     double spfr_samp = sample(ADC_SPFR_CHN);
-    uint16_t spfr = (uint16_t) ((15.0 * (5.0 - spfr_samp)) / SUS_POT_SCL);
+    uint16_t spfr = clamp((15.0 * (5.0 - spfr_samp)), 0, 75, SUS_POT_SCL);
 
     double bpf_samp = sample(ADC_BPF_CHN);
-    uint16_t bpf = (uint16_t) (((62.5 * bpf_samp) - 31.25) / BRK_PRS_SCL);
+    uint16_t bpf = clamp(((62.5 * bpf_samp) - 31.25), 0, 250, BRK_PRS_SCL);
 
     double bpr_samp = sample(ADC_BPR_CHN);
-    uint16_t bpr = (uint16_t) (((62.5 * bpr_samp) - 31.25) / BRK_PRS_SCL);
+    uint16_t bpr = clamp(((62.5 * bpr_samp) - 31.25), 0, 250, BRK_PRS_SCL);
 
     ((uint16_t*) data)[SPFL_BYTE / 2] = spfl;
     ((uint16_t*) data)[SPFR_BYTE / 2] = spfr;
@@ -318,15 +318,15 @@ void send_fast_can(void) {
 #elif REAR // Sample and send REAR fast speed sensor channels
 
     double sprl_samp = sample(ADC_SPRL_CHN);
-    uint16_t sprl = (uint16_t) ((15.0 * (5.0 - sprl_samp)) / SUS_POT_SCL);
+    uint16_t sprl = clamp((15.0 * (5.0 - sprl_samp)), 0.0, 75.0, SUS_POT_SCL);
 
     double sprr_samp = sample(ADC_SPRR_CHN);
-    uint16_t sprr = (uint16_t) ((15.0 * (5.0 - sprr_samp)) / SUS_POT_SCL);
+    uint16_t sprr = clamp((15.0 * (5.0 - sprr_samp)), 0, 75, SUS_POT_SCL);
 
     uint16_t eos = 0; //TODO
 
     double bcd_samp = sample(ADC_BCD_CHN);
-    uint16_t bcd = (uint16_t) (((187.5 * bcd_samp) - 468.75) / CUR_DRAW_SCL);
+    uint16_t bcd = clamp(((187.5 * bcd_samp) - 468.75), -375, 375, CUR_DRAW_SCL);
 
     ((uint16_t*) data)[SPRL_BYTE / 2] = sprl;
     ((uint16_t*) data)[SPRR_BYTE / 2] = sprr;
@@ -351,16 +351,16 @@ void send_med_can(void) {
 #if FRONT // Sample and send FRONT medium speed sensor channels
 
     double strp_samp = sample(ADC_STRP_CHN);
-    uint16_t strp = (uint16_t) (((90.0 * strp_samp) - 45.0) / STRP_SCL);
+    uint16_t strp = clamp(((90.0 * strp_samp) - 45.0), 0, 360, STRP_SCL);
 
     double apps0_samp = sample(ADC_APPS0_CHN);
-    uint16_t apps0 = (uint16_t) (((25.0 * apps0_samp) - 12.5) / APPS_SCL);
+    uint16_t apps0 = clamp(((25.0 * apps0_samp) - 12.5), 0, 100, APPS_SCL);
 
     double apps1_samp = sample(ADC_APPS1_CHN);
-    uint16_t apps1 = (uint16_t) (((25.0 * (5.0 - apps1_samp)) - 12.5) / APPS_SCL);
+    uint16_t apps1 = clamp(((25.0 * (5.0 - apps1_samp)) - 12.5), 0, 100, APPS_SCL);
 
     double ptdp_samp = sample(ADC_PTDP_CHN);
-    uint16_t ptdp = (uint16_t) (((3.06458 * ptdp_samp) - 1.53229) / PTDP_SCL);
+    uint16_t ptdp = clamp(((3.06458 * ptdp_samp) - 1.53229), 0, 12.5, PTDP_SCL);
 
     ((uint16_t*) data)[STRP_BYTE / 2] = strp;
     ((uint16_t*) data)[APPS0_BYTE / 2] = apps0;
@@ -371,10 +371,10 @@ void send_med_can(void) {
 #elif REAR // Sample and send REAR medium speed sensor channels
 
     double cpsp_samp = sample(ADC_CPSP_CHN);
-    uint16_t cpsp = (uint16_t) (((1.37552 * cpsp_samp) - 0.18707) / CPSP_SCL);
+    uint16_t cpsp = clamp(((1.37552 * cpsp_samp) - 0.18707), 0, 6, CPSP_SCL);
 
     uint16_t mcd_samp = sample(ADC_MCD_CHN);
-    uint16_t mcd = (uint16_t) (((187.5 * mcd_samp) - 468.75) / CUR_DRAW_SCL);
+    uint16_t mcd = clamp(((187.5 * mcd_samp) - 468.75), -375, 375, CUR_DRAW_SCL);
 
     ((uint16_t*) data)[CPSP_BYTE / 2] = cpsp;
     ((uint16_t*) data)[MCD_BYTE / 2] = mcd;
@@ -434,4 +434,21 @@ void send_slow_can(void) {
 double convert_ntc_res(double voltage, double COEFFICIENT) {
   double resistance = 4750.0 / ((5.0 / voltage) - 1.0);
   return (1.0 / ((log(resistance / 2500.0) / COEFFICIENT) + 0.00341122)) - 273.15;
+}
+
+/**
+ * uint16_t clamp(double value, double min, double max, double scalar)
+ *
+ * Clamps an input value to between the minimum and maximum values, scales by
+ * the desired scalar, then casts to a uint16_t before returning.
+ *
+ * @param value- The input value
+ * @param min- The minimum possible value
+ * @param max- The maximum possible value
+ * @return The clamped and casted value
+ */
+uint16_t clamp(double value, double min, double max, double scalar) {
+  value = (value > max) ? max : value;
+  value = (value < min) ? min : value;
+  return (uint16_t) (value / scalar);
 }
