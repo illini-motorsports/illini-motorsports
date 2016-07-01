@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>FSAE_32</name>
+            <name>FSAE</name>
             <creation-uuid>f7de0f41-3a09-42bd-ac2b-fd7dd66f85b9</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>

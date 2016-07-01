@@ -1,12 +1,12 @@
 /**
- * FSAE Library 32bit CAN
+ * FSAE Library CAN
  *
  * Processor: PIC32MZ2048EFM100
  * Compiler:  Microchip XC32
  * Author:    Andrew Mass
  * Created:   2015-2016
  */
-#include "FSAE_CAN_32.h"
+#include "FSAE_can.h"
 
 /**
  * We have to allocate memory in RAM for the CAN1 module's FIFOs. There can be

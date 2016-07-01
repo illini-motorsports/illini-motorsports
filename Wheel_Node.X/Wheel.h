@@ -10,9 +10,9 @@
 #define WHEEL_H
 
 #include <sys/types.h>
-#include "../FSAE_32/FSAE_config_32.h"
-#include "../FSAE_32/FSAE_CAN_32.h"
-#include "../FSAE_32/FSAE_adc_32.h"
+#include "../FSAE.X/FSAE_config.h"
+#include "../FSAE.X/FSAE_can.h"
+#include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/CAN.h"
 #include "RA8875_driver.h"
 #include "FSAE_LCD.h"

@@ -1,13 +1,13 @@
 /**
- * FSAE Library 32bit CAN Header
+ * FSAE Library CAN Header
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
  * Author:      Andrew Mass
  * Created:     2015-2016
  */
-#ifndef FSAE_CAN_32_H
-#define FSAE_CAN_32_H
+#ifndef FSAE_CAN_H
+#define FSAE_CAN_H
 
 #include <xc.h>
 #include <sys/kmem.h>
@@ -50,7 +50,7 @@ typedef union uCAN_data {
 } CAN_data;
 
 // Must include this after the struct to avoid compilation errors (I'm probably doing something wrong)
-#include "FSAE_config_32.h"
+#include "FSAE_config.h"
 
 /**
  * CanRxMessageBuffer struct
@@ -153,7 +153,7 @@ typedef union uCanTxMessageBuffer {
   int messageWord[4];
 } CanTxMessageBuffer;
 
-// Defined in FSAE_CAN_32.c
+// Defined in FSAE_CAN.c
 extern volatile uint32_t CAN_rx_ovf;
 extern volatile uint32_t CAN_tx_ovf;
 
@@ -162,4 +162,4 @@ void CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data);
 void CAN_recv_messages(void (*handler)(CAN_message msg));
 void init_can(void);
 
-#endif /* FSAE_CAN_32_H */
+#endif /* FSAE_CAN_H */

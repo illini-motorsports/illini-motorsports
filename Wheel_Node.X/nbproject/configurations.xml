@@ -15,10 +15,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>../FSAE_32/FSAE_config_32.c</itemPath>
-      <itemPath>../FSAE_32/FSAE_CAN_32.c</itemPath>
-      <itemPath>../FSAE_32/FSAE_adc_32.c</itemPath>
-      <itemPath>../FSAE_32/FSAE_nvm_32.c</itemPath>
       <itemPath>Wheel.c</itemPath>
       <itemPath>RA8875_driver.c</itemPath>
       <itemPath>FSAE_LCD.c</itemPath>
@@ -48,6 +44,23 @@
       <compileType>
         <linkerTool>
           <linkerLibItems>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../FSAE.X"
+                            CT="3"
+                            CN="WHEEL"
+                            AC="false"
+                            BL="true"
+                            WD="../FSAE.X"
+                            BC="${MAKE}  -f Makefile CONF=WHEEL"
+                            DBC="${MAKE}  -f Makefile CONF=WHEEL TYPE_IMAGE=DEBUG_RUN"
+                            CC="rm -rf &quot;build/WHEEL&quot; &quot;dist/WHEEL&quot;"
+                            OP="dist/WHEEL/production/FSAE.X.a"
+                            DOP="dist/WHEEL/debug/FSAE.X.a"
+                            FL="dist/WHEEL/production/FSAE.X.a"
+                            PD="dist/WHEEL/production/FSAE.X."
+                            DD="dist/WHEEL/debug/FSAE.X.">
+              </makeArtifact>
+            </linkerLibProjectItem>
           </linkerLibItems>
         </linkerTool>
         <archiverTool>

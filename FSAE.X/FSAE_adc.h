@@ -1,17 +1,17 @@
 /**
- * FSAE Library 32bit ADC Header
+ * FSAE Library ADC Header
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
  * Author:      Andrew Mass
  * Created:     2015-2016
  */
-#ifndef FSAE_adc_32_H
-#define FSAE_adc_32_H
+#ifndef FSAE_adc_H
+#define FSAE_adc_H
 
 #include <xc.h>
 #include <sys/types.h>
-#include "FSAE_config_32.h"
+#include "FSAE_config.h"
 
 // ANSEL Settings
 #define AN_INPUT  1
@@ -30,4 +30,4 @@
 // Function definitions
 void init_adc(void (*specific_init)(void));
 
-#endif /* FSAE_adc_32_H */
+#endif /* FSAE_adc_H */

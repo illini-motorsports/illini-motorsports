@@ -1,12 +1,12 @@
 /**
- * FSAE Library 32bit Config
+ * FSAE Library Config
  *
  * Processor: PIC32MZ2048EFM100
  * Compiler:  Microchip XC32
  * Author:    Andrew Mass
  * Created:   2015-2016
  */
-#include "FSAE_config_32.h"
+#include "FSAE_config.h"
 
 // PIC32MZ2048EFM100 Configuration Bit Settings
 

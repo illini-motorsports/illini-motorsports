@@ -1,12 +1,12 @@
 /**
- * FSAE Library 32bit ADC
+ * FSAE Library ADC
  *
  * Processor: PIC32MZ2048EFM100
  * Compiler:  Microchip XC32
  * Author:    Andrew Mass
  * Created:   2015-2016
  */
-#include "FSAE_adc_32.h"
+#include "FSAE_adc.h"
 
 /**
  * void init_adc(void (*specific_init)(void))

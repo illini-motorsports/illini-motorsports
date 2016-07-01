@@ -1,13 +1,13 @@
 /**
- * FSAE Library 32bit Config Header
+ * FSAE Library Config Header
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
  * Author:      Andrew Mass
  * Created:     2015-2016
  */
-#ifndef FSAE_CONFIG_32_H
-#define FSAE_CONFIG_32_H
+#ifndef FSAE_CONFIG_H
+#define FSAE_CONFIG_H
 
 #include <xc.h>
 #include <sys/kmem.h>
@@ -49,4 +49,4 @@ void init_timer1(void);
 void init_spi(void);
 void init_termination(void);
 
-#endif /* FSAE_CONFIG_32_H */
+#endif /* FSAE_CONFIG_H */

@@ -1,12 +1,12 @@
 /**
- * FSAE Library 32bit NVM
+ * FSAE Library NVM
  *
  * Processor: PIC32MZ2048EFM100
  * Compiler:  Microchip XC32
  * Author:    Andrew Mass
  * Created:   2015-2016
  */
-#include "FSAE_nvm_32.h"
+#include "FSAE_nvm.h"
 
 /**
  * void nvm_write_word(void* addr, uint32_t data)
@@ -64,7 +64,7 @@ void write_nvm_data(void* buffer, uint32_t count) {
 
 /**
  * void nvm_erase_page(void)
- * 
+ *
  * Erases the page used for NVM so that the cells can be written to again.
  */
 void nvm_erase_page(void) {
@@ -76,7 +76,7 @@ void nvm_erase_page(void) {
 
 /**
  * void nvm_init_operation(void);
- * 
+ *
  * Start the flash memory programming/erase operation.
  */
 void nvm_init_operation(void) {
