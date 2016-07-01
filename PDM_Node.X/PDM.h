@@ -65,6 +65,7 @@
 #define FUEL_PRIME_DUR     500
 #define STR_MAX_DUR        4000
 #define MAX_PDL_DUR        500
+#define OVERRIDE_TIMEOUT   5000
 
 #define BASIC_CONTROL_WAIT 1000
 #define TEMP_SAMP_INTV     333

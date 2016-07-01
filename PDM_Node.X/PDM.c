@@ -44,7 +44,8 @@ uint16_t total_current_draw = 0;
 uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
 
 // Timing interval variables
-volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr, motec2_recv_tmr = 0;
+volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr,
+    motec2_recv_tmr, override_sw_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t str_en_tmr = 0;
 uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
@@ -287,6 +288,15 @@ void main(void) {
       if (eng_temp > FAN_THRESHOLD_H) {
         over_temp_flag = 1;
       }
+    }
+
+    /**
+     * Reset override switches if the CAN variables are stale
+     */
+    if (millis - override_sw_tmr >= OVERRIDE_TIMEOUT) {
+      fan_override_sw = 0;
+      wtr_override_sw = 0;
+      fuel_override_sw = 0;
     }
 
     /**
@@ -557,6 +567,23 @@ void main(void) {
       }
     }
 
+    // ECU
+    if (ON_SW) {
+      if (!ECU_EN && overcurrent_flag[ECU_IDX] != OVERCRT_RESET) {
+        set_rheo(ECU_IDX, peak_wiper_values[ECU_IDX]);
+        fb_resistances[ECU_IDX] = wpr_to_res(peak_wiper_values[ECU_IDX]);
+        peak_state[ECU_IDX] = 1;
+        EN_ECU_LAT = PWR_ON;
+        ecu_peak_tmr = millis;
+        load_state_changed = 1;
+      }
+    } else {
+      if (ECU_EN) {
+        EN_ECU_LAT = PWR_OFF;
+        load_state_changed = 1;
+      }
+    }
+
     // STR
     if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
       if (!STR_EN && overcurrent_flag[STR_IDX] != OVERCRT_RESET) {
@@ -770,6 +797,7 @@ void process_CAN_msg(CAN_message msg) {
       fan_override_sw = switch_bitmap & FAN_OVER_MASK;
       wtr_override_sw = switch_bitmap & WTR_OVER_MASK;
       fuel_override_sw = switch_bitmap & FUEL_OVER_MASK;
+      override_sw_tmr = millis;
       break;
   }
 }
