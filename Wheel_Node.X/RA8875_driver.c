@@ -30,7 +30,8 @@ void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t fg, ui
 }
 
 // Displays a decimal number using the seven segment helper functions
-void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t decDigits, uint16_t color, double number){
+void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, 
+			uint16_t decDigits, uint16_t color, double number){
 	if(decDigits == 0){
 		sevenSegmentMultDigit(x, y, numWidth, numNums, color, (uint16_t) number);
 		return;
@@ -39,11 +40,13 @@ void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t num
 	uint16_t decNum = (number - intNum) * pow(10, decDigits);
 	sevenSegmentMultDigit(x, y, numWidth, numNums - decDigits, color, intNum);
 	fillCircle(x + (numWidth*1.2*(numNums - decDigits)), y + (numWidth*1.7), numWidth/10, color);
-	sevenSegmentMultDigit(x + (numWidth*1.2*(numNums - decDigits)) + numWidth/5, y, numWidth, decDigits, color, decNum);
+	sevenSegmentMultDigit(x + (numWidth*1.2*(numNums - decDigits)) + numWidth/5, 
+	    	y, numWidth, decDigits, color, decNum);
 }
 
 // Displays multiple digits using the seven segment helper functions
-void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t color, uint16_t number){
+void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, 
+		uint16_t color, uint16_t number){
 	uint16_t offset = numWidth*1.2;
 	int i = 0;
 	for(;i<numNums;i++){
@@ -107,13 +110,17 @@ void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bM
 	}
 	if(bMask & 0x01){ // Second Bit
 		fillRect(x+boxD,y+boxD+barHeight,w-(2*boxD),boxD,color);
-		fillTriangle(x+boxD,y+fhOffset,x+hBoxD,y+hBoxD+fhOffset,x+boxD,y+boxD+fhOffset,color);
-		fillTriangle(x+w-boxD,y+fhOffset,x+w-hBoxD,y+hBoxD+fhOffset,x+w-boxD,y+boxD+fhOffset,color);
+		fillTriangle(x+boxD,y+fhOffset,x+hBoxD,y+hBoxD+fhOffset,x+boxD,
+			y+boxD+fhOffset,color);
+		fillTriangle(x+w-boxD,y+fhOffset,x+w-hBoxD,y+hBoxD+fhOffset,x+w-boxD,
+			y+boxD+fhOffset,color);
 	}
 	if(bMask & 0x08){ // Fourth Bit
 		fillRect(x+boxD,y+(2*boxD)+(2*barHeight),w-(2*boxD),boxD,color);
-		fillTriangle(x+boxD,y+shOffset,x+hBoxD,y+hBoxD+shOffset,x+boxD,y+boxD+shOffset,color);
-		fillTriangle(x+w-boxD,y+shOffset,x+w-hBoxD,y+hBoxD+shOffset,x+w-boxD,y+boxD+shOffset,color);
+		fillTriangle(x+boxD,y+shOffset,x+hBoxD,y+hBoxD+shOffset,x+boxD,
+			y+boxD+shOffset,color);
+		fillTriangle(x+w-boxD,y+shOffset,x+w-hBoxD,y+hBoxD+shOffset,x+w-boxD,
+			y+boxD+shOffset,color);
 	}
 	/*
 	* Vertical Bars
@@ -121,25 +128,31 @@ void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bM
 	if(bMask & 0x02){ // Sixth Bit
 		fillRect(x,y+boxD,boxD,barHeight,color);
 		fillTriangle(x,y+boxD,x+boxD,y+boxD,x+hBoxD,y+hBoxD,color);
-		fillTriangle(x,y+boxD+barHeight,x+boxD,y+boxD+barHeight,x+hBoxD,y+hBoxD+boxD+barHeight,color);
+		fillTriangle(x,y+boxD+barHeight,x+boxD,y+boxD+barHeight,x+hBoxD,
+			y+hBoxD+boxD+barHeight,color);
 	}
 
 	if(bMask & 0x20){ // Second Bit
 		fillRect(x+w-boxD,y+boxD,boxD,barHeight,color);
 		fillTriangle(x+w-boxD,y+boxD,x+w,y+boxD,x+w-hBoxD,y+hBoxD,color);
-		fillTriangle(x+w-boxD,y+boxD+barHeight,x+w,y+boxD+barHeight,x+w-hBoxD,y+hBoxD+boxD+barHeight,color);
+		fillTriangle(x+w-boxD,y+boxD+barHeight,x+w,y+boxD+barHeight,x+w-hBoxD,
+			y+hBoxD+boxD+barHeight,color);
 	}
 
 	if(bMask & 0x04){ // Fifth Bit
 		fillRect(x,y+boxD+boxD+barHeight,boxD,barHeight,color);
-		fillTriangle(x,y+boxD+fhOffset,x+boxD,y+boxD+fhOffset,x+hBoxD,y+hBoxD+fhOffset,color);
-		fillTriangle(x,y+boxD+barHeight+fhOffset,x+boxD,y+boxD+barHeight+fhOffset,x+hBoxD,y+hBoxD+boxD+barHeight+fhOffset,color);
+		fillTriangle(x,y+boxD+fhOffset,x+boxD,y+boxD+fhOffset,x+hBoxD,
+			y+hBoxD+fhOffset,color);
+		fillTriangle(x,y+boxD+barHeight+fhOffset,x+boxD,y+boxD+barHeight+fhOffset,
+			x+hBoxD,y+hBoxD+boxD+barHeight+fhOffset,color);
 	}
 
 	if(bMask & 0x10){ // Third Bit
 		fillRect(x+w-boxD,y+boxD+boxD+barHeight,boxD,barHeight,color);
-		fillTriangle(x+w-boxD,y+boxD+fhOffset,x+w,y+boxD+fhOffset,x+w-hBoxD,y+hBoxD+fhOffset,color);
-		fillTriangle(x+w-boxD,y+boxD+barHeight+fhOffset,x+w,y+boxD+barHeight+fhOffset,x+w-hBoxD,y+hBoxD+boxD+barHeight+fhOffset,color);
+		fillTriangle(x+w-boxD,y+boxD+fhOffset,x+w,y+boxD+fhOffset,x+w-hBoxD,
+			y+hBoxD+fhOffset,color);
+		fillTriangle(x+w-boxD,y+boxD+barHeight+fhOffset,x+w,y+boxD+barHeight+fhOffset,
+			x+w-hBoxD,y+hBoxD+boxD+barHeight+fhOffset,color);
 	}
 }
 
@@ -376,7 +389,8 @@ void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t fille
 	waitPoll(RA8875_DCR, RA8875_DCR_CIRCLE_STATUS);
 }
 
-void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, uint8_t filled) {
+void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, 
+		int16_t y2, uint16_t color, uint8_t filled) {
 
 	/* Set Point 0 */
 	writeCoordinates(0x91, x0, y0);
@@ -402,7 +416,8 @@ void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, 
 	waitPoll(RA8875_DCR, RA8875_DCR_LINESQUTRI_STATUS);
 }
 
-void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint16_t color, uint8_t filled) {
+void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, 
+		uint16_t color, uint8_t filled) {
 
 	/* Set Center Point */
 	writeCoordinates(0xA5, xCenter, yCenter);
@@ -425,7 +440,8 @@ void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t s
 	waitPoll(RA8875_ELLIPSE, RA8875_ELLIPSE_STATUS);
 }
 
-void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color, uint8_t filled) {
+void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, 
+		uint8_t curvePart, uint16_t color, uint8_t filled) {
 	/* Set Center Point */
 	writeCoordinates(0xA5, xCenter, yCenter);
 

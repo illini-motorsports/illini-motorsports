@@ -17,42 +17,44 @@
 #define HEIGHT		272
 #define LCD_WAIT	PORTFbits.RF12
 
-// Formula Defined Functions
-void reset();
+// Screen State Functions
+void reset(); 		//Toggles reset pin
+void displayOn(uint8_t on); // Sends an spi command to wake up screen
+void PLLinit(void); 	// Initialize Clock and stuff
+void initialize(void); 	// Sends a lot of commands to configure the driver
 
-//void softReset(void);
-void displayOn(uint8_t on);
-void sleep(uint8_t sleep);
+/* Backlight */
+void GPIOX(uint8_t on);
+void PWM1config(uint8_t on, uint8_t clock);
+void PWM2config(uint8_t on, uint8_t clock);
+void PWM1out(uint8_t p);
+void PWM2out(uint8_t p);
 
 /* Text functions */
-void textMode(void);
-void textSetCursor(uint16_t x, uint16_t y);
+void textMode(void); 	// Switches drawing mode to text 
+void textSetCursor(uint16_t x, uint16_t y); // Sets the coordinates of the cursor
 void textColor(uint16_t foreColor, uint16_t bgColor);
-void textTransparent(uint16_t foreColor);
-void textEnlarge(uint8_t scale);
-void textWrite(const char* buffer);
+void textTransparent(uint16_t foreColor); // Only writes foreground pixels
+void textEnlarge(uint8_t scale); // Scales text size, not super precise
+void textWrite(const char* buffer); // Writes content of null terminated buffer
 void textWriteHelper(const char* buffer, uint16_t len);
 
-/* Formula Specific Functions*/
-void drawRaceScreen(double oil_temp, double oil_pres, double water_temp, int gear_pos);
-void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bMask);
+// Seven Segment Functions
+// Helper seven segment drawer, uses a bitmask to determine segments to draw
+void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bMask); 
+// Draws a single seven segment digit
 void sevenSegmentDigit(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t digit);
-void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t color, uint16_t number);
+// Draws Multiple Digits
+void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t w, uint16_t numNums, uint16_t color, uint16_t number);
+// Draws a decimal number
 void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, uint16_t decDigits, uint16_t color, double number);
+// Draw the FSAE Chevron
 void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t fg, uint16_t bg);
 
 /* Graphics functions */
-void graphicsMode(void);
-void setXY(uint16_t x, uint16_t y);
-void pushPixels(uint32_t num, uint16_t p);
-
-/* Adafruit_GFX functions */
-void drawPixel(int16_t x, int16_t y, uint16_t color);
-void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-
-/* HW accelerated wrapper functions (override Adafruit_GFX prototypes) */
+void graphicsMode(void); // Switch to graphics mode
 void fillScreen(uint16_t color);
+void drawPixel(int16_t x, int16_t y, uint16_t color);
 void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
 void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
@@ -66,19 +68,7 @@ void drawCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t short
 void fillCurve(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, uint8_t curvePart, uint16_t color);
 void fillCircleSquare(int16_t x, int16_t y, int16_t w, int16_t h, int16_t corner, uint16_t color);
 void setColor(uint16_t color, uint8_t isForeground);
-void writeCoordinates(uint8_t s_reg, uint16_t x, uint16_t y);
-
-/* Backlight */
-void GPIOX(uint8_t on);
-void PWM1config(uint8_t on, uint8_t clock);
-void PWM2config(uint8_t on, uint8_t clock);
-void PWM1out(uint8_t p);
-void PWM2out(uint8_t p);
-
-/* Touch screen */
-void touchEnable(uint8_t on);
-uint8_t touched(void);
-uint8_t touchRead(uint16_t *x, uint16_t *y);
+void writeCoordinates(uint8_t s_reg, uint16_t x, uint16_t y); // Coordinate helper function
 
 /* Low level access */
 void writeReg(uint8_t reg, uint8_t val);
@@ -86,17 +76,11 @@ uint8_t readReg(uint8_t reg);
 void writeData(uint8_t d);
 uint8_t readData(void);
 void writeCommand(uint8_t d);
-uint8_t readStatus(void);
-uint8_t waitPoll(uint8_t r, uint8_t f);
 uint8_t SPI_send(uint8_t data);
 uint8_t readData(void);
 uint8_t readReg(uint8_t reg);
-uint8_t waitPoll(uint8_t reg, uint8_t flag);
-uint16_t width(void);
-uint16_t height(void);
-
-void PLLinit(void);
-void initialize(void);
+// Spams spi, can we do it better?
+uint8_t waitPoll(uint8_t reg, uint8_t flag); 
 
 /* GFX Helper Functions */
 void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t filled);
@@ -111,7 +95,6 @@ uint16_t _width, _height;
 uint8_t _textScale;
 
 /* Jake Defined Values */
-
 #define SEVEN_SEG_0 		0x7E
 #define SEVEN_SEG_1 		0x30
 #define SEVEN_SEG_2 		0x6D
@@ -122,26 +105,26 @@ uint8_t _textScale;
 #define SEVEN_SEG_7 		0x70
 #define SEVEN_SEG_8 		0x7F
 #define SEVEN_SEG_9 		0x7B
-#define SEVEN_SEG_N			0x54
-#define SEVEN_SEG_E			0x4F
+#define SEVEN_SEG_N		0x54
+#define SEVEN_SEG_E		0x4F
 
 // Rectangle Coordinates
-#define RA8875_RECT_X0_0				0x91
-#define RA8875_RECT_X0_1				0x92
-#define RA8875_RECT_Y0_0				0x93
-#define RA8875_RECT_Y0_1				0x94
+#define RA8875_RECT_X0_0	0x91
+#define RA8875_RECT_X0_1	0x92
+#define RA8875_RECT_Y0_0	0x93
+#define RA8875_RECT_Y0_1	0x94
 
-#define RA8875_RECT_X1_0				0x95
-#define RA8875_RECT_X1_1				0x96
-#define RA8875_RECT_Y1_0				0x97
-#define RA8875_RECT_Y1_1				0x98
+#define RA8875_RECT_X1_0	0x95
+#define RA8875_RECT_X1_1	0x96
+#define RA8875_RECT_Y1_0	0x97
+#define RA8875_RECT_Y1_1	0x98
 
 // Circle Coordinates
-#define RA8875_CIRC_X_0					0x99
-#define RA8875_CIRC_X_1					0x9a
-#define RA8875_CIRC_Y_0					0x9b
-#define RA8875_CIRC_Y_1					0x9c
-#define RA8875_CIRC_RAD					0x9d
+#define RA8875_CIRC_X_0		0x99
+#define RA8875_CIRC_X_1		0x9a
+#define RA8875_CIRC_Y_0		0x9b
+#define RA8875_CIRC_Y_1		0x9c
+#define RA8875_CIRC_RAD		0x9d
 
 //Circle Square Coordinates
 #define RA8875_CIRC_SQUARE_X0	0x91
@@ -153,14 +136,14 @@ uint8_t _textScale;
 #define RA8875_CIRC_SQUARE_STAT 0x80
 
 // Background Color Registers
-#define RA8875_BGCR_RED 		0x60
-#define RA8875_BGCR_GREEN 		0x61
-#define RA8875_BGCR_BLUE 		0x62
+#define RA8875_BGCR_RED 	0x60
+#define RA8875_BGCR_GREEN 	0x61
+#define RA8875_BGCR_BLUE 	0x62
 
 // Foreground Color Registers
-#define RA8875_FGCR_RED 		0x63
-#define RA8875_FGCR_GREEN 		0x64
-#define RA8875_FGCR_BLUE 		0x65
+#define RA8875_FGCR_RED 	0x63
+#define RA8875_FGCR_GREEN 	0x64
+#define RA8875_FGCR_BLUE 	0x65
 
 
 // Colors (RGB565)
@@ -172,7 +155,7 @@ uint8_t _textScale;
 #define RA8875_MAGENTA          0xF81F
 #define RA8875_YELLOW           0xFFE0
 #define RA8875_WHITE            0xFFFF
-#define RA8875_GREY							0xBAF7
+#define RA8875_GREY		0xBAF7
 
 // Command/Data pins for SPI
 #define RA8875_DATAWRITE        0x00
@@ -273,8 +256,8 @@ uint8_t _textScale;
 #define RA8875_DCR_DRAWSQUARE         0x10
 
 
-#define RA8875_ELLIPSE                0xA0
-#define RA8875_ELLIPSE_STATUS         0x80
+#define RA8875_ELLIPSE          0xA0
+#define RA8875_ELLIPSE_STATUS   0x80
 
 #define RA8875_MWCR0            0x40
 #define RA8875_MWCR0_GFXMODE    0x00

@@ -85,10 +85,9 @@ void main(void) {
 		else if(tRotary[1].value == 3 && screenNumber != RACE_SCREEN){
 			changeScreen(RACE_SCREEN);
 		}
-        else if(tRotary[1].value == 4 && screenNumber != BRAKE_SCREEN){
-            changeScreen(BRAKE_SCREEN);
-        }
-
+       		else if(tRotary[1].value == 4 && screenNumber != BRAKE_SCREEN){
+            		changeScreen(BRAKE_SCREEN);
+        	}
 		// Change AUX State
 		if(auxState != momentaries[0].value){
 			if(momentaries[0].value == 1){
@@ -97,13 +96,6 @@ void main(void) {
 			auxState = momentaries[0].value;
 		}
 
-		/*
-		if(tRotary[0].value > 2){
-			changeAUXType(0);
-		} else{
-			changeAUXType(tRotary[0].value);
-		}
-		*/
 		refreshScreenItems();
 	}
 }
@@ -183,7 +175,8 @@ void process_CAN_msg(CAN_message msg){
 		case MOTEC_ID + 5:
 			break;
 		case MOTEC_ID + 6:
-			gpsTime.value = (double) ((msg.data[GPS_TIME_BYTE] << 24)|(msg.data[GPS_TIME_BYTE+1] << 16)|(msg.data[GPS_TIME_BYTE+2] << 8)|msg.data[GPS_TIME_BYTE+3]) * GPS_TIME_SCL;
+			gpsTime.value = (double) ((msg.data[GPS_TIME_BYTE] << 24)|(msg.data[GPS_TIME_BYTE+1] << 16)
+		    			|(msg.data[GPS_TIME_BYTE+2] << 8)|msg.data[GPS_TIME_BYTE+3]) * GPS_TIME_SCL;
 			runTime.value = parseMsgMotec(&msg, RUN_TIME_BYTE, RUN_TIME_SCL);
 			fuelConsum.value = parseMsgMotec(&msg, FUEL_USED_BYTE, FUEL_USED_SCL);
 			break;
@@ -357,7 +350,10 @@ void process_CAN_msg(CAN_message msg){
 
 void CANswitchStates(void){
 	CAN_data switchData = {0};
-	uint8_t bitMask = (uint8_t)momentaries[0].value|(uint8_t)momentaries[1].value << 1|(uint8_t)momentaries[2].value << 2|(uint8_t)momentaries[3].value << 3|(uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5|(uint8_t)switches[2].value << 6|(uint8_t)switches[3].value << 7;
+	uint8_t bitMask = (uint8_t)momentaries[0].value|(uint8_t)momentaries[1].value << 1|
+	    	(uint8_t)momentaries[2].value << 2|(uint8_t)momentaries[3].value << 3|
+	    	(uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5|
+	    	(uint8_t)switches[2].value << 6|(uint8_t)switches[3].value << 7;
 	switchData.byte0 = bitMask;
 	switchData.byte1 = ((uint8_t)rotary[0].value << 4) | (uint8_t)rotary[1].value;
 	switchData.byte2 = ((uint8_t)rotary[2].value << 4) | (uint8_t)tRotary[0].value;

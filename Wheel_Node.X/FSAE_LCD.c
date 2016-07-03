@@ -413,15 +413,6 @@ void initAllScreens(void){
 		initDataItem(&(lapTimeBuffer[i]),0,0,1000,2,1);
 		lapTimeBuffer[i].value = -1;
 	}
-
-	// error Stuff
-	errBufferHead = 0;
-	errBufferTail = 0;
-	for(i=0;i<20;i++){
-		errBuffer[i].errText = 0x0;
-		errBuffer[i].item = 0x0;
-		errBuffer[i].priority = 0;
-	}
 }
 
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data){
@@ -884,16 +875,6 @@ void displayNoErrors(void){
 	textEnlarge(1);
 	textWrite("Illini Motorsports");
 	graphicsMode();
-}
-
-void addError(char * errText, dataItem * item, uint8_t priority){
-	errBufferHead = (errBufferHead + 1)%20;
-	if(errBufferHead == errBufferTail){
-		errBufferTail = (errBufferTail + 1)%20;
-	}
-	errBuffer[errBufferHead].errText = errText;
-	errBuffer[errBufferHead].item = item;
-	errBuffer[errBufferHead].priority = priority;
 }
 
 uint16_t tempColor(uint8_t temp){

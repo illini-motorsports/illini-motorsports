@@ -14,10 +14,7 @@
 #include <sys/types.h>
 #include "RA8875_driver.h"
 
-#define BACKGROUND_COLOR 	RA8875_WHITE
-#define FOREGROUND_COLOR 	RA8875_BLACK
-#define WARNING_COLOR 		BACKGROUND_COLOR
-#define ERROR_COLOR 		BACKGROUND_COLOR
+// Define race screen constants
 #define NUM_SCREENS 		8
 #define RACE_SCREEN 		0
 #define PDM_DRAW_SCREEN 	1
@@ -26,22 +23,24 @@
 #define END_RACE_SCREEN		4
 #define CHASSIS_SCREEN		5
 #define GENERAL_SCREEN		6
-#define BRAKE_SCREEN        7
-#define MIN_REFRESH 		100
+#define BRAKE_SCREEN		7
+#define MIN_REFRESH		100
 
-#define MIN_SUS_POS			5
-#define MAX_SUS_POS			20
+#define MIN_SUS_POS		5
+#define MAX_SUS_POS		20
 
-#define MIN_BRAKE_PRESS     0
-#define MAX_BRAKE_PRESS     250
+#define MIN_BRAKE_PRESS     	0
+#define MAX_BRAKE_PRESS     	250
 
 /*
  * Defines a data stream that is relevant to one or more screens
  *
- * value - 					double value of stream
+ * value - 		double value of stream
  * warnThreshold - 	Value where data will enter a warning state
  * errThreshold - 	Value where data will enter an error state
- * refreshInterval -Maximum refresh frequency
+ * refreshInterval -	Maximum refresh frequency
+ * wholeDigits - 	Number of whole digits to display
+ * decDigits - 		Number of decimal digits to display
  */
 typedef struct {
 	double value;
@@ -53,6 +52,14 @@ typedef struct {
 } dataItem;
 
 
+/*
+ * Defines the minimum amount of information a redrawItem function needs to work
+ * 
+ * x -		X coordinate
+ * y - 		Y coordinate
+ * size - 	Size of item
+ */
+
 typedef struct {
 	uint16_t x;
 	uint16_t y;
@@ -63,13 +70,11 @@ typedef struct {
 /*
  * Defines an item that will be displayed on a specific screen
  * 
- * x - 							X coordinate
- * y - 							Y coordinate
- * size - 					Width to be drawn in.  Also used to determine how much to white out
- * 										during refresh
  * currentValue - 	Current value being displayed
- * data - 					Pointer to corresponding dataItem
- * refreshTime -			Time that the value was previously refreshed
+ * data - 		Pointer to corresponding dataItem
+ * refreshTime -	Time that the value was previously refreshed
+ * info - 		Struct that contains necessary info for redrawing
+ * redrawItem - 	Redraw function pointer, called when the item is refreshed
  */
 typedef struct {
 	double currentValue;
@@ -82,22 +87,27 @@ typedef struct {
 /*
  * Defines a screen
  * 
- * elements -	Array of screen Items that will be on that screen 
- * len - 			Length of element array
+ * items -	Array of screen Items that will be on that screen 
+ * len - 	Length of screenItem array
  */
 typedef struct {
 	screenItem * items;
 	uint8_t len;
 } screen;
 
+/*
 typedef struct {
 	char * errText;
 	dataItem * item;
 	uint8_t priority;
 } errMsg;
+*/
 
-screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], brakeItems[8],motecItems[30], endRaceItems[9], chassisItems[20], generalItems[6];
+// Define all screen item arrays for each screen
+screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[6];
+// Define all screen structs
 screen raceScreen, pdmDrawScreen, pdmCutScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
+// Define master array of all screen structs
 screen* allScreens[8];
 
 uint8_t screenNumber, auxNumber;
@@ -141,27 +151,30 @@ volatile dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempF
 volatile dataItem lapTimeBuffer[20];
 uint8_t lapTimeHead, numLaps;
 
-errMsg errBuffer[20];
-uint8_t errBufferHead, errBufferTail;
-
-void initDataItems(void);
-void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, 
-		uint8_t whole, uint8_t dec);
-void initAllScreens(void);
-void initScreen(uint8_t num);
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data);
+void initDataItems(void); // Writes default values to all data items
+// Initializes an individual dataItem
+void initDataItem(volatile dataItem* data, double warn, double err, 
+	uint32_t refresh, uint8_t whole, uint8_t dec);
+void initAllScreens(void); // Initializes all screenItems
+void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
+// Initializes an individual screenItem
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, 
+	void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), 
+	volatile dataItem* data);
+// Toggles between a few different data items on one screen
 void changeAUXType(uint8_t num);
 void changeScreen(uint8_t num);
+// Continuously runs and refreshes stuff
 void refreshScreenItems(void);
 void clearScreen(void);
-void resetScreenItems(void);
-uint8_t initNightMode(uint8_t on);
+void resetScreenItems(void); // Resets all the values
+uint8_t initNightMode(uint8_t on); // Night mode stuff
 void nightMode(uint8_t on);
 double getMinLap(void);
 void endRace(void);
 void displayNoErrors(void);
-void addError(char * errText, dataItem * item, uint8_t priority);
 
+// Redraw Functions!
 void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
@@ -172,6 +185,7 @@ void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double current
 void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
+// Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);
 
 #endif /* _FSAE_LCD_H */
