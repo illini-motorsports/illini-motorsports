@@ -20,6 +20,8 @@ uint32_t CAN_recv_tmr = 0;
 uint32_t diag_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
 
+uint32_t nvm_read_tmr = 0;
+
 /**
  * Main function
  */
@@ -30,15 +32,27 @@ void main(void) {
   init_oscillator(); // Initialize oscillator configuration bits
   init_timer1(); // Initialize timer1 (seconds)
   init_timer2(); // Initialize timer2 (millis)
-  init_spi(); // Initialize SPI interface
+  //init_termination(); // Initialize programmable CAN termination
+
   //init_adc(init_adc_pdm); // Initialize ADC module
-  init_termination(); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
+  init_nvm(); // Initialize NVM module
 
   // Trigger initial ADC conversion
   //ADCCON3bits.GSWTRG = 1;
 
   STI(); // Enable interrupts
+
+  NvmStatusReg status = { .reg = 0 };
+
+  nvm_write_enable();
+  nvm_read_tmr = millis;
+  while(nvm_read_tmr == millis);
+
+  NvmStatusReg setting = { .WPEN = 0, .BP1 = 1, .BP0 = 1 };
+  nvm_write_status_reg(setting);
+  nvm_read_tmr = millis;
+  while(nvm_read_tmr == millis);
 
   // Main loop
   while (1) {
@@ -48,6 +62,13 @@ void main(void) {
      * Send diagnostic CAN messages
      */
     send_diag_can();
+
+
+    // Read NVM chip status register
+    if (millis != nvm_read_tmr) {
+      status = nvm_read_status_reg();
+      nvm_read_tmr = millis;
+    }
   }
 }
 

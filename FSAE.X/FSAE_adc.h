@@ -13,10 +13,6 @@
 #include <sys/types.h>
 #include "FSAE_config.h"
 
-// ANSEL Settings
-#define AN_INPUT  1
-#define DIG_INPUT 0
-
 // ADCTRGx Settings
 #define NO_TRIGGER   0b00
 #define SOFTWARE     0b01

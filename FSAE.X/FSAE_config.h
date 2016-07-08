@@ -28,6 +28,10 @@
 #define OUTPUT 0
 #define INPUT 1
 
+// ANSEL Settings
+#define AN_INPUT  1
+#define DIG_INPUT 0
+
 // Definitions for interval override control
 #define OVERRIDE    1
 #define NO_OVERRIDE 0
@@ -40,13 +44,14 @@
 #define STI() asm volatile("ei;")
 
 // Function definitions
+void unlock_config(void);
+void lock_config(void);
 void init_general(void);
-void init_gpio_pins(void);
 void init_peripheral_modules(void);
+void init_gpio_pins(void);
 void init_oscillator(void);
-void init_can(void);
 void init_timer1(void);
-void init_spi(void);
-void init_termination();
+void init_timer2(void);
+void init_termination(void);
 
 #endif /* FSAE_CONFIG_H */

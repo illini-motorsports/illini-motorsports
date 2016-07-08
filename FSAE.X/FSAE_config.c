@@ -786,72 +786,12 @@ void init_timer2(void) {
   lock_config();
 }
 
-void init_spi() {
-  unlock_config();
-
-  // Initialize SDI1/SDO1 PPS pins
-  CFGCONbits.IOLOCK = 0;
-  TRISBbits.TRISB9 = INPUT;
-  ANSELBbits.ANSB9 = 0;
-  SDI1Rbits.SDI1R = 0b0101; // RPB9
-  TRISBbits.TRISB10 = OUTPUT;
-  RPB10Rbits.RPB10R = 0b0101; // SDO1
-  CFGCONbits.IOLOCK = 1;
-
-  // Disable interrupts
-  IEC3bits.SPI1EIE = 0;
-  IEC3bits.SPI1RXIE = 0;
-  IEC3bits.SPI1TXIE = 0;
-
-  // Disable SPI1 module
-  SPI1CONbits.ON = 0;
-
-  // Clear receive buffer
-  uint32_t readVal = SPI1BUF;
-
-  // Use standard buffer mode
-  SPI1CONbits.ENHBUF = 0;
-
-  /**
-   * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-   * F_SCK = 100Mhz / (2 * (4 + 1))
-   * F_SCK = 10Mhz
-   */
-
-  // Set the baud rate (see above equation)
-  SPI1BRG = 4;
-
-  SPI1STATbits.SPIROV = 0;
-
-  SPI1CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
-  SPI1CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-  SPI1CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (16-bit)
-  SPI1CONbits.MODE16 = 1;  // 32/16-Bit Communication Select bits (16-bit)
-  SPI1CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-  SPI1CONbits.CKE = 1;     // SPI Clock Edge Select bit (Serial output data changes on transition from active clock state to idle clock state)
-  SPI1CONbits.DISSDI = 0;
-  SPI1CONbits.DISSDO = 0;
-  SPI1CONbits.SMP = 1;
-
-//TODO: Move this into a parameter
-#if BUILD_WHEEL
-  SPI1BRG = 9;
-  SPI1CONbits.MODE16 = 0;
-#endif
-
-  // Enable SPI1 module
-  SPI1CONbits.ON = 1;
-
-  lock_config();
-}
-
-
 /**
  * void init_termination(void)
  *
  * Sets up programmable CAN termination based on user defines.
  */
-void init_termination() {
+void init_termination(void) {
   // Initialize pin
   TERM_TRIS = OUTPUT;
 
