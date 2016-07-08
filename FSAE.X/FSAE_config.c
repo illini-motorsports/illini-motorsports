@@ -851,10 +851,10 @@ void init_spi() {
  *
  * Sets up programmable CAN termination based on user defines.
  */
-void init_termination(int term) {
+void init_termination() {
   // Initialize pin
   TERM_TRIS = OUTPUT;
 
   // Set termination based on value defined in specific node's header
-  TERM_LAT = term;
+  TERM_LAT = TERMINATING;
 }

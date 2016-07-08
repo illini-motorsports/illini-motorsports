@@ -15,10 +15,10 @@
 
 #ifdef BUILD_PDM
 #include "../PDM_Node.X/PDM.h"
-#endif
-
-#ifdef BUILD_WHEEL
+#elif BUILD_WHEEL
 #include "../Wheel_Node.X/Wheel.h"
+#elif BUILD_LOGGER
+#include "../Logger_Node.X/Logger.h"
 #endif
 
 // Code control defines
@@ -47,6 +47,6 @@ void init_oscillator(void);
 void init_can(void);
 void init_timer1(void);
 void init_spi(void);
-void init_termination(int term);
+void init_termination();
 
 #endif /* FSAE_CONFIG_H */
