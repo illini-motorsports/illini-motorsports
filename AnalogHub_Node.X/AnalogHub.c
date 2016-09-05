@@ -87,7 +87,9 @@ volatile uint32_t millis = 0;  // Holds timer0 rollover count
 volatile uint32_t seconds = 0; // Holds timer1 rollover count
 
 uint32_t fast_send_tmr, med_send_tmr, slow_send_tmr,
-    diag_send_tmr = 0; // Various millis timers
+    diag_send_tmr, adl_send_tmr = 0; // Various millis timers
+
+uint16_t ctri_hold, ctro_hold, ctsp_hold = 0;
 
 #if FRONT
 uint8_t radio_sw = 0; // State variable updated by PDM switch state CAN message
@@ -192,6 +194,16 @@ void main(void) {
 
     // Send diagnostic CAN message
     send_diag_can();
+
+    // Send coolant temp ADL messages to MoTeC
+    if (millis - adl_send_tmr >= SLOW_MSG_SEND) {
+      ((int16_t*) data)[0] = 0x1;
+      ((uint16_t*) data)[1] = ((ctri_hold << 8) & 0xFF00) | ((ctri_hold >> 8) & 0xFF);
+      ((uint16_t*) data)[2] = ((ctro_hold << 8) & 0xFF00) | ((ctro_hold >> 8) & 0xFF);
+      ((uint16_t*) data)[3] = ((ctsp_hold << 8) & 0xFF00) | ((ctsp_hold >> 8) & 0xFF);
+      ECANSendMessage(0x500, data, 8, ECAN_TX_FLAGS);
+      adl_send_tmr = millis;
+    }
 
 #if FRONT
     if (radio_sw) {
@@ -404,6 +416,10 @@ void send_slow_can(void) {
 
     double ctsp_samp = sample(ADC_CTSP_CHN);
     int16_t ctsp = (int16_t) (convert_ntc_res(ctsp_samp, PSTF_COEFF) / TEMP_SCL);
+
+    ctri_hold = (uint16_t) ctri;
+    ctro_hold = (uint16_t) ctro;
+    ctsp_hold = (uint16_t) ctsp;
 
     ((int16_t*) data)[CTRI_BYTE / 2] = ctri;
     ((int16_t*) data)[CTRO_BYTE / 2] = ctro;
