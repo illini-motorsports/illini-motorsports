@@ -52,6 +52,6 @@ void init_gpio_pins(void);
 void init_oscillator(void);
 void init_timer1(void);
 void init_timer2(void);
-void init_termination(void);
+void init_termination(uint8_t isTerm);
 
 #endif /* FSAE_CONFIG_H */

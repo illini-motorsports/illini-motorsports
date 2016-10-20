@@ -791,10 +791,10 @@ void init_timer2(void) {
  *
  * Sets up programmable CAN termination based on user defines.
  */
-void init_termination(void) {
+void init_termination(uint8_t isTerm) {
   // Initialize pin
   TERM_TRIS = OUTPUT;
 
   // Set termination based on value defined in specific node's header
-  TERM_LAT = TERMINATING;
+  TERM_LAT = isTerm;
 }
