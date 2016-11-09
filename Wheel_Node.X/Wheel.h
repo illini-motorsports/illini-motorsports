@@ -129,5 +129,6 @@ void CANdiag(void);
 void initADCWheel(void);
 void updateSwVals(void);
 uint8_t getRotaryPosition(uint32_t adcValue);
+void init_spi();
 
 #endif /* WHEEL_H */
