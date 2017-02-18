@@ -787,7 +787,7 @@ void init_timer2(void) {
 }
 
 /**
- * void init_termination(void)
+ * void init_termination(uint8_t isTerm)
  *
  * Sets up programmable CAN termination based on user defines.
  */

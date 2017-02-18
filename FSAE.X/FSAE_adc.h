@@ -18,10 +18,17 @@
 #define SOFTWARE     0b01
 #define SCAN_TRIGGER 0b11
 
-// Pin definitions for temperature sensor
-#define TEMP_TRIS  TRISBbits.TRISB11
-#define TEMP_ANSEL ANSELBbits.ANSB11
-#define TEMP_CSS   ADCCSS1bits.CSS6
+// Pin definitions for PCB temperature sensor
+#define ADC_PTEMP_CHN   6
+#define ADC_PTEMP_TRIS  TRISBbits.TRISB11
+#define ADC_PTEMP_ANSEL ANSELBbits.ANSB11
+#define ADC_PTEMP_CSS   ADCCSS1bits.CSS6
+#define ADC_PTEMP_TRG   ADCTRG2bits.TRGSRC6
+
+// Pin definitions for junction temperature sensor
+#define ADC_JTEMP_CHN   44
+#define ADC_JTEMP_CSS   ADCCSS2bits.CSS44
+//#define ADC_JTEMP_TRG   ADCTRG3bits.TRGSRC44
 
 // Function definitions
 void init_adc(void (*specific_init)(void));

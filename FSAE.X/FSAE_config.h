@@ -13,16 +13,9 @@
 #include <sys/kmem.h>
 #include <sys/types.h>
 
-#ifdef BUILD_PDM
-#include "../PDM_Node.X/PDM.h"
-#elif BUILD_WHEEL
-#include "../Wheel_Node.X/Wheel.h"
-#elif BUILD_LOGGER
-#include "../Logger_Node.X/Logger.h"
-#endif
-
-// Code control defines
-//#define REFCLKO
+// Code control definitions
+#define INTERNAL_CLK 0 // Determines whether the internal or external clock source is used
+#define REFCLKO      0 // Determines whether SYSCLK / 10 is driven out on RF0
 
 // TRIS Settings
 #define OUTPUT 0
@@ -35,6 +28,10 @@
 // Definitions for interval override control
 #define OVERRIDE    1
 #define NO_OVERRIDE 0
+
+// Programmable termination settings
+#define TERMINATING 1
+#define NOT_TERMINATING 0
 
 // Pin definitions for programmable termination
 #define TERM_TRIS TRISAbits.TRISA2

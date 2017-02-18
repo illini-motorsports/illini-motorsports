@@ -23,9 +23,6 @@
  *     initialization code for board-specific ADC configuration
  */
 void init_adc(void (*specific_init)(void)) {
-  // Set TEMP pin as an analog input
-  TEMP_TRIS = INPUT;
-  TEMP_ANSEL = AN_INPUT;
 
   // Clear control registers
   ADCCON1 = 0;
@@ -90,6 +87,14 @@ void init_adc(void (*specific_init)(void)) {
   ADCANCONbits.ANEN7 = 1;      // ADC7 Analog and Bias Circuitry Enable (Enabled)
   while(!ADCANCONbits.WKRDY7); // Wait until ADC7 analog and bias circuitry is ready
   ADCCON3bits.DIGEN7 = 1;      // ADC7 Digital Enable (Enabled)
+
+  // Configure PCB/Junction temp channels
+  ADC_PTEMP_TRIS = INPUT;
+  ADC_PTEMP_ANSEL = AN_INPUT;
+  ADC_PTEMP_TRG = SCAN_TRIGGER;
+  //TODO: ADC_JTEMP_TRG = SCAN_TRIGGER;
+  ADC_PTEMP_CSS = 1;
+  ADC_JTEMP_CSS = 1;
 
   // Call board-specific ADC init function if one was provided
   if(specific_init != NULL) {
