@@ -43,18 +43,18 @@
             <linkerLibProjectItem>
               <makeArtifact PL="../FSAE.X"
                             CT="3"
-                            CN="PDM"
+                            CN="default"
                             AC="true"
                             BL="true"
                             WD="../FSAE.X"
-                            BC="${MAKE}  -f Makefile CONF=PDM"
-                            DBC="${MAKE}  -f Makefile CONF=PDM TYPE_IMAGE=DEBUG_RUN"
-                            CC="rm -rf &quot;build/PDM&quot; &quot;dist/PDM&quot;"
-                            OP="dist/PDM/production/FSAE.X.a"
-                            DOP="dist/PDM/debug/FSAE.X.a"
-                            FL="dist/PDM/production/FSAE.X.a"
-                            PD="dist/PDM/production/FSAE.X."
-                            DD="dist/PDM/debug/FSAE.X.">
+                            BC="${MAKE}  -f Makefile CONF=default"
+                            DBC="${MAKE}  -f Makefile CONF=default TYPE_IMAGE=DEBUG_RUN"
+                            CC="rm -rf &quot;build/default&quot; &quot;dist/default&quot;"
+                            OP="dist/default/production/FSAE.X.a"
+                            DOP="dist/default/debug/FSAE.X.a"
+                            FL="dist/default/production/FSAE.X.a"
+                            PD="dist/default/production/FSAE.X."
+                            DD="dist/default/debug/FSAE.X.">
               </makeArtifact>
             </linkerLibProjectItem>
           </linkerLibItems>
@@ -178,7 +178,7 @@
         <property key="use-indirect-calls" value="false"/>
       </C32CPP>
       <C32Global>
-        <property key="common-include-directories" value="../FSAE_32"/>
+        <property key="common-include-directories" value="../FSAE"/>
         <property key="gp-relative-option" value=""/>
         <property key="legacy-libc" value="false"/>
         <property key="relaxed-math" value="false"/>

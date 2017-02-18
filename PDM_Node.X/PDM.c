@@ -26,7 +26,7 @@ uint8_t peak_state[NUM_LOADS] = {0};
 double fb_resistances[NUM_LOADS] = {0.0};
 
 // Stores the sampled current draw values for each load
-uint16_t load_current[NUM_LOADS] = {0};
+uint16_t load_current[NUM_LOADS + 1] = {0};
 
 // Stores the overcurrent state of each load
 uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT};
@@ -54,21 +54,34 @@ uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
 uint32_t temp_samp_tmr, current_samp_tmr = 0;
 
-/**
- * For whatever reason, reading from EN_IGN_PORT does not work. Instead, we'll
- * keep track of the value with a global variable.
- */
-uint8_t ign_enabled = 0;
-
 // Initial overcurrent thresholds to use for all the loads
-const double load_cutoff[NUM_LOADS] = {100.0 /*IGN*/, 100.0 /*INJ*/,
-10.0 /*FUEL*/, 20.0 /*ECU*/, 15.0 /*WTR*/, 20.0 /*FAN*/, 2.0 /*AUX*/,
-60.0 /*PDLU*/, 60.0 /*PDLD*/, 10.0 /*B5V5*/, 10.0 /*BVBAT*/,
-5.0 /*STR0*/, 2.0 /*STR1*/, 2.0 /*STR2*/};
-const double load_peak_cutoff[NUM_LOADS] = {0.0 /*IGN*/, 0.0 /*INJ*/,
-40.0 /*FUEL*/, 60.0 /*ECU*/, 40.0 /*WTR*/, 100.0 /*FAN*/, 0.0 /*AUX*/,
-0.0 /*PDLU*/, 0.0 /*PDLD*/, 0.0 /*B5V5*/, 0.0 /*BVBAT*/,
-0.0 /*STR0*/, 0.0 /*STR1*/, 0.0 /*STR2*/};
+const double load_cutoff[NUM_LOADS] = {
+  10.0,  // FUEL
+  100.0, // IGN
+  100.0, // INJ
+  50.0,  // ABS
+  60.0,  // PDLU
+  60.0,  // PDLD
+  20.0,  // FAN
+  15.0,  // WTR
+  20.0,  // ECU
+  2.0,   // AUX
+  10.0   // BVBAT
+};
+
+const double load_peak_cutoff[NUM_LOADS] = {
+  40.0,  // FUEL
+  0.0,   // IGN
+  0.0,   // INJ
+  0.0,   // ABS
+  0.0,   // PDLU
+  0.0,   // PDLD
+  100.0, // FAN
+  40.0,  // WTR
+  60.0,  // ECU
+  0.0,   // AUX
+  0.0    // BVBAT
+};
 
 /**
  * Main function
@@ -80,39 +93,36 @@ void main(void) {
   init_oscillator(); // Initialize oscillator configuration bits
   init_timer1(); // Initialize timer1 (seconds)
   init_timer2(); // Initialize timer2 (millis)
-  init_spi(); // Initialize SPI interface
-  init_adc(init_adc_pdm); // Initialize ADC module
-  init_termination(); // Initialize programmable CAN termination
+  //init_spi(); // Initialize SPI interface
+  init_adc(NULL); // Initialize ADC module
+  init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
 
   // Set EN pins to outputs
+  EN_FUEL_TRIS = OUTPUT;
   EN_IGN_TRIS = OUTPUT;
   EN_INJ_TRIS = OUTPUT;
-  EN_FUEL_TRIS = OUTPUT;
-  EN_ECU_TRIS = OUTPUT;
-  EN_WTR_TRIS = OUTPUT;
-  EN_FAN_TRIS = OUTPUT;
-  EN_AUX_TRIS = OUTPUT;
+  EN_ABS_TRIS = OUTPUT;
   EN_PDLU_TRIS = OUTPUT;
   EN_PDLD_TRIS = OUTPUT;
-  EN_B5V5_TRIS = OUTPUT;
+  EN_FAN_TRIS = OUTPUT;
+  EN_WTR_TRIS = OUTPUT;
+  EN_ECU_TRIS = OUTPUT;
+  EN_AUX_TRIS = OUTPUT;
   EN_BVBAT_TRIS = OUTPUT;
   EN_STR_TRIS = OUTPUT;
 
-  // Set unused EN_FUEL pin to input so it doesn't interfere
-  EN_FUEL_UNUSED_TRIS = INPUT;
-
   // Turn off all loads
+  EN_FUEL_LAT = PWR_OFF;
   EN_IGN_LAT = PWR_OFF;
   EN_INJ_LAT = PWR_OFF;
-  EN_FUEL_LAT = PWR_OFF;
-  EN_ECU_LAT = PWR_OFF;
-  EN_WTR_LAT = PWR_OFF;
-  EN_FAN_LAT = PWR_OFF;
-  EN_AUX_LAT = PWR_OFF;
+  EN_ABS_LAT = PWR_OFF;
   EN_PDLU_LAT = PWR_OFF;
   EN_PDLD_LAT = PWR_OFF;
-  EN_B5V5_LAT = PWR_OFF;
+  EN_FAN_LAT = PWR_OFF;
+  EN_WTR_LAT = PWR_OFF;
+  EN_ECU_LAT = PWR_OFF;
+  EN_AUX_LAT = PWR_OFF;
   EN_BVBAT_LAT = PWR_OFF;
   EN_STR_LAT = PWR_OFF;
 
@@ -124,139 +134,114 @@ void main(void) {
   SW5_TRIS = INPUT;
   SW6_TRIS = INPUT;
   SW7_TRIS = INPUT;
-  //SW8_TRIS = INPUT;
+  SW8_TRIS = INPUT;
   SW9_TRIS = INPUT;
   KILL_TRIS = INPUT;
 
   // Set TRIS registers - !CS
+  CS_FUEL_TRIS = OUTPUT;
   CS_IGN_TRIS = OUTPUT;
   CS_INJ_TRIS = OUTPUT;
-  CS_FUEL_TRIS = OUTPUT;
-  CS_ECU_TRIS = OUTPUT;
-  CS_WTR_TRIS = OUTPUT;
-  CS_FAN_TRIS = OUTPUT;
-  CS_AUX_TRIS = OUTPUT;
+  CS_ABS_TRIS = OUTPUT;
   CS_PDLU_TRIS = OUTPUT;
   CS_PDLD_TRIS = OUTPUT;
-  CS_B5V5_TRIS = OUTPUT;
+  CS_FAN_TRIS = OUTPUT;
+  CS_WTR_TRIS = OUTPUT;
+  CS_ECU_TRIS = OUTPUT;
+  CS_AUX_TRIS = OUTPUT;
   CS_BVBAT_TRIS = OUTPUT;
-  CS_STR0_TRIS = OUTPUT;
-  CS_STR1_TRIS = OUTPUT;
-  CS_STR2_TRIS = OUTPUT;
 
   // Set all !CS signals high
+  CS_FUEL_LAT = 1;
   CS_IGN_LAT = 1;
   CS_INJ_LAT = 1;
-  CS_FUEL_LAT = 1;
-  CS_ECU_LAT = 1;
-  CS_WTR_LAT = 1;
-  CS_FAN_LAT = 1;
-  CS_AUX_LAT = 1;
+  CS_ABS_LAT = 1;
   CS_PDLU_LAT = 1;
   CS_PDLD_LAT = 1;
-  CS_B5V5_LAT = 1;
+  CS_FAN_LAT = 1;
+  CS_WTR_LAT = 1;
+  CS_ECU_LAT = 1;
+  CS_AUX_LAT = 1;
   CS_BVBAT_LAT = 1;
-  CS_STR0_LAT = 1;
-  CS_STR1_LAT = 1;
-  CS_STR2_LAT = 1;
 
   // Disconnect terminal A from resistor network for all rheostats
-  send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
+  //send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
 
   // Get wiper data struct from NVM
   Wiper_nvm_data data = {0};
-  read_nvm_data(&data, sizeof(Wiper_nvm_data));
+  //read_nvm_data(&data, sizeof(Wiper_nvm_data));
 
   // Check to see if the wiper data in NVM has been initialized
-  if(data.key != NVM_WPR_CONSTANT) {
+  if(0 /*data.key != NVM_WPR_CONSTANT*/) {
     // Initialize normal and peak wiper values to general settings
     uint32_t i;
     for (i = 0; i < NUM_LOADS; i++) {
-      double ratio = 0;
-
-      switch (i) {
-        case IGN_IDX: ratio = IGN_RATIO; break;
-        case INJ_IDX: ratio = INJ_RATIO; break;
-        case FUEL_IDX: ratio = FUEL_RATIO; break;
-        case ECU_IDX: ratio = ECU_RATIO; break;
-        case WTR_IDX: ratio = WTR_RATIO; break;
-        case FAN_IDX: ratio = FAN_RATIO; break;
-        case AUX_IDX: ratio = AUX_RATIO; break;
-        case PDLU_IDX: ratio = PDLU_RATIO; break;
-        case PDLD_IDX: ratio = PDLD_RATIO; break;
-        case B5V5_IDX: ratio = B5V5_RATIO; break;
-        case BVBAT_IDX: ratio = BVBAT_RATIO; break;
-        case STR0_IDX: ratio = STR0_RATIO; break;
-        case STR1_IDX: ratio = STR1_RATIO; break;
-        case STR2_IDX: ratio = STR2_RATIO; break;
-      }
-
-      double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0 : (ratio * 4.7) / load_cutoff[i];
+      double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_cutoff[i];
       wiper_values[i] = res_to_wpr(fb_resistance);
-      fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0 : (ratio * 4.7) / load_peak_cutoff[i];
+      fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_peak_cutoff[i];
       peak_wiper_values[i] = res_to_wpr(fb_resistance);
     }
 
     // Store default wiper data struct in NVM
-    data.key = NVM_WPR_CONSTANT;
+    //data.key = NVM_WPR_CONSTANT;
+    data.fuel_wpr_val = wiper_values[FUEL_IDX];
     data.ign_wpr_val = wiper_values[IGN_IDX];
     data.inj_wpr_val = wiper_values[INJ_IDX];
-    data.fuel_wpr_val = wiper_values[FUEL_IDX];
-    data.ecu_wpr_val = wiper_values[ECU_IDX];
-    data.wtr_wpr_val = wiper_values[WTR_IDX];
-    data.fan_wpr_val = wiper_values[FAN_IDX];
-    data.aux_wpr_val = wiper_values[AUX_IDX];
+    data.abs_wpr_val = wiper_values[ABS_IDX];
     data.pdlu_wpr_val = wiper_values[PDLU_IDX];
     data.pdld_wpr_val = wiper_values[PDLD_IDX];
-    data.b5v5_wpr_val = wiper_values[B5V5_IDX];
+    data.fan_wpr_val = wiper_values[FAN_IDX];
+    data.wtr_wpr_val = wiper_values[WTR_IDX];
+    data.ecu_wpr_val = wiper_values[ECU_IDX];
+    data.aux_wpr_val = wiper_values[AUX_IDX];
     data.bvbat_wpr_val = wiper_values[BVBAT_IDX];
-    data.str0_wpr_val = wiper_values[STR0_IDX];
-    data.str1_wpr_val = wiper_values[STR1_IDX];
-    data.str2_wpr_val = wiper_values[STR2_IDX];
+
     data.fuel_peak_wpr_val = peak_wiper_values[FUEL_IDX];
-    data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
     data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
-    write_nvm_data(&data, sizeof(Wiper_nvm_data));
+    data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
+    //write_nvm_data(&data, sizeof(Wiper_nvm_data));
   } else {
     // Copy peak and normal wiper values from NVM
+    wiper_values[FUEL_IDX] = data.fuel_wpr_val;
     wiper_values[IGN_IDX] = data.ign_wpr_val;
     wiper_values[INJ_IDX] = data.inj_wpr_val;
-    wiper_values[FUEL_IDX] = data.fuel_wpr_val;
-    wiper_values[ECU_IDX] = data.ecu_wpr_val;
-    wiper_values[WTR_IDX] = data.wtr_wpr_val;
-    wiper_values[FAN_IDX] = data.fan_wpr_val;
-    wiper_values[AUX_IDX] = data.aux_wpr_val;
+    wiper_values[ABS_IDX] = data.abs_wpr_val;
     wiper_values[PDLU_IDX] = data.pdlu_wpr_val;
     wiper_values[PDLD_IDX] = data.pdld_wpr_val;
-    wiper_values[B5V5_IDX] = data.b5v5_wpr_val;
+    wiper_values[FAN_IDX] = data.fan_wpr_val;
+    wiper_values[WTR_IDX] = data.wtr_wpr_val;
+    wiper_values[ECU_IDX] = data.ecu_wpr_val;
+    wiper_values[AUX_IDX] = data.aux_wpr_val;
     wiper_values[BVBAT_IDX] = data.bvbat_wpr_val;
-    wiper_values[STR0_IDX] = data.str0_wpr_val;
-    wiper_values[STR1_IDX] = data.str1_wpr_val;
-    wiper_values[STR2_IDX] = data.str2_wpr_val;
+
     peak_wiper_values[FUEL_IDX] = data.fuel_peak_wpr_val;
-    peak_wiper_values[WTR_IDX] = data.wtr_peak_wpr_val;
     peak_wiper_values[FAN_IDX] = data.fan_peak_wpr_val;
+    peak_wiper_values[WTR_IDX] = data.wtr_peak_wpr_val;
   }
 
   // Set each rheostat to the value loaded from NVM
   uint32_t i;
   for (i = 0; i < NUM_LOADS; i++) {
-    set_rheo(i, wiper_values[i]);
+    //set_rheo(i, wiper_values[i]);
     peak_state[i] = 0;
     fb_resistances[i] = wpr_to_res(wiper_values[i]);
   }
 
+  /*
   // Turn on state-independent loads
   EN_AUX_LAT = PWR_ON;
   EN_B5V5_LAT = PWR_ON;
   EN_BVBAT_LAT = PWR_ON;
+   */
 
+  /*
   // Turn on ECU (state-independent)
   set_rheo(ECU_IDX, peak_wiper_values[ECU_IDX]);
   fb_resistances[ECU_IDX] = wpr_to_res(peak_wiper_values[ECU_IDX]);
   peak_state[ECU_IDX] = 1;
   EN_ECU_LAT = PWR_ON;
   ecu_peak_tmr = millis;
+   */
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
@@ -301,7 +286,6 @@ void main(void) {
 
     /**
      * Control PDLU/PDLD loads based on the ACT_UP/ACT_DN signals
-     */
 
     // PDLU
     if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW && (millis - pdlu_tmr < MAX_PDL_DUR)) {
@@ -342,7 +326,9 @@ void main(void) {
         load_state_changed = 1;
       }
     }
+     */
 
+#if 0
     /**
      * Toggle state-dependent loads
      *
@@ -641,6 +627,7 @@ void main(void) {
       peak_state[ECU_IDX] = 0;
       load_state_changed = 1;
     }
+#endif
 
     /**
      * Sample load current data and check if any of the loads have overcurrented.
@@ -862,6 +849,7 @@ void sample_temp(void) {
  * draw of each load.
  */
 void sample_load_current(void) {
+  /*
   load_current[IGN_IDX] = (((((double) read_adc_chn(ADC_IGN_CHN)) / 4095.0)
       * 3.3 * 1.5) * IGN_SCLINV * IGN_RATIO) / fb_resistances[IGN_IDX];
 
@@ -897,6 +885,7 @@ void sample_load_current(void) {
 
   load_current[STR0_IDX] = (((((double) read_adc_chn(ADC_STR0_CHN)) / 4095.0)
       * 3.3 * 1.5) * STR0_SCLINV * STR0_RATIO) / fb_resistances[STR0_IDX];
+   */
 
   /*
   load_current[STR1_IDX] = (((((double) read_adc_chn(ADC_STR1_CHN)) / 4095.0)
@@ -906,6 +895,7 @@ void sample_load_current(void) {
       * 3.3 * 1.5) * STR2_SCLINV * STR2_RATIO) / fb_resistances[STR2_IDX];
    */
 
+  /*
   // Calculate total current consumption
   double current_total = ((double) load_current[IGN_IDX]) / (IGN_SCLINV / TOTAL_SCLINV);
   current_total += ((double) load_current[INJ_IDX]) / (INJ_SCLINV / TOTAL_SCLINV);
@@ -922,6 +912,7 @@ void sample_load_current(void) {
   //current_total += ((double) load_current[STR1_IDX]) / (STR1_SCLINV / TOTAL_SCLINV);
   //current_total += ((double) load_current[STR2_IDX]) / (STR2_SCLINV / TOTAL_SCLINV);
   total_current_draw = current_total;
+   */
 }
 
 /**
@@ -933,7 +924,7 @@ void sample_load_current(void) {
  */
 void check_load_overcurrent(void) {
   uint32_t load_idx;
-  for (load_idx = 0; load_idx < NUM_LOADS - 2; load_idx++) {
+  for (load_idx = 0; load_idx < NUM_LOADS; load_idx++) {
     switch (overcurrent_flag[load_idx]) {
 
       case NO_OVERCRT:
@@ -980,9 +971,8 @@ void check_load_overcurrent(void) {
 void send_load_current_can(void) {
   if(millis - load_current_send_tmr >= LOAD_CUR_SEND) {
     CAN_data load_current_data = {0};
-    uint16_t current_str_total = load_current[STR0_IDX];// + load_current[STR1_IDX]
-    //    + load_current[STR2_IDX];
 
+    /*
     load_current_data.halfword0 = load_current[IGN_IDX];
     load_current_data.halfword1 = load_current[INJ_IDX];
     load_current_data.halfword2 = load_current[FUEL_IDX];
@@ -1008,6 +998,7 @@ void send_load_current_can(void) {
     load_current_data.halfword2 = 0; //load_current[STR2_IDX];
     load_current_data.halfword3 = current_str_total;
     CAN_send_message(PDM_ID + 7, 8, load_current_data);
+     */
 
     load_current_send_tmr = millis;
   }
@@ -1021,6 +1012,7 @@ void send_load_current_can(void) {
  */
 void send_rail_volt_can(void) {
   if(millis - rail_volt_send_tmr >= RAIL_VOLT_SEND) {
+    /*
     uint32_t rail_vbat = read_adc_chn(ADC_VBAT_CHN);
     uint16_t rail_vbat_conv = ((((double) rail_vbat) / 4095.0) * 3.3 * 5) * 1000.0;
 
@@ -1035,16 +1027,17 @@ void send_rail_volt_can(void) {
 
     uint32_t rail_3v3 = read_adc_chn(ADC_3V3_CHN);
     uint16_t rail_3v3_conv = ((((double) rail_3v3) / 4095.0) * 3.3 * 2) * 1000.0;
+     */
 
     CAN_data rail_voltage_data = {0};
-    rail_voltage_data.halfword0 = rail_vbat_conv;
-    rail_voltage_data.halfword1 = rail_12v_conv;
-    rail_voltage_data.halfword2 = rail_5v5_conv;
-    rail_voltage_data.halfword3 = rail_5v_conv;
+    //rail_voltage_data.halfword0 = rail_vbat_conv;
+    //rail_voltage_data.halfword1 = rail_12v_conv;
+    //rail_voltage_data.halfword2 = rail_5v5_conv;
+    //rail_voltage_data.halfword3 = rail_5v_conv;
     CAN_send_message(PDM_ID + 2, 8, rail_voltage_data);
 
     rail_voltage_data.doubleword = 0;
-    rail_voltage_data.halfword0 = rail_3v3_conv;
+    //rail_voltage_data.halfword0 = rail_3v3_conv;
     CAN_send_message(PDM_ID + 3, 2, rail_voltage_data);
 
     rail_volt_send_tmr = millis;
@@ -1061,16 +1054,17 @@ void send_rail_volt_can(void) {
  */
 void send_cutoff_values_can(uint8_t override) {
   if ((millis - cutoff_send_tmr >= CUTOFF_VAL_SEND) || override) {
-    double ign_cutoff = (4.7 / wpr_to_res(wiper_values[IGN_IDX])) * IGN_RATIO;
+    /*
+    double ign_cutoff = (4.7 / wpr_to_res(wiper_values[IGN_IDX])) * CUR_RATIO;
     uint16_t ign_cutoff_scl = (uint16_t) (ign_cutoff * CUT_SCLINV);
 
-    double inj_cutoff = (4.7 / wpr_to_res(wiper_values[INJ_IDX])) * INJ_RATIO;
+    double inj_cutoff = (4.7 / wpr_to_res(wiper_values[INJ_IDX])) * CUR_RATIO;
     uint16_t inj_cutoff_scl = (uint16_t) (inj_cutoff * CUT_SCLINV);
 
-    double aux_cutoff = (4.7 / wpr_to_res(wiper_values[AUX_IDX])) * AUX_RATIO;
+    double aux_cutoff = (4.7 / wpr_to_res(wiper_values[AUX_IDX])) * CUR_RATIO;
     uint16_t aux_cutoff_scl = (uint16_t) (aux_cutoff * CUT_SCLINV);
 
-    double pdlu_cutoff = (4.7 / wpr_to_res(wiper_values[PDLU_IDX])) * PDLU_RATIO;
+    double pdlu_cutoff = (4.7 / wpr_to_res(wiper_values[PDLU_IDX])) * CUR_RATIO;
     uint16_t pdlu_cutoff_scl = (uint16_t) (pdlu_cutoff * CUT_SCLINV);
 
     CAN_data cutoff_value_data = {0};
@@ -1080,13 +1074,13 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword3 = pdlu_cutoff_scl;
     CAN_send_message(PDM_ID + 0x8, 8, cutoff_value_data);
 
-    double pdld_cutoff = (4.7 / wpr_to_res(wiper_values[PDLD_IDX])) * PDLD_RATIO;
+    double pdld_cutoff = (4.7 / wpr_to_res(wiper_values[PDLD_IDX])) * CUR_RATIO;
     uint16_t pdld_cutoff_scl = (uint16_t) (pdld_cutoff * CUT_SCLINV);
 
-    double b5v5_cutoff = (4.7 / wpr_to_res(wiper_values[B5V5_IDX])) * B5V5_RATIO;
+    double b5v5_cutoff = (4.7 / wpr_to_res(wiper_values[B5V5_IDX])) * CUR_RATIO;
     uint16_t b5v5_cutoff_scl = (uint16_t) (b5v5_cutoff * CUT_SCLINV);
 
-    double bvbat_cutoff = (4.7 / wpr_to_res(wiper_values[BVBAT_IDX])) * BVBAT_RATIO;
+    double bvbat_cutoff = (4.7 / wpr_to_res(wiper_values[BVBAT_IDX])) * CUR_RATIO;
     uint16_t bvbat_cutoff_scl = (uint16_t) (bvbat_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = pdld_cutoff_scl;
@@ -1094,13 +1088,13 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword2 = bvbat_cutoff_scl;
     CAN_send_message(PDM_ID + 0x9, 6, cutoff_value_data);
 
-    double str0_cutoff = (4.7 / wpr_to_res(wiper_values[STR0_IDX])) * STR0_RATIO;
+    double str0_cutoff = (4.7 / wpr_to_res(wiper_values[STR0_IDX])) * CUR_RATIO;
     uint16_t str0_cutoff_scl = (uint16_t) (str0_cutoff * CUT_SCLINV);
 
-    double str1_cutoff = (4.7 / wpr_to_res(wiper_values[STR1_IDX])) * STR1_RATIO;
+    double str1_cutoff = (4.7 / wpr_to_res(wiper_values[STR1_IDX])) * CUR_RATIO;
     uint16_t str1_cutoff_scl = (uint16_t) (str1_cutoff * CUT_SCLINV);
 
-    double str2_cutoff = (4.7 / wpr_to_res(wiper_values[STR2_IDX])) * STR2_RATIO;
+    double str2_cutoff = (4.7 / wpr_to_res(wiper_values[STR2_IDX])) * CUR_RATIO;
     uint16_t str2_cutoff_scl = (uint16_t) (str2_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = str0_cutoff_scl;
@@ -1108,16 +1102,16 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword2 = str2_cutoff_scl;
     CAN_send_message(PDM_ID + 0xA, 6, cutoff_value_data);
 
-    double fuel_cutoff = (4.7 / wpr_to_res(wiper_values[FUEL_IDX])) * FUEL_RATIO;
+    double fuel_cutoff = (4.7 / wpr_to_res(wiper_values[FUEL_IDX])) * CUR_RATIO;
     uint16_t fuel_cutoff_scl = (uint16_t) (fuel_cutoff * CUT_SCLINV);
 
-    double wtr_cutoff = (4.7 / wpr_to_res(wiper_values[WTR_IDX])) * WTR_RATIO;
+    double wtr_cutoff = (4.7 / wpr_to_res(wiper_values[WTR_IDX])) * CUR_RATIO;
     uint16_t wtr_cutoff_scl = (uint16_t) (wtr_cutoff * CUT_SCLINV);
 
-    double fan_cutoff = (4.7 / wpr_to_res(wiper_values[FAN_IDX])) * FAN_RATIO;
+    double fan_cutoff = (4.7 / wpr_to_res(wiper_values[FAN_IDX])) * CUR_RATIO;
     uint16_t fan_cutoff_scl = (uint16_t) (fan_cutoff * CUT_SCLINV);
 
-    double ecu_cutoff = (4.7 / wpr_to_res(wiper_values[ECU_IDX])) * ECU_RATIO;
+    double ecu_cutoff = (4.7 / wpr_to_res(wiper_values[ECU_IDX])) * CUR_RATIO;
     uint16_t ecu_cutoff_scl = (uint16_t) (ecu_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = fuel_cutoff_scl;
@@ -1126,16 +1120,16 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword3 = ecu_cutoff_scl;
     CAN_send_message(PDM_ID + 0xB, 8, cutoff_value_data);
 
-    double fuel_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FUEL_IDX])) * FUEL_RATIO;
+    double fuel_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FUEL_IDX])) * CUR_RATIO;
     uint16_t fuel_peak_cutoff_scl = (uint16_t) (fuel_peak_cutoff * CUT_SCLINV);
 
-    double wtr_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[WTR_IDX])) * WTR_RATIO;
+    double wtr_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[WTR_IDX])) * CUR_RATIO;
     uint16_t wtr_peak_cutoff_scl = (uint16_t) (wtr_peak_cutoff * CUT_SCLINV);
 
-    double fan_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FAN_IDX])) * FAN_RATIO;
+    double fan_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FAN_IDX])) * CUR_RATIO;
     uint16_t fan_peak_cutoff_scl = (uint16_t) (fan_peak_cutoff * CUT_SCLINV);
 
-    double ecu_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[ECU_IDX])) * ECU_RATIO;
+    double ecu_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[ECU_IDX])) * CUR_RATIO;
     uint16_t ecu_peak_cutoff_scl = (uint16_t) (ecu_peak_cutoff * CUT_SCLINV);
 
     cutoff_value_data.halfword0 = fuel_peak_cutoff_scl;
@@ -1143,6 +1137,7 @@ void send_cutoff_values_can(uint8_t override) {
     cutoff_value_data.halfword2 = fan_peak_cutoff_scl;
     cutoff_value_data.halfword3 = ecu_peak_cutoff_scl;
     CAN_send_message(PDM_ID + 0xC, 8, cutoff_value_data);
+     */
 
     cutoff_send_tmr = millis;
   }
@@ -1159,6 +1154,8 @@ void send_cutoff_values_can(uint8_t override) {
 void send_load_status_can(uint8_t override) {
   if ((millis - load_status_send_tmr >= LOAD_STATUS_SEND) || override) {
     CAN_data data = {0};
+
+    /*
 
     // Create load enablity bitmap
     data.halfword0 = 0x0 |
@@ -1197,6 +1194,7 @@ void send_load_status_can(uint8_t override) {
         ACT_UP_SW << 5 |
         ACT_DN_SW << 4 |
         KILL_SW << 3;
+     */
 
     CAN_send_message(PDM_ID + 0x1, 6, data);
     load_status_send_tmr = millis;
@@ -1213,6 +1211,7 @@ void send_load_status_can(uint8_t override) {
  */
 void send_overcrt_count_can(uint8_t override) {
   if ((millis - overcrt_count_send_tmr >= OVERCRT_COUNT_SEND) || override) {
+    /*
     CAN_data data = {0};
 
     data.byte0 = overcurrent_count[IGN_IDX];
@@ -1230,6 +1229,7 @@ void send_overcrt_count_can(uint8_t override) {
     data.byte2 = overcurrent_count[BVBAT_IDX];
     data.byte3 = overcurrent_count[STR_IDX];
     CAN_send_message(PDM_ID + 0xE, 4, data);
+     */
 
     overcrt_count_send_tmr = millis;
   }
@@ -1248,20 +1248,17 @@ void set_rheo(uint8_t load_idx, uint8_t val) {
 
   // Select specific !CS signal
   switch (load_idx) {
+    case FUEL_IDX: CS_FUEL_LAT = 0; break;
     case IGN_IDX: CS_IGN_LAT = 0; break;
     case INJ_IDX: CS_INJ_LAT = 0; break;
-    case FUEL_IDX: CS_FUEL_LAT = 0; break;
-    case ECU_IDX: CS_ECU_LAT = 0; break;
-    case WTR_IDX: CS_WTR_LAT = 0; break;
-    case FAN_IDX: CS_FAN_LAT = 0; break;
-    case AUX_IDX: CS_AUX_LAT = 0; break;
+    case ABS_IDX: CS_ABS_LAT = 0; break;
     case PDLU_IDX: CS_PDLU_LAT = 0; break;
     case PDLD_IDX: CS_PDLD_LAT = 0; break;
-    case B5V5_IDX: CS_B5V5_LAT = 0; break;
+    case FAN_IDX: CS_FAN_LAT = 0; break;
+    case WTR_IDX: CS_WTR_LAT = 0; break;
+    case ECU_IDX: CS_ECU_LAT = 0; break;
+    case AUX_IDX: CS_AUX_LAT = 0; break;
     case BVBAT_IDX: CS_BVBAT_LAT = 0; break;
-    case STR0_IDX: CS_STR0_LAT = 0; break;
-    //case STR1_IDX: CS_STR1_LAT = 0; break;
-    //case STR2_IDX: CS_STR2_LAT = 0; break;
     default: return;
   }
 
@@ -1270,20 +1267,17 @@ void set_rheo(uint8_t load_idx, uint8_t val) {
 
   // Deselect specific !CS signal
   switch (load_idx) {
+    case FUEL_IDX: CS_FUEL_LAT = 1; break;
     case IGN_IDX: CS_IGN_LAT = 1; break;
     case INJ_IDX: CS_INJ_LAT = 1; break;
-    case FUEL_IDX: CS_FUEL_LAT = 1; break;
-    case ECU_IDX: CS_ECU_LAT = 1; break;
-    case WTR_IDX: CS_WTR_LAT = 1; break;
-    case FAN_IDX: CS_FAN_LAT = 1; break;
-    case AUX_IDX: CS_AUX_LAT = 1; break;
+    case ABS_IDX: CS_ABS_LAT = 1; break;
     case PDLU_IDX: CS_PDLU_LAT = 1; break;
     case PDLD_IDX: CS_PDLD_LAT = 1; break;
-    case B5V5_IDX: CS_B5V5_LAT = 1; break;
+    case FAN_IDX: CS_FAN_LAT = 1; break;
+    case WTR_IDX: CS_WTR_LAT = 1; break;
+    case ECU_IDX: CS_ECU_LAT = 1; break;
+    case AUX_IDX: CS_AUX_LAT = 1; break;
     case BVBAT_IDX: CS_BVBAT_LAT = 1; break;
-    case STR0_IDX: CS_STR0_LAT = 1; break;
-    //case STR1_IDX: CS_STR1_LAT = 1; break;
-    //case STR2_IDX: CS_STR2_LAT = 1; break;
   }
 }
 
@@ -1298,127 +1292,33 @@ void send_all_rheo(uint16_t msg) {
   while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
 
   // Select all !CS signals
+  CS_FUEL_LAT = 0;
   CS_IGN_LAT = 0;
   CS_INJ_LAT = 0;
-  CS_FUEL_LAT = 0;
-  CS_ECU_LAT = 0;
-  CS_WTR_LAT = 0;
-  CS_FAN_LAT = 0;
-  CS_AUX_LAT = 0;
+  CS_ABS_LAT = 0;
   CS_PDLU_LAT = 0;
   CS_PDLD_LAT = 0;
-  CS_B5V5_LAT = 0;
+  CS_FAN_LAT = 0;
+  CS_WTR_LAT = 0;
+  CS_ECU_LAT = 0;
+  CS_AUX_LAT = 0;
   CS_BVBAT_LAT = 0;
-  CS_STR0_LAT = 0;
-  //CS_STR1_LAT = 0;
-  //CS_STR2_LAT = 0;
 
   SPI1BUF = msg; // Send msg on SPI bus
   while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
 
   // Deselect all !CS signals
+  CS_FUEL_LAT = 1;
   CS_IGN_LAT = 1;
   CS_INJ_LAT = 1;
-  CS_FUEL_LAT = 1;
-  CS_ECU_LAT = 1;
-  CS_WTR_LAT = 1;
-  CS_FAN_LAT = 1;
-  CS_AUX_LAT = 1;
+  CS_ABS_LAT = 1;
   CS_PDLU_LAT = 1;
   CS_PDLD_LAT = 1;
-  CS_B5V5_LAT = 1;
+  CS_FAN_LAT = 1;
+  CS_WTR_LAT = 1;
+  CS_ECU_LAT = 1;
+  CS_AUX_LAT = 1;
   CS_BVBAT_LAT = 1;
-  CS_STR0_LAT = 1;
-  //CS_STR1_LAT = 1;
-  //CS_STR2_LAT = 1;
-}
-
-/**
- * void init_adc_pdm(void)
- *
- * Perform additional ADC configuration specific to the PDM.
- */
-void init_adc_pdm(void) {
-  // Configure pins as inputs
-  ADC_IGN_TRIS = INPUT;
-  ADC_INJ_TRIS = INPUT;
-  ADC_FUEL_TRIS = INPUT;
-  ADC_ECU_TRIS = INPUT;
-  ADC_WTR_TRIS = INPUT;
-  ADC_FAN_TRIS = INPUT;
-  ADC_AUX_TRIS = INPUT;
-  ADC_PDLU_TRIS = INPUT;
-  ADC_PDLD_TRIS = INPUT;
-  ADC_B5V5_TRIS = INPUT;
-  ADC_BVBAT_TRIS = INPUT;
-  ADC_STR0_TRIS = INPUT;
-  ADC_STR1_TRIS = INPUT;
-  ADC_STR2_TRIS = INPUT;
-  ADC_3V3_TRIS = INPUT;
-  ADC_5V_TRIS = INPUT;
-  ADC_5V5_TRIS = INPUT;
-  ADC_12V_TRIS = INPUT;
-  ADC_VBAT_TRIS = INPUT;
-  ADC_PTEMP_TRIS = INPUT;
-
-  // Configure pins as analog inputs
-  ADC_IGN_ANSEL = AN_INPUT;
-  ADC_INJ_ANSEL = AN_INPUT;
-  ADC_FUEL_ANSEL = AN_INPUT;
-  ADC_ECU_ANSEL = AN_INPUT;
-  ADC_WTR_ANSEL = AN_INPUT;
-  ADC_FAN_ANSEL = AN_INPUT;
-  ADC_AUX_ANSEL = AN_INPUT;
-  ADC_PDLU_ANSEL = AN_INPUT;
-  ADC_PDLD_ANSEL = AN_INPUT;
-  ADC_B5V5_ANSEL = AN_INPUT;
-  ADC_BVBAT_ANSEL = AN_INPUT;
-  ADC_STR0_ANSEL = AN_INPUT;
-  ADC_STR1_ANSEL = AN_INPUT;
-  ADC_STR2_ANSEL = AN_INPUT;
-  ADC_3V3_ANSEL = AN_INPUT;
-  ADC_5V_ANSEL = AN_INPUT;
-  ADC_5V5_ANSEL = AN_INPUT;
-  ADC_12V_ANSEL = AN_INPUT;
-  ADC_VBAT_ANSEL = AN_INPUT;
-  ADC_PTEMP_ANSEL = AN_INPUT;
-
-  /**
-   * Select scan trigger as trigger source for class 2 inputs
-   *
-   * Note: INJ is the only class 3 input, and it automatically selects the scan
-   * trigger as its trigger source.
-   *
-   * TODO: Registers missing, can't set the trigger source for most channels.
-   */
-  ADC_5V_TRG = SCAN_TRIGGER;
-  ADC_5V5_TRG = SCAN_TRIGGER;
-  ADC_12V_TRG = SCAN_TRIGGER;
-  ADC_VBAT_TRG = SCAN_TRIGGER;
-  ADC_PTEMP_TRG = SCAN_TRIGGER;
-
-  // Include all channels as part of scan list
-  ADC_IGN_CSS = 1;
-  ADC_INJ_CSS = 1;
-  ADC_FUEL_CSS = 1;
-  ADC_ECU_CSS = 1;
-  ADC_WTR_CSS = 1;
-  ADC_FAN_CSS = 1;
-  ADC_AUX_CSS = 1;
-  ADC_PDLU_CSS = 1;
-  ADC_PDLD_CSS = 1;
-  ADC_B5V5_CSS = 1;
-  ADC_BVBAT_CSS = 1;
-  ADC_STR0_CSS = 1;
-  //ADC_STR1_CSS = 1;
-  //ADC_STR2_CSS = 1;
-  ADC_3V3_CSS = 1;
-  ADC_5V_CSS = 1;
-  ADC_5V5_CSS = 1;
-  ADC_12V_CSS = 1;
-  ADC_VBAT_CSS = 1;
-  ADC_PTEMP_CSS = 1;
-  ADC_JTEMP_CSS = 1;
 }
 
 /**
@@ -1432,27 +1332,8 @@ void init_adc_pdm(void) {
  * @param cutoff - The cutoff current (in amps) to set
  */
 void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
-  double ratio = 0;
-
-  switch (load_idx) {
-    case IGN_IDX: ratio = IGN_RATIO; break;
-    case INJ_IDX: ratio = INJ_RATIO; break;
-    case FUEL_IDX: ratio = FUEL_RATIO; break;
-    case ECU_IDX: ratio = ECU_RATIO; break;
-    case WTR_IDX: ratio = WTR_RATIO; break;
-    case FAN_IDX: ratio = FAN_RATIO; break;
-    case AUX_IDX: ratio = AUX_RATIO; break;
-    case PDLU_IDX: ratio = PDLU_RATIO; break;
-    case PDLD_IDX: ratio = PDLD_RATIO; break;
-    case B5V5_IDX: ratio = B5V5_RATIO; break;
-    case BVBAT_IDX: ratio = BVBAT_RATIO; break;
-    case STR0_IDX: ratio = STR0_RATIO; break;
-    case STR1_IDX: ratio = STR1_RATIO; break;
-    case STR2_IDX: ratio = STR2_RATIO; break;
-  }
-
   // Calculate FB pin resistance needed for the requested current cutoff
-  double fb_resistance = (cutoff == 0.0) ? 5000.0 : (ratio * 4.7) / cutoff;
+  double fb_resistance = (cutoff == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / cutoff;
 
   // Store the desired peak or normal mode wiper setting
   if (peak_mode) {
@@ -1474,25 +1355,23 @@ void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
 
   // Save peak and normal mode wiper values in NVM
   Wiper_nvm_data data = {0};
-  data.key = NVM_WPR_CONSTANT;
+  //data.key = NVM_WPR_CONSTANT;
+  data.fuel_wpr_val = wiper_values[FUEL_IDX];
   data.ign_wpr_val = wiper_values[IGN_IDX];
   data.inj_wpr_val = wiper_values[INJ_IDX];
-  data.fuel_wpr_val = wiper_values[FUEL_IDX];
-  data.ecu_wpr_val = wiper_values[ECU_IDX];
-  data.wtr_wpr_val = wiper_values[WTR_IDX];
-  data.fan_wpr_val = wiper_values[FAN_IDX];
-  data.aux_wpr_val = wiper_values[AUX_IDX];
+  data.abs_wpr_val = wiper_values[ABS_IDX];
   data.pdlu_wpr_val = wiper_values[PDLU_IDX];
   data.pdld_wpr_val = wiper_values[PDLD_IDX];
-  data.b5v5_wpr_val = wiper_values[B5V5_IDX];
+  data.fan_wpr_val = wiper_values[FAN_IDX];
+  data.wtr_wpr_val = wiper_values[WTR_IDX];
+  data.ecu_wpr_val = wiper_values[ECU_IDX];
+  data.aux_wpr_val = wiper_values[AUX_IDX];
   data.bvbat_wpr_val = wiper_values[BVBAT_IDX];
-  data.str0_wpr_val = wiper_values[STR0_IDX];
-  data.str1_wpr_val = wiper_values[STR1_IDX];
-  data.str2_wpr_val = wiper_values[STR2_IDX];
+
   data.fuel_peak_wpr_val = peak_wiper_values[FUEL_IDX];
-  data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
   data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
-  write_nvm_data(&data, sizeof(Wiper_nvm_data));
+  data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
+  //write_nvm_data(&data, sizeof(Wiper_nvm_data));
 }
 
 /**
@@ -1541,20 +1420,18 @@ uint8_t res_to_wpr(double res) {
  */
 void set_load(uint8_t load_idx, uint8_t load_state) {
   switch (load_idx) {
+    case FUEL_IDX: EN_FUEL_LAT = load_state; break;
     case IGN_IDX: EN_IGN_LAT = load_state; break;
     case INJ_IDX: EN_INJ_LAT = load_state; break;
-    case FUEL_IDX: EN_FUEL_LAT = load_state; break;
-    case ECU_IDX: EN_ECU_LAT = load_state; break;
-    case WTR_IDX: EN_WTR_LAT = load_state; break;
-    case FAN_IDX: EN_FAN_LAT = load_state; break;
-    case AUX_IDX: EN_AUX_LAT = load_state; break;
+    case ABS_IDX: EN_ABS_LAT = load_state; break;
     case PDLU_IDX: EN_PDLU_LAT = load_state; break;
     case PDLD_IDX: EN_PDLD_LAT = load_state; break;
-    case B5V5_IDX: EN_B5V5_LAT = load_state; break;
+    case FAN_IDX: EN_FAN_LAT = load_state; break;
+    case WTR_IDX: EN_WTR_LAT = load_state; break;
+    case ECU_IDX: EN_ECU_LAT = load_state; break;
+    case AUX_IDX: EN_AUX_LAT = load_state; break;
     case BVBAT_IDX: EN_BVBAT_LAT = load_state; break;
-    case STR0_IDX: EN_STR_LAT = load_state; break;
-    case STR1_IDX: EN_STR_LAT = load_state; break;
-    case STR2_IDX: EN_STR_LAT = load_state; break;
+    case STR_IDX: EN_STR_LAT = load_state; break;
     default: return;
   }
 }
@@ -1569,20 +1446,18 @@ void set_load(uint8_t load_idx, uint8_t load_state) {
  */
 uint8_t load_enabled(uint8_t load_idx) {
   switch (load_idx) {
+    case FUEL_IDX: return FUEL_EN;
     case IGN_IDX: return IGN_EN;
     case INJ_IDX: return INJ_EN;
-    case FUEL_IDX: return FUEL_EN;
-    case ECU_IDX: return ECU_EN;
-    case WTR_IDX: return WTR_EN;
-    case FAN_IDX: return FAN_EN;
-    case AUX_IDX: return AUX_EN;
+    case ABS_IDX: return ABS_EN;
     case PDLU_IDX: return PDLU_EN;
     case PDLD_IDX: return PDLD_EN;
-    case B5V5_IDX: return B5V5_EN;
+    case FAN_IDX: return FAN_EN;
+    case WTR_IDX: return WTR_EN;
+    case ECU_IDX: return ECU_EN;
+    case AUX_IDX: return AUX_EN;
     case BVBAT_IDX: return BVBAT_EN;
-    case STR0_IDX: return STR_EN;
-    case STR1_IDX: return STR_EN;
-    case STR2_IDX: return STR_EN;
+    case STR_IDX: return STR_EN;
     default: return 0;
   }
 }
