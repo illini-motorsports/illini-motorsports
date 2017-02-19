@@ -258,5 +258,6 @@ double wpr_to_res(uint8_t wpr);
 uint8_t res_to_wpr(double res);
 void set_load(uint8_t load_idx, uint8_t load_state);
 uint8_t load_enabled(uint8_t load_idx);
+void init_rheo(void);
 
 #endif /* PDM_H */

@@ -93,10 +93,16 @@ void main(void) {
   init_oscillator(); // Initialize oscillator configuration bits
   init_timer1(); // Initialize timer1 (seconds)
   init_timer2(); // Initialize timer2 (millis)
-  //init_spi(); // Initialize SPI interface
   init_adc(NULL); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
+
+  init_rheo(); // Initialize SPI interface for digital rheostats
+
+  //TODO: GPX
+  //TODO: ADC (AD9470)
+  //TODO: USB
+  //TODO: NVM
 
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;
@@ -165,7 +171,7 @@ void main(void) {
   CS_BVBAT_LAT = 1;
 
   // Disconnect terminal A from resistor network for all rheostats
-  //send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
+  send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
 
   // Get wiper data struct from NVM
   Wiper_nvm_data data = {0};
@@ -227,12 +233,29 @@ void main(void) {
     fb_resistances[i] = wpr_to_res(wiper_values[i]);
   }
 
-  /*
-  // Turn on state-independent loads
+  //TODO: Remove this
+  for (i = 0; i < NUM_LOADS; i++) {
+    set_rheo(i, 50);
+    peak_state[i] = 0;
+    fb_resistances[i] = wpr_to_res(128);
+  }
+
+  EN_FUEL_LAT = PWR_ON;
+  EN_IGN_LAT = PWR_ON;
+  EN_INJ_LAT = PWR_ON;
+  EN_ABS_LAT = PWR_ON;
+  EN_PDLU_LAT = PWR_ON;
+  EN_PDLD_LAT = PWR_ON;
+  EN_FAN_LAT = PWR_ON;
+  EN_WTR_LAT = PWR_ON;
+  EN_ECU_LAT = PWR_ON;
   EN_AUX_LAT = PWR_ON;
-  EN_B5V5_LAT = PWR_ON;
   EN_BVBAT_LAT = PWR_ON;
-   */
+  EN_STR_LAT = PWR_ON;
+
+  // Turn on state-independent loads
+  //EN_AUX_LAT = PWR_ON;
+  //EN_BVBAT_LAT = PWR_ON;
 
   /*
   // Turn on ECU (state-independent)
@@ -923,6 +946,8 @@ void sample_load_current(void) {
  * the enable pin of the relevant MOSFET to reset the load.
  */
 void check_load_overcurrent(void) {
+  return; //TODO: remove this
+
   uint32_t load_idx;
   for (load_idx = 0; load_idx < NUM_LOADS; load_idx++) {
     switch (overcurrent_flag[load_idx]) {
@@ -1460,4 +1485,57 @@ uint8_t load_enabled(uint8_t load_idx) {
     case STR_IDX: return STR_EN;
     default: return 0;
   }
+}
+
+void init_rheo(void) {
+  unlock_config();
+
+  // Initialize SDI1/SDO1 PPS pins
+  CFGCONbits.IOLOCK = 0;
+  TRISBbits.TRISB9 = INPUT;
+  ANSELBbits.ANSB9 = 0;
+  SDI1Rbits.SDI1R = 0b0101; // RPB9
+  TRISBbits.TRISB10 = OUTPUT;
+  RPB10Rbits.RPB10R = 0b0101; // SDO1
+  CFGCONbits.IOLOCK = 1;
+
+  // Disable interrupts
+  IEC3bits.SPI1EIE = 0;
+  IEC3bits.SPI1RXIE = 0;
+  IEC3bits.SPI1TXIE = 0;
+
+  // Disable SPI1 module
+  SPI1CONbits.ON = 0;
+
+  // Clear receive buffer
+  uint32_t readVal = SPI1BUF;
+
+  // Use standard buffer mode
+  SPI1CONbits.ENHBUF = 0;
+
+  /**
+   * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
+   * F_SCK = 100Mhz / (2 * (4 + 1))
+   * F_SCK = 10Mhz
+   */
+
+  // Set the baud rate (see above equation)
+  SPI1BRG = 4;
+
+  SPI1STATbits.SPIROV = 0;
+
+  SPI1CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
+  SPI1CONbits.SIDL = 0; // Stop in Idle Mode bit (Continue operation in Idle mode)
+  SPI1CONbits.MODE32 = 0; // 32/16-Bit Communication Select bits (16-bit)
+  SPI1CONbits.MODE16 = 1; // 32/16-Bit Communication Select bits (16-bit)
+  SPI1CONbits.MSTEN = 1; // Master Mode Enable bit (Master mode)
+  SPI1CONbits.CKE = 1; // SPI Clock Edge Select bit (Serial output data changes on transition from active clock state to idle clock state)
+  SPI1CONbits.DISSDI = 0;
+  SPI1CONbits.DISSDO = 0;
+  SPI1CONbits.SMP = 1;
+
+  // Enable SPI1 module
+  SPI1CONbits.ON = 1;
+
+  lock_config();
 }
