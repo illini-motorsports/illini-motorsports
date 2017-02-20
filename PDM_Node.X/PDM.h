@@ -136,6 +136,11 @@
 #define EN_AUX_TRIS     TRISAbits.TRISA9
 #define EN_BVBAT_TRIS   TRISAbits.TRISA15
 #define EN_STR_TRIS     TRISAbits.TRISA3
+#define EN_FUEL_ANSEL   ANSELBbits.ANSB3
+#define EN_ABS_ANSEL    ANSELBbits.ANSB14
+#define EN_WTR_ANSEL    ANSELBbits.ANSB7
+#define EN_ECU_ANSEL    ANSELEbits.ANSE4
+#define EN_AUX_ANSEL    ANSELAbits.ANSA9
 
 // Pin definitions for !CS signal bus
 #define CS_FUEL_LAT     LATBbits.LATB2
@@ -149,17 +154,6 @@
 #define CS_ECU_LAT      LATEbits.LATE3
 #define CS_AUX_LAT      LATAbits.LATA10
 #define CS_BVBAT_LAT    LATAbits.LATA4
-#define CS_FUEL_PORT    PORTBbits.RB2
-#define CS_IGN_PORT     PORTDbits.RD4
-#define CS_INJ_PORT     PORTCbits.RC13
-#define CS_ABS_PORT     PORTBbits.RB13
-#define CS_PDLU_PORT    PORTGbits.RG13
-#define CS_PDLD_PORT    PORTGbits.RG14
-#define CS_FAN_PORT     PORTDbits.RD12
-#define CS_WTR_PORT     PORTBbits.RB6
-#define CS_ECU_PORT     PORTEbits.RE3
-#define CS_AUX_PORT     PORTAbits.RA10
-#define CS_BVBAT_PORT   PORTAbits.RA4
 #define CS_FUEL_TRIS    TRISBbits.TRISB2
 #define CS_IGN_TRIS     TRISDbits.TRISD4
 #define CS_INJ_TRIS     TRISCbits.TRISC13
@@ -193,6 +187,16 @@
 #define SW8_TRIS   TRISCbits.TRISC4
 #define SW9_TRIS   TRISCbits.TRISC3
 #define KILL_TRIS  TRISCbits.TRISC2
+#define SW1_ANSEL  ANSELBbits.ANSB4
+#define SW2_ANSEL  ANSELEbits.ANSE9
+#define SW3_ANSEL  ANSELEbits.ANSE8
+#define SW4_ANSEL  ANSELAbits.ANSA0
+#define SW5_ANSEL  ANSELGbits.ANSG9
+#define SW6_ANSEL  ANSELGbits.ANSG8
+#define SW7_ANSEL  ANSELGbits.ANSG7
+#define SW8_ANSEL  ANSELCbits.ANSC4
+#define SW9_ANSEL  ANSELCbits.ANSC3
+#define KILL_ANSEL ANSELCbits.ANSC2
 
 // MOSFET Current Ratios
 #define CUR_RATIO   8800.0
