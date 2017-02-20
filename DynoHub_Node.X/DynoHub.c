@@ -142,20 +142,21 @@ void high_isr(void) {
 		ECANReceiveMessage(&id, data, &dataLen, &flags);
 		if(id == RPM_ID) {
 			((BYTE*) &rpm)[0] = data[RPM_BYTE + 1];
-      ((BYTE*) &rpm)[1] = data[RPM_BYTE];
+            ((BYTE*) &rpm)[1] = data[RPM_BYTE];
 		} else if (id == 0x460) {
-      if(data[0] == 0) {
-        lambda0 = (data[1] << 8) | data[0];
-      }
-    } else if (id == 0x461) {
-      if(data[0] == 0) {
-        lambda1 = (data[1] << 8) | data[0];
-      }
-    } else if (id == 0x462) {
-      lambda2 = (data[0] << 8) | data[1];
-    } else if (id == 0x463) {
-      lambda3 = (data[0] << 8) | data[1];
-    }
+            if(data[0] == 0) {
+              lambda0 = ((((int)data[2]) << 8) & 0xFF00) | (data[1] & 0x00FF);
+            }
+        } else if (id == 0x461) {
+            if(data[0] == 0) {
+              lambda1 = ((((int)data[2]) << 8) & 0xFF000) | (data[1] & 0x00FF);
+            }
+        } else if (id == 0x462) {
+            lambda2 = ((((int)data[1]) << 8) & 0xFF000) | (data[2] & 0x00FF);
+
+        } else if (id == 0x463) {
+            lambda3 = ((((int)data[1]) << 8) & 0xFF000) | (data[2] & 0x00FF);
+          }
 	}
 }
 
@@ -415,6 +416,8 @@ void main(void) {
     if(millis - la_send_tmr >= 500) {
       unsigned char data[8] = {0};
       unsigned char data1[8] = {0};
+
+      la_send_tmr = millis;
 
       // ADL 1, 2, 3
       ((unsigned int*) data)[0] = 0;
