@@ -14,6 +14,7 @@
 #include "../FSAE.X/FSAE_can.h"
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/FSAE_nvm.h"
+#include "../FSAE.X/FSAE_ad7490.h"
 #include "../FSAE.X/CAN.h"
 
 // Defines for MOSFET control
@@ -57,7 +58,7 @@
 
 #define BASIC_CONTROL_WAIT 1000
 #define TEMP_SAMP_INTV     333
-#define CURRENT_SAMP_INTV  5
+#define EXT_ADC_SAMP_INTV  5
 #define OVERCRT_WAIT       25
 
 #define DIAG_MSG_SEND      1000
@@ -201,22 +202,10 @@
 // MOSFET Current Ratios
 #define CUR_RATIO   8800.0
 
-//TODO
-// Load Scalar Inverse
-#define FUEL_SCLINV  1000.0
-#define IGN_SCLINV   1000.0
-#define INJ_SCLINV   1000.0
-#define ABS_SCLINV   1000.0
-#define PDLU_SCLINV  1000.0
-#define PDLD_SCLINV  1000.0
-#define FAN_SCLINV   1000.0
-#define WTR_SCLINV   1000.0
-#define ECU_SCLINV   1000.0
-#define AUX_SCLINV   1000.0
-#define BVBAT_SCLINV 1000.0
-#define ST0_SCLINV   100.0
-#define TOTAL_SCLINV 100.0
-#define CUT_SCLINV   400.0
+// Current Scalar Inverse
+#define SCL_INV      1000.0
+#define SCL_INV_LRG  100.0
+#define SCL_INV_CUT  400.0
 
 /**
  * Struct representing the layout of wiper value data in non-volatile memory. The
@@ -248,7 +237,7 @@ void main(void);
 void process_CAN_msg(CAN_message msg);
 void send_diag_can(void);
 void sample_temp(void);
-void sample_load_current(void);
+void sample_ext_adc(void);
 void check_load_overcurrent(void);
 void send_load_current_can(void);
 void send_rail_volt_can(void);
