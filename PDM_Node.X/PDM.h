@@ -14,6 +14,7 @@
 #include "../FSAE.X/FSAE_can.h"
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/FSAE_nvm.h"
+#include "../FSAE.X/FSAE_gpx.h"
 #include "../FSAE.X/FSAE_ad7490.h"
 #include "../FSAE.X/CAN.h"
 
@@ -26,8 +27,11 @@
 #define OVERCRT       1
 #define OVERCRT_RESET 2
 
-// Define for the number of MOSFET control circuits
-#define NUM_LOADS 11
+// The number of MOSFET control circuits
+#define NUM_CTL 11
+
+// The number of load circuits
+#define NUM_LOADS 12
 
 // Indices for arrays containing all the loads
 #define FUEL_IDX  0
@@ -59,7 +63,8 @@
 #define BASIC_CONTROL_WAIT 1000
 #define TEMP_SAMP_INTV     333
 #define EXT_ADC_SAMP_INTV  5
-#define OVERCRT_WAIT       25
+#define OVERCRT_WAIT       100
+#define OVERCRT_CHK_INTV   10
 
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10

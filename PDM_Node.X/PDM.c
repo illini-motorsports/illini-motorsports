@@ -16,17 +16,17 @@ volatile uint32_t millis = 0;
 volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
 
 // Stores wiper values for each load
-uint8_t wiper_values[NUM_LOADS] = {0};
-uint8_t peak_wiper_values[NUM_LOADS] = {0};
+uint8_t wiper_values[NUM_CTL] = {0};
+uint8_t peak_wiper_values[NUM_CTL] = {0};
 
 // Stores whether each load is currently in peak mode
 uint8_t peak_state[NUM_LOADS] = {0};
 
 // Stores the calculated FB pin resistance for each load
-double fb_resistances[NUM_LOADS] = {0.0};
+double fb_resistances[NUM_CTL] = {0.0};
 
 // Stores the sampled current draw values for each load
-uint16_t load_current[NUM_LOADS + 1] = {0};
+uint16_t load_current[NUM_LOADS] = {0};
 
 // Stores the sampled rail voltage values
 uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0;
@@ -35,6 +35,9 @@ uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0;
 uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT};
 uint8_t overcurrent_count[NUM_LOADS] = {0};
 uint32_t overcurrent_tmr[NUM_LOADS] = {0};
+
+// Stores the output state of each load
+uint8_t output_state[NUM_LOADS] = {0};
 
 // Recorded values from temperature sensors
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
@@ -45,6 +48,7 @@ uint8_t fuel_prime_flag = 0;
 uint8_t over_temp_flag = 0;
 uint16_t total_current_draw = 0;
 uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
+uint8_t gpx_int_flag = 0;
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr,
@@ -55,10 +59,10 @@ uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
     cutoff_send_tmr, load_status_send_tmr, overcrt_count_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
 uint32_t pdlu_tmr, pdld_tmr = 0;
-uint32_t temp_samp_tmr, ext_adc_samp_tmr = 0;
+uint32_t temp_samp_tmr, ext_adc_samp_tmr, overcrt_chk_tmr = 0;
 
 // Initial overcurrent thresholds to use for all the loads
-const double load_cutoff[NUM_LOADS] = {
+const double load_cutoff[NUM_CTL] = {
   10.0,  // FUEL
   100.0, // IGN
   100.0, // INJ
@@ -72,7 +76,7 @@ const double load_cutoff[NUM_LOADS] = {
   10.0   // BVBAT
 };
 
-const double load_peak_cutoff[NUM_LOADS] = {
+const double load_peak_cutoff[NUM_CTL] = {
   40.0,  // FUEL
   0.0,   // IGN
   0.0,   // INJ
@@ -87,7 +91,7 @@ const double load_peak_cutoff[NUM_LOADS] = {
 };
 
 // ADC channel indices for all the loads
-const uint8_t ADC_CHN[NUM_LOADS + 1] = {
+const uint8_t ADC_CHN[NUM_LOADS] = {
   7,  // FUEL
   6,  // IGN
   4,  // INJ
@@ -99,7 +103,23 @@ const uint8_t ADC_CHN[NUM_LOADS + 1] = {
   3,  // ECU
   2,  // AUX
   1,  // BVBAT
-  0,  // STR
+  0   // STR
+};
+
+// GPX indices for all the loads
+const uint8_t GPX_IDX[NUM_LOADS] = {
+  12, // FUEL
+  13, // IGN
+  14, // INJ
+  15, // ABS
+  0,  // PDLU
+  1,  // PDLD
+  2,  // FAN
+  3,  // WTR
+  4,  // ECU
+  5,  // AUX
+  6,  // BVBAT
+  7   // STR
 };
 
 /**
@@ -116,10 +136,10 @@ void main(void) {
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
   init_ad7490(); // Initialize AD7490 external ADC chip
+  init_gpx(); // Initialize GPIO expander chip
 
   init_rheo(); // Initialize SPI interface for digital rheostats
 
-  //TODO: GPX
   //TODO: USB
   //TODO: NVM
 
@@ -219,7 +239,7 @@ void main(void) {
   if(0 /*TODO: data.key != NVM_WPR_CONSTANT*/) {
     // Initialize normal and peak wiper values to general settings
     uint32_t i;
-    for (i = 0; i < NUM_LOADS; i++) {
+    for (i = 0; i < NUM_CTL; i++) {
       double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_cutoff[i];
       wiper_values[i] = res_to_wpr(fb_resistance);
       fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_peak_cutoff[i];
@@ -265,7 +285,7 @@ void main(void) {
 
   // Set each rheostat to the value loaded from NVM
   uint32_t i;
-  for (i = 0; i < NUM_LOADS; i++) {
+  for (i = 0; i < NUM_CTL; i++) {
     set_rheo(i, wiper_values[i]);
     peak_state[i] = 0;
     fb_resistances[i] = wpr_to_res(wiper_values[i]);
@@ -660,15 +680,14 @@ void main(void) {
     }
 
     /**
-     * Sample the external ADC module for load current data and rail voltage.
-     * Check if any of the loads have overcurrented. If they have, reset the
-     * load and increment the overcurrent counter.
+     * Check if any of the loads have overcurrented
      */
-    if (millis - ext_adc_samp_tmr >= EXT_ADC_SAMP_INTV) {
-      sample_ext_adc();
-      check_load_overcurrent();
-      ext_adc_samp_tmr = millis;
-    }
+    check_load_overcurrent();
+
+    /**
+     * Sample the external ADC module for load current data and rail voltage
+     */
+    sample_ext_adc();
 
     /**
      * Sample temperature sensors
@@ -705,6 +724,21 @@ void main(void) {
      */
     send_overcrt_count_can(NO_OVERRIDE);
   }
+}
+
+/**
+ * Change Notification E Interrupt Handler
+ */
+void __attribute__((vector(_CHANGE_NOTICE_E_VECTOR), interrupt(IPL3SRS))) cne_inthnd(void) {
+  // Clear mismatch condition
+  uint32_t dummy = PORTE;
+
+  // The interrupt is active-low, so ignore unless GPX_INT is low
+  if (!GPX_INT_PORT) {
+    gpx_int_flag = 1;
+  }
+
+  IFS3CLR = _IFS3_CNEIF_MASK; // Clear CNE Interrupt Flag
 }
 
 /**
@@ -872,74 +906,83 @@ void sample_temp(void) {
  * void sample_ext_adc(void)
  *
  * Reads each channel of the external ADC module to determine the current
- * draw of each load and the voltage of each rail.
+ * draw of each load and the voltage of each rail, if the interval has passed.
  */
 void sample_ext_adc(void) {
-  uint16_t* samples = ad7490_read_channels();
-  total_current_draw = 0;
+  if (millis - ext_adc_samp_tmr >= EXT_ADC_SAMP_INTV) {
+    uint16_t* samples = ad7490_read_channels();
+    total_current_draw = 0;
 
-  uint8_t i;
-  for (i = 0; i < NUM_LOADS; i++) {
-    load_current[i] = (uint16_t) ((((((double) samples[ADC_CHN[i]]) / 4095.0)
-        * 5.0 * SCL_INV * CUR_RATIO) / fb_resistances[i]));
-    total_current_draw += ((uint16_t) ((double) load_current[i]) * (SCL_INV_LRG / SCL_INV));
+    uint8_t i;
+    for (i = 0; i < NUM_CTL; i++) {
+      load_current[i] = (uint16_t) ((((((double) samples[ADC_CHN[i]]) / 4095.0)
+              * 5.0 * SCL_INV * CUR_RATIO) / fb_resistances[i]));
+      total_current_draw += ((uint16_t) ((double) load_current[i]) * (SCL_INV_LRG / SCL_INV));
+    }
+
+    load_current[STR_IDX] = (uint16_t) ((((((double) samples[ADC_CHN[STR_IDX]]) / 4095.0)
+            * 5.0 * SCL_INV_LRG * CUR_RATIO) / 500.0));
+    total_current_draw += load_current[STR_IDX];
+
+    rail_vbat = ((uint16_t) (((((double) samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
+    rail_12v = ((uint16_t) (((((double) samples[13]) / 4095.0) * 5.0 * 4) * 1000.0));
+    rail_5v = ((uint16_t) (((((double) samples[14]) / 4095.0) * 5.0 * 2) * 1000.0));
+    rail_3v3 = ((uint16_t) (((((double) samples[15]) / 4095.0) * 5.0 * 1) * 1000.0));
+
+    ext_adc_samp_tmr = millis;
   }
-
-  load_current[STR_IDX] = (uint16_t) ((((((double) samples[ADC_CHN[STR_IDX]]) / 4095.0)
-      * 5.0 * SCL_INV_LRG * CUR_RATIO) / 500.0));
-  total_current_draw += load_current[STR_IDX];
-
-  rail_vbat = ((uint16_t) (((((double) samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
-  rail_12v = ((uint16_t) (((((double) samples[13]) / 4095.0) * 5.0 * 4) * 1000.0));
-  rail_5v = ((uint16_t) (((((double) samples[14]) / 4095.0) * 5.0 * 2) * 1000.0));
-  rail_3v3 = ((uint16_t) (((((double) samples[15]) / 4095.0) * 5.0 * 1) * 1000.0));
 }
 
 /**
  * void check_load_overcurrent(void)
  *
- * If a load is enabled but drawing zero (or close to zero) current, we
- * can reasonably assume that it has overcurrented. If this is the case, toggle
- * the enable pin of the relevant MOSFET to reset the load.
+ * If a load is enabled but the output is low, we can reasonably assume that it
+ * has overcurrented. If this is the case, toggle the enable pin of the
+ * relevant MOSFET to reset the load.
  */
 void check_load_overcurrent(void) {
-  return; //TODO: remove this
+  if ((millis - overcrt_chk_tmr >= OVERCRT_CHK_INTV) || gpx_int_flag) {
+    uint8_t load_idx;
 
-  uint32_t load_idx;
-  for (load_idx = 0; load_idx < NUM_LOADS; load_idx++) {
-    switch (overcurrent_flag[load_idx]) {
+    gpx_int_flag = 0;
 
-      case NO_OVERCRT:
-        if (load_enabled(load_idx) &&
-            load_current[load_idx] < OVERCRT_DETECT) {
-          overcurrent_flag[load_idx] = OVERCRT;
-          overcurrent_tmr[load_idx] = millis;
-        }
-        break;
+    uint16_t state = gpx_read_state();
 
-      case OVERCRT:
-        if (load_enabled(load_idx) &&
-            load_current[load_idx] < OVERCRT_DETECT) {
-          if (millis - overcurrent_tmr[load_idx] >= OVERCRT_WAIT) {
-            set_load(load_idx, PWR_OFF);
-            overcurrent_flag[load_idx] = OVERCRT_RESET;
+    for (load_idx = 0; load_idx < NUM_LOADS; load_idx++) {
+      output_state[load_idx] = ((state >> GPX_IDX[load_idx]) & 0x1);
+
+      switch (overcurrent_flag[load_idx]) {
+
+        case NO_OVERCRT:
+          if (load_enabled(load_idx) && !output_state[load_idx]) {
+            overcurrent_flag[load_idx] = OVERCRT;
             overcurrent_tmr[load_idx] = millis;
-            overcurrent_count[load_idx]++;
-            send_overcrt_count_can(OVERRIDE);
+          }
+          break;
+
+        case OVERCRT:
+          if (load_enabled(load_idx) && !output_state[load_idx]) {
+            if (millis - overcurrent_tmr[load_idx] >= OVERCRT_WAIT) {
+              set_load(load_idx, PWR_OFF);
+              overcurrent_flag[load_idx] = OVERCRT_RESET;
+              overcurrent_tmr[load_idx] = millis;
+              overcurrent_count[load_idx]++;
+              send_overcrt_count_can(OVERRIDE);
+              send_load_status_can(OVERRIDE);
+            }
+          } else {
+            overcurrent_flag[load_idx] = NO_OVERCRT;
+          }
+          break;
+
+        case OVERCRT_RESET:
+          if (millis != overcurrent_tmr[load_idx]) {
+            set_load(load_idx, PWR_ON);
+            overcurrent_flag[load_idx] = NO_OVERCRT;
             send_load_status_can(OVERRIDE);
           }
-        } else {
-          overcurrent_flag[load_idx] = NO_OVERCRT;
-        }
-        break;
-
-      case OVERCRT_RESET:
-        if (millis != overcurrent_tmr[load_idx]) {
-          set_load(load_idx, PWR_ON);
-          overcurrent_flag[load_idx] = NO_OVERCRT;
-          send_load_status_can(OVERRIDE);
-        }
-        break;
+          break;
+      }
     }
   }
 }
