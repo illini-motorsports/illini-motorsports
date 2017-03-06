@@ -1,12 +1,9 @@
-# Illini Motorsports Electronics
-> Code repository for Illini Motorsports Electronics Subsystem. All code for the microcontrollers and other electronics projects will live here.
+# Illini Motorsports
+> Code repository for the Illini Motorsports electronics subsystem. All code for the microcontrollers and other electronics projects will live here.
 
-![car-image](http://motorsports.illinois.edu/img/car_2014.jpg)
+![car-image](https://cloud.githubusercontent.com/assets/1930963/23601400/e53cedae-0210-11e7-9c85-49f635fb9f22.png)
 
-## [Wiki](https://github.com/mass/illini-motorsports/wiki)
-All information that is necessary to know can be found in the wiki. If you have any questions about something we do on the team, that should be the first place you look.
-
-The wiki is split into three major sections: [General Information](https://github.com/mass/illini-motorsports/wiki/General), [Code](https://github.com/mass/illini-motorsports/wiki/Code), and [Circuit Boards](https://github.com/mass/illini-motorsports/wiki/Circuit-Boards).
+[Illini Motorsports Website](http://motorsports.illinois.edu)
 
 ## Archive
 Code for previous competition years is also stored in this repository. It can be found in separate branches. Keep these branches separate and orphaned from `master` (never merge them in).
@@ -15,6 +12,7 @@ At the end of a competition year, we will make a new branch off of the `master` 
 
 | Branch | Contents |
 | --- | --- |
+| [![2015-2016](http://img.shields.io/badge/2015-2016-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/2015-2016) | Code from the 2015-2016 year. |
 | [![2014-2015](http://img.shields.io/badge/2014-2015-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/2014-2015) | Code from the 2014-2015 year. |
 | [![DAQ-2014](http://img.shields.io/badge/DAQ-2014-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2014) | Code from the 2013-2014 year. |
 | [![DAQ-2013](http://img.shields.io/badge/DAQ-2013-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2013) | Code from the 2012-2013 year. |
