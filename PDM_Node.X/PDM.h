@@ -13,12 +13,10 @@
 #include "../FSAE.X/FSAE_config.h"
 #include "../FSAE.X/FSAE_can.h"
 #include "../FSAE.X/FSAE_adc.h"
-#include "../FSAE.X/FSAE_nvm.h"
-#include "../FSAE.X/FSAE_gpx.h"
 #include "../FSAE.X/FSAE_ad7490.h"
 #include "../FSAE.X/CAN.h"
 
-// Defines for MOSFET control
+// Definitions for MOSFET control
 #define PWR_ON  1
 #define PWR_OFF 0
 
@@ -57,20 +55,22 @@
 
 #define FUEL_PRIME_DUR     500
 #define STR_MAX_DUR        4000
-#define MAX_PDL_DUR        500
-#define OVERRIDE_TIMEOUT   5000
-
+#define PDL_MAX_DUR        500
+#define OVERRIDE_SW_WAIT   5000
 #define BASIC_CONTROL_WAIT 1000
+
 #define TEMP_SAMP_INTV     333
 #define EXT_ADC_SAMP_INTV  10
-#define OVERCRT_WAIT       100
+
+#define DEBOUNCE_WAIT      10
+#define OVERCRT_RESET_WAIT 250
 #define OVERCRT_CHK_INTV   10
 
-#define DIAG_MSG_SEND      1000
-#define LOAD_CUR_SEND      10
+#define DIAG_SEND          1000
+#define DIAG_STATE_SEND    500
 #define RAIL_VOLT_SEND     10
+#define LOAD_CUR_SEND      10
 #define CUTOFF_VAL_SEND    1000
-#define LOAD_STATUS_SEND   500
 #define OVERCRT_COUNT_SEND 500
 
 #define FUEL_PEAK_DUR      150
@@ -78,15 +78,25 @@
 #define FAN_PEAK_DUR       2000
 #define ECU_PEAK_DUR       2
 
-// Switch state definitions
-#define STR_SW    (!SW1_PORT)
-#define ON_SW     (SW2_PORT)
-#define ACT_UP_SW (!SW3_PORT)
-#define ACT_DN_SW (!SW4_PORT)
-#define ABS_SW    (SW5_PORT)
-#define AUX1_SW   (SW6_PORT)
-#define AUX2_SW   (!SW7_PORT)
-#define KILL_SW   (KILL_PORT)
+// Raw (bouncy) switch state definitions
+#define STR_SW_RAW    (!SW1_PORT)
+#define ON_SW_RAW     (SW2_PORT)
+#define ACT_UP_SW_RAW (!SW3_PORT)
+#define ACT_DN_SW_RAW (!SW4_PORT)
+#define ABS_SW_RAW    (SW5_PORT)
+#define AUX1_SW_RAW   (SW6_PORT)
+#define AUX2_SW_RAW   (!SW7_PORT)
+#define KILL_SW_RAW   (KILL_PORT)
+
+// Debounced switch state definitions (use these for everything)
+#define STR_SW (((switch_debounced >> 7) & 0x1))
+#define ON_SW (((switch_debounced >> 6) & 0x1))
+#define ACT_UP_SW (((switch_debounced >> 5) & 0x1))
+#define ACT_DN_SW (((switch_debounced >> 4) & 0x1))
+#define KILL_SW (((switch_debounced >> 3) & 0x1))
+#define ABS_SW (((switch_debounced >> 2) & 0x1))
+#define AUX1_SW (((switch_debounced >> 1) & 0x1))
+#define AUX2_SW (((switch_debounced >> 0) & 0x1))
 
 // Misc state definitions
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
@@ -212,50 +222,84 @@
 #define SCL_INV_LRG  100.0
 #define SCL_INV_CUT  400.0
 
+// Initial overcurrent thresholds to use for all the loads
+const double load_cutoff[NUM_CTL] = {
+  10.0,  // FUEL
+  100.0, // IGN
+  100.0, // INJ
+  50.0,  // ABS
+  60.0,  // PDLU
+  60.0,  // PDLD
+  20.0,  // FAN
+  15.0,  // WTR
+  20.0,  // ECU
+  2.0,   // AUX
+  10.0   // BVBAT
+};
+
+// Initial peak-mode overcurrent thresholds to use for all the loads
+const double load_peak_cutoff[NUM_CTL] = {
+  40.0,  // FUEL
+  0.0,   // IGN
+  0.0,   // INJ
+  0.0,   // ABS
+  0.0,   // PDLU
+  0.0,   // PDLD
+  100.0, // FAN
+  40.0,  // WTR
+  60.0,  // ECU
+  0.0,   // AUX
+  0.0    // BVBAT
+};
+
+// External ADC channel indices for all the loads
+const uint8_t ADC_CHN[NUM_LOADS] = {
+  7,  // FUEL
+  6,  // IGN
+  4,  // INJ
+  5,  // ABS
+  8,  // PDLU
+  9,  // PDLD
+  10, // FAN
+  11, // WTR
+  3,  // ECU
+  2,  // AUX
+  1,  // BVBAT
+  0   // STR
+};
+
 /**
- * Struct representing the layout of wiper value data in non-volatile memory. The
- * key value is a unique constant that we can use to check whether the NVM has
- * been initialized by the PDM.
+ * Function definitions
  */
-typedef struct {
-  uint32_t key;
 
-  uint8_t fuel_wpr_val;
-  uint8_t ign_wpr_val;
-  uint8_t inj_wpr_val;
-  uint8_t abs_wpr_val;
-  uint8_t pdlu_wpr_val;
-  uint8_t pdld_wpr_val;
-  uint8_t fan_wpr_val;
-  uint8_t wtr_wpr_val;
-  uint8_t ecu_wpr_val;
-  uint8_t aux_wpr_val;
-  uint8_t bvbat_wpr_val;
-
-  uint8_t fuel_peak_wpr_val;
-  uint8_t fan_peak_wpr_val;
-  uint8_t wtr_peak_wpr_val;
-} Wiper_nvm_data;
-
-// Function definitions
 void main(void);
+
+// Logic functions
 void process_CAN_msg(CAN_message msg);
-void send_diag_can(void);
+void debounce_switches(void);
+void check_load_overcurrent(void);
+
+// ADC sample functions
 void sample_temp(void);
 void sample_ext_adc(void);
-void check_load_overcurrent(void);
-void send_load_current_can(void);
+
+// CAN message sending functions
+void send_diag_can(void);
+void send_diag_state_can(uint8_t override);
 void send_rail_volt_can(void);
+void send_load_current_can(void);
 void send_cutoff_values_can(uint8_t override);
-void send_load_status_can(uint8_t override);
 void send_overcrt_count_can(uint8_t override);
-void set_rheo(uint8_t load_idx, uint8_t val);
-void send_all_rheo(uint16_t msg);
-void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff);
+
+// Utility functions
 double wpr_to_res(uint8_t wpr);
 uint8_t res_to_wpr(double res);
-void set_load(uint8_t load_idx, uint8_t load_state);
 uint8_t load_enabled(uint8_t load_idx);
+void set_load(uint8_t load_idx, uint8_t load_state);
+
+// Rheostat functions
+void set_rheo(uint8_t load_idx, uint8_t val);
+void send_all_rheo(uint16_t msg);
 void init_rheo(void);
 
 #endif /* PDM_H */

@@ -17,6 +17,10 @@ void init_gpx(void) {
   // Initialize SPI communciations to the GPX chip
   _gpx_init_spi();
 
+  // Toggle !CS once prior to startup
+  CS_GPX_LAT = 0;
+  CS_GPX_LAT = 1;
+
   // Configure IOCON register
   uint8_t IOCON = 0x0;
   IOCON |= (0 << 7); // BANK (Same bank)
@@ -90,6 +94,7 @@ void _gpx_init_spi(void) {
   // Initialize SDI2/SDO2 PPS pins
   CFGCONbits.IOLOCK = 0;
   TRISEbits.TRISE5 = INPUT;
+  ANSELEbits.ANSE5 = DIG_INPUT;
   SDI2Rbits.SDI2R = 0b0110; // RPE5
   TRISCbits.TRISC1 = OUTPUT;
   RPC1Rbits.RPC1R = 0b0110; // SDO2
@@ -97,7 +102,7 @@ void _gpx_init_spi(void) {
 
   // Initialize SCK2 and !CS_GPX pins
   TRISGbits.TRISG6 = OUTPUT; // SCK2
-  CS_GPX_TRIS = OUTPUT; // !CS_AD7490
+  CS_GPX_TRIS = OUTPUT; // !CS_GPX
   CS_GPX_LAT = 1;
 
   // Disable interrupts
@@ -130,9 +135,9 @@ void _gpx_init_spi(void) {
   SPI2CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (8-bit)
   SPI2CONbits.MODE16 = 0;  // 32/16-Bit Communication Select bits (8-bit)
   SPI2CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-  SPI2CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI2CONbits.DISSDI = 0;
   SPI2CONbits.DISSDO = 0;
+  SPI2CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI2CONbits.SMP = 1;
   SPI2CONbits.CKP = 0;     // Clock Polarity Select (Idle state for clock is a low level)
 

@@ -23,8 +23,8 @@
 #define GPX_INT_ANSEL  ANSELEbits.ANSE6
 
 // Opcodes
-#define GPX_OPCODE_READ  0b01000001
-#define GPX_OPCODE_WRITE 0b01000000
+#define GPX_OPCODE_READ  0b01001111
+#define GPX_OPCODE_WRITE 0b01001110
 
 // Register addresses
 #define GPX_IOCON 0x0A

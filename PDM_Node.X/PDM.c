@@ -12,115 +12,37 @@
 volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
-// Car status variables reported over can from the ECU
-volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0;
-
-// Stores wiper values for each load
-uint8_t wiper_values[NUM_CTL] = {0};
-uint8_t peak_wiper_values[NUM_CTL] = {0};
-
-// Stores whether each load is currently in peak mode
-uint8_t peak_state[NUM_LOADS] = {0};
-
-// Stores the calculated FB pin resistance for each load
-double fb_resistances[NUM_CTL] = {0.0};
-
-// Stores the sampled current draw values for each load
-uint16_t load_current[NUM_LOADS] = {0};
-
-// Stores the sampled rail voltage values
-uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0;
-
-// Stores the overcurrent state of each load
-uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT};
-uint8_t overcurrent_count[NUM_LOADS] = {0};
-uint32_t overcurrent_tmr[NUM_LOADS] = {0};
-
-// Stores the output state of each load
-uint8_t output_state[NUM_LOADS] = {0};
-
-// Recorded values from temperature sensors
+// State/status variables determined by various sources
+volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0; // From ECU
+uint16_t total_current_draw = 0;
+uint8_t fuel_prime_flag, over_temp_flag = 0;
+uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
+uint8_t switch_debounced = 0; // Debounced (safe) switch state
+uint8_t switch_prev = 0;      // Previous sampled value of switches
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
+uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0; // Sampled rail voltages
 
-// State variables determined by various sources
-uint8_t fuel_prime_flag = 0;
-uint8_t over_temp_flag = 0;
-uint16_t total_current_draw = 0;
-uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
-uint8_t gpx_int_flag = 0;
+// Load-specific state/status variables
+uint8_t wiper_values[NUM_CTL] = {0};      // Rheostat wiper values
+uint8_t peak_wiper_values[NUM_CTL] = {0}; // Rheostat peak-mode wiper values
+uint8_t peak_state[NUM_LOADS] = {0};      // Stores whether each load is currently in peak mode
+double fb_resistances[NUM_CTL] = {0.0};   // Stores the calculated FB pin resistance for each load
+uint16_t load_current[NUM_LOADS] = {0};   // Stores the sampled current draw values for each load
+uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT}; // Overcurrent state
+uint8_t overcurrent_count[NUM_LOADS] = {0};
+uint32_t overcurrent_tmr[NUM_LOADS] = {0};
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr,
     motec2_recv_tmr, override_sw_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
-uint32_t str_en_tmr = 0;
-uint32_t diag_send_tmr, rail_volt_send_tmr, load_current_send_tmr,
-    cutoff_send_tmr, load_status_send_tmr, overcrt_count_send_tmr = 0;
+uint32_t str_en_tmr, pdlu_tmr, pdld_tmr = 0;
+uint32_t diag_send_tmr, diag_state_send_tmr, rail_volt_send_tmr, 
+    load_current_send_tmr, cutoff_send_tmr, overcrt_count_send_tmr = 0;
 uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
-uint32_t pdlu_tmr, pdld_tmr = 0;
-uint32_t temp_samp_tmr, ext_adc_samp_tmr, overcrt_chk_tmr = 0;
-
-// Initial overcurrent thresholds to use for all the loads
-const double load_cutoff[NUM_CTL] = {
-  10.0,  // FUEL
-  100.0, // IGN
-  100.0, // INJ
-  50.0,  // ABS
-  60.0,  // PDLU
-  60.0,  // PDLD
-  20.0,  // FAN
-  15.0,  // WTR
-  20.0,  // ECU
-  2.0,   // AUX
-  10.0   // BVBAT
-};
-
-const double load_peak_cutoff[NUM_CTL] = {
-  40.0,  // FUEL
-  0.0,   // IGN
-  0.0,   // INJ
-  0.0,   // ABS
-  0.0,   // PDLU
-  0.0,   // PDLD
-  100.0, // FAN
-  40.0,  // WTR
-  60.0,  // ECU
-  0.0,   // AUX
-  0.0    // BVBAT
-};
-
-// ADC channel indices for all the loads
-const uint8_t ADC_CHN[NUM_LOADS] = {
-  7,  // FUEL
-  6,  // IGN
-  4,  // INJ
-  5,  // ABS
-  8,  // PDLU
-  9,  // PDLD
-  10, // FAN
-  11, // WTR
-  3,  // ECU
-  2,  // AUX
-  1,  // BVBAT
-  0   // STR
-};
-
-// GPX indices for all the loads
-const uint8_t GPX_IDX[NUM_LOADS] = {
-  12, // FUEL
-  13, // IGN
-  14, // INJ
-  15, // ABS
-  0,  // PDLU
-  1,  // PDLD
-  2,  // FAN
-  3,  // WTR
-  4,  // ECU
-  5,  // AUX
-  6,  // BVBAT
-  7   // STR
-};
+uint32_t temp_samp_tmr, ext_adc_samp_tmr = 0;
+uint32_t switch_debounce_tmr, overcrt_chk_tmr = 0;
 
 /**
  * Main function
@@ -136,8 +58,6 @@ void main(void) {
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
   init_ad7490(); // Initialize AD7490 external ADC chip
-  init_gpx(); // Initialize GPIO expander chip
-
   init_rheo(); // Initialize SPI interface for digital rheostats
 
   //TODO: USB
@@ -231,60 +151,16 @@ void main(void) {
   // Disconnect terminal A from resistor network for all rheostats
   send_all_rheo(0b0100000011111011); // TCON0bits.R0A = 0
 
-  // Get wiper data struct from NVM
-  Wiper_nvm_data data = {0};
-  //TODO: read_nvm_data(&data, sizeof(Wiper_nvm_data));
-
-  // Check to see if the wiper data in NVM has been initialized
-  if(0 /*TODO: data.key != NVM_WPR_CONSTANT*/) {
-    // Initialize normal and peak wiper values to general settings
-    uint32_t i;
-    for (i = 0; i < NUM_CTL; i++) {
-      double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_cutoff[i];
-      wiper_values[i] = res_to_wpr(fb_resistance);
-      fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_peak_cutoff[i];
-      peak_wiper_values[i] = res_to_wpr(fb_resistance);
-    }
-
-    // Store default wiper data struct in NVM
-    //data.key = NVM_WPR_CONSTANT;
-    data.fuel_wpr_val = wiper_values[FUEL_IDX];
-    data.ign_wpr_val = wiper_values[IGN_IDX];
-    data.inj_wpr_val = wiper_values[INJ_IDX];
-    data.abs_wpr_val = wiper_values[ABS_IDX];
-    data.pdlu_wpr_val = wiper_values[PDLU_IDX];
-    data.pdld_wpr_val = wiper_values[PDLD_IDX];
-    data.fan_wpr_val = wiper_values[FAN_IDX];
-    data.wtr_wpr_val = wiper_values[WTR_IDX];
-    data.ecu_wpr_val = wiper_values[ECU_IDX];
-    data.aux_wpr_val = wiper_values[AUX_IDX];
-    data.bvbat_wpr_val = wiper_values[BVBAT_IDX];
-
-    data.fuel_peak_wpr_val = peak_wiper_values[FUEL_IDX];
-    data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
-    data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
-    //TODO: write_nvm_data(&data, sizeof(Wiper_nvm_data));
-  } else {
-    // Copy peak and normal wiper values from NVM
-    wiper_values[FUEL_IDX] = data.fuel_wpr_val;
-    wiper_values[IGN_IDX] = data.ign_wpr_val;
-    wiper_values[INJ_IDX] = data.inj_wpr_val;
-    wiper_values[ABS_IDX] = data.abs_wpr_val;
-    wiper_values[PDLU_IDX] = data.pdlu_wpr_val;
-    wiper_values[PDLD_IDX] = data.pdld_wpr_val;
-    wiper_values[FAN_IDX] = data.fan_wpr_val;
-    wiper_values[WTR_IDX] = data.wtr_wpr_val;
-    wiper_values[ECU_IDX] = data.ecu_wpr_val;
-    wiper_values[AUX_IDX] = data.aux_wpr_val;
-    wiper_values[BVBAT_IDX] = data.bvbat_wpr_val;
-
-    peak_wiper_values[FUEL_IDX] = data.fuel_peak_wpr_val;
-    peak_wiper_values[FAN_IDX] = data.fan_peak_wpr_val;
-    peak_wiper_values[WTR_IDX] = data.wtr_peak_wpr_val;
+  // Initialize normal and peak wiper values to general settings
+  uint32_t i;
+  for (i = 0; i < NUM_CTL; i++) {
+    double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_cutoff[i];
+    wiper_values[i] = res_to_wpr(fb_resistance);
+    fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_peak_cutoff[i];
+    peak_wiper_values[i] = res_to_wpr(fb_resistance);
   }
 
-  // Set each rheostat to the value loaded from NVM
-  uint32_t i;
+  // Set each rheostat to the correct value
   for (i = 0; i < NUM_CTL; i++) {
     set_rheo(i, wiper_values[i]);
     peak_state[i] = 0;
@@ -337,7 +213,7 @@ void main(void) {
     /**
      * Reset override switches if the CAN variables are stale
      */
-    if (millis - override_sw_tmr >= OVERRIDE_TIMEOUT) {
+    if (millis - override_sw_tmr >= OVERRIDE_SW_WAIT) {
       fan_override_sw = 0;
       wtr_override_sw = 0;
       fuel_override_sw = 0;
@@ -348,7 +224,7 @@ void main(void) {
      */
 
     // PDLU
-    if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW && (millis - pdlu_tmr < MAX_PDL_DUR)) {
+    if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW && (millis - pdlu_tmr < PDL_MAX_DUR)) {
       // Enable PDLU
       if (!PDLU_EN && overcurrent_flag[PDLU_IDX] != OVERCRT_RESET) {
         EN_PDLU_LAT = PWR_ON;
@@ -368,7 +244,7 @@ void main(void) {
     }
 
     // PDLD
-    if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW && (millis - pdld_tmr < MAX_PDL_DUR)) {
+    if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW && (millis - pdld_tmr < PDL_MAX_DUR)) {
       // Enable PDLD
       if (!PDLD_EN && overcurrent_flag[PDLD_IDX] != OVERCRT_RESET) {
         EN_PDLD_LAT = PWR_ON;
@@ -611,7 +487,7 @@ void main(void) {
     if (ABS_SW && !KILL_SW) {
       // Enable ABS if not already enabled
       if (!ABS_EN && overcurrent_flag[ABS_IDX] != OVERCRT_RESET) {
-        EN_FAN_LAT = PWR_ON;
+        EN_ABS_LAT = PWR_ON;
         load_state_changed = 1;
       }
     } else {
@@ -622,7 +498,7 @@ void main(void) {
     }
 
     // STR
-    if (STR_SW && (millis - str_en_tmr < STR_MAX_DUR)) {
+    if (STR_SW && !ENG_ON && (millis - str_en_tmr < STR_MAX_DUR)) {
       if (!STR_EN && overcurrent_flag[STR_IDX] != OVERCRT_RESET) {
         EN_STR_LAT = PWR_ON;
         str_en_tmr = millis;
@@ -680,66 +556,28 @@ void main(void) {
     }
 
     /**
-     * Check if any of the loads have overcurrented
+     * Call helper functions
      */
+
+    // Separate logic functions
+    debounce_switches();
     check_load_overcurrent();
 
-    /**
-     * Sample the external ADC module for load current data and rail voltage
-     */
+    // Analog sampling functions
+    sample_temp();
     sample_ext_adc();
 
-    /**
-     * Sample temperature sensors
-     */
-    sample_temp();
-
-    /**
-     * Send diagnostic CAN messages
-     */
+    // CAN message sending functions
     send_diag_can();
-
-    /**
-     * Send enablity state and peak mode state bitmaps on CAN
-     */
-    send_load_status_can(load_state_changed ? OVERRIDE : NO_OVERRIDE);
-
-    /**
-     * Sample voltage rail data and send results on CAN
-     */
+    send_diag_state_can(load_state_changed ? OVERRIDE : NO_OVERRIDE);
     send_rail_volt_can();
-
-    /**
-     * Send load current on CAN
-     */
     send_load_current_can();
-
-    /**
-     * Send current values of peak and normal mode current cutoffs
-     */
     send_cutoff_values_can(NO_OVERRIDE);
-
-    /**
-     * Send overcurrent count of each load on CAN
-     */
     send_overcrt_count_can(NO_OVERRIDE);
   }
 }
 
-/**
- * Change Notification E Interrupt Handler
- */
-void __attribute__((vector(_CHANGE_NOTICE_E_VECTOR), interrupt(IPL3SRS))) cne_inthnd(void) {
-  // Clear mismatch condition
-  uint32_t dummy = PORTE;
-
-  // The interrupt is active-low, so ignore unless GPX_INT is low
-  if (!GPX_INT_PORT) {
-    gpx_int_flag = 1;
-  }
-
-  IFS3CLR = _IFS3_CNEIF_MASK; // Clear CNE Interrupt Flag
-}
+//=============================== INTERRUPTS ===================================
 
 /**
  * CAN1 Interrupt Handler
@@ -796,6 +634,8 @@ void _nmi_handler(void) {
   asm volatile("eret;"); // Should never be called
 }
 
+//============================ LOGIC FUNCTIONS =================================
+
 /**
  * Handler function for each received CAN message.
  *
@@ -832,14 +672,6 @@ void process_CAN_msg(CAN_message msg) {
       motec2_recv_tmr = millis;
       break;
 
-    case PDM_CONFIG_ID:
-      load_idx = msg.data[LOAD_IDX_BYTE];
-      peak_mode = msg.data[PEAK_MODE_BYTE];
-      cutoff = ((double) ((msg.data[CUTOFF_SETTING_BYTE + 1] << 8) |
-          msg.data[CUTOFF_SETTING_BYTE])) / SCL_INV_CUT;
-      set_current_cutoff(load_idx, peak_mode, cutoff);
-      break;
-
     case WHEEL_ID + 0x1:
       switch_bitmap = msg.data[SWITCH_BITS_BYTE];
       fan_override_sw = switch_bitmap & FAN_OVER_MASK;
@@ -851,21 +683,82 @@ void process_CAN_msg(CAN_message msg) {
 }
 
 /**
- * void send_diag_can(void)
- *
- * Sends the diagnostic CAN message if the interval has passed.
+ * void debounce_switches(void)
+ * 
+ * Keeps track of switch state in order to debounce switch inputs. The inputs
+ * are debounced collectively, rather than debouncing each individual switch
+ * input separately.
  */
-void send_diag_can(void) {
-  if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
-    CAN_data data = {0};
-    data.halfword0 = (uint16_t) seconds;
-    data.halfword1 = pcb_temp;
-    data.halfword2 = junc_temp;
+void debounce_switches(void) {
+  uint8_t switch_raw = 0x0 |
+    STR_SW_RAW << 7 |
+    ON_SW_RAW << 6 |
+    ACT_UP_SW_RAW << 5 |
+    ACT_DN_SW_RAW << 4 |
+    KILL_SW_RAW << 3 |
+    ABS_SW_RAW << 2 |
+    AUX1_SW_RAW << 1 |
+    AUX2_SW_RAW << 0;
 
-    CAN_send_message(PDM_ID + 0, 6, data);
-    diag_send_tmr = millis;
+  if (switch_raw != switch_prev) {
+    switch_debounce_tmr = millis;
+  } else if (millis - switch_debounce_tmr >= DEBOUNCE_WAIT) {
+    switch_debounced = switch_raw;
+  }
+
+  switch_prev = switch_raw;
+}
+
+/**
+ * void check_load_overcurrent(void)
+ *
+ * If a load is enabled but drawing zero (or close to zero) current, we can
+ * reasonably assume that it has overcurrented. If this is the case, toggle
+ * the enable pin of the relevant MOSFET to reset the load.
+ */
+void check_load_overcurrent(void) {
+  if (millis - overcrt_chk_tmr >= OVERCRT_CHK_INTV) {
+    uint8_t load_idx;
+    for (load_idx = 0; load_idx < NUM_CTL; load_idx++) {
+      switch (overcurrent_flag[load_idx]) {
+
+        case NO_OVERCRT:
+          if (load_enabled(load_idx) &&
+              load_current[load_idx] < OVERCRT_DETECT) {
+            overcurrent_flag[load_idx] = OVERCRT;
+            overcurrent_tmr[load_idx] = millis;
+          }
+          break;
+
+        case OVERCRT:
+          if (load_enabled(load_idx) &&
+              load_current[load_idx] < OVERCRT_DETECT) {
+            if (millis - overcurrent_tmr[load_idx] >= OVERCRT_RESET_WAIT) {
+              set_load(load_idx, PWR_OFF);
+              overcurrent_flag[load_idx] = OVERCRT_RESET;
+              overcurrent_tmr[load_idx] = millis;
+              overcurrent_count[load_idx]++;
+              send_overcrt_count_can(OVERRIDE);
+              send_diag_state_can(OVERRIDE);
+            }
+          } else {
+            overcurrent_flag[load_idx] = NO_OVERCRT;
+          }
+          break;
+
+        case OVERCRT_RESET:
+          if (millis != overcurrent_tmr[load_idx]) {
+            set_load(load_idx, PWR_ON);
+            overcurrent_flag[load_idx] = NO_OVERCRT;
+            send_diag_state_can(OVERRIDE);
+          }
+          break;
+      }
+    }
   }
 }
+
+//============================= ADC FUNCTIONS ==================================
 
 /**
  * void sample_temp(void)
@@ -933,57 +826,109 @@ void sample_ext_adc(void) {
   }
 }
 
+//============================= CAN FUNCTIONS ==================================
+
 /**
- * void check_load_overcurrent(void)
+ * void send_diag_can(void)
  *
- * If a load is enabled but the output is low, we can reasonably assume that it
- * has overcurrented. If this is the case, toggle the enable pin of the
- * relevant MOSFET to reset the load.
+ * Sends the diagnostic CAN message if the interval has passed.
  */
-void check_load_overcurrent(void) {
-  if ((millis - overcrt_chk_tmr >= OVERCRT_CHK_INTV) || gpx_int_flag) {
-    uint8_t load_idx;
+void send_diag_can(void) {
+  if (millis - diag_send_tmr >= DIAG_SEND) {
+    CAN_data data = {0};
+    data.halfword0 = (uint16_t) seconds;
+    data.halfword1 = pcb_temp;
+    data.halfword2 = junc_temp;
 
-    gpx_int_flag = 0;
+    CAN_send_message(PDM_ID + 0, 6, data);
+    diag_send_tmr = millis;
+  }
+}
 
-    uint16_t state = gpx_read_state();
+/**
+ * void send_diag_state_can(void)
+ *
+ * If the interval has passed or the caller overrode the check, send out the
+ * enablity and peak mode state of all loads on CAN. Also send total current
+ * draw, switch state, and flag state.
+ * 
+ * TODO: Restrict to a certain rate, even with override
+ *
+ * @param override - Whether to override the interval
+ */
+void send_diag_state_can(uint8_t override) {
+  if ((millis - diag_state_send_tmr >= DIAG_STATE_SEND) || override) {
+    CAN_data data = {0};
 
-    for (load_idx = 0; load_idx < NUM_LOADS; load_idx++) {
-      output_state[load_idx] = ((state >> GPX_IDX[load_idx]) & 0x1);
+    // Create load enablity bitmap
+    data.halfword0 = 0x0 |
+        FUEL_EN << (15 - FUEL_IDX) |
+        IGN_EN << (15 - IGN_IDX) |
+        INJ_EN << (15 - INJ_IDX) |
+        ABS_EN << (15 - ABS_IDX) |
+        PDLU_EN << (15 - PDLU_IDX) |
+        PDLD_EN << (15 - PDLD_IDX) |
+        FAN_EN << (15 - FAN_IDX) |
+        WTR_EN << (15 - WTR_IDX) |
+        ECU_EN << (15 - ECU_IDX) |
+        AUX_EN << (15 - AUX_IDX) |
+        BVBAT_EN << (15 - BVBAT_IDX) |
+        STR_EN << (15 - STR_IDX);
 
-      switch (overcurrent_flag[load_idx]) {
+    // Create load peak mode bitmap
+    data.halfword1 = 0x0 |
+        peak_state[FUEL_IDX] << (15 - FUEL_IDX) |
+        peak_state[IGN_IDX] << (15 - IGN_IDX) |
+        peak_state[INJ_IDX] << (15 - INJ_IDX) |
+        peak_state[ABS_IDX] << (15 - ABS_IDX) |
+        peak_state[PDLU_IDX] << (15 - PDLU_IDX) |
+        peak_state[PDLD_IDX] << (15 - PDLD_IDX) |
+        peak_state[FAN_IDX] << (15 - FAN_IDX) |
+        peak_state[WTR_IDX] << (15 - WTR_IDX) |
+        peak_state[ECU_IDX] << (15 - ECU_IDX) |
+        peak_state[AUX_IDX] << (15 - AUX_IDX) |
+        peak_state[BVBAT_IDX] << (15 - BVBAT_IDX) |
+        peak_state[STR_IDX] << (15 - STR_IDX);
 
-        case NO_OVERCRT:
-          if (load_enabled(load_idx) && !output_state[load_idx]) {
-            overcurrent_flag[load_idx] = OVERCRT;
-            overcurrent_tmr[load_idx] = millis;
-          }
-          break;
+    data.halfword2 = total_current_draw;
 
-        case OVERCRT:
-          if (load_enabled(load_idx) && !output_state[load_idx]) {
-            if (millis - overcurrent_tmr[load_idx] >= OVERCRT_WAIT) {
-              set_load(load_idx, PWR_OFF);
-              overcurrent_flag[load_idx] = OVERCRT_RESET;
-              overcurrent_tmr[load_idx] = millis;
-              overcurrent_count[load_idx]++;
-              send_overcrt_count_can(OVERRIDE);
-              send_load_status_can(OVERRIDE);
-            }
-          } else {
-            overcurrent_flag[load_idx] = NO_OVERCRT;
-          }
-          break;
+    // Create switch state bitmap
+    data.byte6 = 0x0 |
+        STR_SW << 7 |
+        ON_SW << 6 |
+        ACT_UP_SW << 5 |
+        ACT_DN_SW << 4 |
+        KILL_SW << 3 |
+        ABS_SW << 2 |
+        AUX1_SW << 1 |
+        AUX2_SW << 0;
 
-        case OVERCRT_RESET:
-          if (millis != overcurrent_tmr[load_idx]) {
-            set_load(load_idx, PWR_ON);
-            overcurrent_flag[load_idx] = NO_OVERCRT;
-            send_load_status_can(OVERRIDE);
-          }
-          break;
-      }
-    }
+    // Create flag bitmap
+    data.byte7 = 0x0 |
+        fuel_prime_flag << 7 |
+        over_temp_flag << 6;
+
+    CAN_send_message(PDM_ID + 0x1, 8, data);
+    diag_state_send_tmr = millis;
+  }
+}
+
+/**
+ * void send_rail_volt_can(void)
+ *
+ * If the interval has passed, samples rail voltages and sends related CAN
+ * messages.
+ */
+void send_rail_volt_can(void) {
+  if(millis - rail_volt_send_tmr >= RAIL_VOLT_SEND) {
+    CAN_data rail_voltage_data = {0};
+    rail_voltage_data.halfword0 = rail_vbat;
+    rail_voltage_data.halfword1 = rail_12v;
+    rail_voltage_data.halfword2 = rail_5v;
+    rail_voltage_data.halfword3 = rail_3v3;
+    CAN_send_message(PDM_ID + 2, 8, rail_voltage_data);
+
+    rail_volt_send_tmr = millis;
   }
 }
 
@@ -1018,25 +963,6 @@ void send_load_current_can(void) {
     CAN_send_message(PDM_ID + 5, 8, load_current_data);
 
     load_current_send_tmr = millis;
-  }
-}
-
-/**
- * void send_rail_volt_can(void)
- *
- * If the interval has passed, samples rail voltages and sends related CAN
- * messages.
- */
-void send_rail_volt_can(void) {
-  if(millis - rail_volt_send_tmr >= RAIL_VOLT_SEND) {
-    CAN_data rail_voltage_data = {0};
-    rail_voltage_data.halfword0 = rail_vbat;
-    rail_voltage_data.halfword1 = rail_12v;
-    rail_voltage_data.halfword2 = rail_5v;
-    rail_voltage_data.halfword3 = rail_3v3;
-    CAN_send_message(PDM_ID + 2, 8, rail_voltage_data);
-
-    rail_volt_send_tmr = millis;
   }
 }
 
@@ -1118,71 +1044,6 @@ void send_cutoff_values_can(uint8_t override) {
 }
 
 /**
- * void send_load_status_can(void)
- *
- * If the interval has passed or the caller overrode the check, send out the
- * enablity status and peak mode status of all loads on CAN.
- *
- * @param override - Whether to override the interval
- */
-void send_load_status_can(uint8_t override) {
-  if ((millis - load_status_send_tmr >= LOAD_STATUS_SEND) || override) {
-    CAN_data data = {0};
-
-    // Create load enablity bitmap
-    data.halfword0 = 0x0 |
-        FUEL_EN << (15 - FUEL_IDX) |
-        IGN_EN << (15 - IGN_IDX) |
-        INJ_EN << (15 - INJ_IDX) |
-        ABS_EN << (15 - ABS_IDX) |
-        PDLU_EN << (15 - PDLU_IDX) |
-        PDLD_EN << (15 - PDLD_IDX) |
-        FAN_EN << (15 - FAN_IDX) |
-        WTR_EN << (15 - WTR_IDX) |
-        ECU_EN << (15 - ECU_IDX) |
-        AUX_EN << (15 - AUX_IDX) |
-        BVBAT_EN << (15 - BVBAT_IDX) |
-        STR_EN << (15 - STR_IDX);
-
-    // Create load peak mode bitmap
-    data.halfword1 = 0x0 |
-        peak_state[FUEL_IDX] << (15 - FUEL_IDX) |
-        peak_state[IGN_IDX] << (15 - IGN_IDX) |
-        peak_state[INJ_IDX] << (15 - INJ_IDX) |
-        peak_state[ABS_IDX] << (15 - ABS_IDX) |
-        peak_state[PDLU_IDX] << (15 - PDLU_IDX) |
-        peak_state[PDLD_IDX] << (15 - PDLD_IDX) |
-        peak_state[FAN_IDX] << (15 - FAN_IDX) |
-        peak_state[WTR_IDX] << (15 - WTR_IDX) |
-        peak_state[ECU_IDX] << (15 - ECU_IDX) |
-        peak_state[AUX_IDX] << (15 - AUX_IDX) |
-        peak_state[BVBAT_IDX] << (15 - BVBAT_IDX) |
-        peak_state[STR_IDX] << (15 - STR_IDX);
-
-    data.halfword2 = total_current_draw;
-
-    // Create switch state bitmap
-    data.byte6 = 0x0 |
-        STR_SW << 7 |
-        ON_SW << 6 |
-        ACT_UP_SW << 5 |
-        ACT_DN_SW << 4 |
-        KILL_SW << 3 |
-        ABS_SW << 2 |
-        AUX1_SW << 1 |
-        AUX2_SW << 0;
-
-    // Create flag bitmap
-    data.byte7 = 0x0 |
-        fuel_prime_flag << 7 |
-        over_temp_flag << 6;
-
-    CAN_send_message(PDM_ID + 0x1, 8, data);
-    load_status_send_tmr = millis;
-  }
-}
-
-/**
  * void send_overcrt_count_can(void)
  *
  * If the interval has passed or the caller overrode the check, send out the
@@ -1213,6 +1074,98 @@ void send_overcrt_count_can(uint8_t override) {
     overcrt_count_send_tmr = millis;
   }
 }
+
+//========================== UTILITY FUNCTIONS =================================
+
+/**
+ * Functions to convert a wiper value to the expected resistance of the rheostat
+ * and vice versa.
+ *
+ * Luckily, the conversion is mostly linear, so a linear regression approximates
+ * the value well. These values were determined experimentally and should give a
+ * good general idea of the FB pin resistance, but there will be some error. The
+ * error between measured and calculated current cut-off due to this error is
+ * limited to ~0.5A worst case, and this is at the high end of the cut-off range.
+ * So, the error should not be a problem. Refer to the "Digital Rheostat V+
+ * Selection" tab of the "PCB Info" document for more info.
+ */
+
+/**
+ * Converts a wiper value to the expected resistance of the rheostat.
+ *
+ * @param wpr The wiper value to convert
+ * @return The expected resistance
+ */
+double wpr_to_res(uint8_t wpr) {
+  return (19.11639223 * wpr) + 256.6676635;
+}
+
+/**
+ * Converts a rheostat resistance to the wiper value.
+ *
+ * @param res The resistance to convert
+ * @return The wiper value of the rheostat
+ */
+uint8_t res_to_wpr(double res) {
+  double wiper = 0.0523111 * (res - 256.6676635);
+  wiper = (wiper < 0) ? 0 : wiper;
+  wiper = (wiper > 255) ? 255 : wiper;
+  return ((uint8_t) wiper);
+}
+
+/**
+ * uint8_t load_enabled(uint8_t load_idx)
+ *
+ * Returns whether or not the specified load is enabled.
+ *
+ * @param load_idx- Index of the load to get the enablity for
+ * @return Whether or not the specified load is enabled
+ */
+uint8_t load_enabled(uint8_t load_idx) {
+  switch (load_idx) {
+    case FUEL_IDX: return FUEL_EN;
+    case IGN_IDX: return IGN_EN;
+    case INJ_IDX: return INJ_EN;
+    case ABS_IDX: return ABS_EN;
+    case PDLU_IDX: return PDLU_EN;
+    case PDLD_IDX: return PDLD_EN;
+    case FAN_IDX: return FAN_EN;
+    case WTR_IDX: return WTR_EN;
+    case ECU_IDX: return ECU_EN;
+    case AUX_IDX: return AUX_EN;
+    case BVBAT_IDX: return BVBAT_EN;
+    case STR_IDX: return STR_EN;
+    default: return 0;
+  }
+}
+
+/**
+ * void set_load(uint8_t load_idx, uint8_t load_state)
+ *
+ * Sets the specified load to the specified enablity state
+ *
+ * @param load_idx- The load to set
+ * @param load_state- The new state
+ */
+void set_load(uint8_t load_idx, uint8_t load_state) {
+  switch (load_idx) {
+    case FUEL_IDX: EN_FUEL_LAT = load_state; break;
+    case IGN_IDX: EN_IGN_LAT = load_state; break;
+    case INJ_IDX: EN_INJ_LAT = load_state; break;
+    case ABS_IDX: EN_ABS_LAT = load_state; break;
+    case PDLU_IDX: EN_PDLU_LAT = load_state; break;
+    case PDLD_IDX: EN_PDLD_LAT = load_state; break;
+    case FAN_IDX: EN_FAN_LAT = load_state; break;
+    case WTR_IDX: EN_WTR_LAT = load_state; break;
+    case ECU_IDX: EN_ECU_LAT = load_state; break;
+    case AUX_IDX: EN_AUX_LAT = load_state; break;
+    case BVBAT_IDX: EN_BVBAT_LAT = load_state; break;
+    case STR_IDX: EN_STR_LAT = load_state; break;
+    default: return;
+  }
+}
+
+//========================== RHEOSTAT FUNCTIONS ================================
 
 /**
  * void set_rheo(uint8_t load_idx, uint8_t val)
@@ -1301,146 +1254,10 @@ void send_all_rheo(uint16_t msg) {
 }
 
 /**
- * void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff)
- *
- * Sets the current cutoff of the indicated load to the requested value and
- * saves the setting in non-volatile memory.
- *
- * @param load_idx - Index of the load to change
- * @param peak_mode - Whether to set the peak mode cutoff or the normal mode cutoff
- * @param cutoff - The cutoff current (in amps) to set
+ * void init_rheo(void)
+ * 
+ * Initializes the SPI bus for the rheostats.
  */
-void set_current_cutoff(uint8_t load_idx, uint8_t peak_mode, double cutoff) {
-  // Calculate FB pin resistance needed for the requested current cutoff
-  double fb_resistance = (cutoff == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / cutoff;
-
-  // Store the desired peak or normal mode wiper setting
-  if (peak_mode) {
-    peak_wiper_values[load_idx] = res_to_wpr(fb_resistance);
-  } else {
-    wiper_values[load_idx] = res_to_wpr(fb_resistance);
-  }
-
-  // Set the rheostat wiper setting to the new value
-  if (peak_state[load_idx]) {
-    set_rheo(load_idx, peak_wiper_values[load_idx]);
-    fb_resistances[load_idx] = wpr_to_res(peak_wiper_values[load_idx]);
-  } else {
-    set_rheo(load_idx, wiper_values[load_idx]);
-    fb_resistances[load_idx] = wpr_to_res(wiper_values[load_idx]);
-  }
-
-  send_cutoff_values_can(OVERRIDE);
-
-  // Save peak and normal mode wiper values in NVM
-  Wiper_nvm_data data = {0};
-  //data.key = NVM_WPR_CONSTANT;
-  data.fuel_wpr_val = wiper_values[FUEL_IDX];
-  data.ign_wpr_val = wiper_values[IGN_IDX];
-  data.inj_wpr_val = wiper_values[INJ_IDX];
-  data.abs_wpr_val = wiper_values[ABS_IDX];
-  data.pdlu_wpr_val = wiper_values[PDLU_IDX];
-  data.pdld_wpr_val = wiper_values[PDLD_IDX];
-  data.fan_wpr_val = wiper_values[FAN_IDX];
-  data.wtr_wpr_val = wiper_values[WTR_IDX];
-  data.ecu_wpr_val = wiper_values[ECU_IDX];
-  data.aux_wpr_val = wiper_values[AUX_IDX];
-  data.bvbat_wpr_val = wiper_values[BVBAT_IDX];
-
-  data.fuel_peak_wpr_val = peak_wiper_values[FUEL_IDX];
-  data.fan_peak_wpr_val = peak_wiper_values[FAN_IDX];
-  data.wtr_peak_wpr_val = peak_wiper_values[WTR_IDX];
-  //TODO: write_nvm_data(&data, sizeof(Wiper_nvm_data));
-}
-
-/**
- * Functions to convert a wiper value to the expected resistance of the rheostat
- * and vice versa.
- *
- * Luckily, the conversion is mostly linear, so a linear regression approximates
- * the value well. These values were determined experimentally and should give a
- * good general idea of the FB pin resistance, but there will be some error. The
- * error between measured and calculated current cut-off due to this error is
- * limited to ~0.5A worst case, and this is at the high end of the cut-off range.
- * So, the error should not be a problem. Refer to the "Digital Rheostat V+
- * Selection" tab of the "PCB Info" document for more info.
- */
-
-/**
- * Converts a wiper value to the expected resistance of the rheostat.
- *
- * @param wpr The wiper value to convert
- * @return The expected resistance
- */
-double wpr_to_res(uint8_t wpr) {
-  return (19.11639223 * wpr) + 256.6676635;
-}
-
-/**
- * Converts a rheostat resistance to the wiper value.
- *
- * @param res The resistance to convert
- * @return The wiper value of the rheostat
- */
-uint8_t res_to_wpr(double res) {
-  double wiper = 0.0523111 * (res - 256.6676635);
-  wiper = (wiper < 0) ? 0 : wiper;
-  wiper = (wiper > 255) ? 255 : wiper;
-  return ((uint8_t) wiper);
-}
-
-/**
- * void set_load(uint8_t load_idx, uint8_t load_state)
- *
- * Sets the specified load to the specified enablity state
- *
- * @param load_idx- The load to set
- * @param load_state- The new state
- */
-void set_load(uint8_t load_idx, uint8_t load_state) {
-  switch (load_idx) {
-    case FUEL_IDX: EN_FUEL_LAT = load_state; break;
-    case IGN_IDX: EN_IGN_LAT = load_state; break;
-    case INJ_IDX: EN_INJ_LAT = load_state; break;
-    case ABS_IDX: EN_ABS_LAT = load_state; break;
-    case PDLU_IDX: EN_PDLU_LAT = load_state; break;
-    case PDLD_IDX: EN_PDLD_LAT = load_state; break;
-    case FAN_IDX: EN_FAN_LAT = load_state; break;
-    case WTR_IDX: EN_WTR_LAT = load_state; break;
-    case ECU_IDX: EN_ECU_LAT = load_state; break;
-    case AUX_IDX: EN_AUX_LAT = load_state; break;
-    case BVBAT_IDX: EN_BVBAT_LAT = load_state; break;
-    case STR_IDX: EN_STR_LAT = load_state; break;
-    default: return;
-  }
-}
-
-/**
- * uint8_t load_enabled(uint8_t load_idx)
- *
- * Returns whether or not the specified load is enabled.
- *
- * @param load_idx- Index of the load to get the enablity for
- * @return Whether or not the specified load is enabled
- */
-uint8_t load_enabled(uint8_t load_idx) {
-  switch (load_idx) {
-    case FUEL_IDX: return FUEL_EN;
-    case IGN_IDX: return IGN_EN;
-    case INJ_IDX: return INJ_EN;
-    case ABS_IDX: return ABS_EN;
-    case PDLU_IDX: return PDLU_EN;
-    case PDLD_IDX: return PDLD_EN;
-    case FAN_IDX: return FAN_EN;
-    case WTR_IDX: return WTR_EN;
-    case ECU_IDX: return ECU_EN;
-    case AUX_IDX: return AUX_EN;
-    case BVBAT_IDX: return BVBAT_EN;
-    case STR_IDX: return STR_EN;
-    default: return 0;
-  }
-}
-
 void init_rheo(void) {
   unlock_config();
 
