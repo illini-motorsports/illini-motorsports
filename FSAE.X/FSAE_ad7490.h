@@ -23,15 +23,15 @@
 // Struct representing the chip's control register
 typedef union uAD7490ControlReg {
   struct {
-    unsigned WRITE:1;
-    unsigned SEQ:1;
-    unsigned ADDR:4;
-    unsigned PM:2;
-    unsigned SHADOW:1;
-    unsigned WEAK_TRI:1;
-    unsigned RANGE:1;
-    unsigned CODING:1;
     unsigned UNUSED:4;
+    unsigned CODING:1;
+    unsigned RANGE:1;
+    unsigned WEAK_TRI:1;
+    unsigned SHADOW:1;
+    unsigned PM:2;
+    unsigned ADDR:4;
+    unsigned SEQ:1;
+    unsigned WRITE:1;
   };
   uint16_t reg;
 } AD7490ControlReg;
@@ -39,7 +39,7 @@ typedef union uAD7490ControlReg {
 // Function definitions
 void init_ad7490(void);
 uint16_t* ad7490_read_channels(void);
-uint16_t _ad7490_send_one(uint16_t one);
+uint16_t _ad7490_send_one(AD7490ControlReg reg);
 void _ad7490_init_spi(void);
 
 #endif /* FSAE_ad7490_H */

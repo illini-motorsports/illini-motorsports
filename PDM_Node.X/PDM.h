@@ -62,13 +62,13 @@
 
 #define BASIC_CONTROL_WAIT 1000
 #define TEMP_SAMP_INTV     333
-#define EXT_ADC_SAMP_INTV  5
+#define EXT_ADC_SAMP_INTV  10
 #define OVERCRT_WAIT       100
 #define OVERCRT_CHK_INTV   10
 
 #define DIAG_MSG_SEND      1000
 #define LOAD_CUR_SEND      10
-#define RAIL_VOLT_SEND     50
+#define RAIL_VOLT_SEND     10
 #define CUTOFF_VAL_SEND    1000
 #define LOAD_STATUS_SEND   500
 #define OVERCRT_COUNT_SEND 500
@@ -80,11 +80,11 @@
 
 // Switch state definitions
 #define STR_SW    (!SW1_PORT)
-#define ON_SW     (!SW2_PORT)
+#define ON_SW     (SW2_PORT)
 #define ACT_UP_SW (!SW3_PORT)
 #define ACT_DN_SW (!SW4_PORT)
-#define ABS_SW    (!SW5_PORT)
-#define AUX1_SW   (!SW6_PORT)
+#define ABS_SW    (SW5_PORT)
+#define AUX1_SW   (SW6_PORT)
 #define AUX2_SW   (!SW7_PORT)
 #define KILL_SW   (KILL_PORT)
 
