@@ -58,6 +58,7 @@
 #define PDL_MAX_DUR        500
 #define OVERRIDE_SW_WAIT   5000
 #define BASIC_CONTROL_WAIT 1000
+#define STR_PEAK_WAIT      250
 
 #define TEMP_SAMP_INTV     333
 #define EXT_ADC_SAMP_INTV  10
@@ -72,11 +73,6 @@
 #define LOAD_CUR_SEND      10
 #define CUTOFF_VAL_SEND    1000
 #define OVERCRT_COUNT_SEND 500
-
-#define FUEL_PEAK_DUR      150
-#define WTR_PEAK_DUR       250
-#define FAN_PEAK_DUR       2000
-#define ECU_PEAK_DUR       2
 
 // Raw (bouncy) switch state definitions
 #define STR_SW_RAW    (!SW1_PORT)
@@ -252,6 +248,21 @@ const double load_peak_cutoff[NUM_CTL] = {
   0.0    // BVBAT
 };
 
+// Duration to remain in peak-mode for all the loads
+const uint32_t load_peak_duration[NUM_LOADS] = {
+  150,  // FUEL
+  0,    // IGN
+  0,    // INJ
+  0,    // ABS
+  0,    // PDLU
+  0,    // PDLD
+  2000, // FAN
+  250,  // WTR
+  10,   // ECU
+  0,    // AUX
+  0     // BVBAT
+};
+
 // External ADC channel indices for all the loads
 const uint8_t ADC_CHN[NUM_LOADS] = {
   7,  // FUEL
@@ -277,6 +288,7 @@ void main(void);
 // Logic functions
 void process_CAN_msg(CAN_message msg);
 void debounce_switches(void);
+void check_peak_timer(void);
 void check_load_overcurrent(void);
 
 // ADC sample functions
@@ -292,10 +304,13 @@ void send_cutoff_values_can(uint8_t override);
 void send_overcrt_count_can(uint8_t override);
 
 // Utility functions
+void enable_load(uint8_t load_idx);
+void disable_load(uint8_t load_idx);
+void set_load(uint8_t load_idx, uint8_t condition);
 double wpr_to_res(uint8_t wpr);
 uint8_t res_to_wpr(double res);
 uint8_t load_enabled(uint8_t load_idx);
-void set_load(uint8_t load_idx, uint8_t load_state);
+void set_en_load(uint8_t load_idx, uint8_t load_state);
 
 // Rheostat functions
 void set_rheo(uint8_t load_idx, uint8_t val);

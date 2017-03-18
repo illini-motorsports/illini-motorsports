@@ -22,6 +22,7 @@ uint8_t switch_prev = 0;      // Previous sampled value of switches
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0; // Sampled rail voltages
+uint8_t load_state_changed = 0;
 
 // Load-specific state/status variables
 uint8_t wiper_values[NUM_CTL] = {0};      // Rheostat wiper values
@@ -32,15 +33,14 @@ uint16_t load_current[NUM_LOADS] = {0};   // Stores the sampled current draw val
 uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT}; // Overcurrent state
 uint8_t overcurrent_count[NUM_LOADS] = {0};
 uint32_t overcurrent_tmr[NUM_LOADS] = {0};
+uint32_t load_tmr[NUM_LOADS] = {0};       // Millis timestamp of when load was last enabled
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr,
     motec2_recv_tmr, override_sw_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
-uint32_t str_en_tmr, pdlu_tmr, pdld_tmr = 0;
-uint32_t diag_send_tmr, diag_state_send_tmr, rail_volt_send_tmr, 
+uint32_t diag_send_tmr, diag_state_send_tmr, rail_volt_send_tmr,
     load_current_send_tmr, cutoff_send_tmr, overcrt_count_send_tmr = 0;
-uint32_t fuel_peak_tmr, wtr_peak_tmr, fan_peak_tmr, ecu_peak_tmr = 0;
 uint32_t temp_samp_tmr, ext_adc_samp_tmr = 0;
 uint32_t switch_debounce_tmr, overcrt_chk_tmr = 0;
 
@@ -168,15 +168,9 @@ void main(void) {
   }
 
   // Turn on state-independent loads
-  EN_AUX_LAT = PWR_ON;
-  EN_BVBAT_LAT = PWR_ON;
-
-  // Turn on ECU (state-independent)
-  set_rheo(ECU_IDX, peak_wiper_values[ECU_IDX]);
-  fb_resistances[ECU_IDX] = wpr_to_res(peak_wiper_values[ECU_IDX]);
-  peak_state[ECU_IDX] = 1;
-  EN_ECU_LAT = PWR_ON;
-  ecu_peak_tmr = millis;
+  enable_load(AUX_IDX);
+  enable_load(BVBAT_IDX);
+  enable_load(ECU_IDX);
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
@@ -185,7 +179,7 @@ void main(void) {
 
   // Main loop
   while (1) {
-    uint8_t load_state_changed = 0;
+    load_state_changed = 0;
     STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
     /**
@@ -220,57 +214,7 @@ void main(void) {
     }
 
     /**
-     * Control PDLU/PDLD loads based on the ACT_UP/ACT_DN signals
-     */
-
-    // PDLU
-    if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW && (millis - pdlu_tmr < PDL_MAX_DUR)) {
-      // Enable PDLU
-      if (!PDLU_EN && overcurrent_flag[PDLU_IDX] != OVERCRT_RESET) {
-        EN_PDLU_LAT = PWR_ON;
-        pdlu_tmr = millis;
-        load_state_changed = 1;
-      }
-    } else {
-      // Reset PDLU timer if the ACT_UP signal has been disabled
-      if (!ACT_UP_SW) {
-        pdlu_tmr = millis;
-      }
-
-      if (PDLU_EN) {
-        EN_PDLU_LAT = PWR_OFF;
-        load_state_changed = 1;
-      }
-    }
-
-    // PDLD
-    if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW && (millis - pdld_tmr < PDL_MAX_DUR)) {
-      // Enable PDLD
-      if (!PDLD_EN && overcurrent_flag[PDLD_IDX] != OVERCRT_RESET) {
-        EN_PDLD_LAT = PWR_ON;
-        pdld_tmr = millis;
-        load_state_changed = 1;
-      }
-    } else {
-      // Reset PDLD timer if the ACT_DN signal has been disabled
-      if (!ACT_DN_SW) {
-        pdld_tmr = millis;
-      }
-
-      if (PDLD_EN) {
-        EN_PDLD_LAT = PWR_OFF;
-        load_state_changed = 1;
-      }
-    }
-
-    /**
      * Toggle state-dependent loads
-     *
-     * When enabling an inductive load, set the peak current limit and set the
-     * peak timer. The peak current limit will be disabled at a set time later.
-     *
-     * Only power on or power off a load if it is not already on or off, even if
-     * the conditions match.
      */
     if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
         millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
@@ -288,101 +232,31 @@ void main(void) {
        */
 
       if (ON_SW && !KILL_SW) {
-        // Enable IGN
-        if (!IGN_EN && overcurrent_flag[IGN_IDX] != OVERCRT_RESET) {
-          EN_IGN_LAT = PWR_ON;
-          load_state_changed = 1;
-        }
+        enable_load(IGN_IDX);
+        enable_load(INJ_IDX);
+        enable_load(FUEL_IDX);
 
-        // Enable INJ
-        if (!INJ_EN && overcurrent_flag[INJ_IDX] != OVERCRT_RESET) {
-          EN_INJ_LAT = PWR_ON;
-          load_state_changed = 1;
-        }
-
-        // Enable FUEL
-        if (!FUEL_EN && overcurrent_flag[FUEL_IDX] != OVERCRT_RESET) {
-          uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
-          set_rheo(FUEL_IDX, peak_wpr_val);
-          fb_resistances[FUEL_IDX] = wpr_to_res(peak_wpr_val);
-          peak_state[FUEL_IDX] = 1;
-          EN_FUEL_LAT = PWR_ON;
-          fuel_peak_tmr = millis;
-          fuel_prime_tmr = millis;
-          load_state_changed = 1;
-        }
-
-        // If STR load is on, disable WATER and FAN. Otherwise, enable them.
         if (STR_EN) {
-          // Disable WTR
-          if (WTR_EN) {
-            EN_WTR_LAT = PWR_OFF;
-            load_state_changed = 1;
-            peak_state[WTR_IDX] = 0;
-          }
-
-          // Disable FAN
-          if (FAN_EN) {
-            EN_FAN_LAT = PWR_OFF;
-            load_state_changed = 1;
-            peak_state[FAN_IDX] = 0;
-          }
+          disable_load(WTR_IDX);
+          disable_load(FAN_IDX);
         } else {
-          // Enable WTR
-          if (!WTR_EN && overcurrent_flag[WTR_IDX] != OVERCRT_RESET) {
-            uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
-            set_rheo(WTR_IDX, peak_wpr_val);
-            fb_resistances[WTR_IDX] = wpr_to_res(peak_wpr_val);
-            peak_state[WTR_IDX] = 1;
-            EN_WTR_LAT = PWR_ON;
-            wtr_peak_tmr = millis;
-            load_state_changed = 1;
-          }
-
-          // Enable FAN
-          if (!FAN_EN && overcurrent_flag[FAN_IDX] != OVERCRT_RESET) {
-            uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
-            set_rheo(FAN_IDX, peak_wpr_val);
-            fb_resistances[FAN_IDX] = wpr_to_res(peak_wpr_val);
-            peak_state[FAN_IDX] = 1;
-            EN_FAN_LAT = PWR_ON;
-            fan_peak_tmr = millis;
-            load_state_changed = 1;
-          }
+          enable_load(WTR_IDX);
+          enable_load(FAN_IDX);
         }
       } else {
-        // Disable IGN
-        if (IGN_EN) {
-          EN_IGN_LAT = PWR_OFF;
-          load_state_changed = 1;
-        }
+        disable_load(IGN_IDX);
+        disable_load(INJ_IDX);
+        disable_load(FUEL_IDX);
+        disable_load(WTR_IDX);
+        disable_load(FAN_IDX);
+      }
 
-        // Disable INJ
-        if (INJ_EN) {
-          EN_INJ_LAT = PWR_OFF;
-          load_state_changed = 1;
-        }
-
-        // Disable FUEL
-        if (FUEL_EN) {
-          EN_FUEL_LAT = PWR_OFF;
-          load_state_changed = 1;
-          peak_state[FUEL_IDX] = 0;
-        }
-
-        // Disable WTR
-        if (WTR_EN) {
-          EN_WTR_LAT = PWR_OFF;
-          load_state_changed = 1;
-          peak_state[WTR_IDX] = 0;
-        }
-
-        // Disable FAN
-        if (FAN_EN) {
-          EN_FAN_LAT = PWR_OFF;
-          load_state_changed = 1;
-          peak_state[FAN_IDX] = 0;
-        }
+      // STR
+      if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
+        enable_load(STR_IDX);
+      } else {
+        if (!STR_SW) { load_tmr[STR_IDX] = millis; }
+        disable_load(STR_IDX);
       }
     } else {
 
@@ -390,170 +264,58 @@ void main(void) {
        * Perform regular load control
        */
 
-      // IGN, INJ
-      //TODO: Determine less dangerous way of keeping these loads on than ENG_ON?
-      if(ON_SW && !KILL_SW && (ENG_ON || STR_EN)) {
-        // Enable IGN if not already enabled
-        if (!IGN_EN && overcurrent_flag[IGN_IDX] != OVERCRT_RESET) {
-          EN_IGN_LAT = PWR_ON;
-          load_state_changed = 1;
-        }
-
-        // Enable INJ if not already enabled
-        if (!INJ_EN && overcurrent_flag[INJ_IDX] != OVERCRT_RESET) {
-          EN_INJ_LAT = PWR_ON;
-          load_state_changed = 1;
-        }
+      //TODO: Determine less dangerous way than ENG_ON?
+      if(ON_SW && !KILL_SW && (ENG_ON ||
+          (STR_EN && (millis - load_tmr[STR_IDX] > STR_PEAK_WAIT)))) {
+        enable_load(IGN_IDX);
+        enable_load(INJ_IDX);
       } else {
-        // Disable IGN
-        if (IGN_EN) {
-          EN_IGN_LAT = PWR_OFF;
-          load_state_changed = 1;
-        }
-
-        // Disable INJ
-        if (INJ_EN) {
-          EN_INJ_LAT = PWR_OFF;
-          load_state_changed = 1;
-        }
+        disable_load(IGN_IDX);
+        disable_load(INJ_IDX);
       }
 
-      // FUEL
-      if(ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || STR_EN || fuel_override_sw)) {
-        // Enable FUEL if not already enabled
-        if (!FUEL_EN && overcurrent_flag[FUEL_IDX] != OVERCRT_RESET) {
-          uint16_t peak_wpr_val = peak_wiper_values[FUEL_IDX];
-          set_rheo(FUEL_IDX, peak_wpr_val);
-          fb_resistances[FUEL_IDX] = wpr_to_res(peak_wpr_val);
-          peak_state[FUEL_IDX] = 1;
-          EN_FUEL_LAT = PWR_ON;
-          fuel_peak_tmr = millis;
-          fuel_prime_tmr = millis;
-          load_state_changed = 1;
-        }
+      set_load(FUEL_IDX, ON_SW && !KILL_SW &&
+          (ENG_ON || fuel_prime_flag || fuel_override_sw ||
+          (STR_EN && (millis - load_tmr[STR_IDX] > STR_PEAK_WAIT))));
+
+      set_load(WTR_IDX, !STR_EN &&
+          (ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw));
+
+      set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override_sw));
+
+      // STR
+      if (STR_SW && !ENG_ON && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
+        enable_load(STR_IDX);
       } else {
-        // Disable FUEL
-        if (FUEL_EN) {
-          EN_FUEL_LAT = PWR_OFF;
-          load_state_changed = 1;
-          peak_state[FUEL_IDX] = 0;
-        }
-      }
-
-      // WTR
-      if((ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw) && !STR_EN) {
-        // Enable WTR if not already enabled
-        if (!WTR_EN && overcurrent_flag[WTR_IDX] != OVERCRT_RESET) {
-          uint16_t peak_wpr_val = peak_wiper_values[WTR_IDX];
-          set_rheo(WTR_IDX, peak_wpr_val);
-          fb_resistances[WTR_IDX] = wpr_to_res(peak_wpr_val);
-          peak_state[WTR_IDX] = 1;
-          EN_WTR_LAT = PWR_ON;
-          wtr_peak_tmr = millis;
-          load_state_changed = 1;
-        }
-      } else {
-        // Disable WTR
-        if (WTR_EN) {
-          EN_WTR_LAT = PWR_OFF;
-          load_state_changed = 1;
-          peak_state[WTR_IDX] = 0;
-        }
-      }
-
-      // FAN
-      if((over_temp_flag || fan_override_sw) && !STR_EN) {
-        // Enable FAN if not already enabled
-        if (!FAN_EN && overcurrent_flag[FAN_IDX] != OVERCRT_RESET) {
-          uint16_t peak_wpr_val = peak_wiper_values[FAN_IDX];
-          set_rheo(FAN_IDX, peak_wpr_val);
-          fb_resistances[FAN_IDX] = wpr_to_res(peak_wpr_val);
-          peak_state[FAN_IDX] = 1;
-          EN_FAN_LAT = PWR_ON;
-          fan_peak_tmr = millis;
-          load_state_changed = 1;
-        }
-      } else {
-        // Disable FAN
-        if (FAN_EN) {
-          EN_FAN_LAT = PWR_OFF;
-          load_state_changed = 1;
-          peak_state[FAN_IDX] = 0;
-        }
-      }
-    }
-
-    // ABS
-    if (ABS_SW && !KILL_SW) {
-      // Enable ABS if not already enabled
-      if (!ABS_EN && overcurrent_flag[ABS_IDX] != OVERCRT_RESET) {
-        EN_ABS_LAT = PWR_ON;
-        load_state_changed = 1;
-      }
-    } else {
-      if (ABS_EN) {
-        EN_ABS_LAT = PWR_OFF;
-        load_state_changed = 1;
-      }
-    }
-
-    // STR
-    if (STR_SW && !ENG_ON && (millis - str_en_tmr < STR_MAX_DUR)) {
-      if (!STR_EN && overcurrent_flag[STR_IDX] != OVERCRT_RESET) {
-        EN_STR_LAT = PWR_ON;
-        str_en_tmr = millis;
-        load_state_changed = 1;
-      }
-    } else {
-      if (!STR_SW) {
-        // Reset str_en_tmr if the start switch is in the off position
-        str_en_tmr = millis;
-      }
-
-      if (STR_EN) {
-        EN_STR_LAT = PWR_OFF;
-        load_state_changed = 1;
+        if (!STR_SW) { load_tmr[STR_IDX] = millis; }
+        disable_load(STR_IDX);
       }
     }
 
     /**
-     * Check peak timers and reset to normal mode if enough time has passed
+     * Toggle loads that do not depend on CAN variables
      */
 
-    //FUEL
-    if (FUEL_EN && peak_state[FUEL_IDX] && (millis - fuel_peak_tmr > FUEL_PEAK_DUR)) {
-      uint16_t wpr_val = wiper_values[FUEL_IDX];
-      set_rheo(FUEL_IDX, wpr_val);
-      fb_resistances[FUEL_IDX] = wpr_to_res(wpr_val);
-      peak_state[FUEL_IDX] = 0;
-      load_state_changed = 1;
+    // PDLU
+    if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW &&
+        (millis - load_tmr[PDLU_IDX] < PDL_MAX_DUR)) {
+      enable_load(PDLU_IDX);
+    } else {
+      if (!ACT_UP_SW) { load_tmr[PDLU_IDX] = millis; }
+      disable_load(PDLU_IDX);
     }
 
-    //WTR
-    if (WTR_EN && peak_state[WTR_IDX] && (millis - wtr_peak_tmr > WTR_PEAK_DUR)) {
-      uint16_t wpr_val = wiper_values[WTR_IDX];
-      set_rheo(WTR_IDX, wpr_val);
-      fb_resistances[WTR_IDX] = wpr_to_res(wpr_val);
-      peak_state[WTR_IDX] = 0;
-      load_state_changed = 1;
+    // PDLD
+    if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW &&
+        (millis - load_tmr[PDLD_IDX] < PDL_MAX_DUR)) {
+      enable_load(PDLD_IDX);
+    } else {
+      if (!ACT_DN_SW) { load_tmr[PDLD_IDX] = millis; }
+      disable_load(PDLD_IDX);
     }
 
-    //FAN
-    if (FAN_EN && peak_state[FAN_IDX] && (millis - fan_peak_tmr > FAN_PEAK_DUR)) {
-      uint16_t wpr_val = wiper_values[FAN_IDX];
-      set_rheo(FAN_IDX, wpr_val);
-      fb_resistances[FAN_IDX] = wpr_to_res(wpr_val);
-      peak_state[FAN_IDX] = 0;
-      load_state_changed = 1;
-    }
-
-    //ECU
-    if (ECU_EN && peak_state[ECU_IDX] && (millis - ecu_peak_tmr > ECU_PEAK_DUR)) {
-      set_rheo(ECU_IDX, wiper_values[ECU_IDX]);
-      fb_resistances[ECU_IDX] = wpr_to_res(wiper_values[ECU_IDX]);
-      peak_state[ECU_IDX] = 0;
-      load_state_changed = 1;
-    }
+    // ABS
+    set_load(ABS_IDX, ABS_SW && !KILL_SW);
 
     /**
      * Call helper functions
@@ -561,6 +323,7 @@ void main(void) {
 
     // Separate logic functions
     debounce_switches();
+    check_peak_timer();
     check_load_overcurrent();
 
     // Analog sampling functions
@@ -684,7 +447,7 @@ void process_CAN_msg(CAN_message msg) {
 
 /**
  * void debounce_switches(void)
- * 
+ *
  * Keeps track of switch state in order to debounce switch inputs. The inputs
  * are debounced collectively, rather than debouncing each individual switch
  * input separately.
@@ -707,6 +470,26 @@ void debounce_switches(void) {
   }
 
   switch_prev = switch_raw;
+}
+
+/**
+ * void check_peak_timer(void)
+ *
+ * For each load, check to see if it is currently in peak mode and if it has
+ * exceeded the peak mode duration. If so, set the rheostats back to normal mode.
+ */
+void check_peak_timer(void) {
+  uint8_t idx;
+  for (idx = 0; idx < NUM_CTL; idx++) {
+    if (load_enabled(idx) && peak_state[idx] &&
+        (millis - load_tmr[idx] > load_peak_duration[idx])) {
+      uint16_t wpr_val = wiper_values[idx];
+      set_rheo(idx, wpr_val);
+      fb_resistances[idx] = wpr_to_res(wpr_val);
+      peak_state[idx] = 0;
+      load_state_changed = 1;
+    }
+  }
 }
 
 /**
@@ -734,7 +517,7 @@ void check_load_overcurrent(void) {
           if (load_enabled(load_idx) &&
               load_current[load_idx] < OVERCRT_DETECT) {
             if (millis - overcurrent_tmr[load_idx] >= OVERCRT_RESET_WAIT) {
-              set_load(load_idx, PWR_OFF);
+              disable_load(load_idx);
               overcurrent_flag[load_idx] = OVERCRT_RESET;
               overcurrent_tmr[load_idx] = millis;
               overcurrent_count[load_idx]++;
@@ -748,7 +531,7 @@ void check_load_overcurrent(void) {
 
         case OVERCRT_RESET:
           if (millis != overcurrent_tmr[load_idx]) {
-            set_load(load_idx, PWR_ON);
+            enable_load(load_idx);
             overcurrent_flag[load_idx] = NO_OVERCRT;
             send_diag_state_can(OVERRIDE);
           }
@@ -851,7 +634,7 @@ void send_diag_can(void) {
  * If the interval has passed or the caller overrode the check, send out the
  * enablity and peak mode state of all loads on CAN. Also send total current
  * draw, switch state, and flag state.
- * 
+ *
  * TODO: Restrict to a certain rate, even with override
  *
  * @param override - Whether to override the interval
@@ -1078,6 +861,63 @@ void send_overcrt_count_can(uint8_t override) {
 //========================== UTILITY FUNCTIONS =================================
 
 /**
+ * void enable_load(uint8_t load_idx)
+ *
+ * Check if the specified load is currently disabled, and if so, enable it.
+ *
+ * When enabling an inductive load, set the peak current limit and set the
+ * peak timer. The peak current limit will be disabled at a set time later.
+ */
+void enable_load(uint8_t load_idx) {
+  if (load_peak_cutoff[load_idx] == 0.0) {
+    if (!load_enabled(load_idx) && overcurrent_flag[load_idx] != OVERCRT_RESET) {
+      set_en_load(load_idx, PWR_ON);
+      load_tmr[load_idx] = millis;
+      load_state_changed = 1;
+    }
+  } else  {
+    if (!load_enabled(load_idx) && overcurrent_flag[load_idx] != OVERCRT_RESET) {
+      uint16_t peak_wpr_val = peak_wiper_values[load_idx];
+      set_rheo(load_idx, peak_wpr_val);
+      fb_resistances[load_idx] = wpr_to_res(peak_wpr_val);
+      peak_state[load_idx] = 1;
+
+      set_en_load(load_idx, PWR_ON);
+      load_tmr[load_idx] = millis;
+      load_state_changed = 1;
+
+      if (load_idx == FUEL_IDX) { fuel_prime_tmr = millis; }
+    }
+  }
+}
+
+/**
+ * void disable_load(uint8_t load_idx)
+ *
+ * Check if the specified load is currently enabled, and if so, disable it.
+ */
+void disable_load(uint8_t load_idx) {
+  if (load_enabled(load_idx)) {
+    set_en_load(load_idx, PWR_OFF);
+    load_state_changed = 1;
+    peak_state[load_idx] = 0;
+  }
+}
+
+/**
+ * void set_load(uint8_t load_idx, uint8_t condition)
+ *
+ * Enable or disable a load based on some condition.
+ */
+void set_load(uint8_t load_idx, uint8_t condition) {
+  if (condition) {
+    enable_load(load_idx);
+  } else {
+    disable_load(load_idx);
+  }
+}
+
+/**
  * Functions to convert a wiper value to the expected resistance of the rheostat
  * and vice versa.
  *
@@ -1140,14 +980,14 @@ uint8_t load_enabled(uint8_t load_idx) {
 }
 
 /**
- * void set_load(uint8_t load_idx, uint8_t load_state)
+ * void set_en_load(uint8_t load_idx, uint8_t load_state)
  *
  * Sets the specified load to the specified enablity state
  *
  * @param load_idx- The load to set
  * @param load_state- The new state
  */
-void set_load(uint8_t load_idx, uint8_t load_state) {
+void set_en_load(uint8_t load_idx, uint8_t load_state) {
   switch (load_idx) {
     case FUEL_IDX: EN_FUEL_LAT = load_state; break;
     case IGN_IDX: EN_IGN_LAT = load_state; break;
@@ -1255,7 +1095,7 @@ void send_all_rheo(uint16_t msg) {
 
 /**
  * void init_rheo(void)
- * 
+ *
  * Initializes the SPI bus for the rheostats.
  */
 void init_rheo(void) {
