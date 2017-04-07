@@ -12,7 +12,7 @@
 /**
  * Maps an error code to a string message describing the error
  */
-const rom char* errno_msg[NUM_ERR] = {
+const char* errno_msg[NUM_ERR] = {
   /*   0 */ "No error",
   /*   1 */ "Reserved",
   /*   2 */ "Reserved",
@@ -57,8 +57,8 @@ const rom char* errno_msg[NUM_ERR] = {
  * @param errno - Error number of the error that occurred
  */
 void send_errno_CAN_msg(uint16_t origin_id, uint16_t errno) {
-  uint8_t data[8] = {0}; // Holds CAN data bytes
-  ((uint16_t*) data)[ORIGIN_BYTE / 2] = origin_id;
-  ((uint16_t*) data)[ERRNO_BYTE / 2] = errno;
-  ECANSendMessage(ERROR_ID, data, 4, ECAN_TX_FLAGS);
+  CAN_data data = {0};
+  data.halfword0 = origin_id;
+  data.halfword1 = errno;
+  CAN_send_message(ERROR_ID, 4, data);
 }
