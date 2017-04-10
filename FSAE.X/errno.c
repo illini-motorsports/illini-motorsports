@@ -45,7 +45,8 @@ const char* errno_msg[NUM_ERR] = {
   /*  29 */ "Shift queue prevented due to lockout timer",
   /*  30 */ "Shift killed due to maximum duration timer",
   /*  31 */ "Neutral shift missed neutral gear",
-  /*  32 */ "Gear sensor reading invalid"
+  /*  32 */ "Gear sensor reading invalid",
+  /*  33 */ "Prevented leaving neutral at high RPM"
 };
 
 /**

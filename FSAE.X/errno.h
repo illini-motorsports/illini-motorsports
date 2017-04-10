@@ -14,7 +14,7 @@
 #include "CAN.h"
 #include "FSAE_can.h"
 
-#define NUM_ERR 33
+#define NUM_ERR 34
 
 /**
  * Error Codes
@@ -40,6 +40,7 @@
 #define ERR_GCM_MAXDUR         30  // Shift ended due to maximum duration timer
 #define ERR_GCM_MISSNEUT       31  // Neutral shift missed neutral gear
 #define ERR_GCM_GEARFAIL       32  // Gear sensor reading invalid
+#define ERR_GCM_NEUTLOCK       33  // Prevented leaving neutral at high RPM
 
 // Defined in errno.c
 extern const char* errno_msg[NUM_ERR];

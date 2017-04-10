@@ -28,8 +28,11 @@
 
 // Definitions for error conditions
 //TODO: Decide on these values
-#define LOW_VOLT    10.0 // V
-#define LOWER_VOLT  9.0  // V
+#define LOW_VOLT      10.0  // V
+#define LOWER_VOLT    8.0   // V
+#define RPM_NEUT_LOCK 6000  // rpm
+#define RPM_UNDERREV  750   // rpm
+#define RPM_OVERREV   14200 // rpm
 
 // Timing constants (ms)
 #define DEBOUNCE_WAIT    10
@@ -78,6 +81,16 @@
 #define CUT_START  1
 #define CUT_RESEND 2
 
+// Gear ratio of standard Yamaha R6 YZF 08 transmission
+const double gear_ratio[7] = {
+  1.0,
+  2.583,
+  2.000,
+  1.667,
+  1.444,
+  1.286,
+  1.150
+};
 
 // Pin definitions
 #define SHIFT_UP_TRIS  TRISGbits.TRISG15

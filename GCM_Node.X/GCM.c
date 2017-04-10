@@ -29,10 +29,10 @@ uint8_t switch_prev = 0;      // Previous sampled value of switches
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
 
-volatile double eng_rpm = 0;       // Engine RPM (from MoTeC)
-volatile double bat_volt = 0;      // Battery voltage from ECU
-volatile double throttle_pos = 0;  // Throttle position (from MoTeC)
-volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from MoTeC)
+volatile double eng_rpm = 0;       // Engine RPM (from ECU)
+volatile double bat_volt = 0;      // Battery voltage (from ECU)
+volatile double throttle_pos = 0;  // Throttle position (from ECU)
+volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from ECU)
 volatile uint8_t kill_sw = 0;      // Holds state of KILL_SW (from PDM)
 
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
@@ -483,6 +483,12 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
     return 0;
   }
 
+  // Prevent shifting from neutral into gear at high rpm
+  if (gear == GEAR_NEUT && eng_rpm >= RPM_NEUT_LOCK) {
+    send_errno_CAN_msg(GCM_ID, ERR_GCM_NEUTLOCK);
+    return 0;
+  }
+
   // Prevent shifting up past neutral on low voltage
   if (gear == 1 && shift_enum == SHIFT_ENUM_UP) {
     if (bat_volt != 0.0 && bat_volt < LOW_VOLT) {
@@ -511,7 +517,24 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
     return 0;
   }
 
-  //TODO: Check for over/under rev
+  // Check for over/under rev
+  if (shift_enum != SHIFT_ENUM_NT && gear != GEAR_NEUT && gear != GEAR_FAIL) {
+    double output_speed = eng_rpm / gear_ratio[gear];
+
+    if (shift_enum == SHIFT_ENUM_UP && gear != 6) {
+      double new_rpm = output_speed * gear_ratio[gear + 1];
+      if (new_rpm <= RPM_UNDERREV) {
+        send_errno_CAN_msg(GCM_ID, ERR_GCM_UNDERREV);
+        return 0;
+      }
+    } else if (shift_enum == SHIFT_ENUM_DN && gear != 1) {
+      double new_rpm = output_speed * gear_ratio[gear - 1];
+      if (new_rpm >= RPM_OVERREV) {
+        send_errno_CAN_msg(GCM_ID, ERR_GCM_OVERREV);
+        return 0;
+      }
+    }
+  }
 
   // Prevent shifting past 6th gear
   if (gear == 6 && shift_enum == SHIFT_ENUM_UP) {
