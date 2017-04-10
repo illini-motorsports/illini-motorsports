@@ -16,6 +16,9 @@ volatile uint32_t millis = 0;
 volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0; // From ECU
 uint16_t total_current_draw = 0;
 uint8_t fuel_prime_flag, over_temp_flag = 0;
+uint8_t kill_engine_flag, kill_car_flag = 0;
+uint8_t crit_volt_pending, crit_oilpres_pending, crit_oiltemp_pending,
+    crit_engtemp_pending = 0;
 uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
 uint8_t switch_debounced = 0; // Debounced (safe) switch state
 uint8_t switch_prev = 0;      // Previous sampled value of switches
@@ -43,6 +46,7 @@ uint32_t diag_send_tmr, diag_state_send_tmr, rail_volt_send_tmr,
     load_current_send_tmr, cutoff_send_tmr, overcrt_count_send_tmr = 0;
 uint32_t temp_samp_tmr, ext_adc_samp_tmr = 0;
 uint32_t switch_debounce_tmr, overcrt_chk_tmr = 0;
+uint32_t crit_volt_tmr, crit_oilpres_tmr, crit_oiltemp_tmr, crit_engtemp_tmr = 0;
 
 /**
  * Main function
@@ -180,6 +184,7 @@ void main(void) {
   // Main loop
   while (1) {
     load_state_changed = 0;
+    prevent_engine_blowup();
     STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
     /**
@@ -214,84 +219,102 @@ void main(void) {
     }
 
     /**
-     * Toggle state-dependent loads
+     * Respond to critical errors
      */
-    if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
-        millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
-        millis - motec1_recv_tmr > BASIC_CONTROL_WAIT ||
-        millis - motec2_recv_tmr > BASIC_CONTROL_WAIT ||
-        TEST_OUTPUTS) {
-
-      /**
-       * Perform basic load control
-       *
-       * IGN, INJ, FUEL, WTR, and FAN will turn on when the ON_SW is in the on
-       * position and turn off when the ON_SW is in the off position. Other
-       * loads will still be controlled normally as they do not depend on CAN.
-       * The kill switch will disable the aforementioned loads regardless of the
-       * position of the ON_SW.
-       */
-
-      set_load(IGN_IDX, ON_SW && !KILL_SW);
-      set_load(INJ_IDX, ON_SW && !KILL_SW);
-      set_load(FUEL_IDX, ON_SW && !KILL_SW && !TEST_OUTPUTS);
-      set_load(WTR_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
-      set_load(FAN_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
-
-      // STR
-      if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
-        enable_load(STR_IDX);
-      } else {
-        if (!STR_SW) { load_tmr[STR_IDX] = millis; }
+    if (kill_car_flag || kill_engine_flag) {
+      if (kill_car_flag) {
+        uint8_t i;
+        for (i = 0; i < NUM_LOADS; i++) {
+          disable_load(i);
+        }
+      } else if (kill_engine_flag) {
+        disable_load(FUEL_IDX);
+        disable_load(IGN_IDX);
+        disable_load(INJ_IDX);
         disable_load(STR_IDX);
       }
     } else {
 
       /**
-       * Perform regular load control
+       * Toggle state-dependent loads
+       */
+      if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
+          millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
+          millis - motec1_recv_tmr > BASIC_CONTROL_WAIT ||
+          millis - motec2_recv_tmr > BASIC_CONTROL_WAIT ||
+          TEST_OUTPUTS) {
+
+        /**
+         * Perform basic load control
+         *
+         * IGN, INJ, FUEL, WTR, and FAN will turn on when the ON_SW is in the on
+         * position and turn off when the ON_SW is in the off position. Other
+         * loads will still be controlled normally as they do not depend on CAN.
+         * The kill switch will disable the aforementioned loads regardless of the
+         * position of the ON_SW.
+         */
+
+        set_load(IGN_IDX, ON_SW && !KILL_SW);
+        set_load(INJ_IDX, ON_SW && !KILL_SW);
+        set_load(FUEL_IDX, ON_SW && !KILL_SW && !TEST_OUTPUTS);
+        set_load(WTR_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
+        set_load(FAN_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
+
+        // STR
+        if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
+          enable_load(STR_IDX);
+        } else {
+          if (!STR_SW) { load_tmr[STR_IDX] = millis; }
+          disable_load(STR_IDX);
+        }
+      } else {
+
+        /**
+         * Perform regular load control
+         */
+
+        set_load(IGN_IDX, ON_SW && !KILL_SW);
+        set_load(INJ_IDX, ON_SW && !KILL_SW);
+        set_load(FUEL_IDX, ON_SW && !KILL_SW &&
+            (ENG_ON || fuel_prime_flag || fuel_override_sw || STR_EN));
+        set_load(WTR_IDX, !STR_EN &&
+            (ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw));
+        set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override_sw));
+
+        // STR
+        if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
+          enable_load(STR_IDX);
+        } else {
+          if (!STR_SW) { load_tmr[STR_IDX] = millis; }
+          disable_load(STR_IDX);
+        }
+      }
+
+      /**
+       * Toggle loads that do not depend on CAN variables
        */
 
-      set_load(IGN_IDX, ON_SW && !KILL_SW);
-      set_load(INJ_IDX, ON_SW && !KILL_SW);
-      set_load(FUEL_IDX, ON_SW && !KILL_SW &&
-          (ENG_ON || fuel_prime_flag || fuel_override_sw || STR_EN));
-      set_load(WTR_IDX, !STR_EN &&
-          (ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw));
-      set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override_sw));
-
-      // STR
-      if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
-        enable_load(STR_IDX);
+      // PDLU
+      if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW &&
+          (millis - load_tmr[PDLU_IDX] < PDL_MAX_DUR)) {
+        enable_load(PDLU_IDX);
       } else {
-        if (!STR_SW) { load_tmr[STR_IDX] = millis; }
-        disable_load(STR_IDX);
+        if (!ACT_UP_SW) { load_tmr[PDLU_IDX] = millis; }
+        disable_load(PDLU_IDX);
       }
+
+      // PDLD
+      if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW &&
+          (millis - load_tmr[PDLD_IDX] < PDL_MAX_DUR)) {
+        enable_load(PDLD_IDX);
+      } else {
+        if (!ACT_DN_SW) { load_tmr[PDLD_IDX] = millis; }
+        disable_load(PDLD_IDX);
+      }
+
+      // ABS
+      set_load(ABS_IDX, 0 /*ABS_SW && !KILL_SW*/); //TODO: Reset this
     }
-
-    /**
-     * Toggle loads that do not depend on CAN variables
-     */
-
-    // PDLU
-    if (ACT_UP_SW && !ACT_DN_SW && !KILL_SW &&
-        (millis - load_tmr[PDLU_IDX] < PDL_MAX_DUR)) {
-      enable_load(PDLU_IDX);
-    } else {
-      if (!ACT_UP_SW) { load_tmr[PDLU_IDX] = millis; }
-      disable_load(PDLU_IDX);
-    }
-
-    // PDLD
-    if (ACT_DN_SW && !ACT_UP_SW && !KILL_SW &&
-        (millis - load_tmr[PDLD_IDX] < PDL_MAX_DUR)) {
-      enable_load(PDLD_IDX);
-    } else {
-      if (!ACT_DN_SW) { load_tmr[PDLD_IDX] = millis; }
-      disable_load(PDLD_IDX);
-    }
-
-    // ABS
-    set_load(ABS_IDX, 0 /*ABS_SW && !KILL_SW*/); //TODO: Reset this
 
     /**
      * Call helper functions
@@ -517,6 +540,90 @@ void check_load_overcurrent(void) {
   }
 }
 
+/**
+ * void prevent_engine_blowup(void);
+ *
+ * Checks various state variables and ensures they are within an acceptable
+ * range. If not, kill the entire car or just the engine as needed.
+ */
+void prevent_engine_blowup(void) {
+  if (COMP) {
+    kill_engine_flag = 0;
+    kill_car_flag = 0;
+    return; // Godspeed
+  }
+
+  // Kill car if battery voltage too low
+  if (rail_vbat <= CRIT_VOLTAGE) {
+    if (!crit_volt_pending) {
+      crit_volt_tmr = millis;
+    }
+    crit_volt_pending = 1;
+
+    if (millis - crit_volt_tmr >= CRIT_VOLT_WAIT) {
+      send_errno_CAN_msg(PDM_ID, ERR_PDM_CRITVOLT);
+      kill_car_flag = 1;
+      return;
+    }
+  } else {
+    crit_volt_pending = 0;
+  }
+
+  if (millis - motec0_recv_tmr < BASIC_CONTROL_WAIT &&
+      millis - motec1_recv_tmr < BASIC_CONTROL_WAIT &&
+      millis - motec2_recv_tmr < BASIC_CONTROL_WAIT &&
+      eng_rpm >= RPM_CRIT_CHECK) {
+
+    // Kill engine if oil pressure too low
+    if (oil_pres <= CRIT_OILPRES) {
+      if (!crit_oilpres_pending) {
+        crit_oilpres_tmr = millis;
+      }
+      crit_oilpres_pending = 1;
+
+      if (millis - crit_oilpres_tmr >= CRIT_OILPRES_WAIT) {
+        send_errno_CAN_msg(PDM_ID, ERR_PDM_CRITOILPRES);
+        kill_engine_flag = 1;
+        return;
+      }
+    } else {
+      crit_oilpres_pending = 0;
+    }
+
+    // Kill engine if oil temp too high
+    if (oil_temp >= CRIT_OILTEMP) {
+      if (!crit_oiltemp_pending) {
+        crit_oiltemp_tmr = millis;
+      }
+      crit_oiltemp_pending = 1;
+
+      if (millis - crit_oiltemp_tmr >= CRIT_OILTEMP_WAIT) {
+        send_errno_CAN_msg(PDM_ID, ERR_PDM_CRITOILTEMP);
+        kill_engine_flag = 1;
+        return;
+      }
+    } else {
+      crit_oiltemp_pending = 0;
+    }
+
+    // Kill engine if engine temp too high
+    if (eng_temp >= CRIT_ENGTEMP) {
+      if (!crit_engtemp_pending) {
+        crit_engtemp_tmr = millis;
+      }
+      crit_engtemp_pending = 1;
+
+      if (millis - crit_engtemp_tmr >= CRIT_ENGTEMP_WAIT) {
+        send_errno_CAN_msg(PDM_ID, ERR_PDM_CRITENGTEMP);
+        kill_engine_flag = 1;
+        return;
+      }
+    } else {
+      crit_engtemp_pending = 0;
+    }
+  }
+}
+
 //============================= ADC FUNCTIONS ==================================
 
 /**
@@ -665,7 +772,9 @@ void send_diag_state_can(uint8_t override) {
     // Create flag bitmap
     data.byte7 = 0x0 |
         fuel_prime_flag << 7 |
-        over_temp_flag << 6;
+        over_temp_flag << 6 |
+        kill_car_flag << 5 |
+        kill_engine_flag << 4;
 
     CAN_send_message(PDM_ID + 0x1, 8, data);
     diag_state_send_tmr = millis;

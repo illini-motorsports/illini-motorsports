@@ -22,6 +22,11 @@
 
 #define ERR_NONE               0   // No error
 
+#define ERR_PDM_CRITVOLT       10  // Critically low battery voltage
+#define ERR_PDM_CRITOILPRES    11  // Critically low oil pressure
+#define ERR_PDM_CRITOILTEMP    12  // Critically high oil temperature
+#define ERR_PDM_CRITENGTEMP    13  // Critically high engine temperature
+
 #define ERR_GCM_LOWVOLT        20  // Low voltage neutral shift prevented
 #define ERR_GCM_LOWERVOLT      21  // Lower voltage shift prevented
 #define ERR_GCM_KILLSW         22  // Prevented shifting when kill switch pressed

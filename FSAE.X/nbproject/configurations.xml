@@ -26,6 +26,7 @@
       <itemPath>FSAE_nvm.c</itemPath>
       <itemPath>FSAE_ad7490.c</itemPath>
       <itemPath>FSAE_gpx.c</itemPath>
+      <itemPath>errno.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

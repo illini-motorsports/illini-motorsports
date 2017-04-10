@@ -15,6 +15,7 @@
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/FSAE_ad7490.h"
 #include "../FSAE.X/CAN.h"
+#include "../FSAE.X/errno.h"
 
 // Definitions for MOSFET control
 #define PWR_ON  1
@@ -47,9 +48,14 @@
 
 // Thresholds
 #define RPM_ON_THRESHOLD 200.0 // rpm
+#define RPM_CRIT_CHECK   1000.0 // rpm
 #define FAN_THRESHOLD_H  90.0  // C
 #define FAN_THRESHOLD_L  84.0  // C
 #define OVERCRT_DETECT   0.01  // A
+#define CRIT_VOLTAGE     10000 // 10.0 V
+#define CRIT_OILPRES     1.2   // bar
+#define CRIT_OILTEMP     140.0 // C
+#define CRIT_ENGTEMP     110.0 // C
 
 // Timing constants (ms)
 
@@ -72,6 +78,11 @@
 #define LOAD_CUR_SEND      10
 #define CUTOFF_VAL_SEND    1000
 #define OVERCRT_COUNT_SEND 500
+
+#define CRIT_VOLT_WAIT     1000
+#define CRIT_OILPRES_WAIT  500
+#define CRIT_OILTEMP_WAIT  5000
+#define CRIT_ENGTEMP_WAIT  5000
 
 // Raw (bouncy) switch state definitions
 #define STR_SW_RAW    (!SW1_PORT)
@@ -290,6 +301,7 @@ void process_CAN_msg(CAN_message msg);
 void debounce_switches(void);
 void check_peak_timer(void);
 void check_load_overcurrent(void);
+void prevent_engine_blowup(void);
 
 // ADC sample functions
 void sample_temp(void);
