@@ -16,6 +16,7 @@
 // Code control definitions
 #define INTERNAL_CLK 0 // Determines whether the internal or external clock source is used
 #define REFCLKO      0 // Determines whether SYSCLK / 10 is driven out on RF0
+#define COMP         0 // Determines whether we are at competition
 
 // TRIS Settings
 #define OUTPUT 0

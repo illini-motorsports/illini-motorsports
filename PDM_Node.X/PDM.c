@@ -219,7 +219,8 @@ void main(void) {
     if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
         millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
         millis - motec1_recv_tmr > BASIC_CONTROL_WAIT ||
-        millis - motec2_recv_tmr > BASIC_CONTROL_WAIT) {
+        millis - motec2_recv_tmr > BASIC_CONTROL_WAIT ||
+        TEST_OUTPUTS) {
 
       /**
        * Perform basic load control
@@ -231,25 +232,11 @@ void main(void) {
        * position of the ON_SW.
        */
 
-      if (ON_SW && !KILL_SW) {
-        enable_load(IGN_IDX);
-        enable_load(INJ_IDX);
-        enable_load(FUEL_IDX);
-
-        if (STR_EN) {
-          disable_load(WTR_IDX);
-          disable_load(FAN_IDX);
-        } else {
-          enable_load(WTR_IDX);
-          enable_load(FAN_IDX);
-        }
-      } else {
-        disable_load(IGN_IDX);
-        disable_load(INJ_IDX);
-        disable_load(FUEL_IDX);
-        disable_load(WTR_IDX);
-        disable_load(FAN_IDX);
-      }
+      set_load(IGN_IDX, ON_SW && !KILL_SW);
+      set_load(INJ_IDX, ON_SW && !KILL_SW);
+      set_load(FUEL_IDX, ON_SW && !KILL_SW && !TEST_OUTPUTS);
+      set_load(WTR_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
+      set_load(FAN_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
 
       // STR
       if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
@@ -264,27 +251,16 @@ void main(void) {
        * Perform regular load control
        */
 
-      //TODO: Determine less dangerous way than ENG_ON?
-      if(ON_SW && !KILL_SW && (ENG_ON ||
-          (STR_EN && (millis - load_tmr[STR_IDX] > STR_PEAK_WAIT)))) {
-        enable_load(IGN_IDX);
-        enable_load(INJ_IDX);
-      } else {
-        disable_load(IGN_IDX);
-        disable_load(INJ_IDX);
-      }
-
+      set_load(IGN_IDX, ON_SW && !KILL_SW);
+      set_load(INJ_IDX, ON_SW && !KILL_SW);
       set_load(FUEL_IDX, ON_SW && !KILL_SW &&
-          (ENG_ON || fuel_prime_flag || fuel_override_sw ||
-          (STR_EN && (millis - load_tmr[STR_IDX] > STR_PEAK_WAIT))));
-
+          (ENG_ON || fuel_prime_flag || fuel_override_sw || STR_EN));
       set_load(WTR_IDX, !STR_EN &&
           (ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw));
-
       set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override_sw));
 
       // STR
-      if (STR_SW && !ENG_ON && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
+      if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
         enable_load(STR_IDX);
       } else {
         if (!STR_SW) { load_tmr[STR_IDX] = millis; }
@@ -315,7 +291,7 @@ void main(void) {
     }
 
     // ABS
-    set_load(ABS_IDX, ABS_SW && !KILL_SW);
+    set_load(ABS_IDX, 0 /*ABS_SW && !KILL_SW*/); //TODO: Reset this
 
     /**
      * Call helper functions

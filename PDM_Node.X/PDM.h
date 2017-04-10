@@ -58,7 +58,6 @@
 #define PDL_MAX_DUR        500
 #define OVERRIDE_SW_WAIT   5000
 #define BASIC_CONTROL_WAIT 1000
-#define STR_PEAK_WAIT      250
 
 #define TEMP_SAMP_INTV     333
 #define EXT_ADC_SAMP_INTV  10
@@ -96,6 +95,7 @@
 
 // Misc state definitions
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
+#define TEST_OUTPUTS (ABS_SW && !COMP)
 
 // Load state definitions
 #define FUEL_EN  (EN_FUEL_PORT == PWR_ON)
