@@ -45,6 +45,7 @@
 #define LOCKOUT_DUR    50
 #define MAX_SHIFT_DUR  150
 #define RELAX_WAIT     10  //TODO: Tune this value
+#define PWR_CUT_WAIT   10  //TODO: Tune this value
 #define UP_SHIFT_DUR   150 //TODO: Tune this value
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
@@ -72,7 +73,7 @@
 #define SHIFT_ENUM_NT 2
 
 // Miscellaneous definitions
-#define IGN_CUT_SPOOF 0xE803 // Value for "spoofed" gear shift force sensor
+#define PWR_CUT_SPOOF 0xE803 // Value for "spoofed" gear shift force sensor
 #define ACT_ON  0
 #define ACT_OFF 1
 #define NOT_SHIFTING 0

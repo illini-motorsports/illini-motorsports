@@ -49,8 +49,8 @@ uint32_t diag_send_tmr, state_send_tmr = 0;
 uint32_t switch_debounce_tmr = 0;
 volatile uint32_t lockout_tmr = 0; // Holds millis value of last lockout set
 uint32_t act_tmr = 0;              // Records the time the actuator was fired
-uint32_t ign_cut_tmr = 0;          // Records when the ignition cut was initiated
-uint32_t ign_cut_retry_tmr = 0;    // Records when the ADL ignition cut message was last sent
+uint32_t pwr_cut_tmr = 0;          // Records when the power cut was initiated
+uint32_t pwr_cut_retry_tmr = 0;    // Records when the ADL power cut message was last sent
 
 /**
  * Main function
@@ -118,8 +118,8 @@ void main(void) {
       do_shift(SHIFT_ENUM_NT);
     }
 
-    // Send ignition cut message again if MoTeC hasn't received it
-    if ((shift_force_spoof != shift_force_ecu) && (millis - ign_cut_retry_tmr >= CUT_RETRY_WAIT)) {
+    // Send power cut message again if MoTeC hasn't received it
+    if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT)) {
         send_power_cut(CUT_RESEND);
     }
 
@@ -549,7 +549,8 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
   }
 
   // Prevent shifting into neutral from anything other than 1st or 2nd
-  if (shift_enum == SHIFT_ENUM_NT && !(gear == 1 || gear == 2)) {
+  if (shift_enum == SHIFT_ENUM_NT &&
+      !(gear == 1 || gear == 2 || gear == GEAR_FAIL)) {
     send_errno_CAN_msg(GCM_ID, ERR_GCM_BADNEUT);
     return 0;
   }
@@ -607,8 +608,6 @@ void do_shift(uint8_t shift_enum) {
       return;
     }
 
-    send_power_cut(CUT_START);
-
     // Fire actuator
     if (SHIFT_UP) {
       ACT_UP_LAT = ACT_ON;
@@ -616,6 +615,12 @@ void do_shift(uint8_t shift_enum) {
       ACT_DN_LAT = ACT_ON;
     }
     act_tmr = millis;
+
+    // Wait a bit and signal the ECU to cut power
+    while (millis - act_tmr < PWR_CUT_WAIT) {
+      main_loop_misc();
+    }
+    send_power_cut(CUT_START);
 
     while (1) {
       sample_sensors(SHIFTING);
@@ -784,8 +789,6 @@ void do_shift_gear_fail(uint8_t shift_enum) {
       return;
     }
 
-    send_power_cut(CUT_START);
-
     // Fire actuator
     if (SHIFT_UP) {
       ACT_UP_LAT = ACT_ON;
@@ -793,6 +796,12 @@ void do_shift_gear_fail(uint8_t shift_enum) {
       ACT_DN_LAT = ACT_ON;
     }
     act_tmr = millis;
+
+    // Wait a bit and signal the ECU to cut power
+    while (millis - act_tmr < PWR_CUT_WAIT) {
+      main_loop_misc();
+    }
+    send_power_cut(CUT_START);
 
     while (1) {
       if ((SHIFT_UP && millis - act_tmr >= UP_SHIFT_DUR) ||
@@ -890,8 +899,8 @@ void main_loop_misc(void) {
   sample_temp();
   sample_sensors(SHIFTING);
 
-  // Send ignition cut message again if MoTeC hasn't received it
-  if ((shift_force_spoof != shift_force_ecu) && (millis - ign_cut_retry_tmr >= CUT_RETRY_WAIT)) {
+  // Send power cut message again if MoTeC hasn't received it
+  if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT)) {
     send_power_cut(CUT_RESEND);
   }
 
@@ -931,7 +940,7 @@ void debounce_switches(void) {
  */
 void send_power_cut(uint8_t is_start) {
   if (is_start == CUT_START) {
-    shift_force_spoof = IGN_CUT_SPOOF;
+    shift_force_spoof = PWR_CUT_SPOOF;
   } else if (is_start == CUT_END) {
     shift_force_spoof = 0;
   }
@@ -940,5 +949,5 @@ void send_power_cut(uint8_t is_start) {
   data.halfword0 = ADL_IDX_10_12;
   data.halfword1 = shift_force_spoof;
   CAN_send_message(ADL_ID, 4, data);
-  ign_cut_retry_tmr = millis;
+  pwr_cut_retry_tmr = millis;
 }
