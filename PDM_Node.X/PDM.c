@@ -67,6 +67,10 @@ void main(void) {
   //TODO: USB
   //TODO: NVM
 
+  // init ad7490 CS
+  CS_AD7490_TRIS = OUTPUT;
+  CS_AD7490_LAT = 1;
+
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;
   EN_IGN_TRIS = OUTPUT;
