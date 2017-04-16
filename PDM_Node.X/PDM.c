@@ -37,6 +37,7 @@ uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT}; // Overcurrent state
 uint8_t overcurrent_count[NUM_LOADS] = {0};
 uint32_t overcurrent_tmr[NUM_LOADS] = {0};
 uint32_t load_tmr[NUM_LOADS] = {0};       // Millis timestamp of when load was last enabled
+uint16_t ad7490_samples[AD7490_NUM_CHN] = {0}; // Sample data from ad7490
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr,
@@ -673,24 +674,24 @@ void sample_temp(void) {
  */
 void sample_ext_adc(void) {
   if (millis - ext_adc_samp_tmr >= EXT_ADC_SAMP_INTV) {
-    uint16_t* samples = ad7490_read_channels();
+    ad7490_read_channels(ad7490_samples);
     total_current_draw = 0;
 
     uint8_t i;
     for (i = 0; i < NUM_CTL; i++) {
-      load_current[i] = (uint16_t) ((((((double) samples[ADC_CHN[i]]) / 4095.0)
+      load_current[i] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[i]]) / 4095.0)
               * 5.0 * SCL_INV * CUR_RATIO) / fb_resistances[i]));
       total_current_draw += ((uint16_t) ((double) load_current[i]) * (SCL_INV_LRG / SCL_INV));
     }
 
-    load_current[STR_IDX] = (uint16_t) ((((((double) samples[ADC_CHN[STR_IDX]]) / 4095.0)
+    load_current[STR_IDX] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[STR_IDX]]) / 4095.0)
             * 5.0 * SCL_INV_LRG * CUR_RATIO) / 500.0));
     total_current_draw += load_current[STR_IDX];
 
-    rail_vbat = ((uint16_t) (((((double) samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
-    rail_12v = ((uint16_t) (((((double) samples[13]) / 4095.0) * 5.0 * 4) * 1000.0));
-    rail_5v = ((uint16_t) (((((double) samples[14]) / 4095.0) * 5.0 * 2) * 1000.0));
-    rail_3v3 = ((uint16_t) (((((double) samples[15]) / 4095.0) * 5.0 * 1) * 1000.0));
+    rail_vbat = ((uint16_t) (((((double) ad7490_samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
+    rail_12v = ((uint16_t) (((((double) ad7490_samples[13]) / 4095.0) * 5.0 * 4) * 1000.0));
+    rail_5v = ((uint16_t) (((((double) ad7490_samples[14]) / 4095.0) * 5.0 * 2) * 1000.0));
+    rail_3v3 = ((uint16_t) (((((double) ad7490_samples[15]) / 4095.0) * 5.0 * 1) * 1000.0));
 
     ext_adc_samp_tmr = millis;
   }

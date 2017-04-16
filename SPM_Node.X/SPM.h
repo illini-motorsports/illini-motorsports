@@ -21,38 +21,6 @@
 #define CS_HS_ADC_0 0
 #define CS_HS_ADC_1 1
 // Channel Defs
-#define CHAN_HS_ADC_0 11
-#define CHAN_HS_ADC_1 10
-#define CHAN_HS_ADC_2 9
-#define CHAN_HS_ADC_3 8
-#define CHAN_HS_ADC_4 7
-#define CHAN_HS_ADC_5 6
-#define CHAN_HS_ADC_6 5
-#define CHAN_HS_ADC_7 4
-#define CHAN_HS_ADC_8 3
-#define CHAN_HS_ADC_9 2
-#define CHAN_HS_ADC_10 1
-#define CHAN_HS_ADC_11 0
-#define CHAN_HS_ADC_12 12
-#define CHAN_HS_ADC_13 13
-#define CHAN_HS_ADC_14 14
-#define CHAN_HS_ADC_15 15
-#define CHAN_HS_ADC_16 7
-#define CHAN_HS_ADC_17 6
-#define CHAN_HS_ADC_18 5
-#define CHAN_HS_ADC_19 4
-#define CHAN_HS_ADC_20 3
-#define CHAN_HS_ADC_21 2
-#define CHAN_HS_ADC_22 1
-#define CHAN_HS_ADC_23 0
-#define CHAN_HS_ADC_24 12
-#define CHAN_HS_ADC_25 13
-#define CHAN_HS_ADC_26 14
-#define CHAN_HS_ADC_27 15
-#define CHAN_HS_ADC_28 11
-#define CHAN_HS_ADC_29 10
-#define CHAN_HS_ADC_30 9
-#define CHAN_HS_ADC_31 8
 
 // ***************************
 // Low Speed ADC Defs
@@ -120,6 +88,8 @@
 #define DIGIN_13 45
 #define DIGIN_14 46
 #define DIGIN_15 47
+
+uint8_t analogMappings[32] = {11,10,9,8,7,6,5,4,3,2,1,0,12,13,14,15,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25,24};
 
 void main(void);
 

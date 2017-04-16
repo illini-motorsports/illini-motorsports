@@ -8,17 +8,12 @@
  */
 #include "FSAE_ad7490.h"
 
-// Array holding sampled channel values
-uint16_t channel_values[AD7490_NUM_CHN];
-
 /**
  * void init_ad7490(void)
  *
  * Initializes the AD7490 ADC module.
  */
 void init_ad7490(void (*init_spi)(int, int)) {
-  memset(&channel_values, 0x0, AD7490_NUM_CHN * sizeof(uint16_t));
-
   // Initialize SPI communciations to the AD7490 chip
 	init_spi(1, 16); 
 
@@ -42,7 +37,7 @@ void init_ad7490(void (*init_spi)(int, int)) {
  * Iterates through all channels, instructs the ADC to sample the current
  * value, and returns all the sample values.
  */
-uint16_t* ad7490_read_channels(void) {
+void ad7490_read_channels(uint16_t* channel_values) {
   AD7490ControlReg control = {.reg = 0x0};
   control.WRITE = 0b1;
   control.ADDR = 0b0;
@@ -60,8 +55,6 @@ uint16_t* ad7490_read_channels(void) {
     uint16_t resp = _ad7490_send_one(control);
     channel_values[i] = resp & 0x0FFF; // Only bottom 12 bits are value
   }
-
-  return channel_values;
 }
 
 /**
