@@ -61,7 +61,7 @@ void main(void) {
   init_adc(NULL); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
-  init_ad7490(); // Initialize AD7490 external ADC chip
+  init_ad7490(init_spi5); // Initialize AD7490 external ADC chip
   init_rheo(); // Initialize SPI interface for digital rheostats
 
   //TODO: USB

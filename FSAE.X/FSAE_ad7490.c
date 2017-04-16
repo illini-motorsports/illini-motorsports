@@ -16,11 +16,11 @@ uint16_t channel_values[AD7490_NUM_CHN];
  *
  * Initializes the AD7490 ADC module.
  */
-void init_ad7490(void) {
+void init_ad7490(void (*init_spi)(int, int)) {
   memset(&channel_values, 0x0, AD7490_NUM_CHN * sizeof(uint16_t));
 
   // Initialize SPI communciations to the AD7490 chip
-  _ad7490_init_spi();
+	init_spi(1, 16); 
 
   // Send two dummy cycles to reset the chip
   AD7490ControlReg dummy = {.reg = 0xFFFF};
@@ -90,7 +90,7 @@ uint16_t _ad7490_send_one(AD7490ControlReg reg) {
  *
  * Initializes the SPI5 communication bus for use with the AD7490 chip.
  */
-void _ad7490_init_spi(void) {
+void _ad7490_init_spi5(void) {
   unlock_config();
 
   // Initialize SDI5/SDO5 PPS pins

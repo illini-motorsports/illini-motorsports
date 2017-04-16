@@ -6,9 +6,10 @@
 #include "../FSAE.X/FSAE_can.h"
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/CAN.h"
+#include "../FSAE.X/FSAE_ad7490.h"
 
 // Enable programmable termination
-#define TERMINATING 0
+//#define TERMINATING 0 //Redefinition issue
 
 // Determines whether the internal or external clock source is used
 #define INTERNAL_CLK 0
