@@ -30,7 +30,7 @@ void init_spi1(int mhz, int size) {
 
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-	 * SPI1BRG = (F_PBCLK2/(2*F_SCK))-1
+   * SPI1BRG = (F_PBCLK2/(2*F_SCK))-1
    */
 
   // Set the baud rate (see above equation, ceil will round to lower freq)
@@ -43,7 +43,7 @@ void init_spi1(int mhz, int size) {
   SPI1CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (8-bit)
   SPI1CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
   SPI1CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
-	SPI1CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
+  SPI1CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
   SPI1CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI1CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI1CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
@@ -85,7 +85,7 @@ void init_spi2(int mhz, int size) {
 
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI2BRG + 1))
-	 * SPI2BRG = (F_PBCLK2/(2*F_SCK))-1
+   * SPI2BRG = (F_PBCLK2/(2*F_SCK))-1
    */
 
   // Set the baud rate (see above equation, ceil will round to lower freq)
@@ -98,7 +98,7 @@ void init_spi2(int mhz, int size) {
   SPI2CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (8-bit)
   SPI2CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
   SPI2CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
-	SPI2CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
+  SPI2CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
   SPI2CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI2CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI2CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
@@ -140,7 +140,7 @@ void init_spi3(int mhz, int size) {
 
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI3BRG + 1))
-	 * SPI3BRG = (F_PBCLK2/(2*F_SCK))-1
+   * SPI3BRG = (F_PBCLK2/(2*F_SCK))-1
    */
 
   // Set the baud rate (see above equation, ceil will round to lower freq)
@@ -153,7 +153,7 @@ void init_spi3(int mhz, int size) {
   SPI3CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (8-bit)
   SPI3CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
   SPI3CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
-	SPI3CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
+  SPI3CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
   SPI3CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI3CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI3CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
@@ -195,7 +195,7 @@ void init_spi5(int mhz, int size) {
 
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-	 * SPI1BRG = (F_PBCLK2/(2*F_SCK))-1
+   * SPI1BRG = (F_PBCLK2/(2*F_SCK))-1
    */
 
   // Set the baud rate (see above equation, ceil will round to lower freq)
@@ -208,7 +208,7 @@ void init_spi5(int mhz, int size) {
   SPI5CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (8-bit)
   SPI5CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
   SPI5CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
-	SPI5CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
+  SPI5CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
   SPI5CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI5CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI5CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
@@ -250,7 +250,7 @@ void init_spi6(int mhz, int size) {
 
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-	 * SPI1BRG = (F_PBCLK2/(2*F_SCK))-1
+   * SPI1BRG = (F_PBCLK2/(2*F_SCK))-1
    */
 
   // Set the baud rate (see above equation, ceil will round to lower freq)
@@ -263,7 +263,7 @@ void init_spi6(int mhz, int size) {
   SPI6CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (8-bit)
   SPI6CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
   SPI6CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
-	SPI6CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
+  SPI6CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
   SPI6CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI6CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI6CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
