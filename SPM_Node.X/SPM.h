@@ -120,6 +120,12 @@
 #define DIGIN_14 46
 #define DIGIN_15 47
 
+// Frequency output pins
+#define FREQ_IN_0_TRIS TRISGbits.TRISG9
+#define FREQ_IN_2_TRIS TRISFbits.TRISF1
+#define FREQ_IN_3_TRIS TRISFbits.TRISF5
+
 void main(void);
+void init_freq_meas(void);
 
 #endif /* SPM_H */
