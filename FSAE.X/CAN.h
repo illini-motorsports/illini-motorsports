@@ -176,6 +176,10 @@
  * Scalars for channels
  */
 
+// From Diagnostic Message
+#define PCB_TEMP_SCL        0.005
+#define IC_TEMP_SCL         0.005
+
 // From Analog Hubs
 #define SUS_POT_SCL         0.025
 #define BRK_PRS_SCL         0.005
