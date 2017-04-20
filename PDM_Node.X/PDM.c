@@ -62,15 +62,15 @@ void main(void) {
   init_adc(NULL); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
-  init_ad7490(init_spi5); // Initialize AD7490 external ADC chip
   init_rheo(); // Initialize SPI interface for digital rheostats
 
   //TODO: USB
   //TODO: NVM
 
   // init ad7490 CS
-  CS_AD7490_TRIS = OUTPUT;
   CS_AD7490_LAT = 1;
+  CS_AD7490_TRIS = OUTPUT;
+  init_ad7490(init_spi5, ad7490_send_spi); // Initialize AD7490 external ADC chip
 
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;
@@ -674,7 +674,7 @@ void sample_temp(void) {
  */
 void sample_ext_adc(void) {
   if (millis - ext_adc_samp_tmr >= EXT_ADC_SAMP_INTV) {
-    ad7490_read_channels(ad7490_samples);
+    ad7490_read_channels(ad7490_samples, ad7490_send_spi);
     total_current_draw = 0;
 
     uint8_t i;
@@ -1239,4 +1239,8 @@ void init_rheo(void) {
   SPI1CONbits.ON = 1;
 
   lock_config();
+}
+
+uint32_t ad7490_send_spi(uint32_t value){
+    return send_spi5(value, AD7490_CS_LATBITS, AD7490_CS_LATNUM);
 }

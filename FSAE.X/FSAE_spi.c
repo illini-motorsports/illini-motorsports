@@ -274,3 +274,63 @@ void init_spi6(int mhz, int size) {
 
   lock_config();
 }
+
+uint32_t send_spi1(uint32_t value, uint32_t *cs_lat, int cs_num){
+  uint32_t resp = 0;
+
+  *cs_lat &= ~(1 << cs_num); // Set CS Low
+  SPI1BUF = value;
+  while (!SPI1STATbits.SPIRBF);
+  resp = SPI1BUF;
+  *cs_lat |= 1 << cs_num;
+
+  return resp; 
+}
+
+uint32_t send_spi2(uint32_t value, uint32_t *cs_lat, int cs_num){
+  uint32_t resp = 0;
+
+  *cs_lat &= ~(1 << cs_num); // Set CS Low
+  SPI2BUF = value;
+  while (!SPI2STATbits.SPIRBF);
+  resp = SPI2BUF;
+  *cs_lat |= 1 << cs_num;
+
+  return resp; 
+}
+
+uint32_t send_spi3(uint32_t value, uint32_t *cs_lat, int cs_num){
+  uint32_t resp = 0;
+
+  *cs_lat &= ~(1 << cs_num); // Set CS Low
+  SPI3BUF = value;
+  while (!SPI3STATbits.SPIRBF);
+  resp = SPI3BUF;
+  *cs_lat |= 1 << cs_num;
+
+  return resp; 
+}
+
+uint32_t send_spi5(uint32_t value, uint32_t *cs_lat, int cs_num){
+  uint32_t resp = 0;
+
+  *cs_lat &= ~(1 << cs_num); // Set CS Low
+  SPI5BUF = value;
+  while (!SPI5STATbits.SPIRBF);
+  resp = SPI5BUF;
+  *cs_lat |= 1 << cs_num;
+
+  return resp; 
+}
+
+uint32_t send_spi6(uint32_t value, uint32_t *cs_lat, int cs_num){
+  uint32_t resp = 0;
+
+  *cs_lat &= ~(1 << cs_num); // Set CS Low
+  SPI6BUF = value;
+  while (!SPI6STATbits.SPIRBF);
+  resp = SPI6BUF;
+  *cs_lat |= 1 << cs_num;
+
+  return resp; 
+}

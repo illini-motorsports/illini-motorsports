@@ -6,6 +6,7 @@
 #include "../FSAE.X/FSAE_can.h"
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/CAN.h"
+#include "../FSAE.X/FSAE_spi.h"
 #include "../FSAE.X/FSAE_ad7490.h"
 
 // Enable programmable termination

@@ -39,8 +39,7 @@ typedef union uAD7490ControlReg {
 
 // Function definitions
 //void init_ad7490(void (*init_spi)(int, int), int mhz, int size);
-void init_ad7490(void (*init_spi)(int, int));
-void ad7490_read_channels(uint16_t* channel_values);
-uint16_t _ad7490_send_one(AD7490ControlReg reg);
+void init_ad7490(void (*init_spi)(int, int), uint32_t (*send_value)(uint32_t));
+void ad7490_read_channels(uint16_t* channel_values, uint32_t (*send_value)(uint32_t));
 
 #endif /* FSAE_ad7490_H */
