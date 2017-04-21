@@ -13,10 +13,7 @@
  *
  * Initializes the AD7490 ADC module.
  */
-void init_ad7490(void (*init_spi)(int, int), uint32_t (*send_value)(uint32_t)) {
-  // Initialize SPI communciations to the AD7490 chip
-	init_spi(1, 16); 
-
+void init_ad7490(uint32_t (*send_value)(uint32_t)) {
   // Send two dummy cycles to reset the chip
   AD7490ControlReg dummy = {.reg = 0xFFFF};
   send_value(dummy.reg);

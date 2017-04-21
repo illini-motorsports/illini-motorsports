@@ -70,7 +70,8 @@ void main(void) {
   // init ad7490 CS
   CS_AD7490_LAT = 1;
   CS_AD7490_TRIS = OUTPUT;
-  init_ad7490(init_spi5, ad7490_send_spi); // Initialize AD7490 external ADC chip
+	init_spi5(1, 16);
+  init_ad7490(ad7490_send_spi); // Initialize AD7490 external ADC chip
 
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;

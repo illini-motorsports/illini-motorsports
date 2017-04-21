@@ -8,6 +8,7 @@
 #include "../FSAE.X/CAN.h"
 #include "../FSAE.X/FSAE_spi.h"
 #include "../FSAE.X/FSAE_ad7490.h"
+#include "../FSAE.X/FSAE_mcp23s17.h"
 
 // Enable programmable termination
 //#define TERMINATING 0 //Redefinition issue
@@ -90,8 +91,40 @@
 #define DIGIN_14 46
 #define DIGIN_15 47
 
+#define AD7490_0_CS_TRIS TRISAbits.TRISA9
+#define AD7490_1_CS_TRIS TRISAbits.TRISA10
+#define AD7490_0_CS_LAT LATAbits.LATA9
+#define AD7490_1_CS_LAT LATAbits.LATA10
+#define AD7490_0_CS_LATBITS (uint32_t*) (&LATAbits)
+#define AD7490_1_CS_LATBITS (uint32_t*) (&LATAbits)
+#define AD7490_0_CS_LATNUM 9
+#define AD7490_1_CS_LATNUM 10
+
+#define MCP23S17_0_CS_TRIS		TRISAbits.TRISA15
+#define MCP23S17_1_CS_TRIS		TRISAbits.TRISA4
+#define MCP23S17_2_CS_TRIS		TRISAbits.TRISA3
+#define MCP23S17_0_CS_LAT			LATAbits.LATA15
+#define MCP23S17_1_CS_LAT			LATAbits.LATA4
+#define MCP23S17_2_CS_LAT			LATAbits.LATA3
+#define MCP23S17_0_CS_LATBITS	(uint32_t*) (&LATAbits)
+#define MCP23S17_1_CS_LATBITS (uint32_t*) (&LATAbits)
+#define MCP23S17_2_CS_LATBITS (uint32_t*) (&LATAbits)
+#define MCP23S17_0_CS_LATNUM	15
+#define MCP23S17_1_CS_LATNUM	4
+#define MCP23S17_2_CS_LATNUM	3
+
 uint8_t analogMappings[32] = {11,10,9,8,7,6,5,4,3,2,1,0,12,13,14,15,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25,24};
 
 void main(void);
+void update_analog_channels(void);
+
+
+void init_adcs();
+uint32_t ad7490_0_send_spi(uint32_t value);
+uint32_t ad7490_1_send_spi(uint32_t value);
+void init_gpio_ext();
+uint32_t gpio_0_send_spi(uint32_t value);
+uint32_t gpio_1_send_spi(uint32_t value);
+uint32_t gpio_2_send_spi(uint32_t value);
 
 #endif /* SPM_H */
