@@ -518,7 +518,8 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
   }
 
   // Check for over/under rev
-  if (shift_enum != SHIFT_ENUM_NT && gear != GEAR_NEUT && gear != GEAR_FAIL) {
+  if (shift_enum != SHIFT_ENUM_NT && ENG_ON &&
+      gear != GEAR_NEUT && gear != GEAR_FAIL) {
     double output_speed = eng_rpm / gear_ratio[gear];
 
     if (shift_enum == SHIFT_ENUM_UP && gear != 6) {

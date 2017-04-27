@@ -14,90 +14,111 @@ volatile uint8_t darkState;
 volatile uint8_t auxState;
 
 void main(void) {
-	init_general();// Set general runtime configuration bits
-	init_gpio_pins();// Set all I/O pins to low outputs
-	init_oscillator();// Initialize oscillator configuration bits
-	init_timer2();// Initialize timer2 (millis)
-	init_spi();// Initialize SPI interface
-	init_adc(initADCWheel);
+  init_general();// Set general runtime configuration bits
+  init_gpio_pins();// Set all I/O pins to low outputs
+  init_oscillator();// Initialize oscillator configuration bits
+  init_timer2();// Initialize timer2 (millis)
+  init_spi();// Initialize SPI interface
+  init_adc(NULL);
+  init_termination(TERMINATING);
 
-	ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
-	STI();// Enable interrupts
+  ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
+  STI();// Enable interrupts
 
-	// Init Relevant Pins
-	millis = 0;
-	CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
-	auxState = 0;
-	auxNumber = 0;
-	LCD_CS_TRIS = OUTPUT;
-	LCD_CS_LAT = 1;
-	LCD_RST_TRIS = OUTPUT;
-	LCD_RST_LAT = 1;
-	TRISEbits.TRISE8 = OUTPUT;
-	LATEbits.LATE8 = 0;
-	SW1_TRIS = INPUT;
-	SW2_TRIS = INPUT;
-	SW3_TRIS = INPUT;
-	SW4_TRIS = INPUT;
-	MOM1_TRIS = INPUT;
-	MOM2_TRIS = INPUT;
-	MOM3_TRIS = INPUT;
-	MOM4_TRIS = INPUT;
+  millis = 0;
+  CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
+  auxState = 0;
+  auxNumber = 0;
 
-	// Initialize RA8875
-	reset();
-	initialize();
-	displayOn(1);
-	GPIOX(1);// Enable TFT - display enable tied to GPIOX
-	PWM1config(1, RA8875_PWM_CLK_DIV1024);// PWM output for backlight
-	PWM1out(255);
-	//fillScreen(RA8875_WHITE);
-	//drawChevron(150,15,130,200,RA8875_BLACK,RA8875_WHITE);
+  // Init Relevant Pins
+  LCD_CS_TRIS = OUTPUT;
+  LCD_CS_LAT = 1;
+  LCD_RST_TRIS = OUTPUT;
+  LCD_RST_LAT = 1;
+  LCD_PWM_TRIS = OUTPUT;
+  LCD_PWM_LAT = 1; //TODO: This is full brightness, PWM for other settings
 
-	// Initialize All the data streams
-	initDataItems();
-	init_can();
-	updateSwVals();
-	initAllScreens();
-	changeScreen(PDM_CUT_SCREEN);
+  SW1_TRIS = INPUT;
+  SW2_TRIS = INPUT;
+  SW3_TRIS = INPUT;
+  SW4_TRIS = INPUT;
+  MOM1_TRIS = INPUT;
+  MOM2_TRIS = INPUT;
+  MOM3_TRIS = INPUT;
+  MOM4_TRIS = INPUT;
 
-	while(1){
-		// Send CAN messages with the correct frequency
-		if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
-			CANswitchStates();
-			CANswStateMillis = millis;
-		}
-		if(millis - CANswADLMillis >= CAN_SW_ADL_FREQ){
-			CANswitchADL();
-			CANswADLMillis = millis;
-		}
-		if(millis - CANdiagMillis >= CAN_DIAG_FREQ){
-			CANdiag();
-			CANdiagMillis = millis;
-		}
-		// Refresh Screen
-		if(tRotary[1].value == 1 && screenNumber != PDM_DRAW_SCREEN){
-			changeScreen(PDM_DRAW_SCREEN);
-		}
-		else if(tRotary[1].value == 2 && screenNumber != PDM_CUT_SCREEN){
-			changeScreen(PDM_CUT_SCREEN);
-		}
-		else if(tRotary[1].value == 3 && screenNumber != RACE_SCREEN){
-			changeScreen(RACE_SCREEN);
-		}
-       		else if(tRotary[1].value == 4 && screenNumber != BRAKE_SCREEN){
-            		changeScreen(BRAKE_SCREEN);
-        	}
-		// Change AUX State
-		if(auxState != momentaries[0].value){
-			if(momentaries[0].value == 1){
-				changeAUXType((auxNumber+1)%3);
-			}
-			auxState = momentaries[0].value;
-		}
+  ROT1_TRIS = INPUT;
+  ROT1_ANSEL = AN_INPUT;
+  ROT1_CSS = 1;
+  ROT2_TRIS = INPUT;
+  ROT2_ANSEL = AN_INPUT;
+  ROT2_CSS = 1;
+  ROT3_TRIS = INPUT;
+  ROT3_ANSEL = AN_INPUT;
+  ROT3_CSS = 1;
+  TROT1_TRIS = INPUT;
+  TROT1_ANSEL = AN_INPUT;
+  TROT1_CSS = 1;
+  TROT2_TRIS = INPUT;
+  TROT2_ANSEL = AN_INPUT;
+  TROT2_CSS = 1;
 
-		refreshScreenItems();
-	}
+  // Initialize RA8875
+  reset();
+  initialize();
+  displayOn(1);
+  GPIOX(1);// Enable TFT - display enable tied to GPIOX
+
+  fillScreen(RA8875_BLACK);
+  drawChevron(150,15,130,200,RA8875_RED,RA8875_BLACK);
+
+  init_tlc5955();
+  while(1); //TODO: Remove this
+
+  // Initialize All the data streams
+  initDataItems();
+  init_can();
+  updateSwVals();
+  initAllScreens();
+  changeScreen(PDM_CUT_SCREEN);
+
+  while(1) {
+    // Send CAN messages with the correct frequency
+    if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
+      CANswitchStates();
+      CANswStateMillis = millis;
+    }
+    if(millis - CANswADLMillis >= CAN_SW_ADL_FREQ){
+      CANswitchADL();
+      CANswADLMillis = millis;
+    }
+    if(millis - CANdiagMillis >= CAN_DIAG_FREQ){
+      CANdiag();
+      CANdiagMillis = millis;
+    }
+    // Refresh Screen
+    if(tRotary[1].value == 1 && screenNumber != PDM_DRAW_SCREEN){
+      changeScreen(PDM_DRAW_SCREEN);
+    }
+    else if(tRotary[1].value == 2 && screenNumber != PDM_CUT_SCREEN){
+      changeScreen(PDM_CUT_SCREEN);
+    }
+    else if(tRotary[1].value == 3 && screenNumber != RACE_SCREEN){
+      changeScreen(RACE_SCREEN);
+    }
+    else if(tRotary[1].value == 4 && screenNumber != BRAKE_SCREEN){
+      changeScreen(BRAKE_SCREEN);
+    }
+    // Change AUX State
+    if(auxState != momentaries[0].value){
+      if(momentaries[0].value == 1){
+        changeAUXType((auxNumber+1)%3);
+      }
+      auxState = momentaries[0].value;
+    }
+
+    refreshScreenItems();
+  }
 }
 
 /**
@@ -116,7 +137,11 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 		CANswitchStates();
 	}
 
-	IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
+  if (!(millis % 2)) {
+    PWM_TLC5955_LAT = !PWM_TLC5955_LAT;
+  }
+
+  IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
 
 void delay(uint32_t num) {
@@ -140,6 +165,7 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
 void process_CAN_msg(CAN_message msg){
 	uint16_t * lsbArray = (uint16_t *) msg.data;
 	switch (msg.id) {
+    /*
 
 		/*Motec Paddle Shifting*/
 		case MOTEC_ID + 0:
@@ -186,6 +212,7 @@ void process_CAN_msg(CAN_message msg){
 			break;
 
 		/*Paddle Shifting ID's*/
+      /*
 		case PADDLE_ID:
 			paddleUptime.value = (double) ((uint16_t) msg.data[PADDLE_UPTIME_BYTE])*PADDLE_UPTIME_SCL;
 			paddleTemp.value = (double) ((uint16_t) msg.data[PADDLE_TEMP_BYTE])*PADDLE_TEMP_SCL;
@@ -197,14 +224,17 @@ void process_CAN_msg(CAN_message msg){
 			gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE])*GEAR_VOLT_SCL;
 			gearPos.value = msg.data[GEAR_BYTE];
 			break;
+       */
 
 		/*PDM ID's*/
+      /*
 		case PDM_ID:
 			pdmUptime.value = (uint16_t) (msg.data[PDM_UPTIME_BYTE]) * PDM_UPTIME_SCL;
 			pdmTemp.value = (int16_t) (msg.data[PDM_PCB_TEMP_BYTE]) * PDM_PCB_TEMP_SCL;
 			pdmICTemp.value = (int16_t) (msg.data[PDM_IC_TEMP_BYTE]) * PDM_IC_TEMP_SCL;
 			pdmCurrentDraw.value = (uint16_t) (msg.data[TOTAL_CURRENT_BYTE]) * TOTAL_CURRENT_SCL;
 			break;
+       */
 		case PDM_ID + 1:
 			STRenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & STR_ENBL_BIT;
 			BVBATenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & BVBAT_ENBL_BIT;
@@ -238,6 +268,7 @@ void process_CAN_msg(CAN_message msg){
 			ONpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ON_PDM_SW_BIT;
 			STRpdmSw.value = msg.data[PDM_SWITCH_BYTE] & STR_PDM_SW_BIT;
 			break;
+      /*
 		case PDM_ID + 2:
 			pdmVBat.value = (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL;
 			pdm12v.value = (uint16_t) (lsbArray[V12_RAIL_BYTE/2]) * V12_RAIL_SCL;
@@ -298,6 +329,7 @@ void process_CAN_msg(CAN_message msg){
 			pdmFANPcut.value = (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL;
 			pdmECUPcut.value = (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL;
 			break;
+       */
 
 		/*Tire Temps*/
 		case TIRE_TEMP_FL_ID:
@@ -375,25 +407,7 @@ void CANdiag(void){
 }
 
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl){
-	return ((double) ((msg->data[byte] << 8) | msg->data[byte + 1])) * scl;
-}
-
-void initADCWheel(void){
-	ROT1_TRIS = INPUT;
-	ROT2_TRIS = INPUT;
-	ROT3_TRIS = INPUT;
-	TROT1_TRIS = INPUT;
-	TROT2_TRIS = INPUT;
-	ROT1_ANSEL = AN_INPUT;
-	ROT2_ANSEL = AN_INPUT;
-	ROT3_ANSEL = AN_INPUT;
-	TROT1_ANSEL = AN_INPUT;
-	TROT2_ANSEL = AN_INPUT;
-	ROT1_CSS = 1;
-	ROT2_CSS = 1;
-	ROT3_CSS = 1;
-	TROT1_CSS = 1;
-	TROT2_CSS = 1;
+  return ((double) ((msg->data[byte] << 8) | msg->data[byte + 1])) * scl;
 }
 
 void updateSwVals(void){
@@ -433,16 +447,16 @@ uint8_t getRotaryPosition(uint32_t adcValue){
 void init_spi(){
   unlock_config();
 
-  // Initialize SDI6/SDO6 PPS pins
+  // Initialize SDI1/SDO1 PPS pins
   CFGCONbits.IOLOCK = 0;
   TRISBbits.TRISB9 = INPUT;
-  ANSELBbits.ANSB9 = 0;
+  ANSELBbits.ANSB9 = DIG_INPUT;
   SDI1Rbits.SDI1R = 0b0101; // RPB9
   TRISBbits.TRISB10 = OUTPUT;
   RPB10Rbits.RPB10R = 0b0101; // SDO1
   CFGCONbits.IOLOCK = 1;
 
-  // Initialize SCK6 and !CS_NVM pins
+  // Initialize SCK1 and !CS_NVM pins
   TRISDbits.TRISD1 = OUTPUT; // SCK1
 
   // Disable interrupts
