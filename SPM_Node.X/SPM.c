@@ -1,6 +1,6 @@
 #include "SPM.h"
 
-uint16_t analog_channels[36] = {0};
+float analog_channels[36] = {0};
 
 void main(void){
 	init_general();// Set general runtime configuration bits
@@ -13,6 +13,8 @@ void main(void){
 	}
 }
 
+// reads from both ADC's at the same time, which kinda negates the point of the
+// low speed vs high speed ADC's
 void update_analog_channels(void){
 	// Update ad7490 values
 	uint16_t ad7490_values[32] = {0};
@@ -20,24 +22,24 @@ void update_analog_channels(void){
 	ad7490_read_channels(ad7490_values+16, ad7490_1_send_spi);
 	int i;
 	for(i = 0;i<32;i++){
-		analog_channels[i] = ad7490_values[analogMappings[i]];
+		analog_channels[i] = 5*(ad7490_values[analogMappings[i]]/4095.0);
 	}
 
 	// manually read analog channels
 	AD7680_0_CS_LAT = 0;
-	analog_channels[32] = ad7680_read_spi();
+	analog_channels[32] = 5*(ad7680_read_spi()/65535.0);
 	AD7680_0_CS_LAT = 1;
 
 	AD7680_1_CS_LAT = 0;
-	analog_channels[33] = ad7680_read_spi();
+	analog_channels[33] = 5*(ad7680_read_spi()/65535.0);
 	AD7680_1_CS_LAT = 1;
 
 	AD7680_2_CS_LAT = 0;
-	analog_channels[34] = ad7680_read_spi();
+	analog_channels[34] = 5*(ad7680_read_spi()/65535.0);
 	AD7680_2_CS_LAT = 1;
 
 	AD7680_3_CS_LAT = 0;
-	analog_channels[35] = ad7680_read_spi();
+	analog_channels[35] = 5*(ad7680_read_spi()/65535.0);
 	AD7680_3_CS_LAT = 1;
 }
 

@@ -27,7 +27,6 @@
 // ***************************
 // GPIO Defs
 // ***************************
-//
 // Pin numbers are created by: 16*CHIP_NUM + 8*(BANK=='B') + PIN_NUM
 #define FREQ_BYP_0 4
 #define FREQ_DIVA_0 3
