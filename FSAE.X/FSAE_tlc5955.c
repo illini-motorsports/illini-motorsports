@@ -26,7 +26,7 @@ void init_tlc5955(void) {
   _tlc5955_init_spi();
 
   _tlc5955_write_control();
-  _tlc5955_write_gs();
+  _tlc5955_write_gs(0);
 }
 
 /**
@@ -65,7 +65,10 @@ void _tlc5955_init_spi(void) {
    */
 
   // Set the baud rate (see above equation)
-  SPI2BRG = 49;
+  //SPI2BRG = 4;
+  //SPI2BRG = 49;
+  SPI2BRG = 511;
+  //SPI2BRG = 249;
 
   SPI2STATbits.SPIROV = 0;
 
@@ -78,7 +81,7 @@ void _tlc5955_init_spi(void) {
   SPI2CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
   SPI2CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
   SPI2CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-  SPI2CONbits.CKP = 1;     // Clock Polarity Select (Idle state for clock is a high level)
+  SPI2CONbits.CKP = 0;     // Clock Polarity Select (Idle state for clock is a low level)
 
   // Enable SPI2 module
   SPI2CONbits.ON = 1;
@@ -91,6 +94,13 @@ void _tlc5955_init_spi(void) {
  */
 void _tlc5955_write_control(void) {
   uint8_t i, j;
+
+  bit_ctr = 0;
+  for (i = 0; i < NUM_BYTES; i++) {
+    pending_register[i] = 0;
+  }
+
+  _tlc5955_reg_append(7, 0x0); // Shift in 7 bits to account for 776 bit SPI shifts
 
   _tlc5955_reg_append(1, 0b1); // MSB indicates control register write
   _tlc5955_reg_append(8, 0x96); // More indication for control register write
@@ -125,15 +135,27 @@ void _tlc5955_write_control(void) {
 /**
  * Writes default values to the TLC5955 GS (grayscale) registers.
  */
-void _tlc5955_write_gs(void) {
+void _tlc5955_write_gs(uint8_t color_idx) {
   uint8_t i, j;
+
+  bit_ctr = 0;
+  for (i = 0; i < NUM_BYTES; i++) {
+    pending_register[i] = 0;
+  }
+
+  _tlc5955_reg_append(7, 0x0); // Shift in 7 bits to account for 776 bit SPI shifts
 
   _tlc5955_reg_append(1, 0b0); // MSB indicates GS write
 
   for (i = 0; i < 16; i++) {
     for (j = 0; j < 3; j++) {
-      _tlc5955_reg_append(8, 0xFF); // GS HW
-      _tlc5955_reg_append(8, 0xFF); // GW LW
+      if (j == color_idx) {
+        _tlc5955_reg_append(8, 0xFF); // GS HW
+        _tlc5955_reg_append(8, 0xFF); // GW LW
+      } else {
+        _tlc5955_reg_append(8, 0x00); // GS HW
+        _tlc5955_reg_append(8, 0x00); // GW LW
+      }
     }
   }
 
@@ -141,13 +163,31 @@ void _tlc5955_write_gs(void) {
 }
 
 /**
+ * TODO: Make this less bad
+ */
+uint8_t reverser(uint8_t n, uint8_t num_bits)
+{
+  uint8_t rev = 0;
+  uint8_t i = 0;
+  for (i; i < num_bits; i++) {
+    uint8_t bit = n & (1 << i);
+    uint8_t pos = num_bits - i - 1;
+    if (bit) { rev |= (1 << pos); }
+  }
+  return rev;
+}
+
+/**
  * Appends <num_bits> of <data> to the pending_register array in preparation
  * for sending a register to the chip.
+ *
+ * TODO: Also make this less bad
  */
 void _tlc5955_reg_append(uint8_t num_bits, uint8_t data) {
   uint8_t i;
+  uint8_t rev = reverser(data, num_bits);
   for (i = 0; i < num_bits; i++) {
-    uint8_t bit = data & (1 << i);
+    uint8_t bit = rev & (1 << i);
     uint8_t idx = ((bit_ctr + i) / 8);
     uint8_t pos = ((bit_ctr + i) % 8);
 
@@ -166,17 +206,27 @@ void _tlc5955_reg_append(uint8_t num_bits, uint8_t data) {
  * <NUM_BYTES> messages.
  */
 void _tlc5955_send_register(void) {
+
+  /*
+   * Need to send data from MSbit to LSbit. Then, after correct number of
+   * pulses, the control bit (bit 769) will have made it to the end of the
+   * register.
+   *
+   * Then latch at the end.
+   *
+   * Also account for the fact that we're shifting more than 769 bits
+   */
   uint8_t i;
   uint8_t resp;
 
-  // Send latch pulse
-  PWM_TLC5955_LAT = 1;
-  for (i = 0; i < 6; i++);
-  PWM_TLC5955_LAT = 0;
-
   for (i = 0; i < NUM_BYTES; i++) {
     SPI2BUF = pending_register[i];
-    while( !SPI2STATbits.SPIRBF);
+    while(!SPI2STATbits.SPIRBF);
     resp = SPI2BUF;
   }
+
+  // Send latch pulse
+  LAT_TLC5955_LAT = 1;
+  for (i = 0; i < 6; i++);
+  LAT_TLC5955_LAT = 0;
 }
