@@ -239,7 +239,8 @@ void initAllScreens(void){
 	// Initialize colors
 	backgroundColor = RA8875_WHITE;
 	foregroundColor = RA8875_BLACK;
-	initNightMode(switches[3].value);
+	//initNightMode(switches[3].value);
+	initNightMode(1); //TODO
 
 	// All Screens Stuff
 	allScreens[GENERAL_SCREEN] = &generalScreen;
@@ -625,7 +626,7 @@ void changeScreen(uint8_t num){
 // has surpassed its refresh interval
 void refreshScreenItems(void){
 	// change night mode if the switch was toggled
-	nightMode(switches[3].value);
+	//nightMode(switches[3].value); //TODO
 
 	screen *currScreen = allScreens[screenNumber];
 	int i;

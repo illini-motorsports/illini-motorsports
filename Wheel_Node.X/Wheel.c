@@ -21,6 +21,7 @@ void main(void) {
   init_spi();// Initialize SPI interface
   init_adc(NULL);
   init_termination(TERMINATING);
+  init_tlc5955();
 
   ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
   STI();// Enable interrupts
@@ -29,6 +30,7 @@ void main(void) {
   CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
   auxState = 0;
   auxNumber = 0;
+  uint8_t color_idx = 0; //TODO
 
   // Init Relevant Pins
   LCD_CS_TRIS = OUTPUT;
@@ -69,20 +71,24 @@ void main(void) {
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
 
-  fillScreen(RA8875_BLACK);
-  drawChevron(150,15,130,200,RA8875_RED,RA8875_BLACK);
-
-  init_tlc5955();
-  while(1); //TODO: Remove this
+  //fillScreen(RA8875_BLACK);
+  //drawChevron(150,15,130,200,RA8875_RED,RA8875_BLACK);
 
   // Initialize All the data streams
   initDataItems();
   init_can();
   updateSwVals();
   initAllScreens();
-  changeScreen(PDM_CUT_SCREEN);
+  changeScreen(RACE_SCREEN);
 
   while(1) {
+    //TODO: Remove this
+    if (!(millis % 500)) {
+      _tlc5955_write_gs(color_idx);
+      color_idx += 1;
+      if (color_idx == 3) { color_idx = 0; }
+    }
+
     // Send CAN messages with the correct frequency
     if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
       CANswitchStates();
@@ -96,6 +102,7 @@ void main(void) {
       CANdiag();
       CANdiagMillis = millis;
     }
+    /*
     // Refresh Screen
     if(tRotary[1].value == 1 && screenNumber != PDM_DRAW_SCREEN){
       changeScreen(PDM_DRAW_SCREEN);
@@ -116,6 +123,7 @@ void main(void) {
       }
       auxState = momentaries[0].value;
     }
+     */
 
     refreshScreenItems();
   }
@@ -212,19 +220,17 @@ void process_CAN_msg(CAN_message msg){
 			break;
 
 		/*Paddle Shifting ID's*/
-      /*
-		case PADDLE_ID:
-			paddleUptime.value = (double) ((uint16_t) msg.data[PADDLE_UPTIME_BYTE])*PADDLE_UPTIME_SCL;
-			paddleTemp.value = (double) ((uint16_t) msg.data[PADDLE_TEMP_BYTE])*PADDLE_TEMP_SCL;
-			neutQueue.value = msg.data[QUEUE_NT_BYTE] * QUEUE_NT_SCL;
-			upQueue.value = msg.data[QUEUE_UP_BYTE] * QUEUE_UP_SCL;
-			downQueue.value =  msg.data[QUEUE_DN_BYTE] * QUEUE_DN_SCL;
+		case GCM_ID:
+			//paddleUptime.value = (double) ((uint16_t) msg.data[UPTIME_BYTE]);
+			//paddleTemp.value = (double) ((uint16_t) msg.data[PCB_TEMP_BYTE])*PCB_TEMP_SCL;
+			//neutQueue.value = msg.data[QUEUE_NT_BYTE] * QUEUE_NT_SCL;
+			//upQueue.value = msg.data[QUEUE_UP_BYTE] * QUEUE_UP_SCL;
+			//downQueue.value =  msg.data[QUEUE_DN_BYTE] * QUEUE_DN_SCL;
 			break;
-		case PADDLE_ID + 1:
-			gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE])*GEAR_VOLT_SCL;
+		case GCM_ID + 1:
+			//gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE])*GEAR_VOLT_SCL;
 			gearPos.value = msg.data[GEAR_BYTE];
 			break;
-       */
 
 		/*PDM ID's*/
       /*
@@ -390,7 +396,7 @@ void CANswitchStates(void){
 	switchData.byte1 = ((uint8_t)rotary[0].value << 4) | (uint8_t)rotary[1].value;
 	switchData.byte2 = ((uint8_t)rotary[2].value << 4) | (uint8_t)tRotary[0].value;
 	switchData.byte3 = (uint8_t)tRotary[1].value << 4;
-	CAN_send_message(WHEEL_ID + 0x1, 4, switchData);
+	//CAN_send_message(WHEEL_ID + 0x1, 4, switchData);
 }
 
 void CANswitchADL(void){
@@ -399,7 +405,7 @@ void CANswitchADL(void){
 	rotaries.halfword1 = (uint16_t) rotary[0].value;
 	rotaries.halfword2 = (uint16_t) rotary[1].value;
 	rotaries.halfword3 = (uint16_t) rotary[2].value;
-	CAN_send_message(ADL_ID, 8, rotaries);
+	//CAN_send_message(ADL_ID, 8, rotaries);
 }
 
 void CANdiag(void){

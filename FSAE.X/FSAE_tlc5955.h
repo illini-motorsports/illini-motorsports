@@ -22,10 +22,10 @@
 #define PWM_TLC5955_LAT  LATGbits.LATG8
 
 // Function definitions
-void init_tlc5955();
+void init_tlc5955(void);
 void _tlc5955_init_spi(void);
 void _tlc5955_write_control(void);
-void _tlc5955_write_gs(void);
+void _tlc5955_write_gs(uint8_t color_idx);
 void _tlc5955_reg_append(uint8_t num_bits, uint8_t data);
 void _tlc5955_send_register(void);
 
