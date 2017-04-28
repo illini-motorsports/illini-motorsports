@@ -789,10 +789,11 @@ void redrawRotary(screenItemInfo * item, volatile dataItem * data, double curren
 }
 
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
-	if(data->value == currentValue){
+	uint8_t numFilled = (uint8_t)(9*(data->value/9000.0));
+	uint8_t oldNumFilled = (uint8_t)(9*(currentValue/9000.0));
+	if(numFilled == oldNumFilled){
 		return;
 	}
-	uint8_t numFilled = (uint8_t)(9*(data->value/9000.0));
 	uint64_t triangleColor = rpmColors[numFilled];
 	uint64_t colorArray[16] = {0};
 
