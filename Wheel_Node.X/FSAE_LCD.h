@@ -104,7 +104,7 @@ typedef struct {
 */
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[6];
+screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
 // Define all screen structs
 screen raceScreen, pdmDrawScreen, pdmCutScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
 // Define master array of all screen structs
@@ -184,6 +184,7 @@ void redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double curr
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
 // Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);

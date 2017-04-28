@@ -10,6 +10,9 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 
+
+uint16_t rpmColors[9] = {0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFFFF, 0xFFFF, 0xFF, 0xFF};
+
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
 void initDataItems(void){
@@ -245,13 +248,14 @@ void initAllScreens(void){
 	// All Screens Stuff
 	allScreens[GENERAL_SCREEN] = &generalScreen;
 	generalScreen.items = generalItems;
-	generalScreen.len = 6;
+	generalScreen.len = 7;
 	initScreenItem(&generalItems[0], 20, 30, 15, redrawRotary, &rotary[0]);
 	initScreenItem(&generalItems[1], 20, 30, 15, redrawRotary, &rotary[1]);
 	initScreenItem(&generalItems[2], 20, 30, 15, redrawRotary, &rotary[2]);
 	initScreenItem(&generalItems[3], 20, 30, 15, redrawFanSw, &switches[0]);
 	initScreenItem(&generalItems[4], 20, 30, 15, redrawFUELPumpSw, &switches[1]);
 	initScreenItem(&generalItems[5], 20, 30, 15, redrawWTRPumpSw, &switches[2]);
+	initScreenItem(&generalItems[6], 20, 30, 15, redrawShiftLightsRPM, &rpm);
 
 	// Race Screen Stuff
 	allScreens[RACE_SCREEN] = &raceScreen;
@@ -776,17 +780,31 @@ void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double curr
 	}
 }
 
-
-
-    
-
-
 void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue){
 	fillCircle(item->x, item->y, item->size, RA8875_RED);
 	if(data->value == currentValue){
 		return;
 	}
 	sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
+}
+
+void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
+	if(data->value == currentValue){
+		return;
+	}
+	uint8_t numFilled = (uint8_t)(9*(data->value/9000.0));
+	uint64_t triangleColor = rpmColors[numFilled];
+	uint64_t colorArray[16] = {0};
+
+	int i;
+	for(i=0;i<3;i++){
+		colorArray[i] = triangleColor;
+		colorArray[i+12] = triangleColor;
+	}
+	for(i=0;i<numFilled;i++){
+		colorArray[i+3] = rpmColors[i];
+	}
+	_tlc5955_write_colors(colorArray);
 }
 
 void clearScreen(void){

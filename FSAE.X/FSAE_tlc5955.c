@@ -10,6 +10,8 @@
 
 uint8_t pending_register[NUM_BYTES] = {0};
 uint16_t bit_ctr = 0;
+uint64_t current_colors[16] = {0};
+uint8_t led_mapping[16] = {4, 15, 6, 8, 3, 1, 7, 9, 0, 2, 14, 13, 5, 10, 11, 12};
 
 /**
  * Initializes the TLC5955 module.
@@ -152,11 +154,77 @@ void _tlc5955_write_gs(uint8_t color_idx) {
       if (j == color_idx) {
         _tlc5955_reg_append(8, 0xFF); // GS HW
         _tlc5955_reg_append(8, 0xFF); // GW LW
+				current_colors[i] |= 0xFFFF << (8*j); // update current colors
       } else {
         _tlc5955_reg_append(8, 0x00); // GS HW
         _tlc5955_reg_append(8, 0x00); // GW LW
+				current_colors[i] &= 0x0000 << (8*j); // update current colors
       }
     }
+  }
+
+  _tlc5955_send_register();
+}
+
+/**
+ * Writes a color to a set of lights specified by onMap
+ */
+void _tlc5955_write_same_color(uint64_t color, uint16_t onMap) {
+  uint8_t i, j;
+
+  bit_ctr = 0;
+  for (i = 0; i < NUM_BYTES; i++) {
+    pending_register[i] = 0;
+  }
+
+  _tlc5955_reg_append(7, 0x0); // Shift in 7 bits to account for 776 bit SPI shifts
+
+  _tlc5955_reg_append(1, 0b0); // MSB indicates GS write
+
+  for (i = 0; i < 16; i++) {
+		if(onMap&(1 << led_mapping[i])){
+			current_colors[i] = color;
+			for (j = 0; j < 3; j++) {
+    	    _tlc5955_reg_append(8, 0xFF & (color >> (8*j+4))); // GS HW
+    	    _tlc5955_reg_append(8, 0xFF & (color >> (8*j))); // GW LW
+    	}
+		} else {
+			current_colors[i] = 0;
+			// 16 bits of color for each if off
+			_tlc5955_reg_append(8, 0x00); // zero bit
+			_tlc5955_reg_append(8, 0x00); // zero bit
+			_tlc5955_reg_append(8, 0x00); // zero bit
+			_tlc5955_reg_append(8, 0x00); // zero bit
+			_tlc5955_reg_append(8, 0x00); // zero bit
+			_tlc5955_reg_append(8, 0x00); // zero bit
+		}
+  }
+
+  _tlc5955_send_register();
+}
+
+/**
+ * Writes a color to a set of lights specified by onMap
+ */
+void _tlc5955_write_colors(uint64_t * colors) {
+  uint8_t i, j;
+
+  bit_ctr = 0;
+  for (i = 0; i < NUM_BYTES; i++) {
+    pending_register[i] = 0;
+  }
+
+  _tlc5955_reg_append(7, 0x0); // Shift in 7 bits to account for 776 bit SPI shifts
+
+  _tlc5955_reg_append(1, 0b0); // MSB indicates GS write
+
+  for (i = 0; i < 16; i++) {
+		uint64_t color = colors[led_mapping[i]];
+		current_colors[i] = color;
+		for (j = 0; j < 3; j++) {
+			_tlc5955_reg_append(8, 0xFF & (color >> (8*j+4))); // GS HW
+   	  _tlc5955_reg_append(8, 0xFF & (color >> (8*j))); // GW LW
+   	}
   }
 
   _tlc5955_send_register();
