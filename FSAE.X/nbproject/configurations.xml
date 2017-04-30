@@ -13,6 +13,7 @@
       <itemPath>FSAE_ad7490.h</itemPath>
       <itemPath>FSAE_gpx.h</itemPath>
       <itemPath>FSAE_tlc5955.h</itemPath>
+      <itemPath>FSAE_ltc3350.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -29,6 +30,7 @@
       <itemPath>FSAE_gpx.c</itemPath>
       <itemPath>errno.c</itemPath>
       <itemPath>FSAE_tlc5955.c</itemPath>
+      <itemPath>FSAE_ltc3350.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

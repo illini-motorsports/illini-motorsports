@@ -15,7 +15,7 @@
 #define ANALOG_FRONT_ID 0x060
 #define MOTEC_ID        0x100
 #define GCM_ID          0x200
-#define LOGGER_ID       0X2AA
+#define LOGGER_ID       0x300
 #define WHEEL_ID        0x400
 #define ADL_ID          0x500
 #define PDM_ID          0x600
