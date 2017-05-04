@@ -121,6 +121,10 @@
 #define CUTOFF_SETTING_BYTE 2
 
 // From PDM
+#define PDM_UPTIME_BYTE     0
+#define PDM_PCB_TEMP_BYTE   2
+#define PDM_IC_TEMP_BYTE    4
+
 #define LOAD_ENABLITY_BYTE  0
 #define LOAD_PEAK_BYTE      2
 #define TOTAL_CURRENT_BYTE  4
@@ -165,6 +169,20 @@
 #define FAN_CUT_P_BYTE      2
 #define WTR_CUT_P_BYTE      4
 #define ECU_CUT_P_BYTE      6
+
+#define FUEL_OC_COUNT_BYTE  0
+#define IGN_OC_COUNT_BYTE   1
+#define INJ_OC_COUNT_BYTE   2
+#define ABS_OC_COUNT_BYTE   3
+#define PDLU_OC_COUNT_BYTE  4
+#define PDLD_OC_COUNT_BYTE  5
+#define FAN_OC_COUNT_BYTE   6
+#define WTR_OC_COUNT_BYTE   7
+
+#define ECU_OC_COUNT_BYTE   0
+#define AUX_OC_COUNT_BYTE   1
+#define BVBAT_OC_COUNT_BYTE 2
+#define STR_OC_COUNT_BYTE   3
 
 // From Tire Temp Sensors
 #define TIRE_TEMP_1_BYTE    0
@@ -237,11 +255,54 @@
 #define QUEUE_NT_SCL       1
 
 // From PDM
+#define PDM_UPTIME_SCL    1
+#define PDM_PCB_TEMP_SCL  0.005
+#define PDM_IC_TEMP_SCL   0.005
 #define TOTAL_CURRENT_SCL 0.01
+
 #define VOLT_RAIL_SCL     0.001
 #define LOAD_DRAW_SCL     0.001
 #define STR_DRW_SCL       0.01
 #define LOAD_CUT_SCL      0.0025
+
+#define VBAT_RAIL_SCL     0.001
+#define V12_RAIL_SCL      0.001
+#define V5_RAIL_SCL       0.001
+#define V3V3_RAIL_SCL     0.001
+
+#define FUEL_DRAW_SCL     0.001
+#define IGN_DRAW_SCL      0.001
+#define INJ_DRAW_SCL      0.001
+#define ABS_DRAW_SCL      0.001
+
+#define PDLU_DRAW_SCL     0.001
+#define PDLD_DRAW_SCL     0.001
+#define FAN_DRAW_SCL      0.001
+#define WTR_DRAW_SCL      0.001
+
+#define ECU_DRAW_SCL      0.001
+#define AUX_DRAW_SCL      0.001
+#define BVBAT_DRAW_SCL    0.001
+#define STR_DRAW_SCL      0.01
+
+#define FUEL_CUT_SCL      0.0025
+#define IGN_CUT_SCL       0.0025
+#define INJ_CUT_SCL       0.0025
+#define ABS_CUT_SCL       0.0025
+
+#define PDLU_CUT_SCL      0.0025
+#define PDLD_CUT_SCL      0.0025
+#define WTR_CUT_SCL       0.0025
+#define FAN_CUT_SCL       0.0025
+
+#define ECU_CUT_SCL       0.0025
+#define AUX_CUT_SCL       0.0025
+#define BVBAT_CUT_SCL     0.0025
+
+#define FUEL_CUT_P_SCL    0.0025
+#define FAN_CUT_P_SCL     0.0025
+#define WTR_CUT_P_SCL     0.0025
+#define ECU_CUT_P_SCL     0.0025
 
 // From Tire Temp Sensors
 #define TIRE_TEMP_SCL       0.1

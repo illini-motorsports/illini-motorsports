@@ -54,7 +54,7 @@ typedef struct {
 
 /*
  * Defines the minimum amount of information a redrawItem function needs to work
- * 
+ *
  * x -		X coordinate
  * y - 		Y coordinate
  * size - 	Size of item
@@ -69,7 +69,7 @@ typedef struct {
 
 /*
  * Defines an item that will be displayed on a specific screen
- * 
+ *
  * currentValue - 	Current value being displayed
  * data - 		Pointer to corresponding dataItem
  * refreshTime -	Time that the value was previously refreshed
@@ -86,8 +86,8 @@ typedef struct {
 
 /*
  * Defines a screen
- * 
- * items -	Array of screen Items that will be on that screen 
+ *
+ * items -	Array of screen Items that will be on that screen
  * len - 	Length of screenItem array
  */
 typedef struct {
@@ -130,10 +130,12 @@ volatile dataItem ttFLA[4], ttFL, ttFRA[4], ttFR, ttRLA[4], ttRL, ttRRA[4], ttRR
 volatile dataItem rotary[3], tRotary[2], switches[4], momentaries[4];
 
 // PDM
-volatile dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v, pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, pdmFUELNcut, pdmFUELPcut, pdmECUdraw, pdmECUNcut, pdmECUPcut, pdmWTRdraw, pdmWTRNcut, pdmWTRPcut, pdmFANdraw, pdmFANNcut, pdmFANPcut, pdmAUXdraw, pdmAUXcut, pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, pdmBATdraw, pdmBATcut, pdmSTR0draw, pdmSTR0cut, pdmSTR1draw, pdmSTR1cut, pdmSTR2draw, pdmSTR2cut, pdmSTRdraw;
+volatile dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v, pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, pdmFUELcut, pdmFUELPcut, pdmECUdraw, pdmECUcut, pdmECUPcut, pdmWTRdraw, pdmWTRcut, pdmWTRPcut, pdmFANdraw, pdmFANcut, pdmFANPcut, pdmAUXdraw, pdmAUXcut, pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, pdmBATdraw, pdmBATcut, pdmSTRdraw, pdmSTRcut, pdmTOTdraw, pdmABSdraw, pdmABScut, pdmBVBATdraw, pdmBVBATcut;
 
 // PDM Bitmaps
-volatile dataItem STRenabl, BVBATenabl, B5V5enabl, PDLDenabl, PDLUenabl, AUXenabl, FANenabl, WTRenabl, ECUenabl, FUELenabl, INJenabl, IGNenabl, STR2pm, STR1pm, STR0pm, BVBATpm, B5V5pm, PDLDpm, PDLUpm, AUXpm, FANpm, WTRpm, ECUpm, FUELpm, INJpm, IGNpm, KILLpdmSw, ACT_DNpdmSw, ACT_UPpdmSw, ONpdmSw, STRpdmSw;
+volatile dataItem STRenabl, BVBATenabl, PDLDenabl, PDLUenabl, AUXenabl, ABSenabl, FANenabl, WTRenabl, ECUenabl, FUELenabl, INJenabl, IGNenabl, STRpm, BVBATpm, B5V5pm, PDLDpm, PDLUpm, ABSpm, AUXpm, FANpm, WTRpm, ECUpm, FUELpm, INJpm, IGNpm, KILLpdmSw, ACT_DNpdmSw, ACT_UPpdmSw, ONpdmSw, STRpdmSw, AUX1pdmSw, AUX2pdmSw, ABSpdmSw, KillEngineFlag, KillCarFlag, OverTempFlag, FuelPrimeFlag;
+
+volatile dataItem FUELOCCount, IGNOCCount, INJOCCount, ABSOCCount, PDLUOCCount, PDLDOCCount, FANOCCount, WTROCCount, ECUOCCount, AUXOCCount, BVBATOCCount, STROCCount;
 
 // Rear Analog Hub
 volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radOutputTemp, swirlTemp, swirlPress;
@@ -142,7 +144,7 @@ volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radO
 volatile dataItem susPosFR, susPosFL, brakePressFront, brakePressRear, brakeMaxFront, brakeMinFront,brakeMaxRear, brakeMinRear, steeringAngle, accelPedalPos0, accelPedalPos1;
 
 // Paddle Shifting
-volatile dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage; 
+volatile dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage;
 
 // End Race Data
 volatile dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempFR, endTireTempRL, endTireTempRR, endAmbientTemp, endFuelConsum;
@@ -153,13 +155,13 @@ uint8_t lapTimeHead, numLaps;
 
 void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem
-void initDataItem(volatile dataItem* data, double warn, double err, 
+void initDataItem(volatile dataItem* data, double warn, double err,
 	uint32_t refresh, uint8_t whole, uint8_t dec);
 void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, 
-	void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), 
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
+	void (*redrawItem)(screenItemInfo *, volatile dataItem *, double),
 	volatile dataItem* data);
 // Toggles between a few different data items on one screen
 void changeAUXType(uint8_t num);
