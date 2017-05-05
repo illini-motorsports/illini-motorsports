@@ -236,21 +236,6 @@ void _tlc5955_write_colors(uint64_t * colors) {
 }
 
 /**
- * TODO: Make this less bad
- */
-uint8_t reverser(uint8_t n, uint8_t num_bits)
-{
-  uint8_t rev = 0;
-  uint8_t i = 0;
-  for (i; i < num_bits; i++) {
-    uint8_t bit = n & (1 << i);
-    uint8_t pos = num_bits - i - 1;
-    if (bit) { rev |= (1 << pos); }
-  }
-  return rev;
-}
-
-/**
  * Appends <num_bits> of <data> to the pending_register array in preparation
  * for sending a register to the chip.
  *
@@ -258,11 +243,10 @@ uint8_t reverser(uint8_t n, uint8_t num_bits)
  */
 void _tlc5955_reg_append(uint8_t num_bits, uint8_t data) {
   uint8_t i;
-  uint8_t rev = reverser(data, num_bits);
   for (i = 0; i < num_bits; i++) {
-    uint8_t bit = rev & (1 << i);
-    uint8_t idx = ((bit_ctr + i) / 8);
-    uint8_t pos = ((bit_ctr + i) % 8);
+    uint8_t bit = data & (1 << (num_bits-1-i)); // selects bits in reverse order
+    uint8_t idx = (bit_ctr + i) >> 3; // faster divide by 8
+    uint8_t pos = (bit_ctr + i) % 8;
 
     if (bit) {
       pending_register[idx] |= (1 << pos);
