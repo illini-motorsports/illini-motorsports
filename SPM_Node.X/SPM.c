@@ -10,7 +10,29 @@ void main(void){
 
 	while(1){
 		update_analog_channels();
+
+    if(millis-canAnalogMillis > 25){
+      CANAnalogChannels();
+    }
 	}
+}
+
+void CANAnalogChannels(void){
+	CAN_data data = {0};
+  int i;
+  for(i = 0;i<9;i++){
+	  data.halfword0 = (uint16_t) (analog_channels[i*4]*ANALOG_CAN_SCL);
+	  data.halfword1 = (uint16_t) (analog_channels[(i*4)+1]*ANALOG_CAN_SCL);
+	  data.halfword2 = (uint16_t) (analog_channels[(i*4)+2]*ANALOG_CAN_SCL);
+	  data.halfword3 = (uint16_t) (analog_channels[(i*4)+3]*ANALOG_CAN_SCL);
+	  CAN_send_message(ANALOG_REAR_ID + i, 8, data);
+  }
+}
+
+void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
+	millis++;// Increment millis count
+
+	IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
 
 // reads from both ADC's at the same time, which kinda negates the point of the
@@ -33,7 +55,6 @@ void update_analog_channels(void){
 	AD7680_1_CS_LAT = 0;
 	analog_channels[33] = 5*(ad7680_read_spi()/65535.0);
 	AD7680_1_CS_LAT = 1;
-
 	AD7680_2_CS_LAT = 0;
 	analog_channels[34] = 5*(ad7680_read_spi()/65535.0);
 	AD7680_2_CS_LAT = 1;
