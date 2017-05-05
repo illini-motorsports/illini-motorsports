@@ -13,7 +13,7 @@ uint16_t bit_ctr = 0;
 uint64_t current_colors[16] = {0};
 
 //TODO: Why is this wrong
-uint8_t led_mapping[16] = {4, 15, 6, 2, 5, 1, 10, 8, 14, 12, 7, 13, 9, 11, 0, 3};
+uint8_t led_mapping[16] = {12, 11, 10, 5, 13, 14, 2, 0, 9, 7, 1, 3, 8, 6, 15, 4};
 
 /**
  * Initializes the TLC5955 module.
@@ -22,7 +22,7 @@ void init_tlc5955(void) {
   // GSCLK PWM Signal
   PWM_TLC5955_TRIS = OUTPUT;
   PWM_TLC5955_LAT = 1;
-  
+
   // Latch - SHFLAT
   LAT_TLC5955_TRIS = OUTPUT;
   LAT_TLC5955_LAT = 0;
