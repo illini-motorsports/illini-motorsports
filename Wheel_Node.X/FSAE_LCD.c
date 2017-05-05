@@ -11,7 +11,7 @@
 #include "FSAE_LCD.h"
 
 
-uint16_t rpmColors[9] = {0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFFFF, 0xFFFF, 0xFF, 0xFF};
+//uint16_t rpmColors[9] = {0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFFFF, 0xFFFF, 0xFF, 0xFF};
 
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
@@ -614,9 +614,18 @@ void changeScreen(uint8_t num){
 void refreshScreenItems(void){
   // change night mode if the switch was toggled
   //nightMode(switches[3].value); //TODO
-
-  screen *currScreen = allScreens[screenNumber];
+  screen *currScreen = allScreens[GENERAL_SCREEN];
   int i;
+  for(i = 0;i<currScreen->len;i++){
+    screenItem * currItem = &currScreen->items[i];
+    if(currItem->data && millis - currItem->refreshTime >= currItem->data->refreshInterval){
+      currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
+      currItem->currentValue = currItem->data->value;
+      currItem->refreshTime = millis;
+    }
+  }
+
+  currScreen = allScreens[screenNumber];
   for(i = 0;i<currScreen->len;i++){
     screenItem * currItem = &currScreen->items[i];
     if(currItem->data && millis - currItem->refreshTime >= currItem->data->refreshInterval){
@@ -772,12 +781,12 @@ void redrawRotary(screenItemInfo * item, volatile dataItem * data, double curren
 }
 
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
-  uint8_t numFilled = (uint8_t)(9*(data->value/9000.0));
-  uint8_t oldNumFilled = (uint8_t)(9*(currentValue/9000.0));
+  uint8_t numFilled = (uint8_t)(9.0*(data->value/9000.0));
+  uint8_t oldNumFilled = (uint8_t)(9.0*(currentValue/9000.0));
   if(numFilled == oldNumFilled){
     return;
   }
-  uint64_t triangleColor = rpmColors[numFilled];
+  uint64_t triangleColor = 0xFFFFFFFFFFFFFFFF;//rpmColors[numFilled];
   uint64_t colorArray[16] = {0};
 
   int i;
@@ -786,9 +795,9 @@ void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, doubl
     colorArray[i+12] = triangleColor;
   }
   for(i=0;i<numFilled;i++){
-    colorArray[i+3] = rpmColors[i];
+    //colorArray[i+3] = 0xFFFFFFFFFFFFFFFF;//rpmColors[i];
   }
-  _tlc5955_write_colors(colorArray);
+  _tlc5955_write_colors(&colorArray);
 }
 
 void clearScreen(void){

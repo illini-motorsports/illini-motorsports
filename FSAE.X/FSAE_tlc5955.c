@@ -11,7 +11,9 @@
 uint8_t pending_register[NUM_BYTES] = {0};
 uint16_t bit_ctr = 0;
 uint64_t current_colors[16] = {0};
-uint8_t led_mapping[16] = {4, 15, 6, 8, 3, 1, 7, 9, 0, 2, 14, 13, 5, 10, 11, 12};
+
+//TODO: Why is this wrong
+uint8_t led_mapping[16] = {4, 15, 6, 2, 5, 1, 10, 8, 14, 12, 7, 13, 9, 11, 0, 3};
 
 /**
  * Initializes the TLC5955 module.
@@ -62,15 +64,12 @@ void _tlc5955_init_spi(void) {
 
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI2BRG + 1))
-   * F_SCK = 100Mhz / (2 * (49 + 1))
-   * F_SCK = 1Mhz
+   * F_SCK = 100Mhz / (2 * (4 + 1))
+   * F_SCK = 10Mhz
    */
 
   // Set the baud rate (see above equation)
-  //SPI2BRG = 4;
-  //SPI2BRG = 49;
-  SPI2BRG = 511;
-  //SPI2BRG = 249;
+  SPI2BRG = 4;
 
   SPI2STATbits.SPIROV = 0;
 
@@ -219,12 +218,18 @@ void _tlc5955_write_colors(uint64_t * colors) {
   _tlc5955_reg_append(1, 0b0); // MSB indicates GS write
 
   for (i = 0; i < 16; i++) {
-		uint64_t color = colors[led_mapping[i]];
-		current_colors[i] = color;
-		for (j = 0; j < 3; j++) {
-			_tlc5955_reg_append(8, 0xFF & (color >> (8*j+4))); // GS HW
-   	  _tlc5955_reg_append(8, 0xFF & (color >> (8*j))); // GW LW
-   	}
+      // i = ? => colors[0];
+      // i = 7 -> colors[1];
+      //colors[1] = color;
+      // colors[0] = color;]
+      uint8_t idx = i + 1;
+      if (idx == 16) { idx = 0; }
+      uint64_t color = colors[led_mapping[i]];
+      current_colors[i] = color;
+      for (j = 0; j < 3; j++) {
+	  _tlc5955_reg_append(8, 0xFF & ((uint8_t) (color >> (8*j+4)))); // GS HW
+      _tlc5955_reg_append(8, 0xFF & ((uint8_t) (color >> (8*j)))); // GW LW
+      }
   }
 
   _tlc5955_send_register();

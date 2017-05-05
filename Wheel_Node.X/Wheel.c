@@ -13,6 +13,8 @@ volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
 volatile uint8_t darkState;
 volatile uint8_t auxState;
 
+uint64_t color_array[16] = {0};
+
 void main(void) {
   init_general();// Set general runtime configuration bits
   init_gpio_pins();// Set all I/O pins to low outputs
@@ -81,12 +83,20 @@ void main(void) {
   initAllScreens();
   changeScreen(RACE_SCREEN);
 
+  color_idx = 0;
+
   while(1) {
     //TODO: Remove this
     if (!(millis % 500)) {
-      _tlc5955_write_gs(color_idx);
-      color_idx += 1;
-      if (color_idx == 3) { color_idx = 0; }
+      //_tlc5955_write_gs(color_idx);
+      //color_idx += 1;
+      //if (color_idx == 3) { color_idx = 0; }
+
+        // IDX, count from 1 from left (triangle top is 1)
+        //0: 10 //1: 14 //2: 8 //3: 13 //4: 15 //5: 9 //6: 11 //7: 2
+        //8: 6 //9: 3 //10: 7 //11: None //12: 5 //13: 4 //14: 1 //15: 12
+      //color_array[15] = 0xFFFFFFFFFFFFFFFF;
+      //_tlc5955_write_colors(&color_array);
     }
 
     // Send CAN messages with the correct frequency
