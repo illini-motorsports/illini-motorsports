@@ -28,32 +28,32 @@
 // GPIO Defs
 // ***************************
 // Pin numbers are created by: 16*CHIP_NUM + 8*(BANK=='B') + PIN_NUM
-#define AD7490_0_CS_TRIS TRISAbits.TRISA9
-#define AD7490_1_CS_TRIS TRISAbits.TRISA10
-#define AD7490_0_CS_LAT LATAbits.LATA9
-#define AD7490_1_CS_LAT LATAbits.LATA10
-#define AD7490_0_CS_LATBITS (uint32_t*) (&LATAbits)
-#define AD7490_1_CS_LATBITS (uint32_t*) (&LATAbits)
-#define AD7490_0_CS_LATNUM 9
-#define AD7490_1_CS_LATNUM 10
+#define AD7490_0_CS_TRIS      TRISAbits.TRISA9
+#define AD7490_1_CS_TRIS      TRISAbits.TRISA10
+#define AD7490_0_CS_LAT       LATAbits.LATA9
+#define AD7490_1_CS_LAT       LATAbits.LATA10
+#define AD7490_0_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define AD7490_1_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define AD7490_0_CS_LATNUM    9
+#define AD7490_1_CS_LATNUM    10
 
-#define AD7680_0_CS_TRIS	TRISEbits.TRISE6
-#define AD7680_1_CS_TRIS	TRISEbits.TRISE7
-#define AD7680_2_CS_TRIS	TRISAbits.TRISA5
-#define AD7680_3_CS_TRIS	TRISGbits.TRISG15
-#define AD7680_0_CS_LAT		LATEbits.LATE6
-#define AD7680_1_CS_LAT		LATEbits.LATE7
-#define AD7680_2_CS_LAT		LATAbits.LATA5
-#define AD7680_3_CS_LAT		LATGbits.LATG15
+#define AD7680_0_CS_TRIS      TRISEbits.TRISE6
+#define AD7680_1_CS_TRIS      TRISEbits.TRISE7
+#define AD7680_2_CS_TRIS      TRISAbits.TRISA5
+#define AD7680_3_CS_TRIS      TRISGbits.TRISG15
+#define AD7680_0_CS_LAT       LATEbits.LATE6
+#define AD7680_1_CS_LAT       LATEbits.LATE7
+#define AD7680_2_CS_LAT       LATAbits.LATA5
+#define AD7680_3_CS_LAT       LATGbits.LATG15
 
-#define ANALOG_CAN_SCL 1000
+#define ANALOG_CAN_SCL        1000
 
-#define MCP23S17_0_CS_TRIS		TRISAbits.TRISA15
-#define MCP23S17_1_CS_TRIS		TRISAbits.TRISA4
-#define MCP23S17_2_CS_TRIS		TRISAbits.TRISA3
-#define MCP23S17_0_CS_LAT			LATAbits.LATA15
-#define MCP23S17_1_CS_LAT			LATAbits.LATA4
-#define MCP23S17_2_CS_LAT			LATAbits.LATA3
+#define MCP23S17_0_CS_TRIS    TRISAbits.TRISA15
+#define MCP23S17_1_CS_TRIS    TRISAbits.TRISA4
+#define MCP23S17_2_CS_TRIS    TRISAbits.TRISA3
+#define MCP23S17_0_CS_LAT     LATAbits.LATA15
+#define MCP23S17_1_CS_LAT     LATAbits.LATA4
+#define MCP23S17_2_CS_LAT     LATAbits.LATA3
 #define MCP23S17_0_CS_LATBITS	(uint32_t*) (&LATAbits)
 #define MCP23S17_1_CS_LATBITS (uint32_t*) (&LATAbits)
 #define MCP23S17_2_CS_LATBITS (uint32_t*) (&LATAbits)
