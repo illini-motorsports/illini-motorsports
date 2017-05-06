@@ -80,9 +80,7 @@ void main(void) {
   initAllScreens();
   changeScreen(RACE_SCREEN);
 
-  //TODO: Use these only in warning state
-  tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, 0xFFFF00000000);
-  tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, 0xFFFF00000000);
+  tlc5955_startup();
 
   while(1) {
     // Send CAN messages with the correct frequency

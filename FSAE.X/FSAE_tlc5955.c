@@ -29,15 +29,29 @@ uint64_t main_blink_color = 0x0;
 uint32_t main_blink_tmr = 0;
 uint8_t main_blink_flag = 0;
 
+uint8_t startup = 0;
+uint8_t startup_frame = 0;
+uint32_t startup_tmr = 0;
+
+/**
+ * Performs a startup sequence
+ */
+void tlc5955_startup(void) {
+  startup = 1;
+  startup_frame = 0;
+  _tlc5955_startup_frame();
+}
+
 /**
  * Toggles the main LED row blink state
  */
-void tlc5955_set_main_blink(uint8_t on, uint64_t color) {
-  if (on & !main_blink) {
+void tlc5955_set_main_blink(uint8_t on, uint64_t color, uint8_t ovr) {
+  if (startup && !ovr) return;
+  if (on && !main_blink) {
     main_blink = on;
     main_blink_color = color;
     main_blink_tmr = millis;
-    tlc5955_write_main_color(color);
+    tlc5955_write_main_color(color, ovr);
   } else if (!on && main_blink) {
     main_blink = on;
   }
@@ -45,8 +59,12 @@ void tlc5955_set_main_blink(uint8_t on, uint64_t color) {
 
 /**
  * Toggles the left/right cluster triangle warning state
+ *
+ * Precondition: Must be called after startup sequence is over
  */
-void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color) {
+void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color,
+    uint8_t ovr) {
+  if (startup && !ovr) return;
   switch(which) {
     case 0:
       if (on && !left_cluster_warn) {
@@ -89,7 +107,8 @@ void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color) {
 /**
  * Writes a color to a set of lights specified by onMap
  */
-void tlc5955_write_color(uint64_t color, uint16_t onMap) {
+void tlc5955_write_color(uint64_t color, uint16_t onMap, uint8_t ovr) {
+  if (startup && !ovr) { return; }
   uint8_t i;
   for (i = 0; i < 16; i++) {
     uint16_t on = onMap & (1 << led_mapping[i]);
@@ -99,9 +118,25 @@ void tlc5955_write_color(uint64_t color, uint16_t onMap) {
 }
 
 /**
+ * Sets a specific set of LEDs to the specified color
+ */
+void tlc5955_set_leds(uint64_t color, uint16_t setMap, uint8_t ovr) {
+  if (startup && !ovr) { return; }
+  uint8_t i;
+  for (i = 0; i < 16; i++) {
+    uint16_t set = setMap & (1 << led_mapping[i]);
+    if (set) {
+      current_colors[led_mapping[i]] = color;
+    }
+  }
+  _tlc5955_write_gs();
+}
+
+/**
  * Writes a color to the main row of LEDs
  */
-void tlc5955_write_main_color(uint64_t color) {
+void tlc5955_write_main_color(uint64_t color, uint8_t ovr) {
+  if (startup && !ovr) return;
   uint8_t i;
   for (i = 0; i < NUM_LED_MAIN; i++) {
     current_colors[i + 3] = color;
@@ -113,6 +148,7 @@ void tlc5955_write_main_color(uint64_t color) {
  * Writes the colors specified to the main row of LEDs
  */
 void tlc5955_write_main_colors(uint64_t* colors) {
+  if (startup) return;
   uint8_t i;
   for (i = 0; i < NUM_LED_MAIN; i++) {
     current_colors[i + 3] = colors[i];
@@ -124,8 +160,13 @@ void tlc5955_write_main_colors(uint64_t* colors) {
  * Check various timer-based events and respond if necessary
  */
 void tlc5955_check_timers() {
+  if (startup && (millis - startup_tmr > STARTUP_FRAME_INTV)) {
+    _tlc5955_startup_frame();
+    return;
+  }
+
   if (main_blink && (millis - main_blink_tmr > MAIN_BLINK_INTV)) {
-    tlc5955_write_main_color(main_blink_flag ? main_blink_color : 0x0);
+    tlc5955_write_main_color(main_blink_flag ? main_blink_color : 0x0, startup);
     main_blink_tmr = millis;
     main_blink_flag = !main_blink_flag;
   }
@@ -170,7 +211,95 @@ void init_tlc5955(void) {
   _tlc5955_init_spi();
 
   _tlc5955_write_control();
-  tlc5955_write_color(0x00000000FFFF, 0xFFFF); // Set all blue
+  tlc5955_write_color(OFF, 0xFFFF, NO_OVR); // Set all off
+}
+
+/**
+ * Sets the next frame of the startup sequence
+ */
+void _tlc5955_startup_frame(void) {
+  if (startup_frame >= MAX_STARTUP_FRAMES) {
+    startup = 0;
+    tlc5955_set_cluster_warn(CLUSTER_LEFT, 0, OFF, OVR);
+    tlc5955_set_cluster_warn(CLUSTER_RIGHT, 0, OFF, OVR);
+    tlc5955_set_main_blink(0, OFF, OVR);
+    tlc5955_write_color(0x0, 0x0, OVR); // Turn off all LEDs
+    return;
+  }
+
+  switch(startup_frame) {
+    case 0:
+      tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, WHT, OVR);
+      tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, WHT, OVR);
+      break;
+    case 1:
+      tlc5955_set_leds(RED, 0b000100000001000, OVR);
+      break;
+    case 2:
+      tlc5955_set_leds(RED, 0b000010000010000, OVR);
+      break;
+    case 3:
+      tlc5955_set_leds(RED, 0b000001000100000, OVR);
+      break;
+    case 4:
+      tlc5955_set_leds(RED, 0b000000101000000, OVR);
+      break;
+    case 5:
+      tlc5955_set_leds(RED, 0b000000010000000, OVR);
+      break;
+
+    case 6:
+      tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, BLU, OVR);
+      tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, BLU, OVR);
+      break;
+
+    case 7:
+      tlc5955_set_leds(WHT, 0b000100000001000, OVR);
+      break;
+    case 8:
+      tlc5955_set_leds(WHT, 0b000010000010000, OVR);
+      break;
+    case 9:
+      tlc5955_set_leds(WHT, 0b000001000100000, OVR);
+      break;
+    case 10:
+      tlc5955_set_leds(WHT, 0b000000101000000, OVR);
+      break;
+    case 11:
+      tlc5955_set_leds(WHT, 0b000000010000000, OVR);
+      break;
+
+    case 12:
+      tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, RED, OVR);
+      tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, RED, OVR);
+      break;
+
+    case 13:
+      tlc5955_set_leds(BLU, 0b000100000001000, OVR);
+      break;
+    case 14:
+      tlc5955_set_leds(BLU, 0b000010000010000, OVR);
+      break;
+    case 15:
+      tlc5955_set_leds(BLU, 0b000001000100000, OVR);
+      break;
+    case 16:
+      tlc5955_set_leds(BLU, 0b000000101000000, OVR);
+      break;
+    case 17:
+      tlc5955_set_leds(BLU, 0b000000010000000, OVR);
+      break;
+
+    case 18:
+      tlc5955_set_main_blink(1, BLU, OVR);
+      break;
+
+    default:
+      break;
+  }
+
+  startup_frame++;
+  startup_tmr = millis;
 }
 
 /**

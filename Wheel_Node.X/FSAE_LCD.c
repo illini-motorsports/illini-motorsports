@@ -792,9 +792,9 @@ void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, doubl
   }
 
   if (numFilled == 9) {
-    tlc5955_set_main_blink(1, 0x0000FFFF0000);
+    tlc5955_set_main_blink(1, 0x0000FFFF0000, NO_OVR);
   } else {
-    tlc5955_set_main_blink(0, 0x0);
+    tlc5955_set_main_blink(0, 0x0, NO_OVR);
     tlc5955_write_main_colors(colorArray);
   }
 }
