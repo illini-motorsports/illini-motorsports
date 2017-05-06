@@ -32,6 +32,17 @@
 #define MIN_BRAKE_PRESS     	0
 #define MAX_BRAKE_PRESS     	250
 
+#define REV_RANGE_1 7000
+#define REV_RANGE_2 8000
+#define REV_RANGE_3 9000
+#define REV_RANGE_4 10000
+#define REV_RANGE_5 10500
+#define REV_RANGE_6 11000
+#define REV_RANGE_7 11500
+#define REV_RANGE_8 12000
+#define REV_RANGE_9 12500
+#define REV_RANGE_REDLINE 13000
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -104,7 +115,7 @@ typedef struct {
 */
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[8], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
+screenItem raceScreenItems[10], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
 // Define all screen structs
 screen raceScreen, pdmDrawScreen, pdmCutScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
 // Define master array of all screen structs
@@ -187,6 +198,7 @@ void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double current
 void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
 // Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);

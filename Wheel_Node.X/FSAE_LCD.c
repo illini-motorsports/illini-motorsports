@@ -232,6 +232,7 @@ void initAllScreens(void){
   initNightMode(1); //TODO
 
   // All Screens Stuff
+  /*
   allScreens[GENERAL_SCREEN] = &generalScreen;
   generalScreen.items = generalItems;
   generalScreen.len = 7;
@@ -242,11 +243,12 @@ void initAllScreens(void){
   initScreenItem(&generalItems[4], 20, 30, 15, redrawFUELPumpSw, &switches[1]);
   initScreenItem(&generalItems[5], 20, 30, 15, redrawWTRPumpSw, &switches[2]);
   initScreenItem(&generalItems[6], 20, 30, 15, redrawShiftLightsRPM, &rpm);
+  */
 
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
-  raceScreen.len = 8;
+  raceScreen.len = 10;
   initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
   initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
@@ -255,6 +257,8 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
   initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &batVoltage);
   initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gearPos);
+  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &rpm);
+  initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &KILLpdmSw);
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
@@ -611,18 +615,9 @@ void changeScreen(uint8_t num){
 void refreshScreenItems(void){
   // change night mode if the switch was toggled
   //nightMode(switches[3].value); //TODO
-  screen *currScreen = allScreens[GENERAL_SCREEN];
-  int i;
-  for(i = 0;i<currScreen->len;i++){
-    screenItem * currItem = &currScreen->items[i];
-    if(currItem->data && millis - currItem->refreshTime >= currItem->data->refreshInterval){
-      currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
-      currItem->currentValue = currItem->data->value;
-      currItem->refreshTime = millis;
-    }
-  }
 
-  currScreen = allScreens[screenNumber];
+  screen* currScreen = allScreens[screenNumber];
+  int i;
   for(i = 0;i<currScreen->len;i++){
     screenItem * currItem = &currScreen->items[i];
     if(currItem->data && millis - currItem->refreshTime >= currItem->data->refreshInterval){
@@ -777,25 +772,59 @@ void redrawRotary(screenItemInfo * item, volatile dataItem * data, double curren
   sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
 }
 
+uint8_t _getShiftLightsRevRange(uint16_t rpm) {
+  if (rpm > REV_RANGE_REDLINE) {
+    return 10;
+  } else if (rpm > REV_RANGE_9) {
+    return 9;
+  } else if (rpm > REV_RANGE_8) {
+    return 8;
+  } else if (rpm > REV_RANGE_7) {
+    return 7;
+  } else if (rpm > REV_RANGE_6) {
+    return 6;
+  } else if (rpm > REV_RANGE_5) {
+    return 5;
+  } else if (rpm > REV_RANGE_4) {
+    return 4;
+  } else if (rpm > REV_RANGE_3) {
+    return 3;
+  } else if (rpm > REV_RANGE_2) {
+    return 2;
+  } else if (rpm > REV_RANGE_1) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
-  uint8_t numFilled = (uint8_t)(9.0*(data->value/9000.0));
-  uint8_t oldNumFilled = (uint8_t)(9.0*(currentValue/9000.0));
-  if(numFilled == oldNumFilled){
+  uint16_t rpm = (uint16_t) data->value;
+  uint8_t num_leds = _getShiftLightsRevRange(rpm);
+  if (num_leds == _getShiftLightsRevRange(((uint16_t) currentValue))) {
     return;
   }
-  if(numFilled > 9) numFilled = 9;
-  uint64_t colorArray[9] = {0};
 
-  int i;
-  for(i=0;i<numFilled;i++){
-    colorArray[i] = 0x00000000FFFF; // Blue
-  }
-
-  if (numFilled == 9) {
-    tlc5955_set_main_blink(1, 0x0000FFFF0000, NO_OVR);
+  if (num_leds == 10) {
+    tlc5955_set_main_blink(1, GRN, NO_OVR);
   } else {
+    uint8_t i;
+    uint64_t colorArray[9] = {0};
+    for (i = 0; i < num_leds; i++) {
+      colorArray[i] = BLU;
+    }
     tlc5955_set_main_blink(0, 0x0, NO_OVR);
     tlc5955_write_main_colors(colorArray);
+  }
+}
+
+void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue) {
+  uint8_t kill = data->value ? 1 : 0;
+  if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
+      !kill && tlc5955_get_cluster_warn(CLUSTER_RIGHT)) {
+    if (!tlc5955_get_startup()) {
+      tlc5955_set_cluster_warn(CLUSTER_RIGHT, kill, RED, NO_OVR);
+    }
   }
 }
 

@@ -43,6 +43,13 @@ void tlc5955_startup(void) {
 }
 
 /**
+ * Gets the current state of the startup variable
+ */
+uint8_t tlc5955_get_startup(void) {
+  return startup;
+}
+
+/**
  * Toggles the main LED row blink state
  */
 void tlc5955_set_main_blink(uint8_t on, uint64_t color, uint8_t ovr) {
@@ -66,7 +73,7 @@ void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color,
     uint8_t ovr) {
   if (startup && !ovr) return;
   switch(which) {
-    case 0:
+    case CLUSTER_LEFT:
       if (on && !left_cluster_warn) {
         current_colors[0] = left_cluster_idx != 0 ? color : 0x0;
         current_colors[1] = left_cluster_idx != 1 ? color : 0x0;
@@ -84,7 +91,7 @@ void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color,
       left_cluster_color = color;
       break;
 
-    case 1:
+    case CLUSTER_RIGHT:
       if (on && !right_cluster_warn) {
         current_colors[12] = right_cluster_idx != 0 ? color : 0x0;
         current_colors[13] = right_cluster_idx != 1 ? color : 0x0;
@@ -101,6 +108,18 @@ void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color,
       right_cluster_warn = on;
       right_cluster_color = color;
       break;
+  }
+}
+
+/**
+ * Gets current state of the cluster warning
+ */
+uint8_t tlc5955_get_cluster_warn(uint8_t which) {
+  switch(which) {
+    case CLUSTER_LEFT:
+      return left_cluster_warn;
+    case CLUSTER_RIGHT:
+      return right_cluster_warn;
   }
 }
 
@@ -331,9 +350,9 @@ void _tlc5955_write_control(void) {
   _tlc5955_reg_append(3, 0b101); // Blue
 
   // Write BC registers
-  _tlc5955_reg_append(7, 0b1111111); // Red
+  _tlc5955_reg_append(7, 0b0111111); // Red
   _tlc5955_reg_append(7, 0b1111111); // Green
-  _tlc5955_reg_append(7, 0b1111111); // Blue
+  _tlc5955_reg_append(7, 0b0111111); // Blue
 
   // Write FC registers
   _tlc5955_reg_append(1, 0b1); // DSPRPT

@@ -42,8 +42,10 @@
 
 // Function definitions
 void tlc5955_startup(void);
+uint8_t tlc5955_get_startup(void);
 void tlc5955_set_main_blink(uint8_t on, uint64_t color, uint8_t ovr);
 void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color, uint8_t ovr);
+uint8_t tlc5955_get_cluster_warn(uint8_t which);
 void tlc5955_write_color(uint64_t color, uint16_t onMap, uint8_t ovr);
 void tlc5955_set_leds(uint64_t color, uint16_t setMap, uint8_t ovr);
 void tlc5955_write_main_color(uint64_t color, uint8_t ovr);
