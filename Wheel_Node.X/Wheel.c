@@ -13,8 +13,6 @@ volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
 volatile uint8_t darkState;
 volatile uint8_t auxState;
 
-uint64_t color_array[16] = {0};
-
 void main(void) {
   init_general();// Set general runtime configuration bits
   init_gpio_pins();// Set all I/O pins to low outputs
@@ -32,7 +30,6 @@ void main(void) {
   CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
   auxState = 0;
   auxNumber = 0;
-  uint8_t color_idx = 0; //TODO
 
   // Init Relevant Pins
   LCD_CS_TRIS = OUTPUT;
@@ -83,22 +80,11 @@ void main(void) {
   initAllScreens();
   changeScreen(RACE_SCREEN);
 
-  color_idx = 0;
+  //TODO: Use these only in warning state
+  tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, 0xFFFF00000000);
+  tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, 0xFFFF00000000);
 
   while(1) {
-    //TODO: Remove this
-    if (!(millis % 500)) {
-      //_tlc5955_write_gs(color_idx);
-      //color_idx += 1;
-      //if (color_idx == 3) { color_idx = 0; }
-
-        // IDX, count from 1 from left (triangle top is 1)
-        //0: 10 //1: 14 //2: 8 //3: 13 //4: 15 //5: 9 //6: 11 //7: 2
-        //8: 6 //9: 3 //10: 7 //11: None //12: 5 //13: 4 //14: 1 //15: 12
-      //color_array[15] = 0xFFFFFFFFFFFFFFFF;
-      //_tlc5955_write_colors(&color_array);
-    }
-
     // Send CAN messages with the correct frequency
     if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
       CANswitchStates();
@@ -153,6 +139,7 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
     }
     updateSwVals();
     CANswitchStates();
+    tlc5955_check_timers();
   }
 
   if (!(millis % 2)) {

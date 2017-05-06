@@ -10,9 +10,6 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 
-
-//uint16_t rpmColors[9] = {0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFFFF, 0xFFFF, 0xFF, 0xFF};
-
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
 void initDataItems(void){
@@ -786,18 +783,20 @@ void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, doubl
   if(numFilled == oldNumFilled){
     return;
   }
-  uint64_t triangleColor = 0xFFFFFFFFFFFFFFFF;//rpmColors[numFilled];
-  uint64_t colorArray[16] = {0};
+  if(numFilled > 9) numFilled = 9;
+  uint64_t colorArray[9] = {0};
 
   int i;
-  for(i=0;i<3;i++){
-    colorArray[i] = triangleColor;
-    colorArray[i+12] = triangleColor;
-  }
   for(i=0;i<numFilled;i++){
-    //colorArray[i+3] = 0xFFFFFFFFFFFFFFFF;//rpmColors[i];
+    colorArray[i] = 0x00000000FFFF; // Blue
   }
-  _tlc5955_write_colors(&colorArray);
+
+  if (numFilled == 9) {
+    tlc5955_set_main_blink(1, 0x0000FFFF0000);
+  } else {
+    tlc5955_set_main_blink(0, 0x0);
+    tlc5955_write_main_colors(colorArray);
+  }
 }
 
 void clearScreen(void){
