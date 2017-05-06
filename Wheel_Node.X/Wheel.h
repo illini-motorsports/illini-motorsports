@@ -17,12 +17,6 @@
 #include "RA8875_driver.h"
 #include "FSAE_LCD.h"
 
-// Enable programmable termination
-#define TERMINATING 0
-
-// Determines whether the internal or external clock source is used
-#define INTERNAL_CLK 0
-
 #define LCD_CS_TRIS	TRISGbits.TRISG9
 #define LCD_CS_LAT	LATGbits.LATG9
 #define LCD_RST_TRIS	TRISBbits.TRISB4

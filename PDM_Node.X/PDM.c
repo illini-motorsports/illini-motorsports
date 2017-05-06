@@ -26,6 +26,7 @@ int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0; // Sampled rail voltages
 uint8_t load_state_changed = 0;
+uint16_t ad7490_samples[AD7490_NUM_CHN] = {0}; // Sample data from ad7490
 
 // Load-specific state/status variables
 uint8_t wiper_values[NUM_CTL] = {0};      // Rheostat wiper values
@@ -37,7 +38,6 @@ uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT}; // Overcurrent state
 uint8_t overcurrent_count[NUM_LOADS] = {0};
 uint32_t overcurrent_tmr[NUM_LOADS] = {0};
 uint32_t load_tmr[NUM_LOADS] = {0};       // Millis timestamp of when load was last enabled
-uint16_t ad7490_samples[AD7490_NUM_CHN] = {0}; // Sample data from ad7490
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr,
@@ -70,7 +70,7 @@ void main(void) {
   // init ad7490 CS
   CS_AD7490_LAT = 1;
   CS_AD7490_TRIS = OUTPUT;
-	init_spi5(1, 16);
+  init_spi5(1, 16);
   init_ad7490(ad7490_send_spi); // Initialize AD7490 external ADC chip
 
   // Set EN pins to outputs

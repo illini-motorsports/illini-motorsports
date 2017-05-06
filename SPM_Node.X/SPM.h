@@ -10,12 +10,6 @@
 #include "../FSAE.X/FSAE_ad7490.h"
 #include "../FSAE.X/FSAE_mcp23s17.h"
 
-// Enable programmable termination
-//#define TERMINATING 0 //Redefinition issue
-
-// Determines whether the internal or external clock source is used
-#define INTERNAL_CLK 0
-
 // ***************************
 // High Speed ADC Defs
 // ***************************
@@ -63,8 +57,6 @@
 
 uint8_t analogMappings[32] = {11,10,9,8,7,6,5,4,3,2,1,0,12,13,14,15,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25,24};
 uint8_t pgaMappings[12] = {4,5,6,9,8,7,12,11,10,15,14,13};
-volatile uint32_t millis = 0;
-uint32_t canAnalogMillis = 0;
 
 void main(void);
 void update_analog_channels(void);

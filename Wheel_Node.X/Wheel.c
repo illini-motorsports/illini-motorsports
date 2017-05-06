@@ -184,8 +184,8 @@ void process_CAN_msg(CAN_message msg){
       fuelInjDuty.value = parseMsgMotec(&msg, FUEL_INJ_DUTY_BYTE, FUEL_INJ_DUTY_SCL);
       fuelTrim.value = parseMsgMotec(&msg, FUEL_TRIM_BYTE, FUEL_TRIM_SCL);
       break;
-
-      /*Paddle Shifting ID's*/
+/*
+      //Paddle Shifting ID's
     case PADDLE_ID:
       paddleUptime.value = (double) ((uint16_t) msg.data[PADDLE_UPTIME_BYTE])*PADDLE_UPTIME_SCL;
       paddleTemp.value = (double) ((uint16_t) msg.data[PADDLE_TEMP_BYTE])*PADDLE_TEMP_SCL;
@@ -198,13 +198,14 @@ void process_CAN_msg(CAN_message msg){
       gearPos.value = msg.data[GEAR_BYTE];
       break;
 
-      /*PDM ID's*/
+      //PDM ID's
     case PDM_ID:
       pdmUptime.value = (uint16_t) (msg.data[PDM_UPTIME_BYTE]) * PDM_UPTIME_SCL;
       pdmTemp.value = (int16_t) (msg.data[PDM_PCB_TEMP_BYTE]) * PDM_PCB_TEMP_SCL;
       pdmICTemp.value = (int16_t) (msg.data[PDM_IC_TEMP_BYTE]) * PDM_IC_TEMP_SCL;
       pdmCurrentDraw.value = (uint16_t) (msg.data[TOTAL_CURRENT_BYTE]) * TOTAL_CURRENT_SCL;
       break;
+*/
     case PDM_ID + 1:
       STRenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & STR_ENBL_BIT;
       BVBATenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & BVBAT_ENBL_BIT;
@@ -238,6 +239,7 @@ void process_CAN_msg(CAN_message msg){
       ONpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ON_PDM_SW_BIT;
       STRpdmSw.value = msg.data[PDM_SWITCH_BYTE] & STR_PDM_SW_BIT;
       break;
+      /*
     case PDM_ID + 2:
       pdmVBat.value = (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL;
       pdm12v.value = (uint16_t) (lsbArray[V12_RAIL_BYTE/2]) * V12_RAIL_SCL;
@@ -298,7 +300,7 @@ void process_CAN_msg(CAN_message msg){
       pdmFANPcut.value = (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL;
       pdmECUPcut.value = (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL;
       break;
-
+*/
       /*Tire Temps*/
     case TIRE_TEMP_FL_ID:
       ttFLA[0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
@@ -325,7 +327,8 @@ void process_CAN_msg(CAN_message msg){
       ttRRA[3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
       ttRR.value = (ttRRA[0].value+ttRRA[1].value+ttRRA[2].value+ttRRA[3].value)/4.0;
 
-      /*Front Analog Hub*/
+      /*
+      //Front Analog Hub
     case ANALOG_FRONT_ID + 1:
       brakePressFront.value = (double) ((uint16_t) (lsbArray[BPF_BYTE/2]) * BRK_PRS_SCL);
       if(brakePressFront.value > brakeMaxFront.value)
@@ -345,6 +348,7 @@ void process_CAN_msg(CAN_message msg){
       {
         brakeMinRear.value = brakePressRear.value;
       }
+       */
   }
 }
 

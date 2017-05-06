@@ -284,7 +284,7 @@ uint32_t send_spi1(uint32_t value, uint32_t *cs_lat, int cs_num){
   resp = SPI1BUF;
   *cs_lat |= 1 << cs_num;
 
-  return resp; 
+  return resp;
 }
 
 uint32_t send_spi2(uint32_t value, uint32_t *cs_lat, int cs_num){
@@ -296,7 +296,7 @@ uint32_t send_spi2(uint32_t value, uint32_t *cs_lat, int cs_num){
   resp = SPI2BUF;
   *cs_lat |= 1 << cs_num;
 
-  return resp; 
+  return resp;
 }
 
 uint32_t send_spi3(uint32_t value, uint32_t *cs_lat, int cs_num){
@@ -308,7 +308,7 @@ uint32_t send_spi3(uint32_t value, uint32_t *cs_lat, int cs_num){
   resp = SPI3BUF;
   *cs_lat |= 1 << cs_num;
 
-  return resp; 
+  return resp;
 }
 
 uint32_t send_spi5(uint32_t value, uint32_t *cs_lat, int cs_num){
@@ -320,7 +320,7 @@ uint32_t send_spi5(uint32_t value, uint32_t *cs_lat, int cs_num){
   resp = SPI5BUF;
   *cs_lat |= 1 << cs_num;
 
-  return resp; 
+  return resp;
 }
 
 uint32_t send_spi6(uint32_t value, uint32_t *cs_lat, int cs_num){
@@ -332,5 +332,5 @@ uint32_t send_spi6(uint32_t value, uint32_t *cs_lat, int cs_num){
   resp = SPI6BUF;
   *cs_lat |= 1 << cs_num;
 
-  return resp; 
+  return resp;
 }

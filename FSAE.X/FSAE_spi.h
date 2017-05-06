@@ -1,5 +1,5 @@
 /**
- * FSAE Library CAN Header
+ * FSAE Library SPI Header
  *
  * Processor:   PIC32MZ2048EFM100
  * Compiler:    Microchip XC32
@@ -12,8 +12,6 @@
 #include <sys/types.h>
 #include "FSAE_config.h"
 #include <math.h>
-
-#define PBCLK2 100
 
 void init_spi1(int mhz, int size); // SDI: RB9, SDO: RB10
 void init_spi2(int mhz, int size); // SDI: RE5, SDO: RC1

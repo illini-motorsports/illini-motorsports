@@ -1,6 +1,8 @@
 #include "SPM.h"
 
-float analog_channels[36] = {0};
+double analog_channels[36] = {0};
+volatile uint32_t millis = 0;
+uint32_t canAnalogMillis = 0;
 
 void main(void){
   init_general();// Set general runtime configuration bits
@@ -25,7 +27,7 @@ void CANAnalogChannels(void){
     data.halfword1 = (uint16_t) (analog_channels[(i*4)+1]*ANALOG_CAN_SCL);
     data.halfword2 = (uint16_t) (analog_channels[(i*4)+2]*ANALOG_CAN_SCL);
     data.halfword3 = (uint16_t) (analog_channels[(i*4)+3]*ANALOG_CAN_SCL);
-    CAN_send_message(ANALOG_REAR_ID + i, 8, data);
+    CAN_send_message(SPM_ID + i, 8, data);
   }
 }
 
@@ -153,11 +155,11 @@ uint16_t ad7680_read_spi(){
   // next 8 bits
   SPI2BUF = 0x00;
   while (!SPI2STATbits.SPIRBF);
-  result |= SPI2BUF << 4;
+  result |= (SPI2BUF << 4) & 0xFF0;
   // last 8 bits
   SPI2BUF = 0x00;
   while (!SPI2STATbits.SPIRBF);
-  result |= SPI2BUF >> 4;
+  result |= (SPI2BUF >> 4) & 0xF;
 
   return result;
 }
