@@ -19,6 +19,27 @@
 #define CS_HS_ADC_1 1
 // Channel Defs
 
+#define FREQ_BYP_0  4
+#define FREQ_DIVA_0 3
+#define FREQ_DIVB_0 2
+#define FREQ_DIVC_0 1
+#define FREQ_DIVD_0 0
+#define FREQ_BYP_1  8
+#define FREQ_DIVA_1 9
+#define FREQ_DIVB_1 7
+#define FREQ_DIVC_1 6
+#define FREQ_DIVD_1 5
+#define FREQ_BYP_2  14
+#define FREQ_DIVA_2 13
+#define FREQ_DIVB_2 12
+#define FREQ_DIVC_2 11
+#define FREQ_DIVD_2 10
+#define FREQ_BYP_3  3
+#define FREQ_DIVA_3 15
+#define FREQ_DIVB_3 2
+#define FREQ_DIVC_3 1
+#define FREQ_DIVD_3 0
+
 // ***************************
 // GPIO Defs
 // ***************************
@@ -91,11 +112,13 @@ uint8_t pgaMappings[12] = {4,5,6,9,8,7,12,11,10,15,14,13};
 void main(void);
 void update_analog_channels(void);
 void update_thermocouples(void);
+void update_digital_channels(void);
 
 void init_gpio_ext();
 void init_adcs();
 void init_tcouples();
 void set_pga(uint8_t chan, uint8_t level);
+void set_freq_div(uint8_t chan, uint8_t div);
 uint16_t ad7680_read_spi();
 
 // Send SPI functions
@@ -112,6 +135,7 @@ uint32_t max31855_4_send_spi(uint32_t value);
 uint32_t max31855_5_send_spi(uint32_t value);
 
 void CANAnalogChannels(void);
+void CANThermocouples(void);
 
 uint16_t set_bit_val(uint16_t current, uint8_t pos, uint8_t val);
 #endif /* SPM_H */

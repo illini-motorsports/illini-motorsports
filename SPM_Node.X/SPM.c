@@ -4,8 +4,10 @@ double analog_channels[36] = {0};
 double thermocouple_channels[6] = {0};
 double thermocouple_junctions[6] = {0};
 uint8_t thermocouple_fault = 0;
+uint16_t digital_channels = 0;
 volatile uint32_t millis = 0;
 uint32_t canAnalogMillis = 0;
+uint32_t canThermocoupleMillis = 0;
 
 void main(void){
   init_general();// Set general runtime configuration bits
@@ -18,9 +20,13 @@ void main(void){
   while(1){
     update_analog_channels();
     update_thermocouples();
+    update_digital_channels();
 
-    if(millis-canAnalogMillis > 25){
+    if(millis-canAnalogMillis > 50){
       CANAnalogChannels();
+      CANThermocouples();
+      canAnalogMillis = millis;
+      canThermocoupleMillis = millis;
     }
   }
 }
@@ -33,7 +39,7 @@ void CANAnalogChannels(void){
     data.halfword1 = (uint16_t) (analog_channels[(i*4)+1]*ANALOG_CAN_SCL);
     data.halfword2 = (uint16_t) (analog_channels[(i*4)+2]*ANALOG_CAN_SCL);
     data.halfword3 = (uint16_t) (analog_channels[(i*4)+3]*ANALOG_CAN_SCL);
-    CAN_send_message(SPM_ID + i, 8, data);
+    CAN_send_message(SPM_ID + i + 1, 8, data);
   }
 }
 
@@ -45,7 +51,7 @@ void CANThermocouples(void){
   data.halfword2 = (int16_t) (thermocouple_channels[2]*THERMOCOUPLE_CAN_SCL);
   data.halfword3 = (int16_t) (thermocouple_channels[3]*THERMOCOUPLE_CAN_SCL);
 
-  CAN_send_message(SPM_ID + 9, 8, data);
+  CAN_send_message(SPM_ID + 10, 8, data);
 
   data.halfword0 = (int16_t) (thermocouple_channels[0]*THERMOCOUPLE_CAN_SCL);
   data.halfword1 = (int16_t) (thermocouple_channels[1]*THERMOCOUPLE_CAN_SCL);
@@ -59,7 +65,7 @@ void CANThermocouples(void){
   data.halfword2 = (int16_t) ((acc/6.0)*JUNCTION_CAN_SCL);
   data.halfword3 = thermocouple_fault;
 
-  CAN_send_message(SPM_ID + 10, 8, data);
+  CAN_send_message(SPM_ID + 11, 8, data);
 }
 
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
@@ -147,6 +153,58 @@ void set_pga(uint8_t chan, uint8_t level){
 
   // set bits
   mcp23s17_write_all(new_vals, gpio_1_send_spi);
+}
+
+// divisor = 2^div
+void set_freq_div(uint8_t chan, uint8_t div) {
+  uint8_t byp, divBytes;
+  uint16_t current_vals, new_vals;
+
+  if(div <= 16) {
+    byp = 1;
+    divBytes = div - 1;
+  }
+
+  else {
+    byp = 0;
+    divBytes = 0x8 | ((div - 1) & 0x7);
+  }
+
+  switch(chan) {
+    case 0:
+      current_vals = mcp23s17_read_all(gpio_0_send_spi);
+      new_vals = set_bit_val(current_vals, FREQ_BYP_0, byp);
+      new_vals = set_bit_val(current_vals, FREQ_DIVA_0, divBytes & 0x1);
+      new_vals = set_bit_val(current_vals, FREQ_DIVB_0, divBytes & 0x2);
+      new_vals = set_bit_val(current_vals, FREQ_DIVC_0, divBytes & 0x4);
+      new_vals = set_bit_val(current_vals, FREQ_DIVD_0, divBytes & 0x8);
+      mcp23s17_write_all(new_vals, gpio_0_send_spi);
+      break;
+
+    case 1: // #2 constants are used due to bad naming standards on SPM
+      current_vals = mcp23s17_read_all(gpio_0_send_spi);
+      new_vals = set_bit_val(current_vals, FREQ_BYP_2, byp);
+      new_vals = set_bit_val(current_vals, FREQ_DIVA_2, divBytes & 0x1);
+      new_vals = set_bit_val(current_vals, FREQ_DIVB_2, divBytes & 0x2);
+      new_vals = set_bit_val(current_vals, FREQ_DIVC_2, divBytes & 0x4);
+      new_vals = set_bit_val(current_vals, FREQ_DIVD_2, divBytes & 0x8);
+      mcp23s17_write_all(new_vals, gpio_0_send_spi);
+      break;
+
+    case 2: // This one has pins spread across two gpio chips
+      mcp23s17_write_one(FREQ_DIVA_3, byp, gpio_0_send_spi);
+      current_vals = mcp23s17_read_all(gpio_1_send_spi);
+      new_vals = set_bit_val(current_vals, FREQ_DIVA_3, divBytes & 0x1);
+      new_vals = set_bit_val(current_vals, FREQ_DIVB_3, divBytes & 0x2);
+      new_vals = set_bit_val(current_vals, FREQ_DIVC_3, divBytes & 0x4);
+      new_vals = set_bit_val(current_vals, FREQ_DIVD_3, divBytes & 0x8);
+      mcp23s17_write_all(new_vals, gpio_1_send_spi);
+      break;
+  }
+}
+
+void update_digital_channels(void) {
+  digital_channels = mcp23s17_read_all(gpio_2_send_spi);
 }
 
 void init_adcs(void) {
