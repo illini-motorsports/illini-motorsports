@@ -1,6 +1,7 @@
 #include "SPM.h"
 
 double analog_channels[36] = {0};
+double thermocouple_channels[6] = {0};
 volatile uint32_t millis = 0;
 uint32_t canAnalogMillis = 0;
 
@@ -9,9 +10,12 @@ void main(void){
   init_gpio_pins();// Set all I/O pins to low outputs
   init_oscillator();// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
+  init_adcs();// Initialize all of the ADC's
+  init_tcouples(); // Initialize all max31855 thermocouple readers
 
   while(1){
     update_analog_channels();
+    update_thermocouples();
 
     if(millis-canAnalogMillis > 25){
       CANAnalogChannels();
@@ -66,6 +70,15 @@ void update_analog_channels(void){
   AD7680_3_CS_LAT = 1;
 }
 
+void update_thermocouples(void) {
+  thermocouple_channels[0] = read_max31855_temp(max31855_0_send_spi);
+  thermocouple_channels[1] = read_max31855_temp(max31855_1_send_spi);
+  thermocouple_channels[2] = read_max31855_temp(max31855_2_send_spi);
+  thermocouple_channels[3] = read_max31855_temp(max31855_3_send_spi);
+  thermocouple_channels[4] = read_max31855_temp(max31855_4_send_spi);
+  thermocouple_channels[5] = read_max31855_temp(max31855_5_send_spi);
+}
+
 void set_pga(uint8_t chan, uint8_t level){
   if(level > 7 || chan > 3) {
     return; // invalid level or chan
@@ -105,6 +118,24 @@ void init_adcs(void) {
   init_spi2(2, 8); // 2mhz clk, 24 bits
 }
 
+void init_tcouples(void) {
+  MAX31855_0_CS_LAT = 1;
+  MAX31855_1_CS_LAT = 1;
+  MAX31855_2_CS_LAT = 1;
+  MAX31855_3_CS_LAT = 1;
+  MAX31855_4_CS_LAT = 1;
+  MAX31855_5_CS_LAT = 1;
+
+  MAX31855_0_CS_TRIS = OUTPUT;
+  MAX31855_1_CS_TRIS = OUTPUT;
+  MAX31855_2_CS_TRIS = OUTPUT;
+  MAX31855_3_CS_TRIS = OUTPUT;
+  MAX31855_4_CS_TRIS = OUTPUT;
+  MAX31855_5_CS_TRIS = OUTPUT;
+
+  init_max31855(init_spi3);
+}
+
 void init_gpio_ext(void){
   // Initialize all CS pins
   MCP23S17_0_CS_LAT = 1;
@@ -142,6 +173,30 @@ uint32_t gpio_1_send_spi(uint32_t value){
 
 uint32_t gpio_2_send_spi(uint32_t value){
   return send_spi5(value, MCP23S17_2_CS_LATBITS, MCP23S17_2_CS_LATNUM);
+}
+
+uint32_t max31855_0_send_spi(uint32_t value){
+  return send_spi3(value, MAX31855_0_CS_LATBITS, MAX31855_0_CS_LATNUM);
+}
+
+uint32_t max31855_1_send_spi(uint32_t value){
+  return send_spi3(value, MAX31855_1_CS_LATBITS, MAX31855_1_CS_LATNUM);
+}
+
+uint32_t max31855_2_send_spi(uint32_t value){
+  return send_spi3(value, MAX31855_2_CS_LATBITS, MAX31855_2_CS_LATNUM);
+}
+
+uint32_t max31855_3_send_spi(uint32_t value){
+  return send_spi3(value, MAX31855_3_CS_LATBITS, MAX31855_3_CS_LATNUM);
+}
+
+uint32_t max31855_4_send_spi(uint32_t value){
+  return send_spi3(value, MAX31855_4_CS_LATBITS, MAX31855_4_CS_LATNUM);
+}
+
+uint32_t max31855_5_send_spi(uint32_t value){
+  return send_spi3(value, MAX31855_5_CS_LATBITS, MAX31855_5_CS_LATNUM);
 }
 
 // build up result from 3 seperate spi reads

@@ -13,6 +13,8 @@
       <itemPath>FSAE_ad7490.h</itemPath>
       <itemPath>FSAE_gpx.h</itemPath>
       <itemPath>FSAE_max31855.h</itemPath>
+      <itemPath>FSAE_mcp23s17.h</itemPath>
+      <itemPath>FSAE_spi.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -29,6 +31,8 @@
       <itemPath>FSAE_gpx.c</itemPath>
       <itemPath>errno.c</itemPath>
       <itemPath>FSAE_max31855.c</itemPath>
+      <itemPath>FSAE_mcp23s17.c</itemPath>
+      <itemPath>FSAE_spi.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

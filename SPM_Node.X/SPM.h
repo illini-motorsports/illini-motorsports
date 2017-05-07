@@ -55,22 +55,59 @@
 #define MCP23S17_1_CS_LATNUM	4
 #define MCP23S17_2_CS_LATNUM	3
 
+#define MAX31855_0_CS_TRIS       TRISAbits.TRISA0
+#define MAX31855_1_CS_TRIS       TRISEbits.TRISE8
+#define MAX31855_2_CS_TRIS       TRISEbits.TRISE9
+#define MAX31855_3_CS_TRIS       TRISBbits.TRISB4
+#define MAX31855_4_CS_TRIS       TRISBbits.TRISB3
+#define MAX31855_5_CS_TRIS       TRISBbits.TRISB2
+#define MAX31855_0_CS_LAT        LATAbits.LATA0
+#define MAX31855_1_CS_LAT        LATEbits.LATE8
+#define MAX31855_2_CS_LAT        LATEbits.LATE9
+#define MAX31855_3_CS_LAT        LATBbits.LATB4
+#define MAX31855_4_CS_LAT        LATBbits.LATB3
+#define MAX31855_5_CS_LAT        LATBbits.LATB2
+#define MAX31855_0_CS_LATBITS    (uint32_t*) (&LATAbits)
+#define MAX31855_1_CS_LATBITS    (uint32_t*) (&LATEbits)
+#define MAX31855_2_CS_LATBITS    (uint32_t*) (&LATEbits)
+#define MAX31855_3_CS_LATBITS    (uint32_t*) (&LATBbits)
+#define MAX31855_4_CS_LATBITS    (uint32_t*) (&LATBbits)
+#define MAX31855_5_CS_LATBITS    (uint32_t*) (&LATBbits)
+#define MAX31855_0_CS_LATNUM     0
+#define MAX31855_1_CS_LATNUM     8
+#define MAX31855_2_CS_LATNUM     9
+#define MAX31855_3_CS_LATNUM     4
+#define MAX31855_4_CS_LATNUM     3
+#define MAX31855_5_CS_LATNUM     2
+
+
+
 uint8_t analogMappings[32] = {11,10,9,8,7,6,5,4,3,2,1,0,12,13,14,15,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25,24};
 uint8_t pgaMappings[12] = {4,5,6,9,8,7,12,11,10,15,14,13};
 
 void main(void);
 void update_analog_channels(void);
+void update_thermocouples(void);
 
-void set_pga(uint8_t chan, uint8_t level);
-
+void init_gpio_ext();
 void init_adcs();
+void init_tcouples();
+void set_pga(uint8_t chan, uint8_t level);
+uint16_t ad7680_read_spi();
+
+// Send SPI functions
 uint32_t ad7490_0_send_spi(uint32_t value);
 uint32_t ad7490_1_send_spi(uint32_t value);
-void init_gpio_ext();
 uint32_t gpio_0_send_spi(uint32_t value);
 uint32_t gpio_1_send_spi(uint32_t value);
 uint32_t gpio_2_send_spi(uint32_t value);
-uint16_t ad7680_read_spi();
+uint32_t max31855_0_send_spi(uint32_t value);
+uint32_t max31855_1_send_spi(uint32_t value);
+uint32_t max31855_2_send_spi(uint32_t value);
+uint32_t max31855_3_send_spi(uint32_t value);
+uint32_t max31855_4_send_spi(uint32_t value);
+uint32_t max31855_5_send_spi(uint32_t value);
+
 
 void CANAnalogChannels(void);
 
