@@ -38,7 +38,7 @@ max31855_data read_max31855_data(uint32_t (*send_value)(uint32_t)) {
   }
 
   max31855_data output_data;
-  output_data.tCoupleTemp = thermocouple_temp/4.0;
+  output_data.thermocoupleTemp = thermocouple_temp/4.0;
   output_data.junctionTemp = junction_temp/16.0;
   output_data.fault = data & 0x07; // isolate fault data
 

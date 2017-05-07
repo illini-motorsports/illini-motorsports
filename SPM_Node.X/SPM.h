@@ -9,6 +9,7 @@
 #include "../FSAE.X/FSAE_spi.h"
 #include "../FSAE.X/FSAE_ad7490.h"
 #include "../FSAE.X/FSAE_mcp23s17.h"
+#include "../FSAE.X/FSAE_max31855.h"
 
 // ***************************
 // High Speed ADC Defs
@@ -41,6 +42,8 @@
 #define AD7680_3_CS_LAT       LATGbits.LATG15
 
 #define ANALOG_CAN_SCL        1000
+#define THERMOCOUPLE_CAN_SCL  4
+#define JUNCTION_CAN_SCL      16
 
 #define MCP23S17_0_CS_TRIS    TRISAbits.TRISA15
 #define MCP23S17_1_CS_TRIS    TRISAbits.TRISA4
@@ -107,7 +110,6 @@ uint32_t max31855_2_send_spi(uint32_t value);
 uint32_t max31855_3_send_spi(uint32_t value);
 uint32_t max31855_4_send_spi(uint32_t value);
 uint32_t max31855_5_send_spi(uint32_t value);
-
 
 void CANAnalogChannels(void);
 

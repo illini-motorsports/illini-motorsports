@@ -2,6 +2,8 @@
 
 double analog_channels[36] = {0};
 double thermocouple_channels[6] = {0};
+double thermocouple_junctions[6] = {0};
+uint8_t thermocouple_fault = 0;
 volatile uint32_t millis = 0;
 uint32_t canAnalogMillis = 0;
 
@@ -33,6 +35,31 @@ void CANAnalogChannels(void){
     data.halfword3 = (uint16_t) (analog_channels[(i*4)+3]*ANALOG_CAN_SCL);
     CAN_send_message(SPM_ID + i, 8, data);
   }
+}
+
+void CANThermocouples(void){
+  CAN_data data = {};
+
+  data.halfword0 = (int16_t) (thermocouple_channels[0]*THERMOCOUPLE_CAN_SCL);
+  data.halfword1 = (int16_t) (thermocouple_channels[1]*THERMOCOUPLE_CAN_SCL);
+  data.halfword2 = (int16_t) (thermocouple_channels[2]*THERMOCOUPLE_CAN_SCL);
+  data.halfword3 = (int16_t) (thermocouple_channels[3]*THERMOCOUPLE_CAN_SCL);
+
+  CAN_send_message(SPM_ID + 9, 8, data);
+
+  data.halfword0 = (int16_t) (thermocouple_channels[0]*THERMOCOUPLE_CAN_SCL);
+  data.halfword1 = (int16_t) (thermocouple_channels[1]*THERMOCOUPLE_CAN_SCL);
+
+  double acc = 0;
+  int i;
+  for(i=0;i<6;i++){
+    acc += thermocouple_junctions[i];
+  }
+
+  data.halfword2 = (int16_t) ((acc/6.0)*JUNCTION_CAN_SCL);
+  data.halfword3 = thermocouple_fault;
+
+  CAN_send_message(SPM_ID + 10, 8, data);
 }
 
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
@@ -71,12 +98,38 @@ void update_analog_channels(void){
 }
 
 void update_thermocouples(void) {
-  thermocouple_channels[0] = read_max31855_temp(max31855_0_send_spi);
-  thermocouple_channels[1] = read_max31855_temp(max31855_1_send_spi);
-  thermocouple_channels[2] = read_max31855_temp(max31855_2_send_spi);
-  thermocouple_channels[3] = read_max31855_temp(max31855_3_send_spi);
-  thermocouple_channels[4] = read_max31855_temp(max31855_4_send_spi);
-  thermocouple_channels[5] = read_max31855_temp(max31855_5_send_spi);
+  max31855_data data;
+  thermocouple_fault = 0;
+
+  data = read_max31855_data(max31855_0_send_spi);
+  thermocouple_channels[0] = data.thermocoupleTemp;
+  thermocouple_junctions[0] = data.junctionTemp;
+  thermocouple_fault |= data.fault;
+
+  data = read_max31855_data(max31855_1_send_spi);
+  thermocouple_channels[1] = data.thermocoupleTemp;
+  thermocouple_junctions[1] = data.junctionTemp;
+  thermocouple_fault |= data.fault << 1;
+
+  data = read_max31855_data(max31855_2_send_spi);
+  thermocouple_channels[2] = data.thermocoupleTemp;
+  thermocouple_junctions[2] = data.junctionTemp;
+  thermocouple_fault |= data.fault << 2;
+
+  data = read_max31855_data(max31855_3_send_spi);
+  thermocouple_channels[3] = data.thermocoupleTemp;
+  thermocouple_junctions[3] = data.junctionTemp;
+  thermocouple_fault |= data.fault << 3;
+
+  data = read_max31855_data(max31855_4_send_spi);
+  thermocouple_channels[4] = data.thermocoupleTemp;
+  thermocouple_junctions[4] = data.junctionTemp;
+  thermocouple_fault |= data.fault << 4;
+
+  data = read_max31855_data(max31855_5_send_spi);
+  thermocouple_channels[5] = data.thermocoupleTemp;
+  thermocouple_junctions[5] = data.junctionTemp;
+  thermocouple_fault |= data.fault << 5;
 }
 
 void set_pga(uint8_t chan, uint8_t level){

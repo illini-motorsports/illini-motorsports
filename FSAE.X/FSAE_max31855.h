@@ -13,7 +13,7 @@
 #include "FSAE_config.h"
 
 typedef struct {
-  double tCoupleTemp;
+  double thermocoupleTemp;
   double junctionTemp;
   uint8_t fault;
 } max31855_data;
