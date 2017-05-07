@@ -1,6 +1,6 @@
 #include "FSAE_spi.h"
 
-void init_spi1(int mhz, int size) {
+void init_spi1(double mhz, int size) {
   unlock_config();
 
   // Initialize SDI1/SDO1 PPS pins
@@ -55,7 +55,7 @@ void init_spi1(int mhz, int size) {
   lock_config();
 }
 
-void init_spi2(int mhz, int size) {
+void init_spi2(double mhz, int size) {
   unlock_config();
 
   // Initialize SDI2/SDO2 PPS pins
@@ -110,7 +110,7 @@ void init_spi2(int mhz, int size) {
   lock_config();
 }
 
-void init_spi3(int mhz, int size) {
+void init_spi3(double mhz, int size) {
   unlock_config();
 
   // Initialize SDI3/SDO3 PPS pins
@@ -165,7 +165,7 @@ void init_spi3(int mhz, int size) {
   lock_config();
 }
 
-void init_spi5(int mhz, int size) {
+void init_spi5(double mhz, int size) {
   unlock_config();
 
   // Initialize SDI5/SDO5 PPS pins
@@ -220,7 +220,7 @@ void init_spi5(int mhz, int size) {
   lock_config();
 }
 
-void init_spi6(int mhz, int size) {
+void init_spi6(double mhz, int size) {
   unlock_config();
 
   // Initialize SDI6/SDO6 PPS pins
