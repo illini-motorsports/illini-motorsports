@@ -8,6 +8,8 @@
  */
 #include "GCM.h"
 
+//TODO: Add more checks/handling for stale CAN data
+
 // Count number of seconds and milliseconds since start of code execution
 volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
@@ -322,6 +324,7 @@ void process_CAN_msg(CAN_message msg) {
     case PDM_ID + 0x1:
       switch_bitmap = msg.data[PDM_SWITCH_BYTE];
       kill_sw = switch_bitmap & KILL_SW_MASK;
+      CAN_recv_tmr = millis;
       break;
   }
 }
@@ -477,74 +480,14 @@ void process_downshift_press(void) {
  * @return 0 if restricted, 1 if allowable
  */
 uint8_t check_shift_conditions(uint8_t shift_enum) {
-  // Prevent shifting if CAN state variables aren't updated
-  if (millis - CAN_recv_tmr >= CAN_STATE_WAIT) {
-    send_errno_CAN_msg(GCM_ID, ERR_GCM_NOCAN);
-    return 0;
-  }
-
-  // Prevent shifting from neutral into gear at high rpm
-  if (gear == GEAR_NEUT && eng_rpm >= RPM_NEUT_LOCK) {
-    send_errno_CAN_msg(GCM_ID, ERR_GCM_NEUTLOCK);
-    return 0;
-  }
-
-  // Prevent shifting up past neutral on low voltage
-  if (gear == 1 && shift_enum == SHIFT_ENUM_UP) {
-    if (bat_volt != 0.0 && bat_volt < LOW_VOLT) {
-      send_errno_CAN_msg(GCM_ID, ERR_GCM_LOWVOLT);
-      return 0;
-    }
-  }
-
-  // Prevent shifting down past neutral on low voltage
-  if (gear == 2 && shift_enum == SHIFT_ENUM_DN) {
-    if (bat_volt != 0 && bat_volt < LOW_VOLT) {
-      send_errno_CAN_msg(GCM_ID, ERR_GCM_LOWVOLT);
-      return 0;
-    }
-  }
-
-  // Prevent any shifting on very low voltage
-  if (bat_volt != 0 && bat_volt < LOWER_VOLT) {
-    send_errno_CAN_msg(GCM_ID, ERR_GCM_LOWERVOLT);
-    return 0;
-  }
-
-  // Prevent shifting while the kill switch is pressed
-  if (kill_sw) {
-    send_errno_CAN_msg(GCM_ID, ERR_GCM_KILLSW);
-    return 0;
-  }
-
-  // Check for over/under rev
-  if (shift_enum != SHIFT_ENUM_NT && ENG_ON &&
-      gear != GEAR_NEUT && gear != GEAR_FAIL) {
-    double output_speed = eng_rpm / gear_ratio[gear];
-
-    if (shift_enum == SHIFT_ENUM_UP && gear != 6) {
-      double new_rpm = output_speed * gear_ratio[gear + 1];
-      if (new_rpm <= RPM_UNDERREV) {
-        send_errno_CAN_msg(GCM_ID, ERR_GCM_UNDERREV);
-        return 0;
-      }
-    } else if (shift_enum == SHIFT_ENUM_DN && gear != 1) {
-      double new_rpm = output_speed * gear_ratio[gear - 1];
-      if (new_rpm >= RPM_OVERREV) {
-        send_errno_CAN_msg(GCM_ID, ERR_GCM_OVERREV);
-        return 0;
-      }
-    }
-  }
-
-  // Prevent shifting past 6th gear
-  if (gear == 6 && shift_enum == SHIFT_ENUM_UP) {
+  // Prevent shifting past 1st gear
+  if (gear == 1 && shift_enum == SHIFT_ENUM_DN) {
     send_errno_CAN_msg(GCM_ID, ERR_GCM_SHIFTPAST);
     return 0;
   }
 
-  // Prevent shifting past 1st gear
-  if (gear == 1 && shift_enum == SHIFT_ENUM_DN) {
+  // Prevent shifting past 6th gear
+  if (gear == 6 && shift_enum == SHIFT_ENUM_UP) {
     send_errno_CAN_msg(GCM_ID, ERR_GCM_SHIFTPAST);
     return 0;
   }
@@ -554,6 +497,71 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
       !(gear == 1 || gear == 2 || gear == GEAR_FAIL)) {
     send_errno_CAN_msg(GCM_ID, ERR_GCM_BADNEUT);
     return 0;
+  }
+
+  // Only perform these checks if CAN data isn't stale
+  uint8_t stale_CAN = (millis - CAN_recv_tmr >= CAN_STATE_WAIT);
+  if (!stale_CAN) {
+    // Prevent shifting while the kill switch is pressed
+    if (kill_sw) {
+      send_errno_CAN_msg(GCM_ID, ERR_GCM_KILLSW);
+      return 0;
+    }
+
+    // Prevent shifting from neutral into gear at high rpm
+    if (gear == GEAR_NEUT && eng_rpm >= RPM_NEUT_LOCK) {
+      send_errno_CAN_msg(GCM_ID, ERR_GCM_NEUTLOCK);
+      return 0;
+    }
+
+    // Check for over/under rev
+    if (shift_enum != SHIFT_ENUM_NT && ENG_ON &&
+        gear != GEAR_NEUT && gear != GEAR_FAIL) {
+      double output_speed = eng_rpm / gear_ratio[gear];
+
+      if (shift_enum == SHIFT_ENUM_UP && gear != 6) {
+        double new_rpm = output_speed * gear_ratio[gear + 1];
+        if (new_rpm <= RPM_UNDERREV) {
+          send_errno_CAN_msg(GCM_ID, ERR_GCM_UNDERREV);
+          return 0;
+        }
+      } else if (shift_enum == SHIFT_ENUM_DN && gear != 1) {
+        double new_rpm = output_speed * gear_ratio[gear - 1];
+        if (new_rpm >= RPM_OVERREV) {
+          send_errno_CAN_msg(GCM_ID, ERR_GCM_OVERREV);
+          return 0;
+        }
+      }
+    }
+  } else if (!COMP) {
+    // Prevent shifting if CAN state variables aren't updated
+    send_errno_CAN_msg(GCM_ID, ERR_GCM_NOCAN);
+    return 0;
+  }
+
+  // Only perform these checks if we aren't at competition and have good CAN data
+  if (!COMP && !stale_CAN) {
+    // Prevent shifting up past neutral on low voltage
+    if (gear == 1 && shift_enum == SHIFT_ENUM_UP) {
+      if (bat_volt != 0.0 && bat_volt < LOW_VOLT) {
+        send_errno_CAN_msg(GCM_ID, ERR_GCM_LOWVOLT);
+        return 0;
+      }
+    }
+
+    // Prevent shifting down past neutral on low voltage
+    if (gear == 2 && shift_enum == SHIFT_ENUM_DN) {
+      if (bat_volt != 0 && bat_volt < LOW_VOLT) {
+        send_errno_CAN_msg(GCM_ID, ERR_GCM_LOWVOLT);
+        return 0;
+      }
+    }
+
+    // Prevent any shifting on very low voltage
+    if (bat_volt != 0 && bat_volt < LOWER_VOLT) {
+      send_errno_CAN_msg(GCM_ID, ERR_GCM_LOWERVOLT);
+      return 0;
+    }
   }
 
   return 1;
