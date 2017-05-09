@@ -121,6 +121,10 @@
 #define OVER_TEMP_PDM_FLAG_BIT    0x40
 #define FUEL_PRIME_PDM_FLAG_BIT   0x80
 
+#define PADDLE_UP_GCM_SW_BIT      0x1
+#define PADDLE_DOWN_GCM_SW_BIT    0x2
+#define NEUTRAL_GCM_SW_BIT        0x4
+
 volatile uint32_t millis;
 
 void main(void);

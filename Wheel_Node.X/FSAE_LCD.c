@@ -20,7 +20,21 @@ void initDataItems(void){
     initDataItem(&(pdmDataItems[i]),0,0,MIN_REFRESH,2,1);
   }
 
+  // Customized PDM dataitem initialization
   pdmDataItems[STR_DRAW_IDX].wholeDigits = 3;
+
+  // Set default initialization for GCM data items
+  for(i=0;i<GCM_DATAITEM_SIZE;i++){
+    initDataItem(&(gcmDataItems[i]),0,0,MIN_REFRESH,1,0);
+  }
+
+  // Customized GCM dataitem initialization
+  gcmDataItems[GEAR_VOLT_IDX].decDigits = 2;
+  gcmDataItems[GEAR_VOLT_IDX].wholeDigits = 2;
+  gcmDataItems[FORCE_IDX].decDigits = 2;
+  gcmDataItems[FORCE_IDX].wholeDigits = 2;
+
+
 
   // Motec Vars
   // Refresh Intervals
@@ -80,14 +94,6 @@ void initDataItems(void){
   initDataItem(&ttRRA[2],0,0,MIN_REFRESH,2,1);
   initDataItem(&ttRRA[3],0,0,MIN_REFRESH,2,1);
   initDataItem(&ttRR,0,0,MIN_REFRESH,2,1);
-
-  // Paddle Shifting
-  initDataItem(&paddleTemp,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gearPos,0,0,MIN_REFRESH,1,0);
-  initDataItem(&neutQueue,0,0,MIN_REFRESH,1,0);
-  initDataItem(&upQueue,0,0,MIN_REFRESH,1,0);
-  initDataItem(&downQueue,0,0,MIN_REFRESH,1,0);
-  initDataItem(&gearVoltage,0,0,MIN_REFRESH,1,2);
 
   // Rear Analog Hub
   initDataItem(&susPosRR,0,0,MIN_REFRESH,2,1);
@@ -198,7 +204,7 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &waterTemp);
   initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
   initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &batVoltage);
-  initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gearPos);
+  initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
   initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &rpm);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 

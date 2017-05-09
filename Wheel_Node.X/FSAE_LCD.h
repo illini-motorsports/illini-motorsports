@@ -129,6 +129,19 @@
 #define BVBAT_OC_COUNT_IDX    91
 #define STR_OC_COUNT_IDX      92
 
+//GCM
+#define GCM_DATAITEM_SIZE     12
+
+#define GEAR_IDX              3
+#define GEAR_VOLT_IDX         4
+#define FORCE_IDX             5
+#define PADDLE_UP_SW_IDX      6
+#define PADDLE_DOWN_SW_IDX    7
+#define NEUTRAL_SW_IDX        8
+#define QUEUE_UP_IDX          9
+#define QUEUE_DN_IDX          10
+#define QUEUE_NT_IDX          11
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -211,7 +224,7 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE];
 
 // General Items
 volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
@@ -235,9 +248,6 @@ volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radO
 
 // Front Analog Hub
 volatile dataItem susPosFR, susPosFL, brakePressFront, brakePressRear, brakeMaxFront, brakeMinFront,brakeMaxRear, brakeMinRear, steeringAngle, accelPedalPos0, accelPedalPos1;
-
-// Paddle Shifting
-volatile dataItem paddleTemp, gearPos, neutQueue, upQueue, downQueue, gearVoltage;
 
 // End Race Data
 volatile dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempFR, endTireTempRL, endTireTempRR, endAmbientTemp, endFuelConsum;

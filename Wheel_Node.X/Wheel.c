@@ -214,24 +214,31 @@ void process_CAN_msg(CAN_message msg){
       fuelTrim.value = parseMsgMotec(&msg, FUEL_TRIM_BYTE, FUEL_TRIM_SCL);
       break;
 
-      /*Paddle Shifting ID's*/
+      /*GCM ID's*/
     case GCM_ID:
-      //paddleUptime.value = (double) ((uint16_t) msg.data[UPTIME_BYTE]);
-      //paddleTemp.value = (double) ((uint16_t) msg.data[PCB_TEMP_BYTE])*PCB_TEMP_SCL;
-      //neutQueue.value = msg.data[QUEUE_NT_BYTE] * QUEUE_NT_SCL;
-      //upQueue.value = msg.data[QUEUE_UP_BYTE] * QUEUE_UP_SCL;
-      //downQueue.value =  msg.data[QUEUE_DN_BYTE] * QUEUE_DN_SCL;
+      gcmDataItems[UPTIME_IDX].value = (uint16_t) (lsbArray[UPTIME_BYTE/2]) * UPTIME_SCL;
+      gcmDataItems[PCB_TEMP_IDX].value = (int16_t) (lsbArray[PCB_TEMP_BYTE/2]) * PCB_TEMP_SCL;
+      gcmDataItems[IC_TEMP_IDX].value = (int16_t) (lsbArray[IC_TEMP_BYTE/2]) * IC_TEMP_SCL;
       break;
     case GCM_ID + 1:
-      //gearVoltage.value = (double) ((uint16_t) msg.data[GEAR_VOLT_BYTE])*GEAR_VOLT_SCL;
-      gearPos.value = msg.data[GEAR_BYTE];
+      gcmDataItems[GEAR_IDX].value = (uint8_t) (msg.data[GEAR_BYTE]) * GEAR_SCL;
+      gcmDataItems[GEAR_VOLT_IDX].value = (uint16_t) (lsbArray[GEAR_VOLT_BYTE/2]) * GEAR_VOLT_SCL;
+      gcmDataItems[FORCE_IDX].value = (int16_t) (lsbArray[FORCE_BYTE/2]) * FORCE_SCL;
+      break;
+    case GCM_ID + 2:
+      gcmDataItems[PADDLE_UP_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & PADDLE_UP_GCM_SW_BIT;
+      gcmDataItems[PADDLE_DOWN_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & PADDLE_DOWN_GCM_SW_BIT;
+      gcmDataItems[NEUTRAL_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & NEUTRAL_GCM_SW_BIT;
+      gcmDataItems[QUEUE_UP_IDX].value = (uint8_t) (msg.data[QUEUE_UP_BYTE]) * QUEUE_UP_SCL;
+      gcmDataItems[QUEUE_DN_IDX].value = (uint8_t) (msg.data[QUEUE_DN_BYTE]) * QUEUE_DN_SCL;
+      gcmDataItems[QUEUE_NT_IDX].value = (uint8_t) (msg.data[QUEUE_NT_BYTE]) * QUEUE_NT_SCL;
       break;
 
       /*PDM ID's*/
     case PDM_ID:
-      pdmDataItems[UPTIME_IDX].value = (uint16_t) (msg.data[PDM_UPTIME_BYTE]) * PDM_UPTIME_SCL;
-      pdmDataItems[PCB_TEMP_IDX].value = (int16_t) (msg.data[PDM_PCB_TEMP_BYTE]) * PDM_PCB_TEMP_SCL;
-      pdmDataItems[IC_TEMP_IDX].value = (int16_t) (msg.data[PDM_IC_TEMP_BYTE]) * PDM_IC_TEMP_SCL;
+      pdmDataItems[UPTIME_IDX].value = (uint16_t) (lsbArray[UPTIME_BYTE/2]) * UPTIME_SCL;
+      pdmDataItems[PCB_TEMP_IDX].value = (int16_t) (lsbArray[PCB_TEMP_BYTE/2]) * PCB_TEMP_SCL;
+      pdmDataItems[IC_TEMP_IDX].value = (int16_t) (lsbArray[IC_TEMP_BYTE/2]) * IC_TEMP_SCL;
       break;
     case PDM_ID + 1:
 
