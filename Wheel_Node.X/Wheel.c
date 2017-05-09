@@ -229,121 +229,121 @@ void process_CAN_msg(CAN_message msg){
 
       /*PDM ID's*/
     case PDM_ID:
-      pdmUptime.value = (uint16_t) (msg.data[PDM_UPTIME_BYTE]) * PDM_UPTIME_SCL;
-      pdmTemp.value = (int16_t) (msg.data[PDM_PCB_TEMP_BYTE]) * PDM_PCB_TEMP_SCL;
-      pdmICTemp.value = (int16_t) (msg.data[PDM_IC_TEMP_BYTE]) * PDM_IC_TEMP_SCL;
+      pdmDataItems[UPTIME_IDX].value = (uint16_t) (msg.data[PDM_UPTIME_BYTE]) * PDM_UPTIME_SCL;
+      pdmDataItems[PCB_TEMP_IDX].value = (int16_t) (msg.data[PDM_PCB_TEMP_BYTE]) * PDM_PCB_TEMP_SCL;
+      pdmDataItems[IC_TEMP_IDX].value = (int16_t) (msg.data[PDM_IC_TEMP_BYTE]) * PDM_IC_TEMP_SCL;
       break;
     case PDM_ID + 1:
 
       // Enablity
-      STRenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & STR_ENBL_BIT;
-      BVBATenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & BVBAT_ENBL_BIT;
-      AUXenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & AUX_ENBL_BIT;
-      ECUenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & ECU_ENBL_BIT;
-      WTRenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & WTR_ENBL_BIT;
-      FANenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & FAN_ENBL_BIT;
-      PDLDenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLD_ENBL_BIT;
-      PDLUenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLU_ENBL_BIT;
-      ABSenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & ABS_ENBL_BIT;
-      INJenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & INJ_ENBL_BIT;
-      IGNenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & IGN_ENBL_BIT;
-      FUELenabl.value = lsbArray[LOAD_ENABLITY_BYTE/2] & FUEL_ENBL_BIT;
+      pdmDataItems[STR_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & STR_ENBL_BIT;
+      pdmDataItems[BVBAT_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & BVBAT_ENBL_BIT;
+      pdmDataItems[AUX_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & AUX_ENBL_BIT;
+      pdmDataItems[ECU_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & ECU_ENBL_BIT;
+      pdmDataItems[WTR_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & WTR_ENBL_BIT;
+      pdmDataItems[FAN_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & FAN_ENBL_BIT;
+      pdmDataItems[PDLD_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLD_ENBL_BIT;
+      pdmDataItems[PDLU_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLU_ENBL_BIT;
+      pdmDataItems[ABS_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & ABS_ENBL_BIT;
+      pdmDataItems[INJ_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & INJ_ENBL_BIT;
+      pdmDataItems[IGN_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & IGN_ENBL_BIT;
+      pdmDataItems[FUEL_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & FUEL_ENBL_BIT;
 
       // Peak Mode
-      STRpm.value = lsbArray[LOAD_PEAK_BYTE/2] & STR_PEAKM_BIT;
-      BVBATpm.value = lsbArray[LOAD_PEAK_BYTE/2] & BVBAT_PEAKM_BIT;
-      AUXpm.value = lsbArray[LOAD_PEAK_BYTE/2] & AUX_PEAKM_BIT;
-      ECUpm.value = lsbArray[LOAD_PEAK_BYTE/2] & ECU_PEAKM_BIT;
-      WTRpm.value = lsbArray[LOAD_PEAK_BYTE/2] & WTR_PEAKM_BIT;
-      FANpm.value = lsbArray[LOAD_PEAK_BYTE/2] & FAN_PEAKM_BIT;
-      PDLDpm.value = lsbArray[LOAD_PEAK_BYTE/2] & PDLD_PEAKM_BIT;
-      PDLUpm.value = lsbArray[LOAD_PEAK_BYTE/2] & PDLU_PEAKM_BIT;
-      ABSpm.value = lsbArray[LOAD_PEAK_BYTE/2] & ABS_PEAKM_BIT;
-      INJpm.value = lsbArray[LOAD_PEAK_BYTE/2] & INJ_PEAKM_BIT;
-      IGNpm.value = lsbArray[LOAD_PEAK_BYTE/2] & IGN_PEAKM_BIT;
-      FUELpm.value = lsbArray[LOAD_PEAK_BYTE/2] & FUEL_PEAKM_BIT;
+      pdmDataItems[STR_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & STR_PEAKM_BIT;
+      pdmDataItems[BVBAT_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & BVBAT_PEAKM_BIT;
+      pdmDataItems[AUX_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & AUX_PEAKM_BIT;
+      pdmDataItems[ECU_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & ECU_PEAKM_BIT;
+      pdmDataItems[WTR_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & WTR_PEAKM_BIT;
+      pdmDataItems[FAN_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & FAN_PEAKM_BIT;
+      pdmDataItems[PDLD_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & PDLD_PEAKM_BIT;
+      pdmDataItems[PDLU_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & PDLU_PEAKM_BIT;
+      pdmDataItems[ABS_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & ABS_PEAKM_BIT;
+      pdmDataItems[INJ_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & INJ_PEAKM_BIT;
+      pdmDataItems[IGN_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & IGN_PEAKM_BIT;
+      pdmDataItems[FUEL_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & FUEL_PEAKM_BIT;
 
       // Total current
-      pdmTOTdraw.value = (uint16_t) (lsbArray[TOTAL_CURRENT_BYTE/2]) * TOTAL_CURRENT_SCL;
+      pdmDataItems[TOTAL_CURRENT_IDX].value = (uint16_t) (lsbArray[TOTAL_CURRENT_BYTE/2]) * TOTAL_CURRENT_SCL;
 
       // Switch bitmap
-      AUX2pdmSw.value = msg.data[PDM_SWITCH_BYTE] & AUX2_PDM_SW_BIT;
-      AUX1pdmSw.value = msg.data[PDM_SWITCH_BYTE] & AUX1_PDM_SW_BIT;
-      ABSpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ABS_PDM_SW_BIT;
-      KILLpdmSw.value = msg.data[PDM_SWITCH_BYTE] & KILL_PDM_SW_BIT;
-      ACT_DNpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ACT_DN_PDM_SW_BIT;
-      ACT_UPpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ACT_UP_PDM_SW_BIT;
-      ONpdmSw.value = msg.data[PDM_SWITCH_BYTE] & ON_PDM_SW_BIT;
-      STRpdmSw.value = msg.data[PDM_SWITCH_BYTE] & STR_PDM_SW_BIT;
+      pdmDataItems[AUX2_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & AUX2_PDM_SW_BIT;
+      pdmDataItems[AUX1_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & AUX1_PDM_SW_BIT;
+      pdmDataItems[ABS_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ABS_PDM_SW_BIT;
+      pdmDataItems[KILL_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & KILL_PDM_SW_BIT;
+      pdmDataItems[ACT_DN_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ACT_DN_PDM_SW_BIT;
+      pdmDataItems[ACT_UP_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ACT_UP_PDM_SW_BIT;
+      pdmDataItems[ON_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ON_PDM_SW_BIT;
+      pdmDataItems[STR_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & STR_PDM_SW_BIT;
 
       // Flags
-      KillEngineFlag.value = msg.data[PDM_FLAG_BYTE] & KILL_ENGINE_PDM_FLAG_BIT;
-      KillCarFlag.value = msg.data[PDM_FLAG_BYTE] & KILL_CAR_PDM_FLAG_BIT;
-      OverTempFlag.value = msg.data[PDM_FLAG_BYTE] & OVER_TEMP_PDM_FLAG_BIT;
-      FuelPrimeFlag.value = msg.data[PDM_FLAG_BYTE] & FUEL_PRIME_PDM_FLAG_BIT;
+      pdmDataItems[KILL_ENGINE_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & KILL_ENGINE_PDM_FLAG_BIT;
+      pdmDataItems[KILL_CAR_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & KILL_CAR_PDM_FLAG_BIT;
+      pdmDataItems[OVER_TEMP_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & OVER_TEMP_PDM_FLAG_BIT;
+      pdmDataItems[FUEL_PRIME_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & FUEL_PRIME_PDM_FLAG_BIT;
       break;
     case PDM_ID + 2:
-      pdmVBat.value = (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL;
-      pdm12v.value = (uint16_t) (lsbArray[V12_RAIL_BYTE/2]) * V12_RAIL_SCL;
-      pdm5v.value = (uint16_t) (lsbArray[V5_RAIL_BYTE/2]) * V5_RAIL_SCL;
-      pdm3v3.value = (uint16_t) (lsbArray[V3V3_RAIL_BYTE/2]) * V3V3_RAIL_SCL;
+      pdmDataItems[VBAT_RAIL_IDX].value = (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL;
+      pdmDataItems[V12_RAIL_IDX].value = (uint16_t) (lsbArray[V12_RAIL_BYTE/2]) * V12_RAIL_SCL;
+      pdmDataItems[V5_RAIL_IDX].value = (uint16_t) (lsbArray[V5_RAIL_BYTE/2]) * V5_RAIL_SCL;
+      pdmDataItems[V3V3_RAIL_IDX].value = (uint16_t) (lsbArray[V3V3_RAIL_BYTE/2]) * V3V3_RAIL_SCL;
       break;
     case PDM_ID + 3:
-      pdmFUELdraw.value = (uint16_t) (lsbArray[FUEL_DRAW_BYTE/2]) * FUEL_DRAW_SCL;
-      pdmIGNdraw.value = (uint16_t) (lsbArray[IGN_DRAW_BYTE/2]) * IGN_DRAW_SCL;
-      pdmINJdraw.value = (uint16_t) (lsbArray[INJ_DRAW_BYTE/2]) * INJ_DRAW_SCL;
-      pdmABSdraw.value = (uint16_t) (lsbArray[ABS_DRAW_BYTE/2]) * ABS_DRAW_SCL;
+      pdmDataItems[FUEL_DRAW_IDX].value = (uint16_t) (lsbArray[FUEL_DRAW_BYTE/2]) * FUEL_DRAW_SCL;
+      pdmDataItems[IGN_DRAW_IDX].value = (uint16_t) (lsbArray[IGN_DRAW_BYTE/2]) * IGN_DRAW_SCL;
+      pdmDataItems[INJ_DRAW_IDX].value = (uint16_t) (lsbArray[INJ_DRAW_BYTE/2]) * INJ_DRAW_SCL;
+      pdmDataItems[ABS_DRAW_IDX].value = (uint16_t) (lsbArray[ABS_DRAW_BYTE/2]) * ABS_DRAW_SCL;
       break;
     case PDM_ID + 4:
-      pdmPDLUdraw.value = (uint16_t) (lsbArray[PDLU_DRAW_BYTE/2]) * PDLU_DRAW_SCL;
-      pdmPDLDdraw.value = (uint16_t) (lsbArray[PDLD_DRAW_BYTE/2]) * PDLD_DRAW_SCL;
-      pdmFANdraw.value = (uint16_t) (lsbArray[FAN_DRAW_BYTE/2]) * FAN_DRAW_SCL;
-      pdmWTRdraw.value = (uint16_t) (lsbArray[WTR_DRAW_BYTE/2]) * WTR_DRAW_SCL;
+      pdmDataItems[PDLU_DRAW_IDX].value = (uint16_t) (lsbArray[PDLU_DRAW_BYTE/2]) * PDLU_DRAW_SCL;
+      pdmDataItems[PDLD_DRAW_IDX].value = (uint16_t) (lsbArray[PDLD_DRAW_BYTE/2]) * PDLD_DRAW_SCL;
+      pdmDataItems[FAN_DRAW_IDX].value = (uint16_t) (lsbArray[FAN_DRAW_BYTE/2]) * FAN_DRAW_SCL;
+      pdmDataItems[WTR_DRAW_IDX].value = (uint16_t) (lsbArray[WTR_DRAW_BYTE/2]) * WTR_DRAW_SCL;
       break;
     case PDM_ID + 5:
-      pdmECUdraw.value = (uint16_t) (lsbArray[ECU_DRAW_BYTE/2]) * ECU_DRAW_SCL;
-      pdmAUXdraw.value = (uint16_t) (lsbArray[AUX_DRAW_BYTE/2]) * AUX_DRAW_SCL;
-      pdmBVBATdraw.value = (uint16_t) (lsbArray[BVBAT_DRAW_BYTE/2]) * BVBAT_DRAW_SCL;
-      pdmSTRdraw.value = (uint16_t) (lsbArray[STR_DRAW_BYTE/2]) * STR_DRAW_SCL;
+      pdmDataItems[ECU_DRAW_IDX].value = (uint16_t) (lsbArray[ECU_DRAW_BYTE/2]) * ECU_DRAW_SCL;
+      pdmDataItems[AUX_DRAW_IDX].value = (uint16_t) (lsbArray[AUX_DRAW_BYTE/2]) * AUX_DRAW_SCL;
+      pdmDataItems[BVBAT_DRAW_IDX].value = (uint16_t) (lsbArray[BVBAT_DRAW_BYTE/2]) * BVBAT_DRAW_SCL;
+      pdmDataItems[STR_DRAW_IDX].value = (uint16_t) (lsbArray[STR_DRAW_BYTE/2]) * STR_DRAW_SCL;
       break;
     case PDM_ID + 6:
-      pdmFUELcut.value = (uint16_t) (lsbArray[FUEL_CUT_BYTE/2]) * FUEL_CUT_SCL;
-      pdmIGNcut.value = (uint16_t) (lsbArray[IGN_CUT_BYTE/2]) * IGN_CUT_SCL;
-      pdmINJcut.value = (uint16_t) (lsbArray[INJ_CUT_BYTE/2]) * INJ_CUT_SCL;
-      pdmABScut.value = (uint16_t) (lsbArray[ABS_CUT_BYTE/2]) * ABS_CUT_SCL;
+      pdmDataItems[FUEL_CUT_IDX].value = (uint16_t) (lsbArray[FUEL_CUT_BYTE/2]) * FUEL_CUT_SCL;
+      pdmDataItems[IGN_CUT_IDX].value = (uint16_t) (lsbArray[IGN_CUT_BYTE/2]) * IGN_CUT_SCL;
+      pdmDataItems[INJ_CUT_IDX].value = (uint16_t) (lsbArray[INJ_CUT_BYTE/2]) * INJ_CUT_SCL;
+      pdmDataItems[ABS_CUT_IDX].value = (uint16_t) (lsbArray[ABS_CUT_BYTE/2]) * ABS_CUT_SCL;
       break;
     case PDM_ID + 7:
-      pdmPDLUcut.value = (uint16_t) (lsbArray[PDLU_CUT_BYTE/2]) * PDLU_CUT_SCL;
-      pdmPDLDcut.value = (uint16_t) (lsbArray[PDLD_CUT_BYTE/2]) * PDLD_CUT_SCL;
-      pdmFANcut.value = (uint16_t) (lsbArray[FAN_CUT_BYTE/2]) * FAN_CUT_SCL;
-      pdmWTRcut.value = (uint16_t) (lsbArray[WTR_CUT_BYTE/2]) * WTR_CUT_SCL;
+      pdmDataItems[PDLU_CUT_IDX].value = (uint16_t) (lsbArray[PDLU_CUT_BYTE/2]) * PDLU_CUT_SCL;
+      pdmDataItems[PDLD_CUT_IDX].value = (uint16_t) (lsbArray[PDLD_CUT_BYTE/2]) * PDLD_CUT_SCL;
+      pdmDataItems[FAN_CUT_IDX].value = (uint16_t) (lsbArray[FAN_CUT_BYTE/2]) * FAN_CUT_SCL;
+      pdmDataItems[WTR_CUT_IDX].value = (uint16_t) (lsbArray[WTR_CUT_BYTE/2]) * WTR_CUT_SCL;
       break;
     case PDM_ID + 8:
-      pdmECUcut.value = (uint16_t) (lsbArray[ECU_CUT_BYTE/2]) * ECU_CUT_SCL;
-      pdmAUXcut.value = (uint16_t) (lsbArray[AUX_CUT_BYTE/2]) * AUX_CUT_SCL;
-      pdmBVBATcut.value = (uint16_t) (lsbArray[BVBAT_CUT_BYTE/2]) * BVBAT_CUT_SCL;
+      pdmDataItems[ECU_CUT_IDX].value = (uint16_t) (lsbArray[ECU_CUT_BYTE/2]) * ECU_CUT_SCL;
+      pdmDataItems[AUX_CUT_IDX].value = (uint16_t) (lsbArray[AUX_CUT_BYTE/2]) * AUX_CUT_SCL;
+      pdmDataItems[BVBAT_CUT_IDX].value = (uint16_t) (lsbArray[BVBAT_CUT_BYTE/2]) * BVBAT_CUT_SCL;
       break;
     case PDM_ID + 9:
-      pdmFUELPcut.value = (uint16_t) (lsbArray[FUEL_CUT_P_BYTE/2]) * FUEL_CUT_P_SCL;
-      pdmFANPcut.value = (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL;
-      pdmWTRPcut.value = (uint16_t) (lsbArray[WTR_CUT_P_BYTE/2]) * WTR_CUT_P_SCL;
-      pdmECUPcut.value = (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL;
+      pdmDataItems[FUEL_CUT_P_IDX].value = (uint16_t) (lsbArray[FUEL_CUT_P_BYTE/2]) * FUEL_CUT_P_SCL;
+      pdmDataItems[FAN_CUT_P_IDX].value = (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL;
+      pdmDataItems[WTR_CUT_P_IDX].value = (uint16_t) (lsbArray[WTR_CUT_P_BYTE/2]) * WTR_CUT_P_SCL;
+      pdmDataItems[ECU_CUT_P_IDX].value = (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL;
       break;
     case PDM_ID + 10:
-      FUELOCCount.value = (uint16_t) (msg.data[FUEL_OC_COUNT_BYTE]);
-      IGNOCCount.value = (uint16_t) (msg.data[IGN_OC_COUNT_BYTE]);
-      INJOCCount.value = (uint16_t) (msg.data[INJ_OC_COUNT_BYTE]);
-      ABSOCCount.value = (uint16_t) (msg.data[ABS_OC_COUNT_BYTE]);
-      PDLUOCCount.value = (uint16_t) (msg.data[PDLU_OC_COUNT_BYTE]);
-      PDLDOCCount.value = (uint16_t) (msg.data[PDLD_OC_COUNT_BYTE]);
-      FANOCCount.value = (uint16_t) (msg.data[FAN_OC_COUNT_BYTE]);
-      WTROCCount.value = (uint16_t) (msg.data[WTR_OC_COUNT_BYTE]);
+      pdmDataItems[FUEL_OC_COUNT_IDX].value = (uint16_t) (msg.data[FUEL_OC_COUNT_BYTE]);
+      pdmDataItems[IGN_OC_COUNT_IDX].value = (uint16_t) (msg.data[IGN_OC_COUNT_BYTE]);
+      pdmDataItems[INJ_OC_COUNT_IDX].value = (uint16_t) (msg.data[INJ_OC_COUNT_BYTE]);
+      pdmDataItems[ABS_OC_COUNT_IDX].value = (uint16_t) (msg.data[ABS_OC_COUNT_BYTE]);
+      pdmDataItems[PDLU_OC_COUNT_IDX].value = (uint16_t) (msg.data[PDLU_OC_COUNT_BYTE]);
+      pdmDataItems[PDLD_OC_COUNT_IDX].value = (uint16_t) (msg.data[PDLD_OC_COUNT_BYTE]);
+      pdmDataItems[FAN_OC_COUNT_IDX].value = (uint16_t) (msg.data[FAN_OC_COUNT_BYTE]);
+      pdmDataItems[WTR_OC_COUNT_IDX].value = (uint16_t) (msg.data[WTR_OC_COUNT_BYTE]);
       break;
     case PDM_ID + 11:
-      ECUOCCount.value = (uint16_t) (msg.data[ECU_OC_COUNT_BYTE]);
-      AUXOCCount.value = (uint16_t) (msg.data[AUX_OC_COUNT_BYTE]);
-      BVBATOCCount.value = (uint16_t) (msg.data[BVBAT_OC_COUNT_BYTE]);
-      STROCCount.value = (uint16_t) (msg.data[STR_OC_COUNT_BYTE]);
+      pdmDataItems[ECU_OC_COUNT_IDX].value = (uint16_t) (msg.data[ECU_OC_COUNT_BYTE]);
+      pdmDataItems[AUX_OC_COUNT_IDX].value = (uint16_t) (msg.data[AUX_OC_COUNT_BYTE]);
+      pdmDataItems[BVBAT_OC_COUNT_IDX].value = (uint16_t) (msg.data[BVBAT_OC_COUNT_BYTE]);
+      pdmDataItems[STR_OC_COUNT_IDX].value = (uint16_t) (msg.data[STR_OC_COUNT_BYTE]);
       break;
       /*Tire Temps*/
     case TIRE_TEMP_FL_ID:

@@ -43,6 +43,92 @@
 #define REV_RANGE_9 12500
 #define REV_RANGE_REDLINE 13000
 
+#define PDM_DATAITEM_SIZE     93
+
+#define UPTIME_IDX            0
+#define PCB_TEMP_IDX          1
+#define IC_TEMP_IDX           2
+#define STR_ENABLITY_IDX      3
+#define BVBAT_ENABLITY_IDX    4
+#define AUX_ENABLITY_IDX      5
+#define ECU_ENABLITY_IDX      6
+#define WTR_ENABLITY_IDX      7
+#define FAN_ENABLITY_IDX      8
+#define PDLD_ENABLITY_IDX     9
+#define PDLU_ENABLITY_IDX     10
+#define ABS_ENABLITY_IDX      11
+#define INJ_ENABLITY_IDX      12
+#define IGN_ENABLITY_IDX      13
+#define FUEL_ENABLITY_IDX     14
+#define STR_PEAK_MODE_IDX     15
+#define BVBAT_PEAK_MODE_IDX   16
+#define AUX_PEAK_MODE_IDX     17
+#define ECU_PEAK_MODE_IDX     18
+#define WTR_PEAK_MODE_IDX     19
+#define FAN_PEAK_MODE_IDX     20
+#define PDLD_PEAK_MODE_IDX    21
+#define PDLU_PEAK_MODE_IDX    22
+#define ABS_PEAK_MODE_IDX     23
+#define INJ_PEAK_MODE_IDX     24
+#define IGN_PEAK_MODE_IDX     25
+#define FUEL_PEAK_MODE_IDX    26
+#define TOTAL_CURRENT_IDX     27
+#define AUX2_SWITCH_IDX       28
+#define AUX1_SWITCH_IDX       29
+#define ABS_SWITCH_IDX        30
+#define KILL_SWITCH_IDX       31
+#define ACT_DN_SWITCH_IDX     32
+#define ACT_UP_SWITCH_IDX     33
+#define ON_SWITCH_IDX         34
+#define STR_SWITCH_IDX        35
+#define KILL_ENGINE_FLAG_IDX  36
+#define KILL_CAR_FLAG_IDX     37
+#define OVER_TEMP_FLAG_IDX    38
+#define FUEL_PRIME_FLAG_IDX   39
+#define VBAT_RAIL_IDX         40
+#define V12_RAIL_IDX          41
+#define V5_RAIL_IDX           42
+#define V3V3_RAIL_IDX         43
+#define FUEL_DRAW_IDX         44
+#define IGN_DRAW_IDX          45
+#define INJ_DRAW_IDX          46
+#define ABS_DRAW_IDX          47
+#define PDLU_DRAW_IDX         48
+#define PDLD_DRAW_IDX         49
+#define FAN_DRAW_IDX          50
+#define WTR_DRAW_IDX          51
+#define ECU_DRAW_IDX          52
+#define AUX_DRAW_IDX          53
+#define BVBAT_DRAW_IDX        54
+#define STR_DRAW_IDX          55
+#define FUEL_CUT_IDX          56
+#define IGN_CUT_IDX           57
+#define INJ_CUT_IDX           58
+#define ABS_CUT_IDX           59
+#define PDLU_CUT_IDX          60
+#define PDLD_CUT_IDX          61
+#define FAN_CUT_IDX           62
+#define WTR_CUT_IDX           63
+#define ECU_CUT_IDX           64
+#define AUX_CUT_IDX           65
+#define BVBAT_CUT_IDX         66
+#define FUEL_CUT_P_IDX        67
+#define FAN_CUT_P_IDX         68
+#define WTR_CUT_P_IDX         69
+#define ECU_CUT_P_IDX         80
+#define FUEL_OC_COUNT_IDX     81
+#define IGN_OC_COUNT_IDX      82
+#define INJ_OC_COUNT_IDX      83
+#define ABS_OC_COUNT_IDX      84
+#define PDLU_OC_COUNT_IDX     85
+#define PDLD_OC_COUNT_IDX     86
+#define FAN_OC_COUNT_IDX      87
+#define WTR_OC_COUNT_IDX      88
+#define ECU_OC_COUNT_IDX      89
+#define AUX_OC_COUNT_IDX      90
+#define BVBAT_OC_COUNT_IDX    91
+#define STR_OC_COUNT_IDX      92
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -125,6 +211,8 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE];
+
 // General Items
 volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
 
@@ -139,12 +227,6 @@ volatile dataItem ttFLA[4], ttFL, ttFRA[4], ttFR, ttRLA[4], ttRL, ttRRA[4], ttRR
 
 // Wheel Buttons
 volatile dataItem rotary[3], tRotary[2], switches[4], momentaries[4];
-
-// PDM
-volatile dataItem pdmTemp, pdmICTemp, pdmCurrentDraw, pdmVBat, pdm12v, pdm5v5, pdm5v, pdm3v3, pdmIGNdraw, pdmIGNcut, pdmINJdraw, pdmINJcut, pdmFUELdraw, pdmFUELcut, pdmFUELPcut, pdmECUdraw, pdmECUcut, pdmECUPcut, pdmWTRdraw, pdmWTRcut, pdmWTRPcut, pdmFANdraw, pdmFANcut, pdmFANPcut, pdmAUXdraw, pdmAUXcut, pdmPDLUdraw, pdmPDLUcut, pdmPDLDdraw, pdmPDLDcut, pdm5v5draw, pdm5v5cut, pdmBATdraw, pdmBATcut, pdmSTRdraw, pdmSTRcut, pdmTOTdraw, pdmABSdraw, pdmABScut, pdmBVBATdraw, pdmBVBATcut;
-
-// PDM Bitmaps
-volatile dataItem STRenabl, BVBATenabl, PDLDenabl, PDLUenabl, AUXenabl, ABSenabl, FANenabl, WTRenabl, ECUenabl, FUELenabl, INJenabl, IGNenabl, STRpm, BVBATpm, B5V5pm, PDLDpm, PDLUpm, ABSpm, AUXpm, FANpm, WTRpm, ECUpm, FUELpm, INJpm, IGNpm, KILLpdmSw, ACT_DNpdmSw, ACT_UPpdmSw, ONpdmSw, STRpdmSw, AUX1pdmSw, AUX2pdmSw, ABSpdmSw, KillEngineFlag, KillCarFlag, OverTempFlag, FuelPrimeFlag;
 
 volatile dataItem FUELOCCount, IGNOCCount, INJOCCount, ABSOCCount, PDLUOCCount, PDLDOCCount, FANOCCount, WTROCCount, ECUOCCount, AUXOCCount, BVBATOCCount, STROCCount;
 
