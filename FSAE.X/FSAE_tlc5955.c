@@ -12,7 +12,7 @@ uint8_t pending_register[NUM_BYTES] = {0};
 uint16_t bit_ctr = 0;
 
 uint64_t current_colors[16] = {0}; // Red:16, Green:16, Blue:16
-uint8_t led_mapping[16] = {12, 11, 10, 5, 13, 14, 2, 0, 9, 7, 1, 3, 8, 6, 15, 4};
+uint8_t led_mapping[16] = {4, 15, 6, 8, 3, 1, 7, 9, 0, 2, 14, 13, 5, 10, 11, 12};
 
 uint8_t left_cluster_warn = 0;
 uint64_t left_cluster_color = 0x0;
@@ -220,8 +220,8 @@ void tlc5955_check_timers() {
  */
 void init_tlc5955(void) {
   // GSCLK PWM Signal
-  PWM_TLC5955_TRIS = OUTPUT;
-  PWM_TLC5955_LAT = 1;
+  //PWM_TLC5955_TRIS = OUTPUT;
+  //PWM_TLC5955_LAT = 1;
 
   // Latch - SHFLAT
   LAT_TLC5955_TRIS = OUTPUT;
@@ -229,7 +229,10 @@ void init_tlc5955(void) {
 
   _tlc5955_init_spi();
 
+  // Write control twice in a row to set MC registers
   _tlc5955_write_control();
+  _tlc5955_write_control();
+
   tlc5955_write_color(OFF, 0xFFFF, NO_OVR); // Set all off
 }
 
@@ -332,11 +335,6 @@ void _tlc5955_write_control(void) {
     pending_register[i] = 0;
   }
 
-  _tlc5955_reg_append(7, 0x0); // Shift in 7 bits to account for 776 bit SPI shifts
-
-  _tlc5955_reg_append(1, 0b1); // MSB indicates control register write
-  _tlc5955_reg_append(8, 0x96); // More indication for control register write
-
   // Write DC registers
   for (i = 0; i < 16; i++) {
     for (j = 0; j < 3; j++) {
@@ -345,21 +343,30 @@ void _tlc5955_write_control(void) {
   }
 
   // Write MC registers
-  _tlc5955_reg_append(3, 0b011); // Red
-  _tlc5955_reg_append(3, 0b101); // Green
-  _tlc5955_reg_append(3, 0b101); // Blue
+  _tlc5955_reg_append(3, 0b100); // Red
+  _tlc5955_reg_append(3, 0b100); // Green
+  _tlc5955_reg_append(3, 0b100); // Blue
 
   // Write BC registers
-  _tlc5955_reg_append(7, 0b0111111); // Red
+  _tlc5955_reg_append(7, 0b1111111); // Red
   _tlc5955_reg_append(7, 0b1111111); // Green
-  _tlc5955_reg_append(7, 0b0111111); // Blue
+  _tlc5955_reg_append(7, 0b1111111); // Blue
 
   // Write FC registers
   _tlc5955_reg_append(1, 0b1); // DSPRPT
   _tlc5955_reg_append(1, 0b0); // TMGRST
   _tlc5955_reg_append(1, 0b0); // RFRESH
-  _tlc5955_reg_append(1, 0b1); // ESPWM
+  _tlc5955_reg_append(1, 0b0); // ESPWM
   _tlc5955_reg_append(1, 0b0); // LSDVLT
+
+  // Fill bits in between 378 and (776 - 8 - 1) = 389 bits
+  for (i = 0; i < 48; i++) {
+    _tlc5955_reg_append(8, 0x00);
+  }
+  _tlc5955_reg_append(5, 0x00);
+
+  _tlc5955_reg_append(8, 0x96); // More indication for control register write
+  _tlc5955_reg_append(1, 0b1); // MSB indicates control register write
 
   _tlc5955_send_register();
 }
@@ -369,24 +376,21 @@ void _tlc5955_write_control(void) {
  */
 void _tlc5955_write_gs(void) {
   uint8_t i;
-
   bit_ctr = 0;
   for (i = 0; i < NUM_BYTES; i++) {
     pending_register[i] = 0;
   }
 
-  _tlc5955_reg_append(7, 0x0); // Shift in 7 bits to account for 776 bit SPI shifts
-  _tlc5955_reg_append(1, 0b0); // MSB indicates GS write
-
   for (i = 0; i < 16; i++) {
     uint64_t color = current_colors[led_mapping[i]];
-    _tlc5955_reg_append(8, (color >> 0) & 0xFF); // Blue LW
-    _tlc5955_reg_append(8, (color >> 8) & 0xFF); // Blue LW
-    _tlc5955_reg_append(8, (color >> 16) & 0xFF); // Green LW
-    _tlc5955_reg_append(8, (color >> 24) & 0xFF); // Green LW
     _tlc5955_reg_append(8, (color >> 32) & 0xFF); // Red LW
-    _tlc5955_reg_append(8, (color >> 40) & 0xFF); // Red LW
+    _tlc5955_reg_append(8, (color >> 40) & 0xFF); // Red HW
+    _tlc5955_reg_append(8, (color >> 16) & 0xFF); // Green LW
+    _tlc5955_reg_append(8, (color >> 24) & 0xFF); // Green HW
+    _tlc5955_reg_append(8, (color >> 0) & 0xFF); // Blue LW
+    _tlc5955_reg_append(8, (color >> 8) & 0xFF); // Blue HW
   }
+  _tlc5955_reg_append(1, 0b0); // MSB indicates GS write
 
   _tlc5955_send_register();
 }
@@ -400,7 +404,7 @@ void _tlc5955_write_gs(void) {
 void _tlc5955_reg_append(uint8_t num_bits, uint8_t data) {
   uint8_t i;
   for (i = 0; i < num_bits; i++) {
-    uint8_t bit = data & (1 << (num_bits-1-i)); // selects bits in reverse order
+    uint8_t bit = data & (1 << (i)); 
     uint8_t idx = (bit_ctr + i) >> 3; // faster divide by 8
     uint8_t pos = (bit_ctr + i) % 8;
 
@@ -429,10 +433,10 @@ void _tlc5955_send_register(void) {
    *
    * Also account for the fact that we're shifting more than 769 bits
    */
-  uint8_t i;
+  int8_t i;
   uint8_t resp;
 
-  for (i = 0; i < NUM_BYTES; i++) {
+  for (i = NUM_BYTES - 1; i >= 0; i--) {
     SPI2BUF = pending_register[i];
     while(!SPI2STATbits.SPIRBF);
     resp = SPI2BUF;
