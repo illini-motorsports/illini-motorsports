@@ -175,6 +175,30 @@
 #define SHIFT_FORCE_IDX       27
 #define AIR_TEMP_IDX          28
 
+#define TIRETEMP_DATAITEM_SIZE  20
+
+#define FL                    0
+#define FL0                   1
+#define FL1                   2
+#define FL2                   3
+#define FL3                   4
+#define FR                    5
+#define FR0                   6
+#define FR1                   7
+#define FR2                   8
+#define FR3                   9
+#define RL                    10
+#define RL0                   11
+#define RL1                   12
+#define RL2                   13
+#define RL3                   14
+#define RR                    15
+#define RR0                   16
+#define RR1                   17
+#define RR2                   18
+#define RR3                   19
+
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -257,7 +281,7 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE];
 
 // General Items
 volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
@@ -265,13 +289,8 @@ volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
 // Uptimes
 volatile dataItem loggerUptime, swUptime;
 
-// Tire Temps
-volatile dataItem ttFLA[4], ttFL, ttFRA[4], ttFR, ttRLA[4], ttRL, ttRRA[4], ttRR;
-
 // Wheel Buttons
 volatile dataItem rotary[3], tRotary[2], switches[4], momentaries[4];
-
-volatile dataItem FUELOCCount, IGNOCCount, INJOCCount, ABSOCCount, PDLUOCCount, PDLDOCCount, FANOCCount, WTROCCount, ECUOCCount, AUXOCCount, BVBATOCCount, STROCCount;
 
 // Rear Analog Hub
 volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radOutputTemp, swirlTemp, swirlPress;

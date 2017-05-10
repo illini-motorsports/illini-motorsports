@@ -353,31 +353,36 @@ void process_CAN_msg(CAN_message msg){
       pdmDataItems[BVBAT_OC_COUNT_IDX].value = (uint16_t) (msg.data[BVBAT_OC_COUNT_BYTE]);
       pdmDataItems[STR_OC_COUNT_IDX].value = (uint16_t) (msg.data[STR_OC_COUNT_BYTE]);
       break;
+
       /*Tire Temps*/
     case TIRE_TEMP_FL_ID:
-      ttFLA[0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      ttFLA[1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      ttFLA[2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      ttFLA[3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
-      ttFL.value = (ttFLA[0].value+ttFLA[1].value+ttFLA[2].value+ttFLA[3].value)/4.0;
+      tireTempDataItems[FL0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FL1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FL2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FL3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FL].value = (tireTempDataItems[FL0].value + tireTempDataItems[FL1].value + tireTempDataItems[FL2].value + tireTempDataItems[FL3].value)/4.0;
+      break;
     case TIRE_TEMP_FR_ID:
-      ttFRA[0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      ttFRA[1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      ttFRA[2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      ttFRA[3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
-      ttFR.value = (ttFRA[0].value+ttFRA[1].value+ttFRA[2].value+ttFRA[3].value)/4.0;
+      tireTempDataItems[FR0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FR1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FR2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FR3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FR].value = (tireTempDataItems[FR0].value + tireTempDataItems[FR1].value + tireTempDataItems[FR2].value + tireTempDataItems[FR3].value)/4.0;
+      break;
     case TIRE_TEMP_RL_ID:
-      ttRLA[0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      ttRLA[1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      ttRLA[2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      ttRLA[3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
-      ttRL.value = (ttRLA[0].value+ttRLA[1].value+ttRLA[2].value+ttRLA[3].value)/4.0;
+      tireTempDataItems[RL0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RL1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RL2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RL3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RL].value = (tireTempDataItems[RL0].value + tireTempDataItems[RL1].value + tireTempDataItems[RL2].value + tireTempDataItems[RL3].value)/4.0;
+      break;
     case TIRE_TEMP_RR_ID:
-      ttRRA[0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      ttRRA[1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      ttRRA[2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      ttRRA[3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
-      ttRR.value = (ttRRA[0].value+ttRRA[1].value+ttRRA[2].value+ttRRA[3].value)/4.0;
+      tireTempDataItems[RR0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RR1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RR2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RR3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RR].value = (tireTempDataItems[RR0].value + tireTempDataItems[RR1].value + tireTempDataItems[RR2].value + tireTempDataItems[RR3].value)/4.0;
+      break;
 
       /*Front Analog Hub*/
     case ANALOG_FRONT_ID + 1:

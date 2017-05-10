@@ -56,27 +56,10 @@ void initDataItems(void){
   setDataItemDigits(&motecDataItems[FUEL_INJ_DUTY_IDX], 3, 1);
   setDataItemDigits(&motecDataItems[FUEL_TRIM_IDX], 3, 1);
 
-  // Tire Temps
-  initDataItem(&ttFLA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFLA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFLA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFLA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRR,0,0,MIN_REFRESH,2,1);
+  // Tire temps
+  for(i=0;i<TIRETEMP_DATAITEM_SIZE;i++) {
+    initDataItem(&tireTempDataItems[i],0,0,MIN_REFRESH,2,1); 
+  }
 
   // Rear Analog Hub
   initDataItem(&susPosRR,0,0,MIN_REFRESH,2,1);
@@ -263,18 +246,6 @@ void initAllScreens(void){
   initScreenItem(&endRaceItems[6], 10, 30, 20, redrawTireTemp, &endTireTempRR);
   initScreenItem(&endRaceItems[7], 10, 30, 20, redrawDigit, &endAmbientTemp);
   initScreenItem(&endRaceItems[8], 10, 30, 20, redrawDigit, &endFuelConsum);
-
-  allScreens[CHASSIS_SCREEN] = &chassisScreen;
-  chassisScreen.items = chassisItems;
-  chassisScreen.len = 20;
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttFL);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttFR);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttRL);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttRR);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttFLA);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttFRA);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRLA);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRRA);
 
   //brake screen
   allScreens[BRAKE_SCREEN] = &brakeScreen;
@@ -792,10 +763,10 @@ void endRace(void){
   endLogNum.value = 0;
   endNumLaps.value = numLaps;
   endFastLap.value = getMinLap();
-  endTireTempFL.value = ttFL.value;
-  endTireTempFR.value = ttFR.value;
-  endTireTempRL.value = ttRL.value;
-  endTireTempRR.value = ttRR.value;
+  endTireTempFL.value = tireTempDataItems[FL].value;
+  endTireTempFR.value = tireTempDataItems[FR].value;
+  endTireTempRL.value = tireTempDataItems[RL].value;
+  endTireTempRR.value = tireTempDataItems[RR].value;
   endAmbientTemp.value = motecDataItems[AIR_TEMP_IDX].value;
   endFuelConsum.value = motecDataItems[FUEL_USED_IDX].value;
 }
