@@ -98,10 +98,8 @@ void initDataItems(void){
   initDataItem(&accelPedalPos1,0,0,MIN_REFRESH,2,1);
   // Uptimes
   // uptimes - 4,0
-  initDataItem(&paddleUptime,0,0,MIN_REFRESH,2,1);
   initDataItem(&loggerUptime,0,0,MIN_REFRESH,2,1);
   initDataItem(&swUptime,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmUptime,0,0,MIN_REFRESH,2,1);
   initDataItem(&brakeMinFront,0,0,MIN_REFRESH,2,1);
   initDataItem(&brakeMaxFront,0,0,MIN_REFRESH,2,1);
   initDataItem(&brakeMinRear,0,0,MIN_REFRESH,2,1);

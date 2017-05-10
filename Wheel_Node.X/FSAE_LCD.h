@@ -143,37 +143,37 @@
 #define QUEUE_NT_IDX          11
 
 //MOTEC
-#define MOTEC_DATAITEM_SIZE   31
+#define MOTEC_DATAITEM_SIZE   29
 
-#define ENG_RPM_IDX           3
-#define THROTTLE_POS_IDX      4
-#define LAMBDA_IDX            5
-#define VOLT_ECU_IDX          6
-#define ENG_TEMP_IDX          7
-#define OIL_TEMP_IDX          8
-#define MANIFOLD_TEMP_IDX     9
-#define FUEL_TEMP_IDX         10
-#define AMBIENT_PRES_IDX      11
-#define OIL_PRES_IDX          12
-#define MANIFOLD_PRES_IDX     13
-#define FUEL_PRES_IDX         14
-#define WHEELSPEED_FL_IDX     15
-#define WHEELSPEED_FR_IDX     16
-#define WHEELSPEED_RL_IDX     17
-#define WHEELSPEED_RR_IDX     18
-#define DRIVE_SPEED_IDX       19
-#define GROUND_SPEED_IDX      20
-#define GPS_SPEED_IDX         21
-#define GPS_ALT_IDX           22
-#define GPS_LAT_IDX           23
-#define GPS_LONG_IDX          24
-#define GPS_TIME_IDX          25
-#define RUN_TIME_IDX          26
-#define FUEL_USED_IDX         27
-#define FUEL_INJ_DUTY_IDX     28
-#define FUEL_TRIM_IDX         29
-#define SHIFT_FORCE_IDX       30
-#define AIR_TEMP_IDX          31
+#define ENG_RPM_IDX           0
+#define THROTTLE_POS_IDX      1
+#define LAMBDA_IDX            2
+#define VOLT_ECU_IDX          3
+#define ENG_TEMP_IDX          4
+#define OIL_TEMP_IDX          5
+#define MANIFOLD_TEMP_IDX     6
+#define FUEL_TEMP_IDX         7
+#define AMBIENT_PRES_IDX      8
+#define OIL_PRES_IDX          9
+#define MANIFOLD_PRES_IDX     10
+#define FUEL_PRES_IDX         11
+#define WHEELSPEED_FL_IDX     12
+#define WHEELSPEED_FR_IDX     13
+#define WHEELSPEED_RL_IDX     14
+#define WHEELSPEED_RR_IDX     15
+#define DRIVE_SPEED_IDX       16
+#define GROUND_SPEED_IDX      17
+#define GPS_SPEED_IDX         18
+#define GPS_ALT_IDX           19
+#define GPS_LAT_IDX           20
+#define GPS_LONG_IDX          21
+#define GPS_TIME_IDX          22
+#define RUN_TIME_IDX          23
+#define FUEL_USED_IDX         24
+#define FUEL_INJ_DUTY_IDX     25
+#define FUEL_TRIM_IDX         26
+#define SHIFT_FORCE_IDX       27
+#define AIR_TEMP_IDX          28
 
 /*
  * Defines a data stream that is relevant to one or more screens
@@ -263,7 +263,7 @@ volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZ
 volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
 
 // Uptimes
-volatile dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
+volatile dataItem loggerUptime, swUptime;
 
 // Tire Temps
 volatile dataItem ttFLA[4], ttFL, ttFRA[4], ttFR, ttRLA[4], ttRL, ttRRA[4], ttRR;
