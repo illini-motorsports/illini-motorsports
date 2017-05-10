@@ -142,6 +142,39 @@
 #define QUEUE_DN_IDX          10
 #define QUEUE_NT_IDX          11
 
+//MOTEC
+#define MOTEC_DATAITEM_SIZE   31
+
+#define ENG_RPM_IDX           3
+#define THROTTLE_POS_IDX      4
+#define LAMBDA_IDX            5
+#define VOLT_ECU_IDX          6
+#define ENG_TEMP_IDX          7
+#define OIL_TEMP_IDX          8
+#define MANIFOLD_TEMP_IDX     9
+#define FUEL_TEMP_IDX         10
+#define AMBIENT_PRES_IDX      11
+#define OIL_PRES_IDX          12
+#define MANIFOLD_PRES_IDX     13
+#define FUEL_PRES_IDX         14
+#define WHEELSPEED_FL_IDX     15
+#define WHEELSPEED_FR_IDX     16
+#define WHEELSPEED_RL_IDX     17
+#define WHEELSPEED_RR_IDX     18
+#define DRIVE_SPEED_IDX       19
+#define GROUND_SPEED_IDX      20
+#define GPS_SPEED_IDX         21
+#define GPS_ALT_IDX           22
+#define GPS_LAT_IDX           23
+#define GPS_LONG_IDX          24
+#define GPS_TIME_IDX          25
+#define RUN_TIME_IDX          26
+#define FUEL_USED_IDX         27
+#define FUEL_INJ_DUTY_IDX     28
+#define FUEL_TRIM_IDX         29
+#define SHIFT_FORCE_IDX       30
+#define AIR_TEMP_IDX          31
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -224,16 +257,13 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE];
 
 // General Items
 volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
 
 // Uptimes
 volatile dataItem paddleUptime, loggerUptime, swUptime, pdmUptime;
-
-// Motec Data Stream
-volatile dataItem rpm, throtPos, oilPress, oilTemp, waterTemp, lambda, manifoldPress, batVoltage, wheelSpeedFL, wheelSpeedFR, wheelSpeedRL, wheelSpeedRR, gpsLat, gpsLong, groundSpeed, driveSpeed, gpsSpeed, manifoldTemp, ambientTemp, ambientPress, fuelTemp, fuelPress, lambda1, lambda2, lambda3, lambda4, lcEnablity, fuelConsum, gpsAltitude, gpsTime, runTime, fuelInjDuty, fuelTrim;
 
 // Tire Temps
 volatile dataItem ttFLA[4], ttFL, ttFRA[4], ttFR, ttRLA[4], ttRL, ttRRA[4], ttRR;
@@ -260,6 +290,7 @@ void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem
 void initDataItem(volatile dataItem* data, double warn, double err,
 	uint32_t refresh, uint8_t whole, uint8_t dec);
+void setDataItemDigits(volatile dataItem* data, uint8_t whole, uint8_t dec);
 void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem

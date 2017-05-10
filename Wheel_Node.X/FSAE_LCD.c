@@ -17,7 +17,7 @@ void initDataItems(void){
 
   // Set default initialization for PDM data items
   for(i=0;i<PDM_DATAITEM_SIZE;i++){
-    initDataItem(&(pdmDataItems[i]),0,0,MIN_REFRESH,2,1);
+    initDataItem(&pdmDataItems[i],0,0,MIN_REFRESH,2,1);
   }
 
   // Customized PDM dataitem initialization
@@ -25,7 +25,7 @@ void initDataItems(void){
 
   // Set default initialization for GCM data items
   for(i=0;i<GCM_DATAITEM_SIZE;i++){
-    initDataItem(&(gcmDataItems[i]),0,0,MIN_REFRESH,1,0);
+    initDataItem(&gcmDataItems[i],0,0,MIN_REFRESH,1,0);
   }
 
   // Customized GCM dataitem initialization
@@ -34,44 +34,27 @@ void initDataItems(void){
   gcmDataItems[FORCE_IDX].decDigits = 2;
   gcmDataItems[FORCE_IDX].wholeDigits = 2;
 
+  // Set default initializations for Motec data items
+  for(i=0;i<MOTEC_DATAITEM_SIZE;i++) {
+    initDataItem(&motecDataItems[i],0,0,MIN_REFRESH,2,1);
+  }
 
-
-  // Motec Vars
-  // Refresh Intervals
-  // All Temp Channels - 500
-  initDataItem(&rpm,0,0,MIN_REFRESH,5,0);
-  initDataItem(&throtPos,0,0,MIN_REFRESH,3,1);
-  initDataItem(&oilPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&oilTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&waterTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&lambda,0,0,MIN_REFRESH,1,3);
-  initDataItem(&manifoldPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&batVoltage,0,0,MIN_REFRESH,2,2);
-  initDataItem(&wheelSpeedFL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&wheelSpeedFR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&wheelSpeedRL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&wheelSpeedRR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gpsLong,0,0,MIN_REFRESH,2,1); // Don't need
-  initDataItem(&gpsLat,0,0,MIN_REFRESH,2,1); // Don't need
-  initDataItem(&groundSpeed,0,0,MIN_REFRESH,2,1);
-  initDataItem(&driveSpeed,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gpsSpeed,0,0,MIN_REFRESH,2,1);
-  initDataItem(&manifoldTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&ambientTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&ambientPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&fuelTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&fuelPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&lambda1,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lambda2,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lambda3,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lambda4,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lcEnablity,0,0,MIN_REFRESH,1,0);
-  initDataItem(&fuelConsum,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gpsAltitude,0,0,MIN_REFRESH,2,1); // ?
-  initDataItem(&gpsTime,0,0,MIN_REFRESH,2,1); // ?
-  initDataItem(&runTime,0,0,MIN_REFRESH,4,0);
-  initDataItem(&fuelInjDuty,0,0,MIN_REFRESH,3,1);
-  initDataItem(&fuelTrim,0,0,MIN_REFRESH,3,1);
+  // Customized Motec dataitem initialization
+  setDataItemDigits(&motecDataItems[ENG_RPM_IDX], 5, 0);
+  setDataItemDigits(&motecDataItems[THROTTLE_POS_IDX], 0, 2);
+  setDataItemDigits(&motecDataItems[OIL_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[OIL_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[LAMBDA_IDX], 3, 1);
+  setDataItemDigits(&motecDataItems[MANIFOLD_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[MANIFOLD_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[ENG_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[VOLT_ECU_IDX], 2, 2);
+  setDataItemDigits(&motecDataItems[AMBIENT_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[FUEL_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[FUEL_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[RUN_TIME_IDX], 4, 0);
+  setDataItemDigits(&motecDataItems[FUEL_INJ_DUTY_IDX], 3, 1);
+  setDataItemDigits(&motecDataItems[FUEL_TRIM_IDX], 3, 1);
 
   // Tire Temps
   initDataItem(&ttFLA[0],0,0,MIN_REFRESH,2,1);
@@ -170,6 +153,11 @@ void initDataItem(volatile dataItem* data, double warn, double err, uint32_t ref
   data->decDigits = dec;
 }
 
+void setDataItemDigits(volatile dataItem* data, uint8_t whole, uint8_t dec) {
+  data->wholeDigits = whole;
+  data->decDigits = dec;
+}
+
 // Initializes all the screen and screenitem variables in all
 // the screens that might be displayed
 void initAllScreens(void){
@@ -200,12 +188,12 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
   initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
-  initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &oilTemp);
-  initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &waterTemp);
-  initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
-  initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &batVoltage);
+  initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
+  initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
+  initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
+  initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
   initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
-  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &rpm);
+  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &motecDataItems[ENG_RPM_IDX]);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 
   // PDM stuff
@@ -259,43 +247,6 @@ void initAllScreens(void){
   initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
   initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdmDataItems[V12_RAIL_IDX]);
 
-
-  // MoTec Stuff
-  allScreens[MOTEC_SCREEN] = &motecScreen;
-  motecScreen.items = motecItems;
-  motecScreen.len = 30;
-  initScreenItem(&motecItems[0], 10, 30, 20, redrawDigit, &rpm);
-  initScreenItem(&motecItems[1], 10, 30, 20, redrawDigit, &throtPos);
-  initScreenItem(&motecItems[2], 10, 30, 20, redrawDigit, &oilPress);
-  initScreenItem(&motecItems[3], 10, 30, 20, redrawDigit, &oilTemp);
-  initScreenItem(&motecItems[4], 10, 30, 20, redrawDigit, &waterTemp);
-  initScreenItem(&motecItems[5], 10, 30, 20, redrawDigit, &lambda);
-  initScreenItem(&motecItems[6], 10, 30, 20, redrawDigit, &manifoldPress);
-  initScreenItem(&motecItems[7], 10, 30, 20, redrawDigit, &batVoltage);
-  initScreenItem(&motecItems[8], 10, 30, 20, redrawDigit, &wheelSpeedFL);
-  initScreenItem(&motecItems[9], 10, 30, 20, redrawDigit, &wheelSpeedFR);
-  initScreenItem(&motecItems[10], 10, 30, 20, redrawDigit, &wheelSpeedRL);
-  initScreenItem(&motecItems[11], 10, 30, 20, redrawDigit, &wheelSpeedRR);
-  initScreenItem(&motecItems[12], 10, 30, 20, redrawDigit, &gpsLat);
-  initScreenItem(&motecItems[13], 10, 30, 20, redrawDigit, &gpsLong);
-  initScreenItem(&motecItems[14], 10, 30, 20, redrawDigit, &groundSpeed);
-  initScreenItem(&motecItems[15], 10, 30, 20, redrawDigit, &driveSpeed);
-  initScreenItem(&motecItems[16], 10, 30, 20, redrawDigit, &gpsSpeed);
-  initScreenItem(&motecItems[17], 10, 30, 20, redrawDigit, &manifoldTemp);
-  initScreenItem(&motecItems[18], 10, 30, 20, redrawDigit, &ambientTemp);
-  initScreenItem(&motecItems[19], 10, 30, 20, redrawDigit, &ambientPress);
-  initScreenItem(&motecItems[20], 10, 30, 20, redrawDigit, &fuelTemp);
-  initScreenItem(&motecItems[21], 10, 30, 20, redrawDigit, &fuelPress);
-  initScreenItem(&motecItems[22], 10, 30, 20, redrawDigit, &lambda1);
-  initScreenItem(&motecItems[23], 10, 30, 20, redrawDigit, &lambda2);
-  initScreenItem(&motecItems[24], 10, 30, 20, redrawDigit, &lambda3);
-  initScreenItem(&motecItems[25], 10, 30, 20, redrawDigit, &lambda4);
-  initScreenItem(&motecItems[26], 10, 30, 20, redrawDigit, &lcEnablity);
-  initScreenItem(&motecItems[27], 10, 30, 20, redrawDigit, &fuelConsum);
-  initScreenItem(&motecItems[28], 10, 30, 20, redrawDigit, &gpsAltitude);
-  initScreenItem(&motecItems[29], 10, 30, 20, redrawDigit, &gpsTime);
-  initScreenItem(&motecItems[30], 10, 30, 20, redrawDigit, &fuelInjDuty);
-  initScreenItem(&motecItems[31], 10, 30, 20, redrawDigit, &fuelTrim);
 
   // End Race Screen
   allScreens[END_RACE_SCREEN] = &endRaceScreen;
@@ -523,20 +474,20 @@ void changeAUXType(uint8_t num){
       // Battery Voltage
       case 0:
         textWrite("BAT V");
-        raceScreenItems[6].data = &batVoltage;
+        raceScreenItems[6].data = &pdmDataItems[VBAT_RAIL_IDX];
         raceScreenItems[6].info.x += 30;
         break;
 
         // Lambda
       case 1:
         textWrite("LAMBDA");
-        raceScreenItems[6].data = &lambda;
+        raceScreenItems[6].data = &motecDataItems[LAMBDA_IDX];
         break;
 
         // RPM
       case 2:
         textWrite("RPM");
-        raceScreenItems[6].data = &rpm;
+        raceScreenItems[6].data = &motecDataItems[ENG_RPM_IDX];
         raceScreenItems[6].info.x -= 30;
         break;
     }
@@ -847,8 +798,8 @@ void endRace(void){
   endTireTempFR.value = ttFR.value;
   endTireTempRL.value = ttRL.value;
   endTireTempRR.value = ttRR.value;
-  endAmbientTemp.value = ambientTemp.value;
-  endFuelConsum.value = fuelConsum.value;
+  endAmbientTemp.value = motecDataItems[AIR_TEMP_IDX].value;
+  endFuelConsum.value = motecDataItems[FUEL_USED_IDX].value;
 }
 
 // Error Handling Stuff

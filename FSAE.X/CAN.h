@@ -97,6 +97,7 @@
 #define FUEL_INJ_DUTY_BYTE  0
 #define FUEL_TRIM_BYTE      2
 #define SHIFT_FORCE_BYTE    4
+#define AIR_TEMP_BYTE       4
 
 // From GCM
 #define GEAR_BYTE           0
@@ -195,6 +196,7 @@
  */
 
 // From Diagnostic Message
+#define UPTIME_SCL          1
 #define PCB_TEMP_SCL        0.005
 #define IC_TEMP_SCL         0.005
 
@@ -244,6 +246,7 @@
 #define FUEL_INJ_DUTY_SCL   0.1
 #define FUEL_TRIM_SCL       0.1 //??
 #define SHIFT_FORCE_SCL     1.0 //??
+#define AIR_TEMP_SCL        1.0 //??
 
 // From GCM
 #define GEAR_SCL           1

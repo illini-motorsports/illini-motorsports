@@ -172,46 +172,47 @@ void process_CAN_msg(CAN_message msg){
 
     /*Motec Paddle Shifting*/
     case MOTEC_ID + 0:
-      rpm.value = parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL);
-      throtPos.value = parseMsgMotec(&msg, THROTTLE_POS_BYTE, THROTTLE_POS_SCL);
-      lambda.value = parseMsgMotec(&msg, LAMBDA_BYTE, LAMBDA_SCL);
-      batVoltage.value = parseMsgMotec(&msg, VOLT_ECU_BYTE, VOLT_ECU_SCL);
+      motecDataItems[ENG_RPM_IDX].value = parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL);
+      motecDataItems[THROTTLE_POS_IDX].value = parseMsgMotec(&msg, THROTTLE_POS_BYTE, THROTTLE_POS_SCL);
+      motecDataItems[LAMBDA_IDX].value = parseMsgMotec(&msg, LAMBDA_BYTE, LAMBDA_SCL);
+      motecDataItems[VOLT_ECU_IDX].value = parseMsgMotec(&msg, VOLT_ECU_BYTE, VOLT_ECU_SCL);
       break;
     case MOTEC_ID + 1:
-      waterTemp.value = parseMsgMotec(&msg, ENG_TEMP_BYTE, ENG_TEMP_SCL);
-      oilTemp.value = parseMsgMotec(&msg, OIL_TEMP_BYTE, OIL_TEMP_SCL);
-      manifoldTemp.value = parseMsgMotec(&msg, MANIFOLD_TEMP_BYTE, MANIFOLD_TEMP_SCL);
-      fuelTemp.value = parseMsgMotec(&msg, FUEL_TEMP_BYTE, FUEL_TEMP_SCL);
+      motecDataItems[ENG_TEMP_IDX].value = parseMsgMotec(&msg, ENG_TEMP_BYTE, ENG_TEMP_SCL);
+      motecDataItems[OIL_TEMP_IDX].value = parseMsgMotec(&msg, OIL_TEMP_BYTE, OIL_TEMP_SCL);
+      motecDataItems[MANIFOLD_TEMP_IDX].value = parseMsgMotec(&msg, MANIFOLD_TEMP_BYTE, MANIFOLD_TEMP_SCL);
+      motecDataItems[FUEL_TEMP_IDX].value = parseMsgMotec(&msg, FUEL_TEMP_BYTE, FUEL_TEMP_SCL);
       break;
     case MOTEC_ID + 2:
-      ambientPress.value = parseMsgMotec(&msg, AMBIENT_PRES_BYTE, AMBIENT_PRES_SCL);
-      oilPress.value = parseMsgMotec(&msg, OIL_PRES_BYTE, OIL_PRES_SCL);
-      manifoldPress.value = parseMsgMotec(&msg, MANIFOLD_TEMP_BYTE, MANIFOLD_TEMP_SCL);
-      fuelPress.value = parseMsgMotec(&msg, FUEL_PRES_BYTE, FUEL_PRES_SCL);
+      motecDataItems[AMBIENT_PRES_IDX].value = parseMsgMotec(&msg, AMBIENT_PRES_BYTE, AMBIENT_PRES_SCL);
+      motecDataItems[OIL_PRES_IDX].value = parseMsgMotec(&msg, OIL_PRES_BYTE, OIL_PRES_SCL);
+      motecDataItems[MANIFOLD_PRES_IDX].value = parseMsgMotec(&msg, MANIFOLD_TEMP_BYTE, MANIFOLD_TEMP_SCL);
+      motecDataItems[FUEL_PRES_IDX].value = parseMsgMotec(&msg, FUEL_PRES_BYTE, FUEL_PRES_SCL);
       break;
     case MOTEC_ID + 3:
-      wheelSpeedFL.value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
-      wheelSpeedFR.value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
-      wheelSpeedRL.value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
-      wheelSpeedRR.value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
+      motecDataItems[WHEELSPEED_FL_IDX].value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
+      motecDataItems[WHEELSPEED_FR_IDX].value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
+      motecDataItems[WHEELSPEED_RL_IDX].value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
+      motecDataItems[WHEELSPEED_RR_IDX].value = parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL);
       break;
     case MOTEC_ID + 4:
-      driveSpeed.value = parseMsgMotec(&msg, DRIVE_SPEED_BYTE, DRIVE_SPEED_SCL);
-      groundSpeed.value = parseMsgMotec(&msg, GROUND_SPEED_BYTE, GROUND_SPEED_SCL);
-      gpsSpeed.value = parseMsgMotec(&msg, GPS_SPEED_BYTE, GPS_SPEED_SCL);
-      gpsAltitude.value = parseMsgMotec(&msg, GPS_ALT_BYTE, GPS_ALT_SCL);
+      motecDataItems[DRIVE_SPEED_IDX].value = parseMsgMotec(&msg, DRIVE_SPEED_BYTE, DRIVE_SPEED_SCL);
+      motecDataItems[GROUND_SPEED_IDX].value = parseMsgMotec(&msg, GROUND_SPEED_BYTE, GROUND_SPEED_SCL);
+      motecDataItems[GPS_SPEED_IDX].value = parseMsgMotec(&msg, GPS_SPEED_BYTE, GPS_SPEED_SCL);
+      motecDataItems[GPS_ALT_IDX].value = parseMsgMotec(&msg, GPS_ALT_BYTE, GPS_ALT_SCL);
       break;
     case MOTEC_ID + 5:
       break;
     case MOTEC_ID + 6:
-      gpsTime.value = (double) ((msg.data[GPS_TIME_BYTE] << 24)|(msg.data[GPS_TIME_BYTE+1] << 16)
-          |(msg.data[GPS_TIME_BYTE+2] << 8)|msg.data[GPS_TIME_BYTE+3]) * GPS_TIME_SCL;
-      runTime.value = parseMsgMotec(&msg, RUN_TIME_BYTE, RUN_TIME_SCL);
-      fuelConsum.value = parseMsgMotec(&msg, FUEL_USED_BYTE, FUEL_USED_SCL);
+      motecDataItems[GPS_TIME_IDX].value = (double) ((msg.data[GPS_TIME_BYTE] << 24)|(msg.data[GPS_TIME_BYTE+1] << 16) |(msg.data[GPS_TIME_BYTE+2] << 8)|msg.data[GPS_TIME_BYTE+3]) * GPS_TIME_SCL;
+      motecDataItems[RUN_TIME_IDX].value = parseMsgMotec(&msg, RUN_TIME_BYTE, RUN_TIME_SCL);
+      motecDataItems[FUEL_USED_IDX].value = parseMsgMotec(&msg, FUEL_USED_BYTE, FUEL_USED_SCL);
       break;
     case MOTEC_ID + 7:
-      fuelInjDuty.value = parseMsgMotec(&msg, FUEL_INJ_DUTY_BYTE, FUEL_INJ_DUTY_SCL);
-      fuelTrim.value = parseMsgMotec(&msg, FUEL_TRIM_BYTE, FUEL_TRIM_SCL);
+      motecDataItems[FUEL_INJ_DUTY_IDX].value = parseMsgMotec(&msg, FUEL_INJ_DUTY_BYTE, FUEL_INJ_DUTY_SCL);
+      motecDataItems[FUEL_TRIM_IDX].value = parseMsgMotec(&msg, FUEL_TRIM_BYTE, FUEL_TRIM_SCL);
+      motecDataItems[SHIFT_FORCE_IDX].value = parseMsgMotec(&msg, SHIFT_FORCE_BYTE, SHIFT_FORCE_SCL);
+      motecDataItems[AIR_TEMP_IDX].value = parseMsgMotec(&msg, AIR_TEMP_BYTE, AIR_TEMP_SCL);
       break;
 
       /*GCM ID's*/
