@@ -80,51 +80,6 @@
 #define CAN_SW_ADL_FREQ   500
 #define CAN_DIAG_FREQ     1000
 
-//PDM Bitmask bits
-#define STR_ENBL_BIT   0x10
-#define BVBAT_ENBL_BIT 0x20
-#define AUX_ENBL_BIT   0x40
-#define ECU_ENBL_BIT   0x80
-#define WTR_ENBL_BIT   0x100
-#define FAN_ENBL_BIT   0x200
-#define PDLD_ENBL_BIT  0x400
-#define PDLU_ENBL_BIT  0x800
-#define ABS_ENBL_BIT   0x1000
-#define INJ_ENBL_BIT   0x2000
-#define IGN_ENBL_BIT   0x4000
-#define FUEL_ENBL_BIT  0x8000
-
-#define STR_PEAKM_BIT   0x10
-#define BVBAT_PEAKM_BIT 0x20
-#define AUX_PEAKM_BIT   0x40
-#define ECU_PEAKM_BIT   0x80
-#define WTR_PEAKM_BIT   0x100
-#define FAN_PEAKM_BIT   0x200
-#define PDLD_PEAKM_BIT  0x400
-#define PDLU_PEAKM_BIT  0x800
-#define ABS_PEAKM_BIT   0x1000
-#define INJ_PEAKM_BIT   0x2000
-#define IGN_PEAKM_BIT   0x4000
-#define FUEL_PEAKM_BIT  0x8000
-
-#define AUX2_PDM_SW_BIT   0x1
-#define AUX1_PDM_SW_BIT   0x2
-#define ABS_PDM_SW_BIT    0x4
-#define KILL_PDM_SW_BIT   0x8
-#define ACT_DN_PDM_SW_BIT 0x10
-#define ACT_UP_PDM_SW_BIT 0x20
-#define ON_PDM_SW_BIT     0x40
-#define STR_PDM_SW_BIT    0x80
-
-#define KILL_ENGINE_PDM_FLAG_BIT  0x10
-#define KILL_CAR_PDM_FLAG_BIT     0x20
-#define OVER_TEMP_PDM_FLAG_BIT    0x40
-#define FUEL_PRIME_PDM_FLAG_BIT   0x80
-
-#define PADDLE_UP_GCM_SW_BIT      0x1
-#define PADDLE_DOWN_GCM_SW_BIT    0x2
-#define NEUTRAL_GCM_SW_BIT        0x4
-
 volatile uint32_t millis;
 
 void main(void);

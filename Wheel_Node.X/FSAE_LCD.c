@@ -61,6 +61,10 @@ void initDataItems(void){
     initDataItem(&tireTempDataItems[i],0,0,MIN_REFRESH,2,1); 
   }
 
+  for(i=0;i<SPM_DATAITEM_SIZE;i++) {
+    initDataItem(&spmDataItems[i],0,0,MIN_REFRESH,2,1);
+  }
+
   // Rear Analog Hub
   initDataItem(&susPosRR,0,0,MIN_REFRESH,2,1);
   initDataItem(&susPosRL,0,0,MIN_REFRESH,2,1);

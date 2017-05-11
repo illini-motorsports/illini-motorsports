@@ -32,12 +32,12 @@ void main(void) {
   auxNumber = 0;
 
   // Init Relevant Pins
-  LCD_CS_TRIS = OUTPUT;
   LCD_CS_LAT = 1;
-  LCD_RST_TRIS = OUTPUT;
+  LCD_CS_TRIS = OUTPUT;
   LCD_RST_LAT = 1;
-  LCD_PWM_TRIS = OUTPUT;
+  LCD_RST_TRIS = OUTPUT;
   LCD_PWM_LAT = 1; //TODO: This is full brightness, PWM for other settings
+  LCD_PWM_TRIS = OUTPUT;
 
   SW1_TRIS = INPUT;
   SW2_TRIS = INPUT;
@@ -71,7 +71,6 @@ void main(void) {
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
 
   //fillScreen(RA8875_BLACK);
-  //drawChevron(150,15,130,200,RA8875_RED,RA8875_BLACK);
 
   // Initialize All the data streams
   initDataItems();
@@ -168,9 +167,8 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
 void process_CAN_msg(CAN_message msg){
   uint16_t * lsbArray = (uint16_t *) msg.data;
   switch (msg.id) {
-    /*
 
-    /*Motec Paddle Shifting*/
+    /*Motec*/
     case MOTEC_ID + 0:
       motecDataItems[ENG_RPM_IDX].value = parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL);
       motecDataItems[THROTTLE_POS_IDX].value = parseMsgMotec(&msg, THROTTLE_POS_BYTE, THROTTLE_POS_SCL);
@@ -215,7 +213,7 @@ void process_CAN_msg(CAN_message msg){
       motecDataItems[AIR_TEMP_IDX].value = parseMsgMotec(&msg, AIR_TEMP_BYTE, AIR_TEMP_SCL);
       break;
 
-      /*GCM ID's*/
+      /*GCM*/
     case GCM_ID:
       gcmDataItems[UPTIME_IDX].value = (uint16_t) (lsbArray[UPTIME_BYTE/2]) * UPTIME_SCL;
       gcmDataItems[PCB_TEMP_IDX].value = (int16_t) (lsbArray[PCB_TEMP_BYTE/2]) * PCB_TEMP_SCL;
@@ -227,15 +225,15 @@ void process_CAN_msg(CAN_message msg){
       gcmDataItems[FORCE_IDX].value = (int16_t) (lsbArray[FORCE_BYTE/2]) * FORCE_SCL;
       break;
     case GCM_ID + 2:
-      gcmDataItems[PADDLE_UP_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & PADDLE_UP_GCM_SW_BIT;
-      gcmDataItems[PADDLE_DOWN_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & PADDLE_DOWN_GCM_SW_BIT;
-      gcmDataItems[NEUTRAL_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & NEUTRAL_GCM_SW_BIT;
+      gcmDataItems[PADDLE_UP_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & PADDLE_UP_GCM_SW_MASK;
+      gcmDataItems[PADDLE_DOWN_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & PADDLE_DOWN_GCM_SW_MASK;
+      gcmDataItems[NEUTRAL_SW_IDX].value = msg.data[GCM_SWITCH_BYTE] & NEUTRAL_GCM_SW_MASK;
       gcmDataItems[QUEUE_UP_IDX].value = (uint8_t) (msg.data[QUEUE_UP_BYTE]) * QUEUE_UP_SCL;
       gcmDataItems[QUEUE_DN_IDX].value = (uint8_t) (msg.data[QUEUE_DN_BYTE]) * QUEUE_DN_SCL;
       gcmDataItems[QUEUE_NT_IDX].value = (uint8_t) (msg.data[QUEUE_NT_BYTE]) * QUEUE_NT_SCL;
       break;
 
-      /*PDM ID's*/
+      /*PDM*/
     case PDM_ID:
       pdmDataItems[UPTIME_IDX].value = (uint16_t) (lsbArray[UPTIME_BYTE/2]) * UPTIME_SCL;
       pdmDataItems[PCB_TEMP_IDX].value = (int16_t) (lsbArray[PCB_TEMP_BYTE/2]) * PCB_TEMP_SCL;
@@ -244,51 +242,51 @@ void process_CAN_msg(CAN_message msg){
     case PDM_ID + 1:
 
       // Enablity
-      pdmDataItems[STR_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & STR_ENBL_BIT;
-      pdmDataItems[BVBAT_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & BVBAT_ENBL_BIT;
-      pdmDataItems[AUX_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & AUX_ENBL_BIT;
-      pdmDataItems[ECU_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & ECU_ENBL_BIT;
-      pdmDataItems[WTR_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & WTR_ENBL_BIT;
-      pdmDataItems[FAN_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & FAN_ENBL_BIT;
-      pdmDataItems[PDLD_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLD_ENBL_BIT;
-      pdmDataItems[PDLU_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLU_ENBL_BIT;
-      pdmDataItems[ABS_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & ABS_ENBL_BIT;
-      pdmDataItems[INJ_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & INJ_ENBL_BIT;
-      pdmDataItems[IGN_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & IGN_ENBL_BIT;
-      pdmDataItems[FUEL_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & FUEL_ENBL_BIT;
+      pdmDataItems[STR_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & STR_ENBL_MASK;
+      pdmDataItems[BVBAT_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & BVBAT_ENBL_MASK;
+      pdmDataItems[AUX_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & AUX_ENBL_MASK;
+      pdmDataItems[ECU_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & ECU_ENBL_MASK;
+      pdmDataItems[WTR_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & WTR_ENBL_MASK;
+      pdmDataItems[FAN_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & FAN_ENBL_MASK;
+      pdmDataItems[PDLD_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLD_ENBL_MASK;
+      pdmDataItems[PDLU_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & PDLU_ENBL_MASK;
+      pdmDataItems[ABS_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & ABS_ENBL_MASK;
+      pdmDataItems[INJ_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & INJ_ENBL_MASK;
+      pdmDataItems[IGN_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & IGN_ENBL_MASK;
+      pdmDataItems[FUEL_ENABLITY_IDX].value = lsbArray[LOAD_ENABLITY_BYTE/2] & FUEL_ENBL_MASK;
 
       // Peak Mode
-      pdmDataItems[STR_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & STR_PEAKM_BIT;
-      pdmDataItems[BVBAT_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & BVBAT_PEAKM_BIT;
-      pdmDataItems[AUX_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & AUX_PEAKM_BIT;
-      pdmDataItems[ECU_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & ECU_PEAKM_BIT;
-      pdmDataItems[WTR_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & WTR_PEAKM_BIT;
-      pdmDataItems[FAN_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & FAN_PEAKM_BIT;
-      pdmDataItems[PDLD_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & PDLD_PEAKM_BIT;
-      pdmDataItems[PDLU_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & PDLU_PEAKM_BIT;
-      pdmDataItems[ABS_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & ABS_PEAKM_BIT;
-      pdmDataItems[INJ_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & INJ_PEAKM_BIT;
-      pdmDataItems[IGN_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & IGN_PEAKM_BIT;
-      pdmDataItems[FUEL_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & FUEL_PEAKM_BIT;
+      pdmDataItems[STR_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & STR_PEAKM_MASK;
+      pdmDataItems[BVBAT_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & BVBAT_PEAKM_MASK;
+      pdmDataItems[AUX_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & AUX_PEAKM_MASK;
+      pdmDataItems[ECU_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & ECU_PEAKM_MASK;
+      pdmDataItems[WTR_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & WTR_PEAKM_MASK;
+      pdmDataItems[FAN_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & FAN_PEAKM_MASK;
+      pdmDataItems[PDLD_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & PDLD_PEAKM_MASK;
+      pdmDataItems[PDLU_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & PDLU_PEAKM_MASK;
+      pdmDataItems[ABS_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & ABS_PEAKM_MASK;
+      pdmDataItems[INJ_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & INJ_PEAKM_MASK;
+      pdmDataItems[IGN_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & IGN_PEAKM_MASK;
+      pdmDataItems[FUEL_PEAK_MODE_IDX].value = lsbArray[LOAD_PEAK_BYTE/2] & FUEL_PEAKM_MASK;
 
       // Total current
       pdmDataItems[TOTAL_CURRENT_IDX].value = (uint16_t) (lsbArray[TOTAL_CURRENT_BYTE/2]) * TOTAL_CURRENT_SCL;
 
       // Switch bitmap
-      pdmDataItems[AUX2_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & AUX2_PDM_SW_BIT;
-      pdmDataItems[AUX1_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & AUX1_PDM_SW_BIT;
-      pdmDataItems[ABS_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ABS_PDM_SW_BIT;
-      pdmDataItems[KILL_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & KILL_PDM_SW_BIT;
-      pdmDataItems[ACT_DN_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ACT_DN_PDM_SW_BIT;
-      pdmDataItems[ACT_UP_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ACT_UP_PDM_SW_BIT;
-      pdmDataItems[ON_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ON_PDM_SW_BIT;
-      pdmDataItems[STR_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & STR_PDM_SW_BIT;
+      pdmDataItems[AUX2_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & AUX2_PDM_SW_MASK;
+      pdmDataItems[AUX1_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & AUX1_PDM_SW_MASK;
+      pdmDataItems[ABS_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ABS_PDM_SW_MASK;
+      pdmDataItems[KILL_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & KILL_PDM_SW_MASK;
+      pdmDataItems[ACT_DN_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ACT_DN_PDM_SW_MASK;
+      pdmDataItems[ACT_UP_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ACT_UP_PDM_SW_MASK;
+      pdmDataItems[ON_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & ON_PDM_SW_MASK;
+      pdmDataItems[STR_SWITCH_IDX].value = msg.data[PDM_SWITCH_BYTE] & STR_PDM_SW_MASK;
 
       // Flags
-      pdmDataItems[KILL_ENGINE_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & KILL_ENGINE_PDM_FLAG_BIT;
-      pdmDataItems[KILL_CAR_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & KILL_CAR_PDM_FLAG_BIT;
-      pdmDataItems[OVER_TEMP_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & OVER_TEMP_PDM_FLAG_BIT;
-      pdmDataItems[FUEL_PRIME_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & FUEL_PRIME_PDM_FLAG_BIT;
+      pdmDataItems[KILL_ENGINE_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & KILL_ENGINE_PDM_FLAG_MASK;
+      pdmDataItems[KILL_CAR_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & KILL_CAR_PDM_FLAG_MASK;
+      pdmDataItems[OVER_TEMP_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & OVER_TEMP_PDM_FLAG_MASK;
+      pdmDataItems[FUEL_PRIME_FLAG_IDX].value = msg.data[PDM_FLAG_BYTE] & FUEL_PRIME_PDM_FLAG_MASK;
       break;
     case PDM_ID + 2:
       pdmDataItems[VBAT_RAIL_IDX].value = (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL;
@@ -356,32 +354,140 @@ void process_CAN_msg(CAN_message msg){
 
       /*Tire Temps*/
     case TIRE_TEMP_FL_ID:
-      tireTempDataItems[FL0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[FL1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[FL2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[FL3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FL0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FL1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FL2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FL3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
       tireTempDataItems[FL].value = (tireTempDataItems[FL0].value + tireTempDataItems[FL1].value + tireTempDataItems[FL2].value + tireTempDataItems[FL3].value)/4.0;
       break;
     case TIRE_TEMP_FR_ID:
-      tireTempDataItems[FR0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[FR1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[FR2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[FR3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[FR0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FR1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FR2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FR3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
       tireTempDataItems[FR].value = (tireTempDataItems[FR0].value + tireTempDataItems[FR1].value + tireTempDataItems[FR2].value + tireTempDataItems[FR3].value)/4.0;
       break;
     case TIRE_TEMP_RL_ID:
-      tireTempDataItems[RL0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[RL1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[RL2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[RL3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RL0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RL1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RL2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RL3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
       tireTempDataItems[RL].value = (tireTempDataItems[RL0].value + tireTempDataItems[RL1].value + tireTempDataItems[RL2].value + tireTempDataItems[RL3].value)/4.0;
       break;
     case TIRE_TEMP_RR_ID:
-      tireTempDataItems[RR0].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_1_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[RR1].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_2_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[RR2].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_3_BYTE])*TIRE_TEMP_SCL);
-      tireTempDataItems[RR3].value = (double) ((uint16_t) (msg.data[TIRE_TEMP_4_BYTE])*TIRE_TEMP_SCL);
+      tireTempDataItems[RR0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RR1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RR2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RR3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
       tireTempDataItems[RR].value = (tireTempDataItems[RR0].value + tireTempDataItems[RR1].value + tireTempDataItems[RR2].value + tireTempDataItems[RR3].value)/4.0;
+      break;
+
+      // SPM
+    case SPM_ID:
+      spmDataItems[UPTIME_IDX].value = (uint16_t) (lsbArray[UPTIME_BYTE/2]) * UPTIME_SCL;
+      spmDataItems[PCB_TEMP_IDX].value = (int16_t) (lsbArray[PCB_TEMP_BYTE/2]) * PCB_TEMP_SCL;
+      spmDataItems[IC_TEMP_IDX].value = (int16_t) (lsbArray[IC_TEMP_BYTE/2]) * IC_TEMP_SCL;
+      break;
+    case SPM_ID + 1:
+      spmDataItems[ANALOG_CHAN_0_IDX].value = (double) (lsbArray[ANALOG_CHAN_0_BYTE/2] * ANALOG_CHAN_0_SCL);
+      spmDataItems[ANALOG_CHAN_1_IDX].value = (double) (lsbArray[ANALOG_CHAN_1_BYTE/2] * ANALOG_CHAN_1_SCL);
+      spmDataItems[ANALOG_CHAN_2_IDX].value = (double) (lsbArray[ANALOG_CHAN_2_BYTE/2] * ANALOG_CHAN_2_SCL);
+      spmDataItems[ANALOG_CHAN_3_IDX].value = (double) (lsbArray[ANALOG_CHAN_3_BYTE/2] * ANALOG_CHAN_3_SCL);
+      break;
+    case SPM_ID + 2:
+      spmDataItems[ANALOG_CHAN_4_IDX].value = (double) (lsbArray[ANALOG_CHAN_4_BYTE/2] * ANALOG_CHAN_4_SCL);
+      spmDataItems[ANALOG_CHAN_5_IDX].value = (double) (lsbArray[ANALOG_CHAN_5_BYTE/2] * ANALOG_CHAN_5_SCL);
+      spmDataItems[ANALOG_CHAN_6_IDX].value = (double) (lsbArray[ANALOG_CHAN_6_BYTE/2] * ANALOG_CHAN_6_SCL);
+      spmDataItems[ANALOG_CHAN_7_IDX].value = (double) (lsbArray[ANALOG_CHAN_7_BYTE/2] * ANALOG_CHAN_7_SCL);
+      break;
+    case SPM_ID + 3:
+      spmDataItems[ANALOG_CHAN_8_IDX].value = (double) (lsbArray[ANALOG_CHAN_8_BYTE/2] * ANALOG_CHAN_8_SCL);
+      spmDataItems[ANALOG_CHAN_9_IDX].value = (double) (lsbArray[ANALOG_CHAN_9_BYTE/2] * ANALOG_CHAN_9_SCL);
+      spmDataItems[ANALOG_CHAN_10_IDX].value = (double) (lsbArray[ANALOG_CHAN_10_BYTE/2] * ANALOG_CHAN_10_SCL);
+      spmDataItems[ANALOG_CHAN_11_IDX].value = (double) (lsbArray[ANALOG_CHAN_11_BYTE/2] * ANALOG_CHAN_11_SCL);
+      break;
+    case SPM_ID + 4:
+      spmDataItems[ANALOG_CHAN_12_IDX].value = (double) (lsbArray[ANALOG_CHAN_12_BYTE/2] * ANALOG_CHAN_12_SCL);
+      spmDataItems[ANALOG_CHAN_13_IDX].value = (double) (lsbArray[ANALOG_CHAN_13_BYTE/2] * ANALOG_CHAN_13_SCL);
+      spmDataItems[ANALOG_CHAN_14_IDX].value = (double) (lsbArray[ANALOG_CHAN_14_BYTE/2] * ANALOG_CHAN_14_SCL);
+      spmDataItems[ANALOG_CHAN_15_IDX].value = (double) (lsbArray[ANALOG_CHAN_15_BYTE/2] * ANALOG_CHAN_15_SCL);
+      break;
+    case SPM_ID + 5:
+      spmDataItems[ANALOG_CHAN_16_IDX].value = (double) (lsbArray[ANALOG_CHAN_16_BYTE/2] * ANALOG_CHAN_16_SCL);
+      spmDataItems[ANALOG_CHAN_17_IDX].value = (double) (lsbArray[ANALOG_CHAN_17_BYTE/2] * ANALOG_CHAN_17_SCL);
+      spmDataItems[ANALOG_CHAN_18_IDX].value = (double) (lsbArray[ANALOG_CHAN_18_BYTE/2] * ANALOG_CHAN_18_SCL);
+      spmDataItems[ANALOG_CHAN_19_IDX].value = (double) (lsbArray[ANALOG_CHAN_19_BYTE/2] * ANALOG_CHAN_19_SCL);
+      break;
+    case SPM_ID + 6:
+      spmDataItems[ANALOG_CHAN_20_IDX].value = (double) (lsbArray[ANALOG_CHAN_20_BYTE/2] * ANALOG_CHAN_20_SCL);
+      spmDataItems[ANALOG_CHAN_21_IDX].value = (double) (lsbArray[ANALOG_CHAN_21_BYTE/2] * ANALOG_CHAN_21_SCL);
+      spmDataItems[ANALOG_CHAN_22_IDX].value = (double) (lsbArray[ANALOG_CHAN_22_BYTE/2] * ANALOG_CHAN_22_SCL);
+      spmDataItems[ANALOG_CHAN_23_IDX].value = (double) (lsbArray[ANALOG_CHAN_23_BYTE/2] * ANALOG_CHAN_23_SCL);
+      break;
+    case SPM_ID + 7:
+      spmDataItems[ANALOG_CHAN_24_IDX].value = (double) (lsbArray[ANALOG_CHAN_24_BYTE/2] * ANALOG_CHAN_24_SCL);
+      spmDataItems[ANALOG_CHAN_25_IDX].value = (double) (lsbArray[ANALOG_CHAN_25_BYTE/2] * ANALOG_CHAN_25_SCL);
+      spmDataItems[ANALOG_CHAN_26_IDX].value = (double) (lsbArray[ANALOG_CHAN_26_BYTE/2] * ANALOG_CHAN_26_SCL);
+      spmDataItems[ANALOG_CHAN_27_IDX].value = (double) (lsbArray[ANALOG_CHAN_27_BYTE/2] * ANALOG_CHAN_27_SCL);
+      break;
+    case SPM_ID + 8:
+      spmDataItems[ANALOG_CHAN_28_IDX].value = (double) (lsbArray[ANALOG_CHAN_28_BYTE/2] * ANALOG_CHAN_28_SCL);
+      spmDataItems[ANALOG_CHAN_29_IDX].value = (double) (lsbArray[ANALOG_CHAN_29_BYTE/2] * ANALOG_CHAN_29_SCL);
+      spmDataItems[ANALOG_CHAN_30_IDX].value = (double) (lsbArray[ANALOG_CHAN_30_BYTE/2] * ANALOG_CHAN_30_SCL);
+      spmDataItems[ANALOG_CHAN_31_IDX].value = (double) (lsbArray[ANALOG_CHAN_31_BYTE/2] * ANALOG_CHAN_31_SCL);
+      break;
+    case SPM_ID + 9:
+      spmDataItems[ANALOG_CHAN_32_IDX].value = (double) (lsbArray[ANALOG_CHAN_32_BYTE/2] * ANALOG_CHAN_32_SCL);
+      spmDataItems[ANALOG_CHAN_33_IDX].value = (double) (lsbArray[ANALOG_CHAN_33_BYTE/2] * ANALOG_CHAN_33_SCL);
+      spmDataItems[ANALOG_CHAN_34_IDX].value = (double) (lsbArray[ANALOG_CHAN_34_BYTE/2] * ANALOG_CHAN_34_SCL);
+      spmDataItems[ANALOG_CHAN_35_IDX].value = (double) (lsbArray[ANALOG_CHAN_35_BYTE/2] * ANALOG_CHAN_35_SCL);
+      break;
+    case SPM_ID + 10:
+      spmDataItems[TCOUPLE_0_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_0_BYTE/2]) * TCOUPLE_SCL);
+      spmDataItems[TCOUPLE_1_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_1_BYTE/2]) * TCOUPLE_SCL);
+      spmDataItems[TCOUPLE_2_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_2_BYTE/2]) * TCOUPLE_SCL);
+      spmDataItems[TCOUPLE_3_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_3_BYTE/2]) * TCOUPLE_SCL);
+      break;
+    case SPM_ID + 11:
+      spmDataItems[TCOUPLE_4_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_4_BYTE/2]) * TCOUPLE_SCL); 
+      spmDataItems[TCOUPLE_5_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_5_BYTE/2]) * TCOUPLE_SCL);
+      spmDataItems[AVG_JUNCT_TEMP_IDX].value = (double) ((int16_t) (lsbArray[AVG_JUNCT_TEMP_BYTE/2]) * AVG_JUNCT_TEMP_SCL);
+      spmDataItems[TCOUPLE_1_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_0_FAULT_MASK;
+      spmDataItems[TCOUPLE_1_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_1_FAULT_MASK;
+      spmDataItems[TCOUPLE_2_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_2_FAULT_MASK;
+      spmDataItems[TCOUPLE_3_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_3_FAULT_MASK;
+      spmDataItems[TCOUPLE_4_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_4_FAULT_MASK;
+      spmDataItems[TCOUPLE_5_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_5_FAULT_MASK;
+      break;
+    case SPM_ID + 12:
+      spmDataItems[DIGITAL_INPUT_0_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_0_MASK;
+      spmDataItems[DIGITAL_INPUT_1_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_1_MASK;
+      spmDataItems[DIGITAL_INPUT_2_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_2_MASK;
+      spmDataItems[DIGITAL_INPUT_3_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_3_MASK;
+      spmDataItems[DIGITAL_INPUT_4_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_4_MASK;
+      spmDataItems[DIGITAL_INPUT_5_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_5_MASK;
+      spmDataItems[DIGITAL_INPUT_6_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_6_MASK;
+      spmDataItems[DIGITAL_INPUT_7_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_7_MASK;
+      spmDataItems[DIGITAL_INPUT_8_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_8_MASK;
+      spmDataItems[DIGITAL_INPUT_9_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_9_MASK;
+      spmDataItems[DIGITAL_INPUT_10_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_10_MASK;
+      spmDataItems[DIGITAL_INPUT_11_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_11_MASK;
+      spmDataItems[DIGITAL_INPUT_12_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_12_MASK;
+      spmDataItems[DIGITAL_INPUT_13_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_13_MASK;
+      spmDataItems[DIGITAL_INPUT_14_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_14_MASK;
+      spmDataItems[DIGITAL_INPUT_15_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_15_MASK;
+      spmDataItems[FREQ_COUNT_0_IDX].value = (double) (lsbArray[FREQ_COUNT_0_BYTE] * FREQ_COUNT_0_SCL);
+      spmDataItems[FREQ_COUNT_1_IDX].value = (double) (lsbArray[FREQ_COUNT_0_BYTE] * FREQ_COUNT_0_SCL);
+      spmDataItems[FREQ_COUNT_2_IDX].value = (double) (lsbArray[FREQ_COUNT_0_BYTE] * FREQ_COUNT_0_SCL);
+      break;
+    case SPM_ID + 13:
+      spmDataItems[PGA_0_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_0_SETTINGS_MASK) >> PGA_0_SETTINGS_SHF;
+      spmDataItems[PGA_1_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_1_SETTINGS_MASK) >> PGA_1_SETTINGS_SHF;
+      spmDataItems[PGA_2_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_2_SETTINGS_MASK) >> PGA_2_SETTINGS_SHF;
+      spmDataItems[PGA_3_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_3_SETTINGS_MASK) >> PGA_3_SETTINGS_SHF;
+      spmDataItems[FREQ_0_SETTINGS_IDX].value = (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_0_SETTINGS_MASK) >> FREQ_0_SETTINGS_SHF;
+      spmDataItems[FREQ_1_SETTINGS_IDX].value = (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_1_SETTINGS_MASK) >> FREQ_1_SETTINGS_SHF;
+      spmDataItems[FREQ_2_SETTINGS_IDX].value = (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_2_SETTINGS_MASK) >> FREQ_2_SETTINGS_SHF;
       break;
 
       /*Front Analog Hub*/

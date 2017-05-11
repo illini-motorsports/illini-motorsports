@@ -15,34 +15,36 @@
 #include "RA8875_driver.h"
 
 // Define race screen constants
-#define NUM_SCREENS 		8
-#define RACE_SCREEN 		0
-#define PDM_DRAW_SCREEN 	1
-#define PDM_CUT_SCREEN  	2
-#define MOTEC_SCREEN		3
-#define END_RACE_SCREEN		4
-#define CHASSIS_SCREEN		5
-#define GENERAL_SCREEN		6
-#define BRAKE_SCREEN		7
-#define MIN_REFRESH		100
+#define NUM_SCREENS           8
+#define RACE_SCREEN           0
+#define PDM_DRAW_SCREEN       1
+#define PDM_CUT_SCREEN        2
+#define MOTEC_SCREEN          3
+#define END_RACE_SCREEN       4
+#define CHASSIS_SCREEN        5
+#define GENERAL_SCREEN        6
+#define BRAKE_SCREEN          7
 
-#define MIN_SUS_POS		5
-#define MAX_SUS_POS		20
+#define MIN_REFRESH		        100
+
+#define MIN_SUS_POS		        5
+#define MAX_SUS_POS		        20
 
 #define MIN_BRAKE_PRESS     	0
 #define MAX_BRAKE_PRESS     	250
 
-#define REV_RANGE_1 7000
-#define REV_RANGE_2 8000
-#define REV_RANGE_3 9000
-#define REV_RANGE_4 10000
-#define REV_RANGE_5 10500
-#define REV_RANGE_6 11000
-#define REV_RANGE_7 11500
-#define REV_RANGE_8 12000
-#define REV_RANGE_9 12500
-#define REV_RANGE_REDLINE 13000
+#define REV_RANGE_1           7000
+#define REV_RANGE_2           8000
+#define REV_RANGE_3           9000
+#define REV_RANGE_4           10000
+#define REV_RANGE_5           10500
+#define REV_RANGE_6           11000
+#define REV_RANGE_7           11500
+#define REV_RANGE_8           12000
+#define REV_RANGE_9           12500
+#define REV_RANGE_REDLINE     13000
 
+// PDM Dataitem Constants
 #define PDM_DATAITEM_SIZE     93
 
 #define UPTIME_IDX            0
@@ -129,7 +131,7 @@
 #define BVBAT_OC_COUNT_IDX    91
 #define STR_OC_COUNT_IDX      92
 
-//GCM
+//GCM DataItem Constants
 #define GCM_DATAITEM_SIZE     12
 
 #define GEAR_IDX              3
@@ -142,7 +144,7 @@
 #define QUEUE_DN_IDX          10
 #define QUEUE_NT_IDX          11
 
-//MOTEC
+//MOTEC DataItem Constants
 #define MOTEC_DATAITEM_SIZE   29
 
 #define ENG_RPM_IDX           0
@@ -175,6 +177,7 @@
 #define SHIFT_FORCE_IDX       27
 #define AIR_TEMP_IDX          28
 
+//TireTemp DataItem Constants
 #define TIRETEMP_DATAITEM_SIZE  20
 
 #define FL                    0
@@ -198,6 +201,83 @@
 #define RR2                   18
 #define RR3                   19
 
+#define SPM_DATAITEM_SIZE       78
+                               
+#define ANALOG_CHAN_0_IDX       3
+#define ANALOG_CHAN_1_IDX       4
+#define ANALOG_CHAN_2_IDX       5
+#define ANALOG_CHAN_3_IDX       6
+#define ANALOG_CHAN_4_IDX       7
+#define ANALOG_CHAN_5_IDX       8
+#define ANALOG_CHAN_6_IDX       9
+#define ANALOG_CHAN_7_IDX       10
+#define ANALOG_CHAN_8_IDX       11
+#define ANALOG_CHAN_9_IDX       12
+#define ANALOG_CHAN_10_IDX      13
+#define ANALOG_CHAN_11_IDX      14
+#define ANALOG_CHAN_12_IDX      15
+#define ANALOG_CHAN_13_IDX      16
+#define ANALOG_CHAN_14_IDX      17
+#define ANALOG_CHAN_15_IDX      18
+#define ANALOG_CHAN_16_IDX      19
+#define ANALOG_CHAN_17_IDX      20
+#define ANALOG_CHAN_18_IDX      21
+#define ANALOG_CHAN_19_IDX      22
+#define ANALOG_CHAN_20_IDX      23
+#define ANALOG_CHAN_21_IDX      24
+#define ANALOG_CHAN_22_IDX      25
+#define ANALOG_CHAN_23_IDX      26
+#define ANALOG_CHAN_24_IDX      27
+#define ANALOG_CHAN_25_IDX      28
+#define ANALOG_CHAN_26_IDX      29
+#define ANALOG_CHAN_27_IDX      30
+#define ANALOG_CHAN_28_IDX      31
+#define ANALOG_CHAN_29_IDX      32
+#define ANALOG_CHAN_30_IDX      33
+#define ANALOG_CHAN_31_IDX      34
+#define ANALOG_CHAN_32_IDX      35
+#define ANALOG_CHAN_33_IDX      36
+#define ANALOG_CHAN_34_IDX      37
+#define ANALOG_CHAN_35_IDX      38
+#define TCOUPLE_0_IDX           39
+#define TCOUPLE_1_IDX           40
+#define TCOUPLE_2_IDX           41
+#define TCOUPLE_3_IDX           42
+#define TCOUPLE_4_IDX           43
+#define TCOUPLE_5_IDX           44
+#define AVG_JUNCT_TEMP_IDX      45
+#define TCOUPLE_0_FAULT_IDX     46
+#define TCOUPLE_1_FAULT_IDX     47
+#define TCOUPLE_2_FAULT_IDX     48
+#define TCOUPLE_3_FAULT_IDX     49
+#define TCOUPLE_4_FAULT_IDX     50
+#define TCOUPLE_5_FAULT_IDX     51
+#define DIGITAL_INPUT_0_IDX     52
+#define DIGITAL_INPUT_1_IDX     53
+#define DIGITAL_INPUT_2_IDX     54
+#define DIGITAL_INPUT_3_IDX     55
+#define DIGITAL_INPUT_4_IDX     56
+#define DIGITAL_INPUT_5_IDX     57
+#define DIGITAL_INPUT_6_IDX     58
+#define DIGITAL_INPUT_7_IDX     59
+#define DIGITAL_INPUT_8_IDX     60
+#define DIGITAL_INPUT_9_IDX     61
+#define DIGITAL_INPUT_10_IDX    62
+#define DIGITAL_INPUT_11_IDX    63
+#define DIGITAL_INPUT_12_IDX    64
+#define DIGITAL_INPUT_13_IDX    65
+#define DIGITAL_INPUT_14_IDX    66
+#define DIGITAL_INPUT_15_IDX    67
+#define FREQ_COUNT_0_IDX        68
+#define FREQ_COUNT_1_IDX        69
+#define FREQ_COUNT_2_IDX        70
+#define PGA_0_SETTINGS_IDX      71
+#define PGA_1_SETTINGS_IDX      72
+#define PGA_2_SETTINGS_IDX      73
+#define PGA_3_SETTINGS_IDX      74
+#define FREQ_0_SETTINGS_IDX     75
+#define FREQ_1_SETTINGS_IDX     76
+#define FREQ_2_SETTINGS_IDX     77
 
 /*
  * Defines a data stream that is relevant to one or more screens
@@ -262,14 +342,6 @@ typedef struct {
 	uint8_t len;
 } screen;
 
-/*
-typedef struct {
-	char * errText;
-	dataItem * item;
-	uint8_t priority;
-} errMsg;
-*/
-
 // Define all screen item arrays for each screen
 screenItem raceScreenItems[10], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
 // Define all screen structs
@@ -281,7 +353,7 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE];
 
 // General Items
 volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
