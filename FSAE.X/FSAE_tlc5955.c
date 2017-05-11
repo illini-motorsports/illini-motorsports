@@ -219,9 +219,7 @@ void tlc5955_check_timers() {
  * Initializes the TLC5955 module
  */
 void init_tlc5955(void) {
-  // GSCLK PWM Signal
-  //PWM_TLC5955_TRIS = OUTPUT;
-  //PWM_TLC5955_LAT = 1;
+  // GSCLK PWM Signal -- Set this FSAE_config.h
 
   // Latch - SHFLAT
   LAT_TLC5955_TRIS = OUTPUT;
@@ -504,4 +502,3 @@ void _tlc5955_init_spi(void) {
 
   lock_config();
 }
-
