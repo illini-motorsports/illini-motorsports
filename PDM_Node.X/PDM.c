@@ -55,7 +55,7 @@ void main(void) {
   init_general(); // Set general runtime configuration bits
   init_gpio_pins(); // Set all I/O pins to low outputs
   //init_peripheral_modules(); // Disable unused peripheral modules
-  init_oscillator(); // Initialize oscillator configuration bits
+  init_oscillator(0); // Initialize oscillator configuration bits
   init_timer1(); // Initialize timer1 (seconds)
   init_timer2(); // Initialize timer2 (millis)
   init_adc(NULL); // Initialize ADC module
