@@ -13,8 +13,6 @@ volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
 volatile uint8_t darkState;
 volatile uint8_t auxState;
 
-uint8_t lol = 0;
-
 void main(void) {
   init_general();// Set general runtime configuration bits
   init_gpio_pins();// Set all I/O pins to low outputs
