@@ -806,15 +806,15 @@ void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, doubl
   }
 
   if (num_leds == 10) {
-    //tlc5955_set_main_blink(1, GRN, NO_OVR);
+    tlc5955_set_main_blink(1, GRN, NO_OVR);
   } else {
     uint8_t i;
     uint64_t colorArray[9] = {0};
     for (i = 0; i < num_leds; i++) {
       colorArray[i] = BLU;
     }
-    //tlc5955_set_main_blink(0, 0x0, NO_OVR);
-    //tlc5955_write_main_colors(colorArray);
+    tlc5955_set_main_blink(0, 0x0, NO_OVR);
+    tlc5955_write_main_colors(colorArray);
   }
 }
 
@@ -822,9 +822,9 @@ void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double c
   uint8_t kill = data->value ? 1 : 0;
   if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
       !kill && tlc5955_get_cluster_warn(CLUSTER_RIGHT)) {
-    //if (!tlc5955_get_startup()) {
-      //tlc5955_set_cluster_warn(CLUSTER_RIGHT, kill, RED, NO_OVR);
-    //}
+    if (!tlc5955_get_startup()) {
+      tlc5955_set_cluster_warn(CLUSTER_RIGHT, kill, RED, NO_OVR);
+    }
   }
 }
 
