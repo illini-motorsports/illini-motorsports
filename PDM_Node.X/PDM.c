@@ -27,6 +27,7 @@ int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0; // Sampled rail voltages
 uint8_t load_state_changed = 0;
 uint16_t ad7490_samples[AD7490_NUM_CHN] = {0}; // Sample data from ad7490
+SPIConn* ad7490_connection = {0}; // Connection pointer
 
 // Load-specific state/status variables
 uint8_t wiper_values[NUM_CTL] = {0};      // Rheostat wiper values
@@ -70,8 +71,7 @@ void main(void) {
   // init ad7490 CS
   CS_AD7490_LAT = 1;
   CS_AD7490_TRIS = OUTPUT;
-  init_spi5(1, 16);
-  init_ad7490(ad7490_send_spi); // Initialize AD7490 external ADC chip
+  ad7490_connection = init_ad7490(1, CS_AD7490_LATBITS, CS_AD7490_LATNUM); // Initialize AD7490 external ADC chip
 
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;
@@ -675,7 +675,7 @@ void sample_temp(void) {
  */
 void sample_ext_adc(void) {
   if (millis - ext_adc_samp_tmr >= EXT_ADC_SAMP_INTV) {
-    ad7490_read_channels(ad7490_samples, ad7490_send_spi);
+    ad7490_read_channels(ad7490_samples, ad7490_connection);
     total_current_draw = 0;
 
     uint8_t i;
@@ -1240,8 +1240,4 @@ void init_rheo(void) {
   SPI1CONbits.ON = 1;
 
   lock_config();
-}
-
-uint32_t ad7490_send_spi(uint32_t value){
-    return send_spi5(value, AD7490_CS_LATBITS, AD7490_CS_LATNUM);
 }

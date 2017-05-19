@@ -12,6 +12,7 @@
 #include <xc.h>
 #include <sys/types.h>
 #include "FSAE_config.h"
+#include "FSAE_spi.h"
 
 #define MCP23S17_IODIR		0x00 //1=input
 #define MCP23S17_IPOL			0x02 //1=inverted inputs
@@ -44,12 +45,12 @@ typedef union {
 } MCP23S17IoconReg;
 
 // Function definitions
-void init_mcp23s17(uint32_t (*send_value)(uint32_t));
-uint16_t mcp23s17_read_all(uint32_t (*send_value)(uint32_t));
-uint8_t mcp23s17_read_one(uint8_t pin, uint32_t (*send_value)(uint32_t));
-void mcp23s17_write_all(uint16_t value, uint32_t (*send_value)(uint32_t));
-void mcp23s17_write_one(uint8_t pin, uint8_t value, uint32_t (*send_value)(uint32_t));
-uint16_t mcp23s17_read_reg(uint8_t addr, uint32_t (*send_value)(uint32_t));
-void mcp23s17_write_reg(uint8_t addr, uint16_t value, uint32_t (*send_value)(uint32_t));
+SPIConn* init_mcp23s17(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
+uint16_t mcp23s17_read_all(SPIConn *conn);
+uint8_t mcp23s17_read_one(uint8_t pin, SPIConn *conn);
+void mcp23s17_write_all(uint16_t value, SPIConn *conn);
+void mcp23s17_write_one(uint8_t pin, uint8_t value, SPIConn *conn);
+uint16_t mcp23s17_read_reg(uint8_t addr, SPIConn *conn);
+void mcp23s17_write_reg(uint8_t addr, uint16_t value, SPIConn *conn);
 
 #endif /* FSAE_ad7490_H */

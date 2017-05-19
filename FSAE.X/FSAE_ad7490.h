@@ -12,6 +12,7 @@
 #include <xc.h>
 #include <sys/types.h>
 #include "FSAE_config.h"
+#include "FSAE_spi.h"
 
 #define AD7490_NUM_CHN 16
 #define AD7490_DEFAULT 0b0000001101000000
@@ -37,8 +38,7 @@ typedef union uAD7490ControlReg {
 } AD7490ControlReg;
 
 // Function definitions
-//void init_ad7490(void (*init_spi)(int, int), int mhz, int size);
-void init_ad7490(uint32_t (*send_value)(uint32_t));
-void ad7490_read_channels(uint16_t* channel_values, uint32_t (*send_value)(uint32_t));
+SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
+void ad7490_read_channels(uint16_t* channel_values, SPIConn *conn);
 
 #endif /* FSAE_ad7490_H */

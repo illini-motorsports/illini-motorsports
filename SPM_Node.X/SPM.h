@@ -121,19 +121,6 @@ void set_pga(uint8_t chan, uint8_t level);
 void set_freq_div(uint8_t chan, uint8_t div);
 uint16_t ad7680_read_spi();
 
-// Send SPI functions
-uint32_t ad7490_0_send_spi(uint32_t value);
-uint32_t ad7490_1_send_spi(uint32_t value);
-uint32_t gpio_0_send_spi(uint32_t value);
-uint32_t gpio_1_send_spi(uint32_t value);
-uint32_t gpio_2_send_spi(uint32_t value);
-uint32_t max31855_0_send_spi(uint32_t value);
-uint32_t max31855_1_send_spi(uint32_t value);
-uint32_t max31855_2_send_spi(uint32_t value);
-uint32_t max31855_3_send_spi(uint32_t value);
-uint32_t max31855_4_send_spi(uint32_t value);
-uint32_t max31855_5_send_spi(uint32_t value);
-
 void CANAnalogChannels(void);
 void CANThermocouples(void);
 

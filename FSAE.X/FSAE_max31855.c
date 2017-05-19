@@ -1,11 +1,24 @@
 #include "FSAE_max31855.h"
 
-void init_max31855(void (*init_spi)(double mhz, int size)) {
-  init_spi(3, 32);
+SPIConn max31855Connections[10];
+uint8_t max31855ConnIdx = 0;
+
+SPIConn* init_max31855(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
+  if(!max31855ConnIdx) {
+    init_spi(bus, 3, 32);
+  }
+  SPIConn *currConn = &max31855Connections[max31855ConnIdx];
+  currConn->send_fp = get_send_spi(bus);
+  currConn->cs_lat = cs_lat;
+  currConn->cs_num = cs_num;
+
+  max31855ConnIdx++;
+
+  return currConn;
 }
 
-double read_max31855_temp(uint32_t (*send_value)(uint32_t)) {
-  uint32_t data = send_value(0);
+double read_max31855_temp(SPIConn *conn) {
+  uint32_t data = send_spi(0, conn);
   int16_t thermocouple_temp;
   if(data & 0x80000000) { // deal with the number properly if it's negative
     thermocouple_temp = ((data & 0xFFFC0000) >> 18) | 0xC000;
@@ -16,8 +29,8 @@ double read_max31855_temp(uint32_t (*send_value)(uint32_t)) {
   return thermocouple_temp/4.0;
 }
 
-max31855_data read_max31855_data(uint32_t (*send_value)(uint32_t)) {
-  uint32_t data = send_value(0);
+max31855_data read_max31855_data(SPIConn *conn) {
+  uint32_t data = send_spi(0, conn);
   int16_t thermocouple_temp;
   int16_t junction_temp;
 

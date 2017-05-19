@@ -1,10 +1,13 @@
 #include "SPM.h"
 
 double analog_channels[36] = {0};
+SPIConn *analog_connections[6] = {0};
 double thermocouple_channels[6] = {0};
 double thermocouple_junctions[6] = {0};
+SPIConn *thermocouple_connections[6] = {0};
 uint8_t thermocouple_fault = 0;
 uint16_t digital_channels = 0;
+SPIConn *digital_connections[3] = {0};
 volatile uint32_t millis = 0;
 uint32_t canAnalogMillis = 0;
 uint32_t canThermocoupleMillis = 0;
@@ -79,8 +82,8 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 void update_analog_channels(void){
   // Update ad7490 values
   uint16_t ad7490_values[32] = {0};
-  ad7490_read_channels(ad7490_values, ad7490_0_send_spi);
-  ad7490_read_channels(ad7490_values+16, ad7490_1_send_spi);
+  ad7490_read_channels(ad7490_values, analog_connections[0]);
+  ad7490_read_channels(ad7490_values+16, analog_connections[1]);
   int i;
   for(i = 0;i<32;i++){
     analog_channels[i] = 5*(ad7490_values[analogMappings[i]]/4095.0);
@@ -106,36 +109,14 @@ void update_analog_channels(void){
 void update_thermocouples(void) {
   max31855_data data;
   thermocouple_fault = 0;
+  int i;
 
-  data = read_max31855_data(max31855_0_send_spi);
-  thermocouple_channels[0] = data.thermocoupleTemp;
-  thermocouple_junctions[0] = data.junctionTemp;
-  thermocouple_fault |= data.fault;
-
-  data = read_max31855_data(max31855_1_send_spi);
-  thermocouple_channels[1] = data.thermocoupleTemp;
-  thermocouple_junctions[1] = data.junctionTemp;
-  thermocouple_fault |= data.fault << 1;
-
-  data = read_max31855_data(max31855_2_send_spi);
-  thermocouple_channels[2] = data.thermocoupleTemp;
-  thermocouple_junctions[2] = data.junctionTemp;
-  thermocouple_fault |= data.fault << 2;
-
-  data = read_max31855_data(max31855_3_send_spi);
-  thermocouple_channels[3] = data.thermocoupleTemp;
-  thermocouple_junctions[3] = data.junctionTemp;
-  thermocouple_fault |= data.fault << 3;
-
-  data = read_max31855_data(max31855_4_send_spi);
-  thermocouple_channels[4] = data.thermocoupleTemp;
-  thermocouple_junctions[4] = data.junctionTemp;
-  thermocouple_fault |= data.fault << 4;
-
-  data = read_max31855_data(max31855_5_send_spi);
-  thermocouple_channels[5] = data.thermocoupleTemp;
-  thermocouple_junctions[5] = data.junctionTemp;
-  thermocouple_fault |= data.fault << 5;
+  for(i = 0;i < 6; i++){
+    data = read_max31855_data(thermocouple_connections[i]);
+    thermocouple_channels[i] = data.thermocoupleTemp;
+    thermocouple_junctions[i] = data.junctionTemp;
+    thermocouple_fault |= data.fault << i;   
+  }
 }
 
 void set_pga(uint8_t chan, uint8_t level){
@@ -144,7 +125,7 @@ void set_pga(uint8_t chan, uint8_t level){
   }
 
   // get current values
-  uint16_t current_vals = mcp23s17_read_all(gpio_1_send_spi);
+  uint16_t current_vals = mcp23s17_read_all(digital_connections[1]);
 
   // modify proper bits according to mappings
   uint16_t new_vals = set_bit_val(current_vals, pgaMappings[3*chan], level & 0x1);
@@ -152,7 +133,7 @@ void set_pga(uint8_t chan, uint8_t level){
   new_vals = set_bit_val(new_vals, pgaMappings[3*chan+2], (level>>2) & 0x1);
 
   // set bits
-  mcp23s17_write_all(new_vals, gpio_1_send_spi);
+  mcp23s17_write_all(new_vals, digital_connections[1]);
 }
 
 // divisor = 2^div
@@ -172,39 +153,39 @@ void set_freq_div(uint8_t chan, uint8_t div) {
 
   switch(chan) {
     case 0:
-      current_vals = mcp23s17_read_all(gpio_0_send_spi);
+      current_vals = mcp23s17_read_all(digital_connections[0]);
       new_vals = set_bit_val(current_vals, FREQ_BYP_0, byp);
       new_vals = set_bit_val(current_vals, FREQ_DIVA_0, divBytes & 0x1);
       new_vals = set_bit_val(current_vals, FREQ_DIVB_0, divBytes & 0x2);
       new_vals = set_bit_val(current_vals, FREQ_DIVC_0, divBytes & 0x4);
       new_vals = set_bit_val(current_vals, FREQ_DIVD_0, divBytes & 0x8);
-      mcp23s17_write_all(new_vals, gpio_0_send_spi);
+      mcp23s17_write_all(new_vals, digital_connections[0]);
       break;
 
     case 1: // #2 constants are used due to bad naming standards on SPM
-      current_vals = mcp23s17_read_all(gpio_0_send_spi);
+      current_vals = mcp23s17_read_all(digital_connections[0]);
       new_vals = set_bit_val(current_vals, FREQ_BYP_2, byp);
       new_vals = set_bit_val(current_vals, FREQ_DIVA_2, divBytes & 0x1);
       new_vals = set_bit_val(current_vals, FREQ_DIVB_2, divBytes & 0x2);
       new_vals = set_bit_val(current_vals, FREQ_DIVC_2, divBytes & 0x4);
       new_vals = set_bit_val(current_vals, FREQ_DIVD_2, divBytes & 0x8);
-      mcp23s17_write_all(new_vals, gpio_0_send_spi);
+      mcp23s17_write_all(new_vals, digital_connections[0]);
       break;
 
     case 2: // This one has pins spread across two gpio chips
-      mcp23s17_write_one(FREQ_DIVA_3, byp, gpio_0_send_spi);
-      current_vals = mcp23s17_read_all(gpio_1_send_spi);
+      mcp23s17_write_one(FREQ_DIVA_3, byp, digital_connections[0]);
+      current_vals = mcp23s17_read_all(digital_connections[1]);
       new_vals = set_bit_val(current_vals, FREQ_DIVA_3, divBytes & 0x1);
       new_vals = set_bit_val(current_vals, FREQ_DIVB_3, divBytes & 0x2);
       new_vals = set_bit_val(current_vals, FREQ_DIVC_3, divBytes & 0x4);
       new_vals = set_bit_val(current_vals, FREQ_DIVD_3, divBytes & 0x8);
-      mcp23s17_write_all(new_vals, gpio_1_send_spi);
+      mcp23s17_write_all(new_vals, digital_connections[1]);
       break;
   }
 }
 
 void update_digital_channels(void) {
-  digital_channels = mcp23s17_read_all(gpio_2_send_spi);
+  digital_channels = mcp23s17_read_all(digital_connections[2]);
 }
 
 void init_adcs(void) {
@@ -222,11 +203,10 @@ void init_adcs(void) {
   AD7680_2_CS_TRIS = OUTPUT;
   AD7680_3_CS_TRIS = OUTPUT;
 
-  init_spi1(1, 16);
-  init_ad7490(ad7490_0_send_spi);
-  init_ad7490(ad7490_1_send_spi);// SPI1 will initialize twice
+  analog_connections[0] = init_ad7490(1, AD7490_0_CS_LATBITS, AD7490_0_CS_LATNUM);
+  analog_connections[1] = init_ad7490(1, AD7490_1_CS_LATBITS, AD7490_1_CS_LATNUM);
 
-  init_spi2(2, 8); // 2mhz clk, 24 bits
+  init_spi(1, 2, 8); // 2mhz clk, 24 bits
 }
 
 void init_tcouples(void) {
@@ -244,7 +224,12 @@ void init_tcouples(void) {
   MAX31855_4_CS_TRIS = OUTPUT;
   MAX31855_5_CS_TRIS = OUTPUT;
 
-  init_max31855(init_spi3);
+  thermocouple_connections[0] = init_max31855(3, MAX31855_0_CS_LATBITS, MAX31855_0_CS_LATNUM);
+  thermocouple_connections[1] = init_max31855(3, MAX31855_1_CS_LATBITS, MAX31855_1_CS_LATNUM);
+  thermocouple_connections[2] = init_max31855(3, MAX31855_2_CS_LATBITS, MAX31855_2_CS_LATNUM);
+  thermocouple_connections[3] = init_max31855(3, MAX31855_3_CS_LATBITS, MAX31855_3_CS_LATNUM);
+  thermocouple_connections[4] = init_max31855(3, MAX31855_4_CS_LATBITS, MAX31855_4_CS_LATNUM);
+  thermocouple_connections[5] = init_max31855(3, MAX31855_5_CS_LATBITS, MAX31855_5_CS_LATNUM);
 }
 
 void init_gpio_ext(void){
@@ -256,58 +241,12 @@ void init_gpio_ext(void){
   MCP23S17_1_CS_TRIS = OUTPUT;
   MCP23S17_2_CS_TRIS = OUTPUT;
 
-  init_spi5(3, 32); // initialize to 3 mhz and 32 bit width
-
   // initialize all gpio chips
-  init_mcp23s17(gpio_0_send_spi);
-  init_mcp23s17(gpio_1_send_spi);
-  init_mcp23s17(gpio_2_send_spi);
+  digital_connections[0] = init_mcp23s17(5, MCP23S17_0_CS_LATBITS, MCP23S17_0_CS_LATNUM);
+  digital_connections[1] = init_mcp23s17(5, MCP23S17_1_CS_LATBITS, MCP23S17_1_CS_LATNUM);
+  digital_connections[2] = init_mcp23s17(5, MCP23S17_2_CS_LATBITS, MCP23S17_2_CS_LATNUM);
 
-  mcp23s17_write_reg(MCP23S17_IODIR, 0xFFFF, gpio_2_send_spi); // digital inputs
-}
-
-uint32_t ad7490_0_send_spi(uint32_t value){
-  return send_spi1(value, AD7490_0_CS_LATBITS, AD7490_0_CS_LATNUM);
-}
-
-uint32_t ad7490_1_send_spi(uint32_t value){
-  return send_spi1(value, AD7490_1_CS_LATBITS, AD7490_1_CS_LATNUM);
-}
-
-uint32_t gpio_0_send_spi(uint32_t value){
-  return send_spi5(value, MCP23S17_0_CS_LATBITS, MCP23S17_0_CS_LATNUM);
-}
-
-uint32_t gpio_1_send_spi(uint32_t value){
-  return send_spi5(value, MCP23S17_1_CS_LATBITS, MCP23S17_1_CS_LATNUM);
-}
-
-uint32_t gpio_2_send_spi(uint32_t value){
-  return send_spi5(value, MCP23S17_2_CS_LATBITS, MCP23S17_2_CS_LATNUM);
-}
-
-uint32_t max31855_0_send_spi(uint32_t value){
-  return send_spi3(value, MAX31855_0_CS_LATBITS, MAX31855_0_CS_LATNUM);
-}
-
-uint32_t max31855_1_send_spi(uint32_t value){
-  return send_spi3(value, MAX31855_1_CS_LATBITS, MAX31855_1_CS_LATNUM);
-}
-
-uint32_t max31855_2_send_spi(uint32_t value){
-  return send_spi3(value, MAX31855_2_CS_LATBITS, MAX31855_2_CS_LATNUM);
-}
-
-uint32_t max31855_3_send_spi(uint32_t value){
-  return send_spi3(value, MAX31855_3_CS_LATBITS, MAX31855_3_CS_LATNUM);
-}
-
-uint32_t max31855_4_send_spi(uint32_t value){
-  return send_spi3(value, MAX31855_4_CS_LATBITS, MAX31855_4_CS_LATNUM);
-}
-
-uint32_t max31855_5_send_spi(uint32_t value){
-  return send_spi3(value, MAX31855_5_CS_LATBITS, MAX31855_5_CS_LATNUM);
+  mcp23s17_write_reg(MCP23S17_IODIR, 0xFFFF, digital_connections[2]); // digital inputs
 }
 
 // build up result from 3 seperate spi reads

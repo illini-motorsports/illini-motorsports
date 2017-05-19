@@ -224,8 +224,8 @@
 
 // AD7490 CS Pin definitions
 // Cast to uint32 pointer to more easily pass into functions
-#define AD7490_CS_LATBITS (uint32_t*) (&LATAbits)
-#define AD7490_CS_LATNUM 1
+#define CS_AD7490_LATBITS   (uint32_t*) (&LATAbits)
+#define CS_AD7490_LATNUM    1
 
 // MOSFET Current Ratios
 #define CUR_RATIO   8800.0
@@ -334,8 +334,5 @@ void set_en_load(uint8_t load_idx, uint8_t load_state);
 void set_rheo(uint8_t load_idx, uint8_t val);
 void send_all_rheo(uint16_t msg);
 void init_rheo(void);
-
-// SPI Functions
-uint32_t ad7490_send_spi(uint32_t value);
 
 #endif /* PDM_H */
