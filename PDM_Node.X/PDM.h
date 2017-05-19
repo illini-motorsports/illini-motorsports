@@ -15,6 +15,7 @@
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/FSAE_spi.h"
 #include "../FSAE.X/FSAE_ad7490.h"
+#include "../FSAE.X/FSAE_rheo.h"
 #include "../FSAE.X/CAN.h"
 #include "../FSAE.X/errno.h"
 
@@ -190,6 +191,29 @@
 #define CS_AUX_TRIS     TRISAbits.TRISA10
 #define CS_BVBAT_TRIS   TRISAbits.TRISA4
 
+#define CS_FUEL_LATBITS   (uint32_t*) (&LATBbits)
+#define CS_IGN_LATBITS    (uint32_t*) (&LATDbits)
+#define CS_INJ_LATBITS    (uint32_t*) (&LATCbits)
+#define CS_ABS_LATBITS    (uint32_t*) (&LATBbits)
+#define CS_PDLU_LATBITS   (uint32_t*) (&LATGbits)
+#define CS_PDLD_LATBITS   (uint32_t*) (&LATGbits)
+#define CS_FAN_LATBITS    (uint32_t*) (&LATDbits)
+#define CS_WTR_LATBITS    (uint32_t*) (&LATBbits)
+#define CS_ECU_LATBITS    (uint32_t*) (&LATEbits)
+#define CS_AUX_LATBITS    (uint32_t*) (&LATAbits)
+#define CS_BVBAT_LATBITS  (uint32_t*) (&LATAbits)
+#define CS_FUEL_LATNUM    2
+#define CS_IGN_LATNUM     4
+#define CS_INJ_LATNUM     13
+#define CS_ABS_LATNUM     13
+#define CS_PDLU_LATNUM    13
+#define CS_PDLD_LATNUM    14
+#define CS_FAN_LATNUM     12
+#define CS_WTR_LATNUM     6
+#define CS_ECU_LATNUM     3
+#define CS_AUX_LATNUM     10
+#define CS_BVBAT_LATNUM   4
+
 // Pin definitions for !SW signal bus
 #define SW1_PORT   PORTBbits.RB4
 #define SW2_PORT   PORTEbits.RE9
@@ -330,9 +354,7 @@ uint8_t res_to_wpr(double res);
 uint8_t load_enabled(uint8_t load_idx);
 void set_en_load(uint8_t load_idx, uint8_t load_state);
 
-// Rheostat functions
-void set_rheo(uint8_t load_idx, uint8_t val);
-void send_all_rheo(uint16_t msg);
-void init_rheo(void);
+// Initialize Rheostats
+void init_rheostats(void);
 
 #endif /* PDM_H */
