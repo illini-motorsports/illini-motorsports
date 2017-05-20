@@ -104,20 +104,20 @@ const double gear_ratio[7] = {
 #define SHIFT_NT_ANSEL ANSELEbits.ANSE5
 #define SHIFT_NT_PORT  PORTEbits.RE5
 
-#define ACT_UP_TRIS TRISEbits.TRISE7
-#define ACT_UP_LAT  LATEbits.LATE7
-#define ACT_DN_TRIS TRISCbits.TRISC1
-#define ACT_DN_LAT  LATCbits.LATC1
+#define ACT_UP_TRIS TRISBbits.TRISB5
+#define ACT_UP_LAT  LATBbits.LATB5
+#define ACT_DN_TRIS TRISBbits.TRISB4
+#define ACT_DN_LAT  LATBbits.LATB4
 
 #define ADC_GEAR_TRIS  TRISGbits.TRISG6
 #define ADC_GEAR_ANSEL ANSELGbits.ANSG6
 #define ADC_GEAR_CSS   ADCCSS1bits.CSS14
 #define ADC_GEAR_CHN   14
 
-#define ADC_FORCE_TRIS  TRISGbits.TRISG8
-#define ADC_FORCE_ANSEL ANSELGbits.ANSG8
-#define ADC_FORCE_CSS   ADCCSS1bits.CSS12
-#define ADC_FORCE_CHN   12
+#define ADC_FORCE_TRIS  TRISEbits.TRISE8
+#define ADC_FORCE_ANSEL ANSELEbits.ANSE8
+#define ADC_FORCE_CSS   ADCCSS1bits.CSS25
+#define ADC_FORCE_CHN   25
 
 /**
  * Function definitions

@@ -165,6 +165,10 @@ uint32_t read_adc_chn(uint8_t chn) {
     case 34: return ADCDATA34;
     case 43: return ADCDATA43;
     case 44: return ADCDATA44;
+
+    case 46: return ADCDATA1;
+    case 47: return ADCDATA2;
+
     default: return 0;
   }
 }

@@ -109,6 +109,11 @@
 uint8_t analogMappings[32] = {11,10,9,8,7,6,5,4,3,2,1,0,12,13,14,15,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25,24};
 uint8_t pgaMappings[12] = {4,5,6,9,8,7,12,11,10,15,14,13};
 
+// Frequency output pins
+#define FREQ_IN_0_TRIS TRISGbits.TRISG9
+#define FREQ_IN_2_TRIS TRISFbits.TRISF1
+#define FREQ_IN_3_TRIS TRISFbits.TRISF5
+
 void main(void);
 void update_analog_channels(void);
 void update_thermocouples(void);
@@ -125,4 +130,5 @@ void CANAnalogChannels(void);
 void CANThermocouples(void);
 
 uint16_t set_bit_val(uint16_t current, uint8_t pos, uint8_t val);
+
 #endif /* SPM_H */

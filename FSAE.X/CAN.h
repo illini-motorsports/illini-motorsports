@@ -14,7 +14,7 @@
 #define SPM_ID          0x050
 #define MOTEC_ID        0x100
 #define GCM_ID          0x200
-#define LOGGER_ID       0X2AA
+#define LOGGER_ID       0x300
 #define WHEEL_ID        0x400
 #define ADL_ID          0x500
 #define PDM_ID          0x600
@@ -96,6 +96,7 @@
 #define FUEL_INJ_DUTY_BYTE  0
 #define FUEL_TRIM_BYTE      2
 #define SHIFT_FORCE_BYTE    4
+#define AIR_TEMP_BYTE       4
 
 // From GCM
 #define GEAR_BYTE           0
@@ -120,6 +121,10 @@
 #define CUTOFF_SETTING_BYTE 2
 
 // From PDM
+#define PDM_UPTIME_BYTE     0
+#define PDM_PCB_TEMP_BYTE   2
+#define PDM_IC_TEMP_BYTE    4
+
 #define LOAD_ENABLITY_BYTE  0
 #define LOAD_PEAK_BYTE      2
 #define TOTAL_CURRENT_BYTE  4
@@ -165,15 +170,89 @@
 #define WTR_CUT_P_BYTE      4
 #define ECU_CUT_P_BYTE      6
 
+#define FUEL_OC_COUNT_BYTE  0
+#define IGN_OC_COUNT_BYTE   1
+#define INJ_OC_COUNT_BYTE   2
+#define ABS_OC_COUNT_BYTE   3
+#define PDLU_OC_COUNT_BYTE  4
+#define PDLD_OC_COUNT_BYTE  5
+#define FAN_OC_COUNT_BYTE   6
+#define WTR_OC_COUNT_BYTE   7
+
+#define ECU_OC_COUNT_BYTE   0
+#define AUX_OC_COUNT_BYTE   1
+#define BVBAT_OC_COUNT_BYTE 2
+#define STR_OC_COUNT_BYTE   3
+
 // From Tire Temp Sensors
 #define TIRE_TEMP_1_BYTE    0
 #define TIRE_TEMP_2_BYTE    2
 #define TIRE_TEMP_3_BYTE    4
 #define TIRE_TEMP_4_BYTE    6
 
+#define ANALOG_CHAN_0_BYTE    0
+#define ANALOG_CHAN_1_BYTE    2
+#define ANALOG_CHAN_2_BYTE    4
+#define ANALOG_CHAN_3_BYTE    6
+#define ANALOG_CHAN_4_BYTE    0
+#define ANALOG_CHAN_5_BYTE    2
+#define ANALOG_CHAN_6_BYTE    4
+#define ANALOG_CHAN_7_BYTE    6
+#define ANALOG_CHAN_8_BYTE    0
+#define ANALOG_CHAN_9_BYTE    2
+#define ANALOG_CHAN_10_BYTE   4
+#define ANALOG_CHAN_11_BYTE   6
+#define ANALOG_CHAN_12_BYTE   0
+#define ANALOG_CHAN_13_BYTE   2
+#define ANALOG_CHAN_14_BYTE   4
+#define ANALOG_CHAN_15_BYTE   6
+#define ANALOG_CHAN_16_BYTE   0
+#define ANALOG_CHAN_17_BYTE   2
+#define ANALOG_CHAN_18_BYTE   4
+#define ANALOG_CHAN_19_BYTE   6
+#define ANALOG_CHAN_20_BYTE   0
+#define ANALOG_CHAN_21_BYTE   2
+#define ANALOG_CHAN_22_BYTE   4
+#define ANALOG_CHAN_23_BYTE   6
+#define ANALOG_CHAN_24_BYTE   0
+#define ANALOG_CHAN_25_BYTE   2
+#define ANALOG_CHAN_26_BYTE   4
+#define ANALOG_CHAN_27_BYTE   6
+#define ANALOG_CHAN_28_BYTE   0
+#define ANALOG_CHAN_29_BYTE   2
+#define ANALOG_CHAN_30_BYTE   4
+#define ANALOG_CHAN_31_BYTE   6
+#define ANALOG_CHAN_32_BYTE   0
+#define ANALOG_CHAN_33_BYTE   2
+#define ANALOG_CHAN_34_BYTE   4
+#define ANALOG_CHAN_35_BYTE   6
+
+#define TCOUPLE_0_BYTE        0
+#define TCOUPLE_1_BYTE        2
+#define TCOUPLE_2_BYTE        4
+#define TCOUPLE_3_BYTE        6
+
+#define TCOUPLE_4_BYTE        0
+#define TCOUPLE_5_BYTE        2
+#define AVG_JUNCT_TEMP_BYTE   4
+#define TCOUPLE_FAULT_BYTE    6
+
+#define DIGITAL_INPUT_BYTE    0
+#define FREQ_COUNT_0_BYTE     2
+#define FREQ_COUNT_1_BYTE     4
+#define FREQ_COUNT_2_BYTE     6
+
+#define PGA_SETTINGS_BYTE     0
+#define FREQ_SETTINGS_BYTE    2
+
 /**
  * Scalars for channels
  */
+
+// From Diagnostic Message
+#define UPTIME_SCL          1
+#define PCB_TEMP_SCL        0.005
+#define IC_TEMP_SCL         0.005
 
 // From Analog Hubs
 #define SUS_POT_SCL         0.025
@@ -221,6 +300,7 @@
 #define FUEL_INJ_DUTY_SCL   0.1
 #define FUEL_TRIM_SCL       0.1 //??
 #define SHIFT_FORCE_SCL     1.0 //??
+#define AIR_TEMP_SCL        1.0 //??
 
 // From GCM
 #define GEAR_SCL           1
@@ -231,35 +311,202 @@
 #define QUEUE_DN_SCL       1
 #define QUEUE_NT_SCL       1
 
-// From PDM
+// From PDM 
 #define TOTAL_CURRENT_SCL 0.01
+
 #define VOLT_RAIL_SCL     0.001
 #define LOAD_DRAW_SCL     0.001
 #define STR_DRW_SCL       0.01
 #define LOAD_CUT_SCL      0.0025
 
+#define VBAT_RAIL_SCL     0.001
+#define V12_RAIL_SCL      0.001
+#define V5_RAIL_SCL       0.001
+#define V3V3_RAIL_SCL     0.001
+
+#define FUEL_DRAW_SCL     0.001
+#define IGN_DRAW_SCL      0.001
+#define INJ_DRAW_SCL      0.001
+#define ABS_DRAW_SCL      0.001
+
+#define PDLU_DRAW_SCL     0.001
+#define PDLD_DRAW_SCL     0.001
+#define FAN_DRAW_SCL      0.001
+#define WTR_DRAW_SCL      0.001
+
+#define ECU_DRAW_SCL      0.001
+#define AUX_DRAW_SCL      0.001
+#define BVBAT_DRAW_SCL    0.001
+#define STR_DRAW_SCL      0.01
+
+#define FUEL_CUT_SCL      0.0025
+#define IGN_CUT_SCL       0.0025
+#define INJ_CUT_SCL       0.0025
+#define ABS_CUT_SCL       0.0025
+
+#define PDLU_CUT_SCL      0.0025
+#define PDLD_CUT_SCL      0.0025
+#define WTR_CUT_SCL       0.0025
+#define FAN_CUT_SCL       0.0025
+
+#define ECU_CUT_SCL       0.0025
+#define AUX_CUT_SCL       0.0025
+#define BVBAT_CUT_SCL     0.0025
+
+#define FUEL_CUT_P_SCL    0.0025
+#define FAN_CUT_P_SCL     0.0025
+#define WTR_CUT_P_SCL     0.0025
+#define ECU_CUT_P_SCL     0.0025
+
 // From Tire Temp Sensors
 #define TIRE_TEMP_SCL       0.1
+
+#define ANALOG_CHAN_0_SCL     0.001
+#define ANALOG_CHAN_1_SCL     0.001
+#define ANALOG_CHAN_2_SCL     0.001
+#define ANALOG_CHAN_3_SCL     0.001
+#define ANALOG_CHAN_4_SCL     0.001
+#define ANALOG_CHAN_5_SCL     0.001
+#define ANALOG_CHAN_6_SCL     0.001
+#define ANALOG_CHAN_7_SCL     0.001
+#define ANALOG_CHAN_8_SCL     0.001
+#define ANALOG_CHAN_9_SCL     0.001
+#define ANALOG_CHAN_10_SCL    0.001
+#define ANALOG_CHAN_11_SCL    0.001
+#define ANALOG_CHAN_12_SCL    0.001
+#define ANALOG_CHAN_13_SCL    0.001
+#define ANALOG_CHAN_14_SCL    0.001
+#define ANALOG_CHAN_15_SCL    0.001
+#define ANALOG_CHAN_16_SCL    0.001
+#define ANALOG_CHAN_17_SCL    0.001
+#define ANALOG_CHAN_18_SCL    0.001
+#define ANALOG_CHAN_19_SCL    0.001
+#define ANALOG_CHAN_20_SCL    0.001
+#define ANALOG_CHAN_21_SCL    0.001
+#define ANALOG_CHAN_22_SCL    0.001
+#define ANALOG_CHAN_23_SCL    0.001
+#define ANALOG_CHAN_24_SCL    0.001
+#define ANALOG_CHAN_25_SCL    0.001
+#define ANALOG_CHAN_26_SCL    0.001
+#define ANALOG_CHAN_27_SCL    0.001
+#define ANALOG_CHAN_28_SCL    0.001
+#define ANALOG_CHAN_29_SCL    0.001
+#define ANALOG_CHAN_30_SCL    0.001
+#define ANALOG_CHAN_31_SCL    0.001
+#define ANALOG_CHAN_32_SCL    0.001
+#define ANALOG_CHAN_33_SCL    0.001
+#define ANALOG_CHAN_34_SCL    0.001
+#define ANALOG_CHAN_35_SCL    0.001
+
+#define TCOUPLE_SCL         0.25
+
+#define TCOUPLE_4_SCL         0.25
+#define TCOUPLE_5_SCL         0.25
+#define AVG_JUNCT_TEMP_SCL    0.0625
+
+#define FREQ_COUNT_0_SCL      1 // ???
+#define FREQ_COUNT_1_SCL      1 // ???
+#define FREQ_COUNT_2_SCL      1 // ???
 
 /**
  * Masks for bitmaps & packed messages
  */
 
 // From Wheel
-#define FAN_OVER_MASK  0x10
-#define WTR_OVER_MASK  0x20
-#define FUEL_OVER_MASK 0x40
-#define RADIO_BTN_MASK 0x01
-#define ROT1_MASK      0xF0
-#define ROT2_MASK      0x0F
-#define ROT3_MASK      0xF0
+#define FAN_OVER_MASK         0x10
+#define WTR_OVER_MASK         0x20
+#define FUEL_OVER_MASK        0x40
+#define RADIO_BTN_MASK        0x01
+#define ROT1_MASK             0xF0
+#define ROT2_MASK             0x0F
+#define ROT3_MASK             0xF0
 
-// From PDM
-#define KILL_SW_MASK   0x08
-#define ACT_DN_SW_MASK 0x10
-#define ACT_UP_SW_MASK 0x20
-#define ON_SW_MASK     0x40
-#define STR_SW_MASK    0x80
+//PDM Bitmask bits
+#define STR_ENBL_MASK         0x10
+#define BVBAT_ENBL_MASK       0x20
+#define AUX_ENBL_MASK         0x40
+#define ECU_ENBL_MASK         0x80
+#define WTR_ENBL_MASK         0x100
+#define FAN_ENBL_MASK         0x200
+#define PDLD_ENBL_MASK        0x400
+#define PDLU_ENBL_MASK        0x800
+#define ABS_ENBL_MASK         0x1000
+#define INJ_ENBL_MASK         0x2000
+#define IGN_ENBL_MASK         0x4000
+#define FUEL_ENBL_MASK        0x8000
+
+#define STR_PEAKM_MASK        0x10
+#define BVBAT_PEAKM_MASK      0x20
+#define AUX_PEAKM_MASK        0x40
+#define ECU_PEAKM_MASK        0x80
+#define WTR_PEAKM_MASK        0x100
+#define FAN_PEAKM_MASK        0x200
+#define PDLD_PEAKM_MASK       0x400
+#define PDLU_PEAKM_MASK       0x800
+#define ABS_PEAKM_MASK        0x1000
+#define INJ_PEAKM_MASK        0x2000
+#define IGN_PEAKM_MASK        0x4000
+#define FUEL_PEAKM_MASK       0x8000
+
+#define AUX2_PDM_SW_MASK      0x1
+#define AUX1_PDM_SW_MASK      0x2
+#define ABS_PDM_SW_MASK       0x4
+#define KILL_PDM_SW_MASK      0x8
+#define ACT_DN_PDM_SW_MASK    0x10
+#define ACT_UP_PDM_SW_MASK    0x20
+#define ON_PDM_SW_MASK        0x40
+#define STR_PDM_SW_MASK       0x80
+
+#define KILL_ENGINE_PDM_FLAG_MASK   0x10
+#define KILL_CAR_PDM_FLAG_MASK      0x20
+#define OVER_TEMP_PDM_FLAG_MASK     0x40
+#define FUEL_PRIME_PDM_FLAG_MASK    0x80
+
+#define PADDLE_UP_GCM_SW_MASK       0x1
+#define PADDLE_DOWN_GCM_SW_MASK     0x2
+#define NEUTRAL_GCM_SW_MASK         0x4
+
+//SPM Bitmasks
+#define TCOUPLE_0_FAULT_MASK        0x1
+#define TCOUPLE_1_FAULT_MASK        0x2
+#define TCOUPLE_2_FAULT_MASK        0x4
+#define TCOUPLE_3_FAULT_MASK        0x8
+#define TCOUPLE_4_FAULT_MASK        0x10
+#define TCOUPLE_5_FAULT_MASK        0x20
+
+#define DIGITAL_INPUT_0_MASK        0x1
+#define DIGITAL_INPUT_1_MASK        0x2
+#define DIGITAL_INPUT_2_MASK        0x4
+#define DIGITAL_INPUT_3_MASK        0x8
+#define DIGITAL_INPUT_4_MASK        0x10
+#define DIGITAL_INPUT_5_MASK        0x20
+#define DIGITAL_INPUT_6_MASK        0x40
+#define DIGITAL_INPUT_7_MASK        0x80
+#define DIGITAL_INPUT_8_MASK        0x100
+#define DIGITAL_INPUT_9_MASK        0x200
+#define DIGITAL_INPUT_10_MASK       0x400
+#define DIGITAL_INPUT_11_MASK       0x800
+#define DIGITAL_INPUT_12_MASK       0x1000
+#define DIGITAL_INPUT_13_MASK       0x2000
+#define DIGITAL_INPUT_14_MASK       0x4000
+#define DIGITAL_INPUT_15_MASK       0x8000
+
+#define PGA_0_SETTINGS_MASK         0x7
+#define PGA_1_SETTINGS_MASK         0x38
+#define PGA_2_SETTINGS_MASK         0x1C0
+#define PGA_3_SETTINGS_MASK         0xE00
+#define FREQ_0_SETTINGS_MASK        0x1F
+#define FREQ_1_SETTINGS_MASK        0x3E0
+#define FREQ_2_SETTINGS_MASK        0x7C00
+
+#define PGA_0_SETTINGS_SHF          0
+#define PGA_1_SETTINGS_SHF          3
+#define PGA_2_SETTINGS_SHF          6
+#define PGA_3_SETTINGS_SHF          9
+#define FREQ_0_SETTINGS_SHF         0
+#define FREQ_1_SETTINGS_SHF         5
+#define FREQ_2_SETTINGS_SHF         10
+
 
 /**
  * ADL definitions

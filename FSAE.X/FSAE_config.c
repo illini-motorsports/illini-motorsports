@@ -603,7 +603,7 @@ void init_gpio_pins(void) {
   LATGbits.LATG15 = 0;
 }
 
-void init_oscillator(void) {
+void init_oscillator(uint8_t whl_refoclk4) {
   unlock_config();
 
   // OSCCON
@@ -700,10 +700,42 @@ void init_oscillator(void) {
   REFO3CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
   REFO3CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO3 pin)
 
-  // REF04CON
-  REFO4CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
-  REFO4CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-  REFO4CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO4 pin)
+  if (whl_refoclk4) {
+    /**
+     * REFO4CLK == (PBCLK1 / (2 * (RODIV + (ROTRIM / 512)))) ==
+     * (100Mhz / (2 * (128 + (0/512)))) == (100Mhz / 256) =~ 390kHz
+     */
+
+    // Initialize REFCLKO4 PPS pin
+    CFGCONbits.IOLOCK = 0;
+    TRISGbits.TRISG8 = OUTPUT;
+    RPG8R = 0b1101; // Assign REFCLK04 to RG8
+    CFGCONbits.IOLOCK = 1;
+
+    // REFO4CON
+    REFO4CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
+    REFO4CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
+
+    REFO4CONbits.ROSEL = 0b0001;            // Reference Clock Source Select (PBCLK1)
+    REFO4CONbits.SIDL = 1;                  // Peripheral Stop in Idle Mode (Discontinue module operation when device enters Idle mode)
+    REFO4CONbits.OE = 1;                    // Reference Clock Output Enable (Reference clock is driven out on REFCLKO1 pin)
+
+    REFO4CONbits.DIVSWEN = 1;               // Divider Switch Enable (Divider switch is in progress)
+    REFO4CONbits.RODIV = 0b000000010000000; // Reference Clock Divider (Divide by 128)
+    REFO4CONbits.DIVSWEN = 0;               // Divider Switch Enable (Divider switch is complete)
+
+    // REFO4TRIM
+    REFO4TRIMbits.ROTRIM = 0b000000000;     // Reference Oscillator Trim (0/512 divisor added to RODIV value)
+
+    // Enable REFCLKO4
+    REFO4CONbits.ACTIVE = 1;                // Reference Clock Request Status (Reference clock request is active)
+    REFO4CONbits.ON = 1;                    // Output Enable (Reference Oscillator Module enabled)
+  } else {
+    // REF04CON
+    REFO4CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
+    REFO4CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
+    REFO4CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO4 pin)
+  }
 
   lock_config();
 }
