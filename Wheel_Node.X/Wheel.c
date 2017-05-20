@@ -95,6 +95,7 @@ void main(void) {
       CANdiag();
       CANdiagMillis = millis;
     }
+
     /*
     // Refresh Screen
     if(tRotary[1].value == 1 && screenNumber != PDM_DRAW_SCREEN){
@@ -487,6 +488,7 @@ void process_CAN_msg(CAN_message msg){
       break;
 
       /*Front Analog Hub*/
+      /*
     case ANALOG_FRONT_ID + 1:
       brakePressFront.value = (double) ((uint16_t) (lsbArray[BPF_BYTE/2]) * BRK_PRS_SCL);
       if(brakePressFront.value > brakeMaxFront.value)
@@ -506,6 +508,7 @@ void process_CAN_msg(CAN_message msg){
       {
         brakeMinRear.value = brakePressRear.value;
       }
+       */
   }
 }
 

@@ -26,8 +26,11 @@ int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0; // Sampled rail voltages
 uint8_t load_state_changed = 0;
+uint16_t ad7490_samples[AD7490_NUM_CHN] = {0}; // Sample data from ad7490
+SPIConn* ad7490_connection = {0}; // Connection pointer
 
 // Load-specific state/status variables
+SPIConn *rheo_connections[NUM_CTL] = {0}; // Rheostat SPI Connections
 uint8_t wiper_values[NUM_CTL] = {0};      // Rheostat wiper values
 uint8_t peak_wiper_values[NUM_CTL] = {0}; // Rheostat peak-mode wiper values
 uint8_t peak_state[NUM_LOADS] = {0};      // Stores whether each load is currently in peak mode
@@ -61,11 +64,15 @@ void main(void) {
   init_adc(NULL); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
-  init_ad7490(); // Initialize AD7490 external ADC chip
-  init_rheo(); // Initialize SPI interface for digital rheostats
+  init_rheostats(); // Initialize SPI interface for digital rheostats
 
   //TODO: USB
   //TODO: NVM
+
+  // init ad7490 CS
+  CS_AD7490_LAT = 1;
+  CS_AD7490_TRIS = OUTPUT;
+  ad7490_connection = init_ad7490(1, CS_AD7490_LATBITS, CS_AD7490_LATNUM); // Initialize AD7490 external ADC chip
 
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;
@@ -166,7 +173,7 @@ void main(void) {
 
   // Set each rheostat to the correct value
   for (i = 0; i < NUM_CTL; i++) {
-    set_rheo(i, wiper_values[i]);
+    set_rheo(wiper_values[i], rheo_connections[i]);
     peak_state[i] = 0;
     fb_resistances[i] = wpr_to_res(wiper_values[i]);
   }
@@ -483,7 +490,7 @@ void check_peak_timer(void) {
     if (load_enabled(idx) && peak_state[idx] &&
         (millis - load_tmr[idx] > load_peak_duration[idx])) {
       uint16_t wpr_val = wiper_values[idx];
-      set_rheo(idx, wpr_val);
+      set_rheo(wpr_val, rheo_connections[idx]);
       fb_resistances[idx] = wpr_to_res(wpr_val);
       peak_state[idx] = 0;
       load_state_changed = 1;
@@ -669,24 +676,24 @@ void sample_temp(void) {
  */
 void sample_ext_adc(void) {
   if (millis - ext_adc_samp_tmr >= EXT_ADC_SAMP_INTV) {
-    uint16_t* samples = ad7490_read_channels();
+    ad7490_read_channels(ad7490_samples, ad7490_connection);
     total_current_draw = 0;
 
     uint8_t i;
     for (i = 0; i < NUM_CTL; i++) {
-      load_current[i] = (uint16_t) ((((((double) samples[ADC_CHN[i]]) / 4095.0)
+      load_current[i] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[i]]) / 4095.0)
               * 5.0 * SCL_INV * CUR_RATIO) / fb_resistances[i]));
       total_current_draw += ((uint16_t) ((double) load_current[i]) * (SCL_INV_LRG / SCL_INV));
     }
 
-    load_current[STR_IDX] = (uint16_t) ((((((double) samples[ADC_CHN[STR_IDX]]) / 4095.0)
+    load_current[STR_IDX] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[STR_IDX]]) / 4095.0)
             * 5.0 * SCL_INV_LRG * CUR_RATIO) / 500.0));
     total_current_draw += load_current[STR_IDX];
 
-    rail_vbat = ((uint16_t) (((((double) samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
-    rail_12v = ((uint16_t) (((((double) samples[13]) / 4095.0) * 5.0 * 4) * 1000.0));
-    rail_5v = ((uint16_t) (((((double) samples[14]) / 4095.0) * 5.0 * 2) * 1000.0));
-    rail_3v3 = ((uint16_t) (((((double) samples[15]) / 4095.0) * 5.0 * 1) * 1000.0));
+    rail_vbat = ((uint16_t) (((((double) ad7490_samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
+    rail_12v = ((uint16_t) (((((double) ad7490_samples[13]) / 4095.0) * 5.0 * 4) * 1000.0));
+    rail_5v = ((uint16_t) (((((double) ad7490_samples[14]) / 4095.0) * 5.0 * 2) * 1000.0));
+    rail_3v3 = ((uint16_t) (((((double) ad7490_samples[15]) / 4095.0) * 5.0 * 1) * 1000.0));
 
     ext_adc_samp_tmr = millis;
   }
@@ -963,7 +970,7 @@ void enable_load(uint8_t load_idx) {
   } else  {
     if (!load_enabled(load_idx) && overcurrent_flag[load_idx] != OVERCRT_RESET) {
       uint16_t peak_wpr_val = peak_wiper_values[load_idx];
-      set_rheo(load_idx, peak_wpr_val);
+      set_rheo(peak_wpr_val, rheo_connections[load_idx]);
       fb_resistances[load_idx] = wpr_to_res(peak_wpr_val);
       peak_state[load_idx] = 1;
 
@@ -1090,148 +1097,16 @@ void set_en_load(uint8_t load_idx, uint8_t load_state) {
   }
 }
 
-//========================== RHEOSTAT FUNCTIONS ================================
-
-/**
- * void set_rheo(uint8_t load_idx, uint8_t val)
- *
- * Sets the specified load's rheostat to the specified value
- *
- * @param load_idx The index of the load for which the rheostat value will be changed
- * @param val The value to set the rheostat to
- */
-void set_rheo(uint8_t load_idx, uint8_t val) {
-  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-
-  // Select specific !CS signal
-  switch (load_idx) {
-    case FUEL_IDX: CS_FUEL_LAT = 0; break;
-    case IGN_IDX: CS_IGN_LAT = 0; break;
-    case INJ_IDX: CS_INJ_LAT = 0; break;
-    case ABS_IDX: CS_ABS_LAT = 0; break;
-    case PDLU_IDX: CS_PDLU_LAT = 0; break;
-    case PDLD_IDX: CS_PDLD_LAT = 0; break;
-    case FAN_IDX: CS_FAN_LAT = 0; break;
-    case WTR_IDX: CS_WTR_LAT = 0; break;
-    case ECU_IDX: CS_ECU_LAT = 0; break;
-    case AUX_IDX: CS_AUX_LAT = 0; break;
-    case BVBAT_IDX: CS_BVBAT_LAT = 0; break;
-    default: return;
-  }
-
-  SPI1BUF = ((uint16_t) val);
-  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-
-  // Deselect specific !CS signal
-  switch (load_idx) {
-    case FUEL_IDX: CS_FUEL_LAT = 1; break;
-    case IGN_IDX: CS_IGN_LAT = 1; break;
-    case INJ_IDX: CS_INJ_LAT = 1; break;
-    case ABS_IDX: CS_ABS_LAT = 1; break;
-    case PDLU_IDX: CS_PDLU_LAT = 1; break;
-    case PDLD_IDX: CS_PDLD_LAT = 1; break;
-    case FAN_IDX: CS_FAN_LAT = 1; break;
-    case WTR_IDX: CS_WTR_LAT = 1; break;
-    case ECU_IDX: CS_ECU_LAT = 1; break;
-    case AUX_IDX: CS_AUX_LAT = 1; break;
-    case BVBAT_IDX: CS_BVBAT_LAT = 1; break;
-  }
-}
-
-/**
- * void set_all_rheo(uint16_t msg)
- *
- * Sends all rheostats a specific message.
- *
- * @param msg The 16-bit message to send to all rheostats
- */
-void send_all_rheo(uint16_t msg) {
-  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-
-  // Select all !CS signals
-  CS_FUEL_LAT = 0;
-  CS_IGN_LAT = 0;
-  CS_INJ_LAT = 0;
-  CS_ABS_LAT = 0;
-  CS_PDLU_LAT = 0;
-  CS_PDLD_LAT = 0;
-  CS_FAN_LAT = 0;
-  CS_WTR_LAT = 0;
-  CS_ECU_LAT = 0;
-  CS_AUX_LAT = 0;
-  CS_BVBAT_LAT = 0;
-
-  SPI1BUF = msg; // Send msg on SPI bus
-  while (SPI1STATbits.SPIBUSY); // Wait for idle SPI module
-
-  // Deselect all !CS signals
-  CS_FUEL_LAT = 1;
-  CS_IGN_LAT = 1;
-  CS_INJ_LAT = 1;
-  CS_ABS_LAT = 1;
-  CS_PDLU_LAT = 1;
-  CS_PDLD_LAT = 1;
-  CS_FAN_LAT = 1;
-  CS_WTR_LAT = 1;
-  CS_ECU_LAT = 1;
-  CS_AUX_LAT = 1;
-  CS_BVBAT_LAT = 1;
-}
-
-/**
- * void init_rheo(void)
- *
- * Initializes the SPI bus for the rheostats.
- */
-void init_rheo(void) {
-  unlock_config();
-
-  // Initialize SDI1/SDO1 PPS pins
-  CFGCONbits.IOLOCK = 0;
-  TRISBbits.TRISB9 = INPUT;
-  ANSELBbits.ANSB9 = 0;
-  SDI1Rbits.SDI1R = 0b0101; // RPB9
-  TRISBbits.TRISB10 = OUTPUT;
-  RPB10Rbits.RPB10R = 0b0101; // SDO1
-  CFGCONbits.IOLOCK = 1;
-
-  // Disable interrupts
-  IEC3bits.SPI1EIE = 0;
-  IEC3bits.SPI1RXIE = 0;
-  IEC3bits.SPI1TXIE = 0;
-
-  // Disable SPI1 module
-  SPI1CONbits.ON = 0;
-
-  // Clear receive buffer
-  uint32_t readVal = SPI1BUF;
-
-  // Use standard buffer mode
-  SPI1CONbits.ENHBUF = 0;
-
-  /**
-   * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-   * F_SCK = 100Mhz / (2 * (4 + 1))
-   * F_SCK = 10Mhz
-   */
-
-  // Set the baud rate (see above equation)
-  SPI1BRG = 4;
-
-  SPI1STATbits.SPIROV = 0;
-
-  SPI1CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
-  SPI1CONbits.SIDL = 0; // Stop in Idle Mode bit (Continue operation in Idle mode)
-  SPI1CONbits.MODE32 = 0; // 32/16-Bit Communication Select bits (16-bit)
-  SPI1CONbits.MODE16 = 1; // 32/16-Bit Communication Select bits (16-bit)
-  SPI1CONbits.MSTEN = 1; // Master Mode Enable bit (Master mode)
-  SPI1CONbits.CKE = 1; // SPI Clock Edge Select bit (Serial output data changes on transition from active clock state to idle clock state)
-  SPI1CONbits.DISSDI = 0;
-  SPI1CONbits.DISSDO = 0;
-  SPI1CONbits.SMP = 1;
-
-  // Enable SPI1 module
-  SPI1CONbits.ON = 1;
-
-  lock_config();
+void init_rheostats(void) {
+  rheo_connections[0] = init_rheo(1, CS_FUEL_LATBITS, CS_FUEL_LATNUM);
+  rheo_connections[1] = init_rheo(1, CS_IGN_LATBITS, CS_IGN_LATNUM);
+  rheo_connections[2] = init_rheo(1, CS_INJ_LATBITS, CS_INJ_LATNUM);
+  rheo_connections[3] = init_rheo(1, CS_ABS_LATBITS, CS_ABS_LATNUM);
+  rheo_connections[4] = init_rheo(1, CS_PDLU_LATBITS, CS_PDLU_LATNUM);
+  rheo_connections[5] = init_rheo(1, CS_PDLD_LATBITS, CS_PDLD_LATNUM);
+  rheo_connections[6] = init_rheo(1, CS_FAN_LATBITS, CS_FAN_LATNUM);
+  rheo_connections[7] = init_rheo(1, CS_WTR_LATBITS, CS_WTR_LATNUM);
+  rheo_connections[8] = init_rheo(1, CS_ECU_LATBITS, CS_ECU_LATNUM);
+  rheo_connections[9] = init_rheo(1, CS_AUX_LATBITS, CS_AUX_LATNUM);
+  rheo_connections[10] = init_rheo(1, CS_BVBAT_LATBITS, CS_BVBAT_LATNUM);
 }

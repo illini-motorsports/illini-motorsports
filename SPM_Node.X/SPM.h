@@ -6,12 +6,10 @@
 #include "../FSAE.X/FSAE_can.h"
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/CAN.h"
-
-// Enable programmable termination
-#define TERMINATING 0
-
-// Determines whether the internal or external clock source is used
-#define INTERNAL_CLK 0
+#include "../FSAE.X/FSAE_spi.h"
+#include "../FSAE.X/FSAE_ad7490.h"
+#include "../FSAE.X/FSAE_mcp23s17.h"
+#include "../FSAE.X/FSAE_max31855.h"
 
 // ***************************
 // High Speed ADC Defs
@@ -20,105 +18,96 @@
 #define CS_HS_ADC_0 0
 #define CS_HS_ADC_1 1
 // Channel Defs
-#define CHAN_HS_ADC_0 11
-#define CHAN_HS_ADC_1 10
-#define CHAN_HS_ADC_2 9
-#define CHAN_HS_ADC_3 8
-#define CHAN_HS_ADC_4 7
-#define CHAN_HS_ADC_5 6
-#define CHAN_HS_ADC_6 5
-#define CHAN_HS_ADC_7 4
-#define CHAN_HS_ADC_8 3
-#define CHAN_HS_ADC_9 2
-#define CHAN_HS_ADC_10 1
-#define CHAN_HS_ADC_11 0
-#define CHAN_HS_ADC_12 12
-#define CHAN_HS_ADC_13 13
-#define CHAN_HS_ADC_14 14
-#define CHAN_HS_ADC_15 15
-#define CHAN_HS_ADC_16 7
-#define CHAN_HS_ADC_17 6
-#define CHAN_HS_ADC_18 5
-#define CHAN_HS_ADC_19 4
-#define CHAN_HS_ADC_20 3
-#define CHAN_HS_ADC_21 2
-#define CHAN_HS_ADC_22 1
-#define CHAN_HS_ADC_23 0
-#define CHAN_HS_ADC_24 12
-#define CHAN_HS_ADC_25 13
-#define CHAN_HS_ADC_26 14
-#define CHAN_HS_ADC_27 15
-#define CHAN_HS_ADC_28 11
-#define CHAN_HS_ADC_29 10
-#define CHAN_HS_ADC_30 9
-#define CHAN_HS_ADC_31 8
 
-// ***************************
-// Low Speed ADC Defs
-// ***************************
-// SPI Defs
-#define CS_LS_ADC_0 0
-#define CS_LS_ADC_1 1
-#define CS_LS_ADC_2 2
-#define CS_LS_ADC_3 3
-
-// ***************************
-// GPIO Defs
-// ***************************
-// SPI Defs
-#define CS_GPIO_0 0
-#define CS_GPIO_1 1
-#define CS_GPIO_2 2
-
-// Pin numbers are created by: 16*CHIP_NUM + 8*(BANK=='B') + PIN_NUM
-#define FREQ_BYP_0 4
+#define FREQ_BYP_0  4
 #define FREQ_DIVA_0 3
 #define FREQ_DIVB_0 2
 #define FREQ_DIVC_0 1
 #define FREQ_DIVD_0 0
-#define FREQ_BYP_1 8
+#define FREQ_BYP_1  8
 #define FREQ_DIVA_1 9
 #define FREQ_DIVB_1 7
 #define FREQ_DIVC_1 6
 #define FREQ_DIVD_1 5
-#define FREQ_BYP_2 14
+#define FREQ_BYP_2  14
 #define FREQ_DIVA_2 13
 #define FREQ_DIVB_2 12
 #define FREQ_DIVC_2 11
 #define FREQ_DIVD_2 10
-#define FREQ_BYP_3 19
+#define FREQ_BYP_3  3
 #define FREQ_DIVA_3 15
-#define FREQ_DIVB_3 18
-#define FREQ_DIVC_3 17
-#define FREQ_DIVD_3 16
-#define PGA_0_0 20
-#define PGA_0_1 21
-#define PGA_0_2 22
-#define PGA_1_0 25
-#define PGA_1_1 24
-#define PGA_1_2 23
-#define PGA_2_0 28
-#define PGA_2_1 27
-#define PGA_2_2 26
-#define PGA_3_0 31
-#define PGA_3_1 30
-#define PGA_3_2 29
-#define DIGIN_0 32
-#define DIGIN_1 33
-#define DIGIN_2 34
-#define DIGIN_3 35
-#define DIGIN_4 36
-#define DIGIN_5 37
-#define DIGIN_6 38
-#define DIGIN_7 39
-#define DIGIN_8 40
-#define DIGIN_9 41
-#define DIGIN_10 42
-#define DIGIN_11 43
-#define DIGIN_12 44
-#define DIGIN_13 45
-#define DIGIN_14 46
-#define DIGIN_15 47
+#define FREQ_DIVB_3 2
+#define FREQ_DIVC_3 1
+#define FREQ_DIVD_3 0
+
+// ***************************
+// GPIO Defs
+// ***************************
+// Pin numbers are created by: 16*CHIP_NUM + 8*(BANK=='B') + PIN_NUM
+#define AD7490_0_CS_TRIS      TRISAbits.TRISA9
+#define AD7490_1_CS_TRIS      TRISAbits.TRISA10
+#define AD7490_0_CS_LAT       LATAbits.LATA9
+#define AD7490_1_CS_LAT       LATAbits.LATA10
+#define AD7490_0_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define AD7490_1_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define AD7490_0_CS_LATNUM    9
+#define AD7490_1_CS_LATNUM    10
+
+#define AD7680_0_CS_TRIS      TRISEbits.TRISE6
+#define AD7680_1_CS_TRIS      TRISEbits.TRISE7
+#define AD7680_2_CS_TRIS      TRISAbits.TRISA5
+#define AD7680_3_CS_TRIS      TRISGbits.TRISG15
+#define AD7680_0_CS_LAT       LATEbits.LATE6
+#define AD7680_1_CS_LAT       LATEbits.LATE7
+#define AD7680_2_CS_LAT       LATAbits.LATA5
+#define AD7680_3_CS_LAT       LATGbits.LATG15
+
+#define ANALOG_CAN_SCL        1000
+#define THERMOCOUPLE_CAN_SCL  4
+#define JUNCTION_CAN_SCL      16
+
+#define MCP23S17_0_CS_TRIS    TRISAbits.TRISA15
+#define MCP23S17_1_CS_TRIS    TRISAbits.TRISA4
+#define MCP23S17_2_CS_TRIS    TRISAbits.TRISA3
+#define MCP23S17_0_CS_LAT     LATAbits.LATA15
+#define MCP23S17_1_CS_LAT     LATAbits.LATA4
+#define MCP23S17_2_CS_LAT     LATAbits.LATA3
+#define MCP23S17_0_CS_LATBITS	(uint32_t*) (&LATAbits)
+#define MCP23S17_1_CS_LATBITS (uint32_t*) (&LATAbits)
+#define MCP23S17_2_CS_LATBITS (uint32_t*) (&LATAbits)
+#define MCP23S17_0_CS_LATNUM	15
+#define MCP23S17_1_CS_LATNUM	4
+#define MCP23S17_2_CS_LATNUM	3
+
+#define MAX31855_0_CS_TRIS       TRISAbits.TRISA0
+#define MAX31855_1_CS_TRIS       TRISEbits.TRISE8
+#define MAX31855_2_CS_TRIS       TRISEbits.TRISE9
+#define MAX31855_3_CS_TRIS       TRISBbits.TRISB4
+#define MAX31855_4_CS_TRIS       TRISBbits.TRISB3
+#define MAX31855_5_CS_TRIS       TRISBbits.TRISB2
+#define MAX31855_0_CS_LAT        LATAbits.LATA0
+#define MAX31855_1_CS_LAT        LATEbits.LATE8
+#define MAX31855_2_CS_LAT        LATEbits.LATE9
+#define MAX31855_3_CS_LAT        LATBbits.LATB4
+#define MAX31855_4_CS_LAT        LATBbits.LATB3
+#define MAX31855_5_CS_LAT        LATBbits.LATB2
+#define MAX31855_0_CS_LATBITS    (uint32_t*) (&LATAbits)
+#define MAX31855_1_CS_LATBITS    (uint32_t*) (&LATEbits)
+#define MAX31855_2_CS_LATBITS    (uint32_t*) (&LATEbits)
+#define MAX31855_3_CS_LATBITS    (uint32_t*) (&LATBbits)
+#define MAX31855_4_CS_LATBITS    (uint32_t*) (&LATBbits)
+#define MAX31855_5_CS_LATBITS    (uint32_t*) (&LATBbits)
+#define MAX31855_0_CS_LATNUM     0
+#define MAX31855_1_CS_LATNUM     8
+#define MAX31855_2_CS_LATNUM     9
+#define MAX31855_3_CS_LATNUM     4
+#define MAX31855_4_CS_LATNUM     3
+#define MAX31855_5_CS_LATNUM     2
+
+
+
+uint8_t analogMappings[32] = {11,10,9,8,7,6,5,4,3,2,1,0,12,13,14,15,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25,24};
+uint8_t pgaMappings[12] = {4,5,6,9,8,7,12,11,10,15,14,13};
 
 // Frequency output pins
 #define FREQ_IN_0_TRIS TRISGbits.TRISG9
@@ -126,6 +115,20 @@
 #define FREQ_IN_3_TRIS TRISFbits.TRISF5
 
 void main(void);
-void init_freq_meas(void);
+void update_analog_channels(void);
+void update_thermocouples(void);
+void update_digital_channels(void);
+
+void init_gpio_ext();
+void init_adcs();
+void init_tcouples();
+void set_pga(uint8_t chan, uint8_t level);
+void set_freq_div(uint8_t chan, uint8_t div);
+uint16_t ad7680_read_spi();
+
+void CANAnalogChannels(void);
+void CANThermocouples(void);
+
+uint16_t set_bit_val(uint16_t current, uint8_t pos, uint8_t val);
 
 #endif /* SPM_H */

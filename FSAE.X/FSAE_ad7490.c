@@ -8,24 +8,31 @@
  */
 #include "FSAE_ad7490.h"
 
-// Array holding sampled channel values
-uint16_t channel_values[AD7490_NUM_CHN];
+SPIConn connections[10];
+uint8_t ad7490ConnIdx = 0;
 
 /**
  * void init_ad7490(void)
  *
  * Initializes the AD7490 ADC module.
  */
-void init_ad7490(void) {
-  memset(&channel_values, 0x0, AD7490_NUM_CHN * sizeof(uint16_t));
+SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
 
-  // Initialize SPI communciations to the AD7490 chip
-  _ad7490_init_spi();
+  if(!ad7490ConnIdx) {
+    init_spi(bus,1,16);
+  }
+
+  SPIConn * currConn = &connections[ad7490ConnIdx];
+  currConn->send_fp = get_send_spi(bus);
+  currConn->cs_lat = cs_lat;
+  currConn->cs_num = cs_num;
+
+  ad7490ConnIdx++;
 
   // Send two dummy cycles to reset the chip
   AD7490ControlReg dummy = {.reg = 0xFFFF};
-  _ad7490_send_one(dummy);
-  _ad7490_send_one(dummy);
+  send_spi(dummy.reg, currConn);
+  send_spi(dummy.reg, currConn);
 
   // Send initial configuration message
   AD7490ControlReg config = {.reg = 0x0};
@@ -33,16 +40,18 @@ void init_ad7490(void) {
   config.ADDR = 0b0;
   config.PM = 0b11;
   config.WEAK_TRI = 0b1;
-  _ad7490_send_one(config);
+  send_spi(config.reg, currConn);
+
+  return currConn;
 }
 
 /**
- * uint16_t** read_channels(void)
+ * uint16_t** read_channels(Uint16_t, send_value)
  *
  * Iterates through all channels, instructs the ADC to sample the current
  * value, and returns all the sample values.
  */
-uint16_t* ad7490_read_channels(void) {
+void ad7490_read_channels(uint16_t* channel_values, SPIConn *conn) {
   AD7490ControlReg control = {.reg = 0x0};
   control.WRITE = 0b1;
   control.ADDR = 0b0;
@@ -51,99 +60,13 @@ uint16_t* ad7490_read_channels(void) {
   control.CODING = 0b1;
 
   // Set up chip for first read in sequence
-  _ad7490_send_one(control);
+  send_spi(control.reg, conn);
 
   // Sample each channel and save the response
   uint8_t i;
   for (i = 0; i < AD7490_NUM_CHN; i++) {
     control.ADDR = i + 1; // Set up ADDR for next read in sequence
-    uint16_t resp = _ad7490_send_one(control);
+    uint16_t resp = (uint16_t) send_spi(control.reg, conn);
     channel_values[i] = resp & 0x0FFF; // Only bottom 12 bits are value
   }
-
-  return channel_values;
-}
-
-/**
- * uint16_t _ad7490_send_one(uint16_t one)
- *
- * Sends one 16-bit SPI message to the AD7490 chip and returns the response.
- * This response will be clocked in at the same time as the message being sent.
- *
- * @param reg- The control register to send over SPI
- * @return Response clocked in concurrently with message
- */
-uint16_t _ad7490_send_one(AD7490ControlReg reg) {
-  uint16_t resp = 0;
-
-  CS_AD7490_LAT = 0;
-  SPI5BUF = reg.reg;
-  while (!SPI5STATbits.SPIRBF);
-  resp = SPI5BUF;
-  CS_AD7490_LAT = 1;
-
-  return resp;
-}
-
-/**
- * void _ad7490_init_spi(void)
- *
- * Initializes the SPI5 communication bus for use with the AD7490 chip.
- */
-void _ad7490_init_spi(void) {
-  unlock_config();
-
-  // Initialize SDI5/SDO5 PPS pins
-  CFGCONbits.IOLOCK = 0;
-  TRISFbits.TRISF4 = INPUT;
-  SDI5Rbits.SDI5R = 0b0010; // RPF4
-  TRISAbits.TRISA14 = OUTPUT;
-  RPA14Rbits.RPA14R = 0b1001; // SDO5
-  CFGCONbits.IOLOCK = 1;
-
-  // Initialize SCK5 and !CS_ad7490 pins
-  TRISFbits.TRISF13 = OUTPUT; // SCK5
-  CS_AD7490_TRIS = OUTPUT; // !CS_AD7490
-  CS_AD7490_LAT = 1;
-
-  // Disable interrupts
-  IEC5bits.SPI5EIE = 0;
-  IEC5bits.SPI5RXIE = 0;
-  IEC5bits.SPI5TXIE = 0;
-
-  // Disable SPI5 module
-  SPI5CONbits.ON = 0;
-
-  // Clear receive buffer
-  uint32_t readVal = SPI5BUF;
-
-  // Use standard buffer mode
-  SPI5CONbits.ENHBUF = 0;
-
-  /**
-   * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-   * F_SCK = 100Mhz / (2 * (49 + 1))
-   * F_SCK = 1Mhz
-   */
-
-  // Set the baud rate (see above equation)
-  SPI5BRG = 49;
-
-  SPI5STATbits.SPIROV = 0;
-
-  SPI5CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
-  SPI5CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-  SPI5CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI5CONbits.MODE16 = 1;  // 32/16-Bit Communication Select bits (16-bit)
-  SPI5CONbits.DISSDI = 0;
-  SPI5CONbits.DISSDO = 0;
-  SPI5CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-  SPI5CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-  SPI5CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-  SPI5CONbits.CKP = 1;     // Clock Polarity Select (Idle state for clock is a high level)
-
-  // Enable SPI5 module
-  SPI5CONbits.ON = 1;
-
-  lock_config();
 }
