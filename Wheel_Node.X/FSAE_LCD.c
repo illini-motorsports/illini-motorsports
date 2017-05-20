@@ -154,17 +154,17 @@ void initAllScreens(void){
 
   // All Screens Stuff
   /*
-  allScreens[GENERAL_SCREEN] = &generalScreen;
-  generalScreen.items = generalItems;
-  generalScreen.len = 7;
-  initScreenItem(&generalItems[0], 20, 30, 15, redrawRotary, &rotary[0]);
-  initScreenItem(&generalItems[1], 20, 30, 15, redrawRotary, &rotary[1]);
-  initScreenItem(&generalItems[2], 20, 30, 15, redrawRotary, &rotary[2]);
-  initScreenItem(&generalItems[3], 20, 30, 15, redrawFanSw, &switches[0]);
-  initScreenItem(&generalItems[4], 20, 30, 15, redrawFUELPumpSw, &switches[1]);
-  initScreenItem(&generalItems[5], 20, 30, 15, redrawWTRPumpSw, &switches[2]);
-  initScreenItem(&generalItems[6], 20, 30, 15, redrawShiftLightsRPM, &rpm);
-  */
+     allScreens[GENERAL_SCREEN] = &generalScreen;
+     generalScreen.items = generalItems;
+     generalScreen.len = 7;
+     initScreenItem(&generalItems[0], 20, 30, 15, redrawRotary, &rotary[0]);
+     initScreenItem(&generalItems[1], 20, 30, 15, redrawRotary, &rotary[1]);
+     initScreenItem(&generalItems[2], 20, 30, 15, redrawRotary, &rotary[2]);
+     initScreenItem(&generalItems[3], 20, 30, 15, redrawFanSw, &switches[0]);
+     initScreenItem(&generalItems[4], 20, 30, 15, redrawFUELPumpSw, &switches[1]);
+     initScreenItem(&generalItems[5], 20, 30, 15, redrawWTRPumpSw, &switches[2]);
+     initScreenItem(&generalItems[6], 20, 30, 15, redrawShiftLightsRPM, &rpm);
+     */
 
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;

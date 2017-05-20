@@ -66,43 +66,43 @@
 #define THERMOCOUPLE_CAN_SCL  4
 #define JUNCTION_CAN_SCL      16
 
-#define MCP23S17_0_CS_TRIS    TRISAbits.TRISA15
-#define MCP23S17_1_CS_TRIS    TRISAbits.TRISA4
-#define MCP23S17_2_CS_TRIS    TRISAbits.TRISA3
-#define MCP23S17_0_CS_LAT     LATAbits.LATA15
-#define MCP23S17_1_CS_LAT     LATAbits.LATA4
-#define MCP23S17_2_CS_LAT     LATAbits.LATA3
-#define MCP23S17_0_CS_LATBITS	(uint32_t*) (&LATAbits)
-#define MCP23S17_1_CS_LATBITS (uint32_t*) (&LATAbits)
-#define MCP23S17_2_CS_LATBITS (uint32_t*) (&LATAbits)
-#define MCP23S17_0_CS_LATNUM	15
-#define MCP23S17_1_CS_LATNUM	4
-#define MCP23S17_2_CS_LATNUM	3
+#define MCP23S17_0_CS_TRIS      TRISAbits.TRISA15
+#define MCP23S17_1_CS_TRIS      TRISAbits.TRISA4
+#define MCP23S17_2_CS_TRIS      TRISAbits.TRISA3
+#define MCP23S17_0_CS_LAT       LATAbits.LATA15
+#define MCP23S17_1_CS_LAT       LATAbits.LATA4
+#define MCP23S17_2_CS_LAT       LATAbits.LATA3
+#define MCP23S17_0_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define MCP23S17_1_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define MCP23S17_2_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define MCP23S17_0_CS_LATNUM    15
+#define MCP23S17_1_CS_LATNUM    4
+#define MCP23S17_2_CS_LATNUM    3
 
-#define MAX31855_0_CS_TRIS       TRISAbits.TRISA0
-#define MAX31855_1_CS_TRIS       TRISEbits.TRISE8
-#define MAX31855_2_CS_TRIS       TRISEbits.TRISE9
-#define MAX31855_3_CS_TRIS       TRISBbits.TRISB4
-#define MAX31855_4_CS_TRIS       TRISBbits.TRISB3
-#define MAX31855_5_CS_TRIS       TRISBbits.TRISB2
-#define MAX31855_0_CS_LAT        LATAbits.LATA0
-#define MAX31855_1_CS_LAT        LATEbits.LATE8
-#define MAX31855_2_CS_LAT        LATEbits.LATE9
-#define MAX31855_3_CS_LAT        LATBbits.LATB4
-#define MAX31855_4_CS_LAT        LATBbits.LATB3
-#define MAX31855_5_CS_LAT        LATBbits.LATB2
-#define MAX31855_0_CS_LATBITS    (uint32_t*) (&LATAbits)
-#define MAX31855_1_CS_LATBITS    (uint32_t*) (&LATEbits)
-#define MAX31855_2_CS_LATBITS    (uint32_t*) (&LATEbits)
-#define MAX31855_3_CS_LATBITS    (uint32_t*) (&LATBbits)
-#define MAX31855_4_CS_LATBITS    (uint32_t*) (&LATBbits)
-#define MAX31855_5_CS_LATBITS    (uint32_t*) (&LATBbits)
-#define MAX31855_0_CS_LATNUM     0
-#define MAX31855_1_CS_LATNUM     8
-#define MAX31855_2_CS_LATNUM     9
-#define MAX31855_3_CS_LATNUM     4
-#define MAX31855_4_CS_LATNUM     3
-#define MAX31855_5_CS_LATNUM     2
+#define MAX31855_0_CS_TRIS      TRISAbits.TRISA0
+#define MAX31855_1_CS_TRIS      TRISEbits.TRISE8
+#define MAX31855_2_CS_TRIS      TRISEbits.TRISE9
+#define MAX31855_3_CS_TRIS      TRISBbits.TRISB4
+#define MAX31855_4_CS_TRIS      TRISBbits.TRISB3
+#define MAX31855_5_CS_TRIS      TRISBbits.TRISB2
+#define MAX31855_0_CS_LAT       LATAbits.LATA0
+#define MAX31855_1_CS_LAT       LATEbits.LATE8
+#define MAX31855_2_CS_LAT       LATEbits.LATE9
+#define MAX31855_3_CS_LAT       LATBbits.LATB4
+#define MAX31855_4_CS_LAT       LATBbits.LATB3
+#define MAX31855_5_CS_LAT       LATBbits.LATB2
+#define MAX31855_0_CS_LATBITS   (uint32_t*) (&LATAbits)
+#define MAX31855_1_CS_LATBITS   (uint32_t*) (&LATEbits)
+#define MAX31855_2_CS_LATBITS   (uint32_t*) (&LATEbits)
+#define MAX31855_3_CS_LATBITS   (uint32_t*) (&LATBbits)
+#define MAX31855_4_CS_LATBITS   (uint32_t*) (&LATBbits)
+#define MAX31855_5_CS_LATBITS   (uint32_t*) (&LATBbits)
+#define MAX31855_0_CS_LATNUM    0
+#define MAX31855_1_CS_LATNUM    8
+#define MAX31855_2_CS_LATNUM    9
+#define MAX31855_3_CS_LATNUM    4
+#define MAX31855_4_CS_LATNUM    3
+#define MAX31855_5_CS_LATNUM    2
 
 
 

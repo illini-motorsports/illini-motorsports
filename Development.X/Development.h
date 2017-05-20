@@ -8,15 +8,15 @@
 #include "../FSAE.X/CAN.h"
 
 
-#define PIC_LED_TRIS	TRISBbits.TRISB6
-#define PIC_LED_LAT	LATBbits.LATB6
-#define TEMP_CS_TRIS	TRISBbits.TRISB3
-#define TEMP_CS_LAT	LATBbits.LATB3
+#define PIC_LED_TRIS  TRISBbits.TRISB6
+#define PIC_LED_LAT LATBbits.LATB6
+#define TEMP_CS_TRIS  TRISBbits.TRISB3
+#define TEMP_CS_LAT LATBbits.LATB3
 
 typedef struct _kTemp{
-    double temp;
-    double jTemp;
-    uint8_t fault;
+  double temp;
+  double jTemp;
+  uint8_t fault;
 } kTemp;
 
 int main(void);

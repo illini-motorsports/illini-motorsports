@@ -14,20 +14,20 @@
 #include "FSAE_config.h"
 #include "FSAE_spi.h"
 
-#define MCP23S17_IODIR		0x00 //1=input
-#define MCP23S17_IPOL			0x02 //1=inverted inputs
-#define MCP23S17_GPINTEN	0x04 //enables interrupts on changes
-#define MCP23S17_DEFVAL		0x06 //Interrupt occurs if port != default
-#define MCP23S17_INTCON		0x08 //1=use default value, 0= use previous value
-#define MCP23S17_IOCON		0x0A //See bitfield below
-#define MCP23S17_GPPU			0x0C //Attach internal pullup resistor (100k)
-#define MCP23S17_INTF			0x0E //Interrupt Flag
-#define MCP23S17_INTCAP		0x10 //Interrupt captured value
-#define MCP23S17_GPIO 		0x12 //Reading reads PORT, Writing writes LAT
-#define MCP23S17_OLAT 		0x14 //Output Latch
+#define MCP23S17_IODIR    0x00 //1=input
+#define MCP23S17_IPOL     0x02 //1=inverted inputs
+#define MCP23S17_GPINTEN  0x04 //enables interrupts on changes
+#define MCP23S17_DEFVAL   0x06 //Interrupt occurs if port != default
+#define MCP23S17_INTCON   0x08 //1=use default value, 0= use previous value
+#define MCP23S17_IOCON    0x0A //See bitfield below
+#define MCP23S17_GPPU     0x0C //Attach internal pullup resistor (100k)
+#define MCP23S17_INTF     0x0E //Interrupt Flag
+#define MCP23S17_INTCAP   0x10 //Interrupt captured value
+#define MCP23S17_GPIO     0x12 //Reading reads PORT, Writing writes LAT
+#define MCP23S17_OLAT     0x14 //Output Latch
 
-#define MCP23S17_READ			0b01000001 //read control byte
-#define MCP23S17_WRITE		0b01000000 //write control byte
+#define MCP23S17_READ     0b01000001 //read control byte
+#define MCP23S17_WRITE    0b01000000 //write control byte
 
 // Struct representing the chip's control register
 typedef union {

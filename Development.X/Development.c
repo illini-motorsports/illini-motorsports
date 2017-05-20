@@ -2,21 +2,21 @@
 
 kTemp kt;
 int main(void){
-    init_general();// Set general runtime configuration bits
-    init_gpio_pins();// Set all I/O pins to low outputs
-    init_oscillator(0);// Initialize oscillator configuration bits
-    init_timer2();// Initialize timer2 (millis)
-    init_spi();
-    
-    PIC_LED_TRIS = OUTPUT;
-    int i;
-    while(1){
-	for(i = 0;i<1000000;i++);
-    	PIC_LED_LAT = 1;
-	get_temp(&kt);
-	for(i = 0;i<1000000;i++);
-    	PIC_LED_LAT = 0;
-    }
+  init_general();// Set general runtime configuration bits
+  init_gpio_pins();// Set all I/O pins to low outputs
+  init_oscillator(0);// Initialize oscillator configuration bits
+  init_timer2();// Initialize timer2 (millis)
+  init_spi();
+
+  PIC_LED_TRIS = OUTPUT;
+  int i;
+  while(1){
+    for(i = 0;i<1000000;i++);
+    PIC_LED_LAT = 1;
+    get_temp(&kt);
+    for(i = 0;i<1000000;i++);
+    PIC_LED_LAT = 0;
+  }
   return 0;
 }
 
@@ -26,34 +26,34 @@ int main(void){
  * Fires once every millisecond.
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
-	//millis++;// Increment millis count
-	//if (!(millis%250)){
-	//		PIC_LED_LAT = !PIC_LED_LAT;
-	//}
-	IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
+  //millis++;// Increment millis count
+  //if (!(millis%250)){
+  //    PIC_LED_LAT = !PIC_LED_LAT;
+  //}
+  IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
 
 void get_temp(kTemp *kt){
-    uint32_t spi_bits = get_temp_spi();
-    kt->fault = spi_bits & 0x0000000F;
-    if(kt->fault){
-	kt->temp = 0;
-    	kt->jTemp = 0;
-    } else {
-    	kt->temp = (spi_bits >> 18)/4.0;
-    	kt->jTemp = ((spi_bits & 0x0000FFFF) >> 4)*0.0625;
-    }
+  uint32_t spi_bits = get_temp_spi();
+  kt->fault = spi_bits & 0x0000000F;
+  if(kt->fault){
+    kt->temp = 0;
+    kt->jTemp = 0;
+  } else {
+    kt->temp = (spi_bits >> 18)/4.0;
+    kt->jTemp = ((spi_bits & 0x0000FFFF) >> 4)*0.0625;
+  }
 }
 
 uint32_t get_temp_spi(){
-    uint32_t resp = 0;
-    while(SPI1STATbits.SPIBUSY);
-    TEMP_CS_LAT = 0;
-    SPI1BUF = 0;
-    while(!SPI1STATbits.SPIRBF);
-    resp = SPI1BUF;
-    TEMP_CS_LAT = 1;
-    return resp;
+  uint32_t resp = 0;
+  while(SPI1STATbits.SPIBUSY);
+  TEMP_CS_LAT = 0;
+  SPI1BUF = 0;
+  while(!SPI1STATbits.SPIRBF);
+  resp = SPI1BUF;
+  TEMP_CS_LAT = 1;
+  return resp;
 }
 
 void init_spi(){

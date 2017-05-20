@@ -13,15 +13,15 @@
 #include <sys/types.h>
 #include <math.h>
 
-#define WIDTH		480
-#define HEIGHT		272
-#define LCD_WAIT	PORTFbits.RF12
+#define WIDTH   480
+#define HEIGHT    272
+#define LCD_WAIT  PORTFbits.RF12
 
 // Screen State Functions
-void reset(); 		//Toggles reset pin
+void reset();     //Toggles reset pin
 void displayOn(uint8_t on); // Sends an spi command to wake up screen
-void PLLinit(void); 	// Initialize Clock and stuff
-void initialize(void); 	// Sends a lot of commands to configure the driver
+void PLLinit(void);   // Initialize Clock and stuff
+void initialize(void);  // Sends a lot of commands to configure the driver
 
 /* Backlight */
 void GPIOX(uint8_t on);
@@ -31,7 +31,7 @@ void PWM1out(uint8_t p);
 void PWM2out(uint8_t p);
 
 /* Text functions */
-void textMode(void); 	// Switches drawing mode to text 
+void textMode(void);  // Switches drawing mode to text 
 void textSetCursor(uint16_t x, uint16_t y); // Sets the coordinates of the cursor
 void textColor(uint16_t foreColor, uint16_t bgColor);
 void textTransparent(uint16_t foreColor); // Only writes foreground pixels
@@ -95,67 +95,67 @@ uint16_t _width, _height;
 uint8_t _textScale;
 
 /* Jake Defined Values */
-#define SEVEN_SEG_0 		0x7E
-#define SEVEN_SEG_1 		0x30
-#define SEVEN_SEG_2 		0x6D
-#define SEVEN_SEG_3 		0x79
-#define SEVEN_SEG_4 		0x33
-#define SEVEN_SEG_5 		0x5B
-#define SEVEN_SEG_6 		0x5F
-#define SEVEN_SEG_7 		0x70
-#define SEVEN_SEG_8 		0x7F
-#define SEVEN_SEG_9 		0x7B
-#define SEVEN_SEG_N		0x54
-#define SEVEN_SEG_E		0x4F
+#define SEVEN_SEG_0     0x7E
+#define SEVEN_SEG_1     0x30
+#define SEVEN_SEG_2     0x6D
+#define SEVEN_SEG_3     0x79
+#define SEVEN_SEG_4     0x33
+#define SEVEN_SEG_5     0x5B
+#define SEVEN_SEG_6     0x5F
+#define SEVEN_SEG_7     0x70
+#define SEVEN_SEG_8     0x7F
+#define SEVEN_SEG_9     0x7B
+#define SEVEN_SEG_N     0x54
+#define SEVEN_SEG_E     0x4F
 
 // Rectangle Coordinates
-#define RA8875_RECT_X0_0	0x91
-#define RA8875_RECT_X0_1	0x92
-#define RA8875_RECT_Y0_0	0x93
-#define RA8875_RECT_Y0_1	0x94
+#define RA8875_RECT_X0_0  0x91
+#define RA8875_RECT_X0_1  0x92
+#define RA8875_RECT_Y0_0  0x93
+#define RA8875_RECT_Y0_1  0x94
 
-#define RA8875_RECT_X1_0	0x95
-#define RA8875_RECT_X1_1	0x96
-#define RA8875_RECT_Y1_0	0x97
-#define RA8875_RECT_Y1_1	0x98
+#define RA8875_RECT_X1_0  0x95
+#define RA8875_RECT_X1_1  0x96
+#define RA8875_RECT_Y1_0  0x97
+#define RA8875_RECT_Y1_1  0x98
 
 // Circle Coordinates
-#define RA8875_CIRC_X_0		0x99
-#define RA8875_CIRC_X_1		0x9a
-#define RA8875_CIRC_Y_0		0x9b
-#define RA8875_CIRC_Y_1		0x9c
-#define RA8875_CIRC_RAD		0x9d
+#define RA8875_CIRC_X_0   0x99
+#define RA8875_CIRC_X_1   0x9a
+#define RA8875_CIRC_Y_0   0x9b
+#define RA8875_CIRC_Y_1   0x9c
+#define RA8875_CIRC_RAD   0x9d
 
 //Circle Square Coordinates
-#define RA8875_CIRC_SQUARE_X0	0x91
-#define RA8875_CIRC_SQUARE_X1	0x95
-#define RA8875_CIRC_SQUARE_CORN	0xA1
-#define RA8875_CIRC_SQUARE_DCR	0xA0
+#define RA8875_CIRC_SQUARE_X0   0x91
+#define RA8875_CIRC_SQUARE_X1   0x95
+#define RA8875_CIRC_SQUARE_CORN 0xA1
+#define RA8875_CIRC_SQUARE_DCR  0xA0
 #define RA8875_CIRC_SQUARE_STRT 0xA0
-#define RA8875_CIRC_SQUARE_FILL	0x40
+#define RA8875_CIRC_SQUARE_FILL 0x40
 #define RA8875_CIRC_SQUARE_STAT 0x80
 
 // Background Color Registers
-#define RA8875_BGCR_RED 	0x60
-#define RA8875_BGCR_GREEN 	0x61
-#define RA8875_BGCR_BLUE 	0x62
+#define RA8875_BGCR_RED         0x60
+#define RA8875_BGCR_GREEN       0x61
+#define RA8875_BGCR_BLUE        0x62
 
 // Foreground Color Registers
-#define RA8875_FGCR_RED 	0x63
-#define RA8875_FGCR_GREEN 	0x64
-#define RA8875_FGCR_BLUE 	0x65
+#define RA8875_FGCR_RED         0x63
+#define RA8875_FGCR_GREEN       0x64
+#define RA8875_FGCR_BLUE        0x65
 
 
 // Colors (RGB565)
-#define	RA8875_BLACK            0x0000
-#define	RA8875_BLUE             0x001F
-#define	RA8875_RED              0xF800
-#define	RA8875_GREEN            0x07E0
+#define RA8875_BLACK            0x0000
+#define RA8875_BLUE             0x001F
+#define RA8875_RED              0xF800
+#define RA8875_GREEN            0x07E0
 #define RA8875_CYAN             0x07FF
 #define RA8875_MAGENTA          0xF81F
 #define RA8875_YELLOW           0xFFE0
 #define RA8875_WHITE            0xFFFF
-#define RA8875_GREY		0xBAF7
+#define RA8875_GREY             0xBAF7
 
 // Command/Data pins for SPI
 #define RA8875_DATAWRITE        0x00

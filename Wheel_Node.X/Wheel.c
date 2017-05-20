@@ -489,26 +489,26 @@ void process_CAN_msg(CAN_message msg){
 
       /*Front Analog Hub*/
       /*
-    case ANALOG_FRONT_ID + 1:
-      brakePressFront.value = (double) ((uint16_t) (lsbArray[BPF_BYTE/2]) * BRK_PRS_SCL);
-      if(brakePressFront.value > brakeMaxFront.value)
-      {
-        brakeMaxFront.value = brakePressFront.value;
-      }
-      if (brakePressFront.value < brakeMinFront.value)
-      {
-        brakeMinFront.value = brakePressFront.value;
-      }
-      brakePressRear.value = (double) ((uint16_t) (lsbArray[BPR_BYTE/2]) * BRK_PRS_SCL);
-      if(brakePressRear.value > brakeMaxRear.value)
-      {
-        brakeMaxRear.value = brakePressRear.value;
-      }
-      if (brakePressRear.value < brakeMinRear.value)
-      {
-        brakeMinRear.value = brakePressRear.value;
-      }
-       */
+         case ANALOG_FRONT_ID + 1:
+         brakePressFront.value = (double) ((uint16_t) (lsbArray[BPF_BYTE/2]) * BRK_PRS_SCL);
+         if(brakePressFront.value > brakeMaxFront.value)
+         {
+         brakeMaxFront.value = brakePressFront.value;
+         }
+         if (brakePressFront.value < brakeMinFront.value)
+         {
+         brakeMinFront.value = brakePressFront.value;
+         }
+         brakePressRear.value = (double) ((uint16_t) (lsbArray[BPR_BYTE/2]) * BRK_PRS_SCL);
+         if(brakePressRear.value > brakeMaxRear.value)
+         {
+         brakeMaxRear.value = brakePressRear.value;
+         }
+         if (brakePressRear.value < brakeMinRear.value)
+         {
+         brakeMinRear.value = brakePressRear.value;
+         }
+         */
   }
 }
 
