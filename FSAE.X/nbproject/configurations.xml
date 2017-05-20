@@ -16,6 +16,8 @@
       <itemPath>FSAE_mcp23s17.h</itemPath>
       <itemPath>FSAE_spi.h</itemPath>
       <itemPath>FSAE_rheo.h</itemPath>
+      <itemPath>FSAE_tlc5955.h</itemPath>
+      <itemPath>FSAE_ltc3350.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -35,6 +37,8 @@
       <itemPath>FSAE_mcp23s17.c</itemPath>
       <itemPath>FSAE_spi.c</itemPath>
       <itemPath>FSAE_rheo.c</itemPath>
+      <itemPath>FSAE_tlc5955.c</itemPath>
+      <itemPath>FSAE_ltc3350.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -52,7 +56,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>1.42</languageToolchainVersion>
+        <languageToolchainVersion>1.40</languageToolchainVersion>
         <platform>2</platform>
       </toolsSet>
       <compileType>
