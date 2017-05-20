@@ -13,139 +13,57 @@
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
 void initDataItems(void){
-  // Motec Vars
-  // Refresh Intervals
-  // All Temp Channels - 500
-  initDataItem(&rpm,0,0,MIN_REFRESH,5,0);
-  initDataItem(&throtPos,0,0,MIN_REFRESH,3,1);
-  initDataItem(&oilPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&oilTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&waterTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&lambda,0,0,MIN_REFRESH,1,3);
-  initDataItem(&manifoldPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&batVoltage,0,0,MIN_REFRESH,2,2);
-  initDataItem(&wheelSpeedFL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&wheelSpeedFR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&wheelSpeedRL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&wheelSpeedRR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gpsLong,0,0,MIN_REFRESH,2,1); // Don't need
-  initDataItem(&gpsLat,0,0,MIN_REFRESH,2,1); // Don't need
-  initDataItem(&groundSpeed,0,0,MIN_REFRESH,2,1);
-  initDataItem(&driveSpeed,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gpsSpeed,0,0,MIN_REFRESH,2,1);
-  initDataItem(&manifoldTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&ambientTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&ambientPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&fuelTemp,0,0,MIN_REFRESH,3,0);
-  initDataItem(&fuelPress,0,0,MIN_REFRESH,1,2);
-  initDataItem(&lambda1,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lambda2,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lambda3,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lambda4,0,0,MIN_REFRESH,1,3);
-  initDataItem(&lcEnablity,0,0,MIN_REFRESH,1,0);
-  initDataItem(&fuelConsum,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gpsAltitude,0,0,MIN_REFRESH,2,1); // ?
-  initDataItem(&gpsTime,0,0,MIN_REFRESH,2,1); // ?
-  initDataItem(&runTime,0,0,MIN_REFRESH,4,0);
-  initDataItem(&fuelInjDuty,0,0,MIN_REFRESH,3,1);
-  initDataItem(&fuelTrim,0,0,MIN_REFRESH,3,1);
+  int i;
 
-  // Tire Temps
-  initDataItem(&ttFLA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFLA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFLA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFLA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFRA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttFR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRLA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[0],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[1],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[2],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRRA[3],0,0,MIN_REFRESH,2,1);
-  initDataItem(&ttRR,0,0,MIN_REFRESH,2,1);
+  // Set default initialization for PDM data items
+  for(i=0;i<PDM_DATAITEM_SIZE;i++){
+    initDataItem(&pdmDataItems[i],0,0,MIN_REFRESH,2,1);
+  }
 
-  // Paddle Shifting
-  initDataItem(&paddleTemp,0,0,MIN_REFRESH,2,1);
-  initDataItem(&gearPos,0,0,MIN_REFRESH,1,0);
-  initDataItem(&neutQueue,0,0,MIN_REFRESH,1,0);
-  initDataItem(&upQueue,0,0,MIN_REFRESH,1,0);
-  initDataItem(&downQueue,0,0,MIN_REFRESH,1,0);
-  initDataItem(&gearVoltage,0,0,MIN_REFRESH,1,2);
+  // Customized PDM dataitem initialization
+  pdmDataItems[STR_DRAW_IDX].wholeDigits = 3;
 
-  // PDM
-  initDataItem(&pdmTemp,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmICTemp,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmCurrentDraw,0,0,MIN_REFRESH,3,1);
-  initDataItem(&pdmVBat,0,0,MIN_REFRESH,2,2);
-  initDataItem(&pdm12v,0,0,MIN_REFRESH,2,2);
-  initDataItem(&pdm5v5,0,0,MIN_REFRESH,1,2);
-  initDataItem(&pdm5v,0,0,MIN_REFRESH,1,2);
-  initDataItem(&pdm3v3,0,0,MIN_REFRESH,1,2);
-  // Draw (^str) - 2,2
-  // Cut (^str)) - 3,1
-  initDataItem(&pdmIGNdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmIGNcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmINJdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmINJcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmFUELdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmFUELcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmFUELPcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmECUdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmECUcut,0,0,MIN_REFRESH,0,1);
-  initDataItem(&pdmECUPcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmWTRdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmWTRcut,0,0,MIN_REFRESH,0,1);
-  initDataItem(&pdmWTRPcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmFANdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmFANcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmFANPcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmAUXdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmAUXcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmPDLUdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmPDLUcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmPDLDdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmPDLDcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdm5v5cut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmBATdraw,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmBATcut,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmSTRdraw,0,0,MIN_REFRESH,3,1);
-  initDataItem(&pdmSTRcut,0,0,MIN_REFRESH,2,1);
+  // Set default initialization for GCM data items
+  for(i=0;i<GCM_DATAITEM_SIZE;i++){
+    initDataItem(&gcmDataItems[i],0,0,MIN_REFRESH,1,0);
+  }
 
-  // PDM Bitmaps
-  initDataItem(&STRenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&BVBATenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&PDLDenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&PDLUenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&AUXenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&FANenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&WTRenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&ECUenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&FUELenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&INJenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&IGNenabl,0,0,MIN_REFRESH,1,0);
-  initDataItem(&BVBATpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&PDLDpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&PDLUpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&AUXpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&FANpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&WTRpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&ECUpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&FUELpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&INJpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&IGNpm,0,0,MIN_REFRESH,1,0);
-  initDataItem(&KILLpdmSw,0,0,MIN_REFRESH,1,0);
-  initDataItem(&ACT_DNpdmSw,0,0,MIN_REFRESH,1,0);
-  initDataItem(&ACT_UPpdmSw,0,0,MIN_REFRESH,1,0);
-  initDataItem(&ONpdmSw,0,0,MIN_REFRESH,1,0);
-  initDataItem(&STRpdmSw,0,0,MIN_REFRESH,1,0);
+  // Customized GCM dataitem initialization
+  gcmDataItems[GEAR_VOLT_IDX].decDigits = 2;
+  gcmDataItems[GEAR_VOLT_IDX].wholeDigits = 2;
+  gcmDataItems[FORCE_IDX].decDigits = 2;
+  gcmDataItems[FORCE_IDX].wholeDigits = 2;
+
+  // Set default initializations for Motec data items
+  for(i=0;i<MOTEC_DATAITEM_SIZE;i++) {
+    initDataItem(&motecDataItems[i],0,0,MIN_REFRESH,2,1);
+  }
+
+  // Customized Motec dataitem initialization
+  setDataItemDigits(&motecDataItems[ENG_RPM_IDX], 5, 0);
+  setDataItemDigits(&motecDataItems[THROTTLE_POS_IDX], 0, 2);
+  setDataItemDigits(&motecDataItems[OIL_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[OIL_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[LAMBDA_IDX], 3, 1);
+  setDataItemDigits(&motecDataItems[MANIFOLD_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[MANIFOLD_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[ENG_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[VOLT_ECU_IDX], 2, 2);
+  setDataItemDigits(&motecDataItems[AMBIENT_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[FUEL_PRES_IDX], 1, 2);
+  setDataItemDigits(&motecDataItems[FUEL_TEMP_IDX], 3, 0);
+  setDataItemDigits(&motecDataItems[RUN_TIME_IDX], 4, 0);
+  setDataItemDigits(&motecDataItems[FUEL_INJ_DUTY_IDX], 3, 1);
+  setDataItemDigits(&motecDataItems[FUEL_TRIM_IDX], 3, 1);
+
+  // Tire temps
+  for(i=0;i<TIRETEMP_DATAITEM_SIZE;i++) {
+    initDataItem(&tireTempDataItems[i],0,0,MIN_REFRESH,2,1); 
+  }
+
+  for(i=0;i<SPM_DATAITEM_SIZE;i++) {
+    initDataItem(&spmDataItems[i],0,0,MIN_REFRESH,2,1);
+  }
 
   // Rear Analog Hub
   initDataItem(&susPosRR,0,0,MIN_REFRESH,2,1);
@@ -167,10 +85,8 @@ void initDataItems(void){
   initDataItem(&accelPedalPos1,0,0,MIN_REFRESH,2,1);
   // Uptimes
   // uptimes - 4,0
-  initDataItem(&paddleUptime,0,0,MIN_REFRESH,2,1);
   initDataItem(&loggerUptime,0,0,MIN_REFRESH,2,1);
   initDataItem(&swUptime,0,0,MIN_REFRESH,2,1);
-  initDataItem(&pdmUptime,0,0,MIN_REFRESH,2,1);
   initDataItem(&brakeMinFront,0,0,MIN_REFRESH,2,1);
   initDataItem(&brakeMaxFront,0,0,MIN_REFRESH,2,1);
   initDataItem(&brakeMinRear,0,0,MIN_REFRESH,2,1);
@@ -206,11 +122,11 @@ void initDataItems(void){
   initDataItem(&momentaries[3],0,0,MIN_REFRESH,1,0);
 
   fanSw[0] = &switches[0];
-  fanSw[1] = &FANenabl;
+  fanSw[1] = &pdmDataItems[FAN_ENABLITY_IDX];
   fuelSw[0] = &switches[1];
-  fuelSw[1] = &FUELenabl;
+  fuelSw[1] = &pdmDataItems[FUEL_ENABLITY_IDX];
   wtrSw[0] = &switches[2];
-  wtrSw[1] = &WTRenabl;
+  wtrSw[1] = &pdmDataItems[WTR_ENABLITY_IDX];
 }
 
 void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, uint8_t whole, uint8_t dec){
@@ -218,6 +134,11 @@ void initDataItem(volatile dataItem* data, double warn, double err, uint32_t ref
   data->warnThreshold = warn;
   data->errThreshold = err;
   data->refreshInterval = refresh;
+  data->wholeDigits = whole;
+  data->decDigits = dec;
+}
+
+void setDataItemDigits(volatile dataItem* data, uint8_t whole, uint8_t dec) {
   data->wholeDigits = whole;
   data->decDigits = dec;
 }
@@ -252,103 +173,65 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
   initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
-  initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &oilTemp);
-  initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &waterTemp);
-  initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &oilPress);
-  initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &batVoltage);
-  initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gearPos);
-  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &rpm);
-  initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &KILLpdmSw);
+  initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
+  initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
+  initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
+  initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
+  initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
+  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &motecDataItems[ENG_RPM_IDX]);
+  initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
   pdmDrawScreen.items = pdmDrawItems;
   pdmDrawScreen.len = 20;
-  initScreenItem(&pdmDrawItems[1], 10, 50, 15, redrawDigit, &pdmIGNdraw);
-  initScreenItem(&pdmDrawItems[2], 85, 50, 15, redrawDigit, &pdmINJdraw);
-  initScreenItem(&pdmDrawItems[3], 160, 50, 15, redrawDigit, &pdmFUELdraw);
-  initScreenItem(&pdmDrawItems[4], 235, 50, 15, redrawDigit, &pdmECUdraw);
-  initScreenItem(&pdmDrawItems[5], 310, 50, 15, redrawDigit, &pdmWTRdraw);
-  initScreenItem(&pdmDrawItems[6], 385, 50, 15, redrawDigit, &pdmFANdraw);
-  initScreenItem(&pdmDrawItems[7], 10, 100, 15, redrawDigit, &pdmAUXdraw);
-  initScreenItem(&pdmDrawItems[8], 85, 100, 15, redrawDigit, &pdmPDLUdraw);
-  initScreenItem(&pdmDrawItems[9], 160, 100, 15, redrawDigit, &pdmPDLDdraw);
-  initScreenItem(&pdmDrawItems[10], 235, 100, 15, redrawDigit, &pdm5v5draw);
-  initScreenItem(&pdmDrawItems[11], 310, 100, 15, redrawDigit, &pdmBATdraw);
-  initScreenItem(&pdmDrawItems[16], 385, 100, 15, redrawDigit, &pdmFUELPcut);
-  initScreenItem(&pdmDrawItems[17], 10, 150, 15, redrawDigit, &pdmECUPcut);
-  initScreenItem(&pdmDrawItems[18], 85, 150, 15, redrawDigit, &pdmWTRPcut);
-  initScreenItem(&pdmDrawItems[19], 160, 150, 15, redrawDigit, &pdmFANPcut);
-  initScreenItem(&pdmDrawItems[15], 280, 200, 15, redrawDigit, &pdmSTRdraw);
-  initScreenItem(&pdmDrawItems[0], 370, 200, 15, redrawDigit, &pdmCurrentDraw);
+  initScreenItem(&pdmDrawItems[1], 10, 50, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[2], 85, 50, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[3], 160, 50, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[4], 235, 50, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[5], 310, 50, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[6], 385, 50, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[7], 10, 100, 15, redrawDigit, &pdmDataItems[AUX_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[8], 85, 100, 15, redrawDigit, &pdmDataItems[PDLU_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[9], 160, 100, 15, redrawDigit, &pdmDataItems[PDLD_DRAW_IDX]);
+  //changed from 5v5
+  initScreenItem(&pdmDrawItems[10], 235, 100, 15, redrawDigit, &pdmDataItems[ABS_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[11], 310, 100, 15, redrawDigit, &pdmDataItems[BVBAT_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[16], 385, 100, 15, redrawDigit, &pdmDataItems[FUEL_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[17], 10, 150, 15, redrawDigit, &pdmDataItems[ECU_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[18], 85, 150, 15, redrawDigit, &pdmDataItems[WTR_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[19], 160, 150, 15, redrawDigit, &pdmDataItems[FAN_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[15], 280, 200, 15, redrawDigit, &pdmDataItems[STR_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[0], 370, 200, 15, redrawDigit, &pdmDataItems[TOTAL_CURRENT_IDX]);
 
 
   allScreens[PDM_CUT_SCREEN] = &pdmCutScreen;
   pdmCutScreen.items = pdmCutItems;
   pdmCutScreen.len = 21;
-  initScreenItem(&pdmCutItems[0], 10, 50, 15, redrawDigit, &pdmTemp);
-  initScreenItem(&pdmCutItems[1], 85, 50, 15, redrawDigit, &pdmICTemp);
-  initScreenItem(&pdmCutItems[4], 310, 50, 15, redrawDigit, &pdm5v5);
-  initScreenItem(&pdmCutItems[5], 385, 50, 15, redrawDigit, &pdm5v);
-  initScreenItem(&pdmCutItems[6], 10, 100, 15, redrawDigit, &pdm3v3);
-  initScreenItem(&pdmCutItems[7], 85, 100, 15, redrawDigit, &pdmIGNcut);
-  initScreenItem(&pdmCutItems[8], 160, 100, 15, redrawDigit, &pdmINJcut);
-  initScreenItem(&pdmCutItems[9], 235, 100, 15, redrawDigit, &pdmFUELcut);
-  pdmECUcut.decDigits = 1;
-  pdmECUcut.wholeDigits = 2;
-  initScreenItem(&pdmCutItems[10], 160, 50, 15, redrawDigit, &pdmECUcut);
-  initScreenItem(&pdmCutItems[12], 10, 150, 15, redrawDigit, &pdmFANcut);
-  initScreenItem(&pdmCutItems[13], 85, 150, 15, redrawDigit, &pdmAUXcut);
-  initScreenItem(&pdmCutItems[14], 160, 150, 15, redrawDigit, &pdmPDLUcut);
-  initScreenItem(&pdmCutItems[15], 235, 150, 15, redrawDigit, &pdmPDLDcut);
-  initScreenItem(&pdmCutItems[16], 310, 150, 15, redrawDigit, &pdm5v5cut);
-  initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmBATcut);
-  initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit, &pdmSTRcut);
+  initScreenItem(&pdmCutItems[0], 10, 50, 15, redrawDigit, &pdmDataItems[PCB_TEMP_IDX]);
+  initScreenItem(&pdmCutItems[1], 85, 50, 15, redrawDigit, &pdmDataItems[IC_TEMP_IDX]);
+  initScreenItem(&pdmCutItems[4], 310, 50, 15, redrawDigit, 0x0);
+  initScreenItem(&pdmCutItems[5], 385, 50, 15, redrawDigit, 0x0);
+  initScreenItem(&pdmCutItems[6], 10, 100, 15, redrawDigit, 0x0);
+  initScreenItem(&pdmCutItems[7], 85, 100, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX]);
+  initScreenItem(&pdmCutItems[8], 160, 100, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX]);
+  initScreenItem(&pdmCutItems[9], 235, 100, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX]);
+  initScreenItem(&pdmCutItems[10], 160, 50, 15, redrawDigit,  &pdmDataItems[ECU_CUT_IDX]);
+  initScreenItem(&pdmCutItems[12], 10, 150, 15, redrawDigit,  &pdmDataItems[FAN_CUT_IDX]);
+  initScreenItem(&pdmCutItems[13], 85, 150, 15, redrawDigit,  &pdmDataItems[AUX_CUT_IDX]);
+  initScreenItem(&pdmCutItems[14], 160, 150, 15, redrawDigit, &pdmDataItems[PDLU_CUT_IDX]);
+  initScreenItem(&pdmCutItems[15], 235, 150, 15, redrawDigit, &pdmDataItems[PDLD_CUT_IDX]);
+  initScreenItem(&pdmCutItems[16], 310, 150, 15, redrawDigit, &pdmDataItems[ABS_CUT_IDX]);
+  initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX]);
+  initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0);
 
   //brake pressure
   initScreenItem(&pdmCutItems[19], 85, 200, 15, redrawDigit,&brakePressFront);
   initScreenItem(&pdmCutItems[20], 160, 200, 15, redrawDigit, &brakePressRear);
 
-  initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmVBat);
-  initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdm12v);
+  initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
+  initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdmDataItems[V12_RAIL_IDX]);
 
-
-  // MoTec Stuff
-  allScreens[MOTEC_SCREEN] = &motecScreen;
-  motecScreen.items = motecItems;
-  motecScreen.len = 30;
-  initScreenItem(&motecItems[0], 10, 30, 20, redrawDigit, &rpm);
-  initScreenItem(&motecItems[1], 10, 30, 20, redrawDigit, &throtPos);
-  initScreenItem(&motecItems[2], 10, 30, 20, redrawDigit, &oilPress);
-  initScreenItem(&motecItems[3], 10, 30, 20, redrawDigit, &oilTemp);
-  initScreenItem(&motecItems[4], 10, 30, 20, redrawDigit, &waterTemp);
-  initScreenItem(&motecItems[5], 10, 30, 20, redrawDigit, &lambda);
-  initScreenItem(&motecItems[6], 10, 30, 20, redrawDigit, &manifoldPress);
-  initScreenItem(&motecItems[7], 10, 30, 20, redrawDigit, &batVoltage);
-  initScreenItem(&motecItems[8], 10, 30, 20, redrawDigit, &wheelSpeedFL);
-  initScreenItem(&motecItems[9], 10, 30, 20, redrawDigit, &wheelSpeedFR);
-  initScreenItem(&motecItems[10], 10, 30, 20, redrawDigit, &wheelSpeedRL);
-  initScreenItem(&motecItems[11], 10, 30, 20, redrawDigit, &wheelSpeedRR);
-  initScreenItem(&motecItems[12], 10, 30, 20, redrawDigit, &gpsLat);
-  initScreenItem(&motecItems[13], 10, 30, 20, redrawDigit, &gpsLong);
-  initScreenItem(&motecItems[14], 10, 30, 20, redrawDigit, &groundSpeed);
-  initScreenItem(&motecItems[15], 10, 30, 20, redrawDigit, &driveSpeed);
-  initScreenItem(&motecItems[16], 10, 30, 20, redrawDigit, &gpsSpeed);
-  initScreenItem(&motecItems[17], 10, 30, 20, redrawDigit, &manifoldTemp);
-  initScreenItem(&motecItems[18], 10, 30, 20, redrawDigit, &ambientTemp);
-  initScreenItem(&motecItems[19], 10, 30, 20, redrawDigit, &ambientPress);
-  initScreenItem(&motecItems[20], 10, 30, 20, redrawDigit, &fuelTemp);
-  initScreenItem(&motecItems[21], 10, 30, 20, redrawDigit, &fuelPress);
-  initScreenItem(&motecItems[22], 10, 30, 20, redrawDigit, &lambda1);
-  initScreenItem(&motecItems[23], 10, 30, 20, redrawDigit, &lambda2);
-  initScreenItem(&motecItems[24], 10, 30, 20, redrawDigit, &lambda3);
-  initScreenItem(&motecItems[25], 10, 30, 20, redrawDigit, &lambda4);
-  initScreenItem(&motecItems[26], 10, 30, 20, redrawDigit, &lcEnablity);
-  initScreenItem(&motecItems[27], 10, 30, 20, redrawDigit, &fuelConsum);
-  initScreenItem(&motecItems[28], 10, 30, 20, redrawDigit, &gpsAltitude);
-  initScreenItem(&motecItems[29], 10, 30, 20, redrawDigit, &gpsTime);
-  initScreenItem(&motecItems[30], 10, 30, 20, redrawDigit, &fuelInjDuty);
-  initScreenItem(&motecItems[31], 10, 30, 20, redrawDigit, &fuelTrim);
 
   // End Race Screen
   allScreens[END_RACE_SCREEN] = &endRaceScreen;
@@ -367,18 +250,6 @@ void initAllScreens(void){
   initScreenItem(&endRaceItems[6], 10, 30, 20, redrawTireTemp, &endTireTempRR);
   initScreenItem(&endRaceItems[7], 10, 30, 20, redrawDigit, &endAmbientTemp);
   initScreenItem(&endRaceItems[8], 10, 30, 20, redrawDigit, &endFuelConsum);
-
-  allScreens[CHASSIS_SCREEN] = &chassisScreen;
-  chassisScreen.items = chassisItems;
-  chassisScreen.len = 20;
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttFL);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttFR);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttRL);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawDigit, &ttRR);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttFLA);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttFRA);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRLA);
-  initScreenItem(&chassisItems[0], 10, 30, 20, redrawTireTemp, ttRRA);
 
   //brake screen
   allScreens[BRAKE_SCREEN] = &brakeScreen;
@@ -576,20 +447,20 @@ void changeAUXType(uint8_t num){
       // Battery Voltage
       case 0:
         textWrite("BAT V");
-        raceScreenItems[6].data = &batVoltage;
+        raceScreenItems[6].data = &pdmDataItems[VBAT_RAIL_IDX];
         raceScreenItems[6].info.x += 30;
         break;
 
         // Lambda
       case 1:
         textWrite("LAMBDA");
-        raceScreenItems[6].data = &lambda;
+        raceScreenItems[6].data = &motecDataItems[LAMBDA_IDX];
         break;
 
         // RPM
       case 2:
         textWrite("RPM");
-        raceScreenItems[6].data = &rpm;
+        raceScreenItems[6].data = &motecDataItems[ENG_RPM_IDX];
         raceScreenItems[6].info.x -= 30;
         break;
     }
@@ -896,12 +767,12 @@ void endRace(void){
   endLogNum.value = 0;
   endNumLaps.value = numLaps;
   endFastLap.value = getMinLap();
-  endTireTempFL.value = ttFL.value;
-  endTireTempFR.value = ttFR.value;
-  endTireTempRL.value = ttRL.value;
-  endTireTempRR.value = ttRR.value;
-  endAmbientTemp.value = ambientTemp.value;
-  endFuelConsum.value = fuelConsum.value;
+  endTireTempFL.value = tireTempDataItems[FL].value;
+  endTireTempFR.value = tireTempDataItems[FR].value;
+  endTireTempRL.value = tireTempDataItems[RL].value;
+  endTireTempRR.value = tireTempDataItems[RR].value;
+  endAmbientTemp.value = motecDataItems[AIR_TEMP_IDX].value;
+  endFuelConsum.value = motecDataItems[FUEL_USED_IDX].value;
 }
 
 // Error Handling Stuff
