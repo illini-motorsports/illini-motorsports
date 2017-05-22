@@ -15,6 +15,12 @@
 
 typedef uint32_t (*send_spi_fp) (uint32_t);
 
+/*
+ *Struct used for all SPI communcation in the FSAE Library.
+ *Contains a send_spi function pointer, and CS pin infomration.
+ *send_spi functions will take SPIConn pointer as an argument
+ *to communicate with a specific chip on a given SPI Bus.
+ */
 typedef struct {
   send_spi_fp send_fp; // send_spi function pointer
   uint32_t *cs_lat; // pointer to CS lat bits

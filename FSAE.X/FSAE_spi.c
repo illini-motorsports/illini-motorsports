@@ -1,5 +1,18 @@
 #include "FSAE_spi.h"
 
+/*
+ * Generic initializaiton function for all SPI busses
+ * The SPI pins used for each bus are the defaults for the FSAE Library:
+ *      |  SDI | SDO | SCK
+ * SPI1 |  RB9 | RB10| RD1
+ * SPI2 |  RE5 | RC1 | RG6
+ * SPI3 |  RB5 | RB3 | RB14
+ * SPI5 |  RF4 | RA14| RF13
+ * SPI6 |  RF4 | RF8 | RD15
+ *
+ * size can have a value of 8, 16, or 32.  This determines the message
+ * size in bits of the SPI communication.
+ */
 void init_spi(uint8_t bus, double mhz, uint8_t size) {
   unlock_config();
 
@@ -187,6 +200,11 @@ void init_spi(uint8_t bus, double mhz, uint8_t size) {
   lock_config();
 }
 
+/*
+ *Returns a function pointer to a generic send_spi function
+ *based on a bus number.  Returns NULL if invalid bus.
+ *Function pointer is of type send_spi_fp
+ */
 send_spi_fp get_send_spi(uint8_t bus){
   switch(bus) {
     case 1:
@@ -234,6 +252,11 @@ uint32_t send_spi6(uint32_t value){
   return SPI6BUF;
 }
 
+/*
+ *Generic send_spi function, which takes a value and a connection pointer.
+ *Will set CS low, send the value using the connection's send_spi
+ *function pointer, return the buffer, and set CS back to high.
+ */
 uint32_t send_spi(uint32_t value, SPIConn *conn){
   *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
   uint32_t buff = conn->send_fp(value);

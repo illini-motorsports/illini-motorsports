@@ -12,8 +12,6 @@ SPIConn connections[10];
 uint8_t ad7490ConnIdx = 0;
 
 /**
- * void init_ad7490(void)
- *
  * Initializes the AD7490 ADC module.
  */
 SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
@@ -46,8 +44,6 @@ SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
 }
 
 /**
- * uint16_t** read_channels(Uint16_t, send_value)
- *
  * Iterates through all channels, instructs the ADC to sample the current
  * value, and returns all the sample values.
  */
