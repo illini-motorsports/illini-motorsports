@@ -9,6 +9,8 @@
 #include "RA8875_driver.h"
 #include "Wheel.h"
 
+SPIConn ra8875Connection;
+
 /*
  ***********************Formula Functions***************************************
  */
@@ -549,9 +551,9 @@ void drawPixel(int16_t x, int16_t y, uint16_t color){
   writeCoordinates(RA8875_CURH0, x, y);
   writeCommand(RA8875_MRWC);
   LCD_CS_LAT = 0;
-  SPI_send(RA8875_DATAWRITE);
-  SPI_send(color >> 8);
-  SPI_send(color);
+  send_spi(RA8875_DATAWRITE, ra8875Connection);
+  send_spi(color >> 8, ra8875Connection);
+  send_spi(color, ra8875Connection);
   LCD_CS_LAT = 1;
 }
 
@@ -598,31 +600,30 @@ void writeReg(uint8_t reg, uint8_t val) {
 }
 
 uint8_t readData() {
-  LCD_CS_LAT = 0;
-  SPI_send(RA8875_DATAREAD);
-  uint8_t readVal = SPI_send(0x00);
-  LCD_CS_LAT = 1;
-  return readVal;
+  return ra8875_send_spi(RA8875_DATAREAD, 0, &ra8875Connection);
 }
 
 void writeData(uint8_t d) {
-  LCD_CS_LAT = 0;
-  SPI_send(RA8875_DATAWRITE);
-  SPI_send(d);
-  LCD_CS_LAT = 1;
+  ra8875_send_spi(RA8875_DATAWRITE, d, &ra8875Connection);
 }
 
 void writeCommand(uint8_t d) {
-  LCD_CS_LAT = 0;
-  SPI_send(RA8875_CMDWRITE);
-  SPI_send(d);
-  LCD_CS_LAT = 1;
+  send_spi(RA8875_CMDWRITE, d, &ra8875Connection);
 }
 
-uint8_t SPI_send(uint8_t data){
-  while(SPI1STATbits.SPIBUSY);
-  SPI1STATbits.SPIROV = 0;
-  SPI1BUF = data;
-  while(!SPI1STATbits.SPIRBF);
-  return SPI1BUF;
+SPIConn* init_ra8875(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
+  init_spi(bus, 2, 8);
+  ra8875Connection.send_fp = get_send_spi(bus);
+  ra8875Connection.cs_lat = cs_lat;
+  ra8875Connection.cs_num = cs_num;
+  reset();
+  initialize();
+}
+
+uint8_t ra8875_send_spi(uint8_t val1, uint8_t val2, SPIConn *conn){
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
+  conn->send_fp(val1);
+  uint8_t buff = conn->send_fp(val2); // only care about the response from last 8 bits
+  *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
+  return buff;
 }

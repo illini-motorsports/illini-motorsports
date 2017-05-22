@@ -13,7 +13,7 @@
 #include "FSAE_config.h"
 #include <math.h>
 
-typedef uint32_t (*send_spi_fp) (uint32_t, uint32_t*, uint8_t);
+typedef uint32_t (*send_spi_fp) (uint32_t);
 
 typedef struct {
   send_spi_fp send_fp; // send_spi function pointer
@@ -24,11 +24,11 @@ typedef struct {
 void init_spi(uint8_t bus, double mhz, uint8_t size);
 
 send_spi_fp get_send_spi(uint8_t bus);
-uint32_t send_spi1(uint32_t value, uint32_t *cs_lat, uint8_t cs_num);
-uint32_t send_spi2(uint32_t value, uint32_t *cs_lat, uint8_t cs_num);
-uint32_t send_spi3(uint32_t value, uint32_t *cs_lat, uint8_t cs_num);
-uint32_t send_spi5(uint32_t value, uint32_t *cs_lat, uint8_t cs_num);
-uint32_t send_spi6(uint32_t value, uint32_t *cs_lat, uint8_t cs_num);
+uint32_t send_spi1(uint32_t value);
+uint32_t send_spi2(uint32_t value);
+uint32_t send_spi3(uint32_t value);
+uint32_t send_spi5(uint32_t value);
+uint32_t send_spi6(uint32_t value);
 uint32_t send_spi(uint32_t value, SPIConn *conn);
 
 #endif /* FSAE_SPI_H */

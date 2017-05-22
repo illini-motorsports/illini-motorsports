@@ -18,7 +18,6 @@ void main(void) {
   init_gpio_pins();// Set all I/O pins to low outputs
   init_oscillator(1);// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
-  init_spi();// Initialize SPI interface
   init_adc(NULL);
   init_termination(TERMINATING);
   init_tlc5955();
@@ -65,8 +64,7 @@ void main(void) {
   TROT2_CSS = 1;
 
   // Initialize RA8875
-  reset();
-  initialize();
+  init_ra8875(1, LCD_CS_LATBITS, LCD_CS_LATNUM); // Don't store SPIConn pointer since will always use default
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
 
@@ -574,61 +572,4 @@ uint8_t getRotaryPosition(uint32_t adcValue){
   if(adcValue >= ROT_RANGE_7 && adcValue < ROT_RANGE_8) {return 8;}
   if(adcValue >= ROT_RANGE_8 && adcValue < ROT_RANGE_HIGH) {return 9;}
   return 10;
-}
-
-void init_spi(){
-  unlock_config();
-
-  // Initialize SDI1/SDO1 PPS pins
-  CFGCONbits.IOLOCK = 0;
-  TRISBbits.TRISB9 = INPUT;
-  ANSELBbits.ANSB9 = DIG_INPUT;
-  SDI1Rbits.SDI1R = 0b0101; // RPB9
-  TRISBbits.TRISB10 = OUTPUT;
-  RPB10Rbits.RPB10R = 0b0101; // SDO1
-  CFGCONbits.IOLOCK = 1;
-
-  // Initialize SCK1 and !CS_NVM pins
-  TRISDbits.TRISD1 = OUTPUT; // SCK1
-
-  // Disable interrupts
-  IEC3bits.SPI1EIE = 0;
-  IEC3bits.SPI1RXIE = 0;
-  IEC3bits.SPI1TXIE = 0;
-
-  // Disable SPI1 module
-  SPI1CONbits.ON = 0;
-
-  // Clear receive buffer
-  uint32_t readVal = SPI1BUF;
-
-  // Use standard buffer mode
-  SPI1CONbits.ENHBUF = 0;
-
-  /**
-   * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-   * F_SCK = 100Mhz / (2 * (4 + 1))
-   * F_SCK = 10Mhz
-   */
-
-  // Set the baud rate (see above equation)
-  SPI1BRG = 24;
-
-  SPI1STATbits.SPIROV = 0;
-
-  SPI1CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
-  SPI1CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-  SPI1CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI1CONbits.MODE16 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI1CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-  SPI1CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-  SPI1CONbits.DISSDI = 0;
-  SPI1CONbits.DISSDO = 0;
-  SPI1CONbits.SMP = 1;
-  SPI1CONbits.CKP = 0;     // Clock Polarity Select (Idle state for clock is a low level)
-
-  // Enable SPI1 module
-  SPI1CONbits.ON = 1;
-
-  lock_config();
 }

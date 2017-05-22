@@ -18,12 +18,14 @@
 #include "RA8875_driver.h"
 #include "FSAE_LCD.h"
 
-#define LCD_CS_TRIS   TRISCbits.TRISC14
-#define LCD_CS_LAT    LATCbits.LATC14
-#define LCD_RST_TRIS  TRISCbits.TRISC13
-#define LCD_RST_LAT   LATCbits.LATC13
-#define LCD_PWM_TRIS  TRISEbits.TRISE3
-#define LCD_PWM_LAT   LATEbits.LATE3
+#define LCD_CS_TRIS     TRISCbits.TRISC14
+#define LCD_CS_LAT      LATCbits.LATC14
+#define LCD_CS_LATBITS  (uint32_t*) (&LATCbits)
+#define LCD_CS_LATNUM   14
+#define LCD_RST_TRIS    TRISCbits.TRISC13
+#define LCD_RST_LAT     LATCbits.LATC13
+#define LCD_PWM_TRIS    TRISEbits.TRISE3
+#define LCD_PWM_LAT     LATEbits.LATE3
 
 #define ROT1_TRIS     TRISFbits.TRISF12
 #define ROT1_ANSEL    ANSELFbits.ANSF12
@@ -91,6 +93,5 @@ void CANswitchADL(void);
 void CANdiag(void);
 void updateSwVals(void);
 uint8_t getRotaryPosition(uint32_t adcValue);
-void init_spi();
 
 #endif /* WHEEL_H */

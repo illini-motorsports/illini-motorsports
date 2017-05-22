@@ -204,66 +204,39 @@ send_spi_fp get_send_spi(uint8_t bus){
   }
 }
 
-uint32_t send_spi1(uint32_t value, uint32_t *cs_lat, uint8_t cs_num){
-  uint32_t resp = 0;
-
-  *cs_lat &= ~(1 << cs_num); // Set CS Low
+uint32_t send_spi1(uint32_t value){
   SPI1BUF = value;
   while (!SPI1STATbits.SPIRBF);
-  resp = SPI1BUF;
-  *cs_lat |= 1 << cs_num;
-
-  return resp;
+  return SPI1BUF;
 }
 
-uint32_t send_spi2(uint32_t value, uint32_t *cs_lat, uint8_t cs_num){
-  uint32_t resp = 0;
-
-  *cs_lat &= ~(1 << cs_num); // Set CS Low
+uint32_t send_spi2(uint32_t value){
   SPI2BUF = value;
   while (!SPI2STATbits.SPIRBF);
-  resp = SPI2BUF;
-  *cs_lat |= 1 << cs_num;
-
-  return resp;
+  return SPI2BUF;
 }
 
-uint32_t send_spi3(uint32_t value, uint32_t *cs_lat, uint8_t cs_num){
-  uint32_t resp = 0;
-
-  *cs_lat &= ~(1 << cs_num); // Set CS Low
+uint32_t send_spi3(uint32_t value){
   SPI3BUF = value;
   while (!SPI3STATbits.SPIRBF);
-  resp = SPI3BUF;
-  *cs_lat |= 1 << cs_num;
-
-  return resp;
+  return SPI3BUF;
 }
 
-uint32_t send_spi5(uint32_t value, uint32_t *cs_lat, uint8_t cs_num){
-  uint32_t resp = 0;
-
-  *cs_lat &= ~(1 << cs_num); // Set CS Low
+uint32_t send_spi5(uint32_t value){
   SPI5BUF = value;
   while (!SPI5STATbits.SPIRBF);
-  resp = SPI5BUF;
-  *cs_lat |= 1 << cs_num;
-
-  return resp;
+  return SPI5BUF;
 }
 
-uint32_t send_spi6(uint32_t value, uint32_t *cs_lat, uint8_t cs_num){
-  uint32_t resp = 0;
-
-  *cs_lat &= ~(1 << cs_num); // Set CS Low
+uint32_t send_spi6(uint32_t value){
   SPI6BUF = value;
   while (!SPI6STATbits.SPIRBF);
-  resp = SPI6BUF;
-  *cs_lat |= 1 << cs_num;
-
-  return resp;
+  return SPI6BUF;
 }
 
 uint32_t send_spi(uint32_t value, SPIConn *conn){
-  return conn->send_fp(value, conn->cs_lat, conn->cs_num);
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
+  uint32_t buff = conn->send_fp(value);
+  *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
+  return buff;
 }

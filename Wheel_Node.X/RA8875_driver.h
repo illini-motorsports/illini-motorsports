@@ -12,16 +12,19 @@
 #include <xc.h>
 #include <sys/types.h>
 #include <math.h>
+#include "../FSAE.X/FSAE_spi.h"
 
 #define WIDTH   480
 #define HEIGHT    272
 #define LCD_WAIT  PORTFbits.RF12
 
 // Screen State Functions
-void reset();     //Toggles reset pin
+void reset(); //Toggles reset pin
 void displayOn(uint8_t on); // Sends an spi command to wake up screen
-void PLLinit(void);   // Initialize Clock and stuff
-void initialize(void);  // Sends a lot of commands to configure the driver
+void PLLinit(void);   // Initialize Clock
+void initialize(void);  // Sends commands to configure the driver
+SPIConn* init_ra8875(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num); // initializes spi and calls other init functions
+uint32_t ra8875_send_spi(uint8_t val1, uint8_t val2, uint8_t ); // Specialized send_spi function for RA8875
 
 /* Backlight */
 void GPIOX(uint8_t on);
@@ -76,7 +79,6 @@ uint8_t readReg(uint8_t reg);
 void writeData(uint8_t d);
 uint8_t readData(void);
 void writeCommand(uint8_t d);
-uint8_t SPI_send(uint8_t data);
 uint8_t readData(void);
 uint8_t readReg(uint8_t reg);
 // Spams spi, can we do it better?
