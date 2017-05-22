@@ -551,9 +551,9 @@ void drawPixel(int16_t x, int16_t y, uint16_t color){
   writeCoordinates(RA8875_CURH0, x, y);
   writeCommand(RA8875_MRWC);
   LCD_CS_LAT = 0;
-  send_spi(RA8875_DATAWRITE, ra8875Connection);
-  send_spi(color >> 8, ra8875Connection);
-  send_spi(color, ra8875Connection);
+  send_spi(RA8875_DATAWRITE, &ra8875Connection);
+  send_spi(color >> 8, &ra8875Connection);
+  send_spi(color, &ra8875Connection);
   LCD_CS_LAT = 1;
 }
 
@@ -608,7 +608,7 @@ void writeData(uint8_t d) {
 }
 
 void writeCommand(uint8_t d) {
-  send_spi(RA8875_CMDWRITE, d, &ra8875Connection);
+  ra8875_send_spi(RA8875_CMDWRITE, d, &ra8875Connection);
 }
 
 SPIConn* init_ra8875(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {

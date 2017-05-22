@@ -24,7 +24,7 @@ void displayOn(uint8_t on); // Sends an spi command to wake up screen
 void PLLinit(void);   // Initialize Clock
 void initialize(void);  // Sends commands to configure the driver
 SPIConn* init_ra8875(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num); // initializes spi and calls other init functions
-uint32_t ra8875_send_spi(uint8_t val1, uint8_t val2, uint8_t ); // Specialized send_spi function for RA8875
+uint8_t ra8875_send_spi(uint8_t val1, uint8_t val2, SPIConn *conn); // Specialized send_spi function for RA8875
 
 /* Backlight */
 void GPIOX(uint8_t on);
