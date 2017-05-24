@@ -8,7 +8,7 @@
  */
 #include "FSAE_ad7490.h"
 
-SPIConn connections[10];
+SPIConn ad7490connections[10];
 uint8_t ad7490ConnIdx = 0;
 
 /**
@@ -20,7 +20,7 @@ SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
     init_spi(bus,1,16);
   }
 
-  SPIConn * currConn = &connections[ad7490ConnIdx];
+  SPIConn * currConn = &ad7490connections[ad7490ConnIdx];
   currConn->send_fp = get_send_spi(bus);
   currConn->cs_lat = cs_lat;
   currConn->cs_num = cs_num;

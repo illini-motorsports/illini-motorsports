@@ -8,13 +8,16 @@
  */
 #include "FSAE_nvm.h"
 
+SPIConn nvmConnections[10];
+uint8_t nvmConnIdx = 0;
+
 /**
  * void nvm_write_enable(void)
  *
  * Sends a message to the NVM chip to set the Write Enable Latch
  */
-void nvm_write_enable(void) {
-  _nvm_send_one(IN_WREN);
+void nvm_write_enable(SPIConn *conn) {
+  spi_send(IN_WREN, conn);
 }
 
 /**
@@ -25,8 +28,8 @@ void nvm_write_enable(void) {
  *
  * @param status- Struct used to set the NVM chip's status register
  */
-void nvm_write_status_reg(NvmStatusReg status) {
-  _nvm_send_two(IN_WRSR, status.reg);
+void nvm_write_status_reg(NvmStatusReg status, SPIConn *conn) {
+  _nvm_send_two(IN_WRSR, status.reg, conn);
 }
 
 /**
@@ -36,45 +39,50 @@ void nvm_write_status_reg(NvmStatusReg status) {
  *
  * @return The current status register
  */
-NvmStatusReg nvm_read_status_reg(void) {
-  NvmStatusReg status = { .reg = _nvm_send_two(IN_RDSR, 0x00) };
+NvmStatusReg nvm_read_status_reg(SPIConn *conn) {
+  NvmStatusReg status = { .reg = _nvm_send_two(IN_RDSR, 0x00, conn) };
   return status;
 }
 
 /**
- * void init_nvm(void)
+ * void nvm_read_data(uint32_t address, uint8_t *bytes, uint8_t numBytes, SPIConn *conn)
  *
- * Initializes the 25LC1024 NVM module.
+ * Reads data starting from the 24 bit address into the provided byte array.
+ * It will read for numBytes bytes, using the provided conn struct.
  */
-void init_nvm(void) {
-  // Initialize SPI communciations to the NVM chip
-  _nvm_init_spi();
+void nvm_read_data(uint32_t address, uint8_t *bytes, uint8_t numBytes, SPIConn *conn){
+  uint8_t i;
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
 
-  //TODO: Set up registers, etc.
+  conn->send_fp(IN_READ);
+  conn->send_fp((address >> 16) & 0xFF);
+  conn->send_fp((address >> 8) & 0xFF);
+  conn->send_fp(address & 0xFF);
+  for(i = 0;i < numBytes; i++) {
+    bytes[i] = conn->send_fp(0x00);
+  }
+
+  *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
 }
 
 /**
- * uint8_t _nvm_send_one(uint8_t one)
  *
- * Sends one 8-bit SPI message to the NVM chip and returns the
- * response. This response will be clocked in at the same time
- * as the message being sent. If a response is sent after the
- * instruction is clocked in, the two-byte SPI function must
- * be used.
- *
- * @param one- The byte to send over SPI
- * @return Response clocked in concurrently with message
+ * Initializes the 25LC1024 NVM module.
  */
-uint8_t _nvm_send_one(uint8_t one) {
-  uint8_t resp = 0;
+SPIConn* init_nvm(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
+  // Initialize SPI communciations to the NVM chip
+  if(!nvmConnIdx) {
+    init_spi(bus, 7, 8); // init to 7 mhz
+  }
 
-  CS_NVM_LAT = 0;
-  SPI6BUF = one;
-  while (!SPI6STATbits.SPIRBF);
-  resp = SPI6BUF;
-  CS_NVM_LAT = 1;
+  SPIConn * currConn = &nvmConnections[nvmConnIdx];
+  currConn->send_fp = get_send_spi(bus);
+  currConn->cs_lat = cs_lat;
+  currConn->cs_num = cs_num;
 
-  return resp;
+  nvmConnIdx++;
+
+  return currConn;
 }
 
 /**
@@ -88,83 +96,15 @@ uint8_t _nvm_send_one(uint8_t one) {
  * @param two- The second byte to send over SPI
  * @return The response clocked in during the second transmission
  */
-uint8_t _nvm_send_two(uint8_t one, uint8_t two) {
+uint8_t _nvm_send_two(uint8_t one, uint8_t two, SPIConn *conn) {
   uint8_t resp = 0;
 
-  CS_NVM_LAT = 0;
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
 
-  SPI6BUF = one;
-  while (!SPI6STATbits.SPIRBF);
-  resp = SPI6BUF;
+  conn->send_fp(one);
+  resp = (uint8_t) conn->send_fp(two);
 
-  SPI6BUF = two;
-  while (!SPI6STATbits.SPIRBF);
-  resp = SPI6BUF;
-
-  CS_NVM_LAT = 1;
+  *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
 
   return resp;
-}
-
-/**
- * void _nvm_init_spi(void)
- *
- * Initializes the SPI6 communication bus for use with the NVM chip.
- */
-void _nvm_init_spi(void) {
-  unlock_config();
-
-  // Initialize SDI6/SDO6 PPS pins
-  CFGCONbits.IOLOCK = 0;
-  TRISFbits.TRISF2 = INPUT;
-  SDI6Rbits.SDI6R = 0b1011; // RPF2
-  TRISFbits.TRISF8 = OUTPUT;
-  RPF8Rbits.RPF8R = 0b1010; // SDO6
-  CFGCONbits.IOLOCK = 1;
-
-  // Initialize SCK6 and !CS_NVM pins
-  TRISDbits.TRISD15 = OUTPUT; // SCK6
-  CS_NVM_TRIS = OUTPUT; // !CS_NVM
-  CS_NVM_LAT = 1;
-
-  // Disable interrupts
-  IEC5bits.SPI6IE = 0;
-  IEC5bits.SPI6RXIE = 0;
-  IEC5bits.SPI6TXIE = 0;
-
-  // Disable SPI6 module
-  SPI6CONbits.ON = 0;
-
-  // Clear receive buffer
-  uint32_t readVal = SPI6BUF;
-
-  // Use standard buffer mode
-  SPI6CONbits.ENHBUF = 0;
-
-  /**
-   * F_SCK = F_PBCLK2 / (2 * (SPI1BRG + 1))
-   * F_SCK = 100Mhz / (2 * (4 + 1))
-   * F_SCK = 10Mhz
-   */
-
-  // Set the baud rate (see above equation)
-  SPI6BRG = 4;
-
-  SPI6STATbits.SPIROV = 0;
-
-  SPI6CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
-  SPI6CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-  SPI6CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI6CONbits.MODE16 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI6CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-  SPI6CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-  SPI6CONbits.DISSDI = 0;
-  SPI6CONbits.DISSDO = 0;
-  SPI6CONbits.SMP = 1;
-  SPI6CONbits.CKP = 0;     // Clock Polarity Select (Idle state for clock is a low level)
-
-  // Enable SPI6 module
-  SPI6CONbits.ON = 1;
-
-  lock_config();
 }

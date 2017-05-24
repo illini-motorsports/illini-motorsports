@@ -12,6 +12,7 @@
 #include <xc.h>
 #include <sys/types.h>
 #include "FSAE_config.h"
+#include "FSAE_spi.h"
 
 // Struct representing the NVM chip's status register
 typedef union uNvmStatusReg {
@@ -44,12 +45,11 @@ typedef union uNvmStatusReg {
 #define CS_NVM_LAT LATDbits.LATD14
 
 // Function definitions
-void nvm_write_enable();
-void nvm_write_status_reg(NvmStatusReg status);
-NvmStatusReg nvm_read_status_reg(void);
-void init_nvm(void);
-uint8_t _nvm_send_one(uint8_t one);
-uint8_t _nvm_send_two(uint8_t one, uint8_t two);
-void _nvm_init_spi(void);
+void nvm_write_enable(SPIConn *conn);
+void nvm_write_status_reg(NvmStatusReg status, SPIConn *conn);
+NvmStatusReg nvm_read_status_reg(SPIConn *conn);
+void nvm_read_data(uint32_t address, uint8_t *bytes, uint8_t numBytes, SPIConn *conn);
+SPIConn* init_nvm(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
+uint8_t _nvm_send_two(uint8_t one, uint8_t two, SPIConn *conn);
 
 #endif /* FSAE_nvm_H */
