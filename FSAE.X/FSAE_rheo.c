@@ -1,6 +1,6 @@
 #include "FSAE_rheo.h"
 
-SPIConn rheoConnections[10];
+SPIConn rheoConnections[15];
 uint8_t rheoConnIdx = 0;
 
 SPIConn* init_rheo(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
@@ -24,6 +24,12 @@ void set_rheo(uint8_t val, SPIConn *conn) {
 void send_all_rheo(uint16_t msg) {
   int i;
   for(i=0;i<rheoConnIdx;i++) {
-    send_spi(msg, &rheoConnections[i]);
+    *(rheoConnections[i].cs_lat) &= ~(1 << (rheoConnections[i].cs_num)); // Set CS Low
+  }
+
+  rheoConnections[0].send_fp(msg);
+
+  for(i=0;i<rheoConnIdx;i++) {
+    *(rheoConnections[i].cs_lat) |= 1 << rheoConnections[i].cs_num; // Set CS High
   }
 }
