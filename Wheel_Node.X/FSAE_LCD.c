@@ -61,6 +61,7 @@ void initDataItems(void){
     initDataItem(&tireTempDataItems[i],0,0,MIN_REFRESH,2,1);
   }
 
+  // SPM
   for(i=0;i<SPM_DATAITEM_SIZE;i++) {
     initDataItem(&spmDataItems[i],0,0,MIN_REFRESH,2,1);
   }
@@ -73,6 +74,7 @@ void initDataItems(void){
     initDataItem(&wheelDataItems[i],0,0,MIN_REFRESH,1,0);
   }
 
+  // Special array declerations
   fanSw[0] = &wheelDataItems[SWITCH_0_IDX];
   fanSw[1] = &pdmDataItems[FAN_ENABLITY_IDX];
   fuelSw[0] = &wheelDataItems[SWITCH_1_IDX];
@@ -148,6 +150,8 @@ void initAllScreens(void){
   pdmCutScreen.len = 21;
   initScreenItem(&pdmCutItems[0], 10, 50, 15, redrawDigit, &pdmDataItems[PCB_TEMP_IDX]);
   initScreenItem(&pdmCutItems[1], 85, 50, 15, redrawDigit, &pdmDataItems[IC_TEMP_IDX]);
+  initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
+  initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdmDataItems[V12_RAIL_IDX]);
   initScreenItem(&pdmCutItems[4], 310, 50, 15, redrawDigit, 0x0);
   initScreenItem(&pdmCutItems[5], 385, 50, 15, redrawDigit, 0x0);
   initScreenItem(&pdmCutItems[6], 10, 100, 15, redrawDigit, 0x0);
@@ -163,9 +167,6 @@ void initAllScreens(void){
   initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX]);
   initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0);
 
-  //brake pressure
-  initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
-  initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdmDataItems[V12_RAIL_IDX]);
 
   /*
   //brake screen

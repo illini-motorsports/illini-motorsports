@@ -541,19 +541,8 @@ void updateSwVals(void){
 
 // 10 is error
 uint8_t getRotaryPosition(uint32_t adcValue){
-  if(adcValue >= ROT_RANGE_LOW && adcValue < ROT_RANGE_0) {return 0;}
-  if(adcValue >= ROT_RANGE_0 && adcValue < ROT_RANGE_1) {return 1;}
-  if(adcValue >= ROT_RANGE_1 && adcValue < ROT_RANGE_2) {return 2;}
-  if(adcValue >= ROT_RANGE_2 && adcValue < ROT_RANGE_3) {return 3;}
-  if(adcValue >= ROT_RANGE_3 && adcValue < ROT_RANGE_4) {return 4;}
-  if(adcValue >= ROT_RANGE_4 && adcValue < ROT_RANGE_5) {return 5;}
-  if(adcValue >= ROT_RANGE_5 && adcValue < ROT_RANGE_6) {return 6;}
-  if(adcValue >= ROT_RANGE_6 && adcValue < ROT_RANGE_7) {return 7;}
-  if(adcValue >= ROT_RANGE_7 && adcValue < ROT_RANGE_8) {return 8;}
-  if(adcValue >= ROT_RANGE_8 && adcValue < ROT_RANGE_HIGH) {return 9;}
-  return 10;
+  return (uint8_t) (adcValue / 409.6);
 }
-
 
 void checkChangeScreen(void) {
   uint8_t rotVal = wheelDataItems[TROTARY_1_IDX].value;

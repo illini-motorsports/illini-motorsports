@@ -48,18 +48,6 @@
 #define TROT1_CSS       ADCCSS1bits.CSS25
 #define TROT1_CHN       25
 
-#define ROT_RANGE_LOW   0
-#define ROT_RANGE_0     409
-#define ROT_RANGE_1     819
-#define ROT_RANGE_2     1228
-#define ROT_RANGE_3     1638
-#define ROT_RANGE_4     2048
-#define ROT_RANGE_5     2457
-#define ROT_RANGE_6     2867
-#define ROT_RANGE_7     3276
-#define ROT_RANGE_8     3686
-#define ROT_RANGE_HIGH  4096
-
 #define SW0_TRIS        TRISGbits.TRISG14
 #define SW0_PORT        PORTGbits.RG14
 #define SW1_TRIS        TRISEbits.TRISE1
