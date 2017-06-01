@@ -38,37 +38,35 @@ void main(void) {
   LCD_PWM_LAT = 1; //TODO: This is full brightness, PWM for other settings
   LCD_PWM_TRIS = OUTPUT;
 
+  SW0_TRIS = INPUT;
   SW1_TRIS = INPUT;
   SW2_TRIS = INPUT;
   SW3_TRIS = INPUT;
-  SW4_TRIS = INPUT;
+  MOM0_TRIS = INPUT;
   MOM1_TRIS = INPUT;
   MOM2_TRIS = INPUT;
   MOM3_TRIS = INPUT;
-  MOM4_TRIS = INPUT;
 
+  ROT0_TRIS = INPUT;
+  ROT0_ANSEL = AN_INPUT;
+  ROT0_CSS = 1;
   ROT1_TRIS = INPUT;
   ROT1_ANSEL = AN_INPUT;
   ROT1_CSS = 1;
   ROT2_TRIS = INPUT;
   ROT2_ANSEL = AN_INPUT;
   ROT2_CSS = 1;
-  ROT3_TRIS = INPUT;
-  ROT3_ANSEL = AN_INPUT;
-  ROT3_CSS = 1;
+  TROT0_TRIS = INPUT;
+  TROT0_ANSEL = AN_INPUT;
+  TROT0_CSS = 1;
   TROT1_TRIS = INPUT;
   TROT1_ANSEL = AN_INPUT;
   TROT1_CSS = 1;
-  TROT2_TRIS = INPUT;
-  TROT2_ANSEL = AN_INPUT;
-  TROT2_CSS = 1;
 
   // Initialize RA8875
   init_ra8875(1, LCD_CS_LATBITS, LCD_CS_LATNUM); // Don't store SPIConn pointer since will always use default
   displayOn(1);
   GPIOX(1);// Enable TFT - display enable tied to GPIOX
-
-  //fillScreen(RA8875_BLACK);
 
   // Initialize All the data streams
   initDataItems();
@@ -94,30 +92,9 @@ void main(void) {
       CANdiagMillis = millis;
     }
 
-    /*
-    // Refresh Screen
-    if(tRotary[1].value == 1 && screenNumber != PDM_DRAW_SCREEN){
-    changeScreen(PDM_DRAW_SCREEN);
-    }
-    else if(tRotary[1].value == 2 && screenNumber != PDM_CUT_SCREEN){
-    changeScreen(PDM_CUT_SCREEN);
-    }
-    else if(tRotary[1].value == 3 && screenNumber != RACE_SCREEN){
-    changeScreen(RACE_SCREEN);
-    }
-    else if(tRotary[1].value == 4 && screenNumber != BRAKE_SCREEN){
-    changeScreen(BRAKE_SCREEN);
-    }
-    // Change AUX State
-    if(auxState != momentaries[0].value){
-    if(momentaries[0].value == 1){
-    changeAUXType((auxNumber+1)%3);
-    }
-    auxState = momentaries[0].value;
-    }
-    */
+    checkChangeScreen(); // Check to see if the screen should be changed
 
-    refreshScreenItems();
+    refreshScreenItems(); // Refresh items on screen
   }
 }
 
@@ -444,7 +421,7 @@ void process_CAN_msg(CAN_message msg){
       spmDataItems[TCOUPLE_3_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_3_BYTE/2]) * TCOUPLE_SCL);
       break;
     case SPM_ID + 11:
-      spmDataItems[TCOUPLE_4_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_4_BYTE/2]) * TCOUPLE_SCL); 
+      spmDataItems[TCOUPLE_4_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_4_BYTE/2]) * TCOUPLE_SCL);
       spmDataItems[TCOUPLE_5_IDX].value = (double) ((int16_t) (lsbArray[TCOUPLE_5_BYTE/2]) * TCOUPLE_SCL);
       spmDataItems[AVG_JUNCT_TEMP_IDX].value = (double) ((int16_t) (lsbArray[AVG_JUNCT_TEMP_BYTE/2]) * AVG_JUNCT_TEMP_SCL);
       spmDataItems[TCOUPLE_1_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_0_FAULT_MASK;
@@ -512,23 +489,26 @@ void process_CAN_msg(CAN_message msg){
 
 void CANswitchStates(void){
   CAN_data switchData = {0};
-  uint8_t bitMask = (uint8_t)momentaries[0].value|(uint8_t)momentaries[1].value << 1|
-    (uint8_t)momentaries[2].value << 2|(uint8_t)momentaries[3].value << 3|
-    (uint8_t)switches[0].value << 4|(uint8_t)switches[1].value << 5|
-    (uint8_t)switches[2].value << 6|(uint8_t)switches[3].value << 7;
+  int bitMask = 0;
+  int i;
+  for(i = MOM_0_IDX;i < SWITCH_3_IDX; i++) {
+    bitMask |= (uint8_t) wheelDataItems[i].value << (i - MOM_0_IDX);
+  }
   switchData.byte0 = bitMask;
-  switchData.byte1 = ((uint8_t)rotary[0].value << 4) | (uint8_t)rotary[1].value;
-  switchData.byte2 = ((uint8_t)rotary[2].value << 4) | (uint8_t)tRotary[0].value;
-  switchData.byte3 = (uint8_t)tRotary[1].value << 4;
+  switchData.byte1 = (uint8_t)wheelDataItems[ROTARY_0_IDX].value << 4;
+  switchData.byte1 |= (uint8_t)wheelDataItems[ROTARY_1_IDX].value;
+  switchData.byte2 = (uint8_t)wheelDataItems[ROTARY_2_IDX].value << 4;
+  switchData.byte2 |= (uint8_t)wheelDataItems[TROTARY_0_IDX].value;
+  switchData.byte3 = (uint8_t)wheelDataItems[TROTARY_1_IDX].value << 4;
   //CAN_send_message(WHEEL_ID + 0x1, 4, switchData);
 }
 
 void CANswitchADL(void){
   CAN_data rotaries = {0};
   rotaries.halfword0 = 0x0000;
-  rotaries.halfword1 = (uint16_t) rotary[0].value;
-  rotaries.halfword2 = (uint16_t) rotary[1].value;
-  rotaries.halfword3 = (uint16_t) rotary[2].value;
+  rotaries.halfword1 = (uint16_t) wheelDataItems[ROTARY_0_IDX].value;
+  rotaries.halfword2 = (uint16_t) wheelDataItems[ROTARY_1_IDX].value;
+  rotaries.halfword3 = (uint16_t) wheelDataItems[ROTARY_2_IDX].value;
   //CAN_send_message(ADL_ID, 8, rotaries);
 }
 
@@ -542,21 +522,21 @@ double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl){
 
 void updateSwVals(void){
   // Update Switches
-  switches[0].value = !SW1_PORT;
-  switches[1].value = !SW2_PORT;
-  switches[2].value = !SW3_PORT;
-  switches[3].value = !SW4_PORT;
+  wheelDataItems[SWITCH_0_IDX].value = !SW0_PORT;
+  wheelDataItems[SWITCH_1_IDX].value = !SW1_PORT;
+  wheelDataItems[SWITCH_2_IDX].value = !SW2_PORT;
+  wheelDataItems[SWITCH_3_IDX].value = !SW3_PORT;
   // Update Momentaries
-  momentaries[0].value = !MOM1_PORT;
-  momentaries[1].value = !MOM2_PORT;
-  momentaries[2].value = !MOM3_PORT;
-  momentaries[3].value = !MOM4_PORT;
+  wheelDataItems[MOM_0_IDX].value = !MOM0_PORT;
+  wheelDataItems[MOM_1_IDX].value = !MOM1_PORT;
+  wheelDataItems[MOM_2_IDX].value = !MOM2_PORT;
+  wheelDataItems[MOM_3_IDX].value = !MOM3_PORT;
   // Update rotaries
-  rotary[0].value = getRotaryPosition(read_adc_chn(ROT1_CHN));
-  rotary[1].value = getRotaryPosition(read_adc_chn(ROT2_CHN));
-  rotary[2].value = getRotaryPosition(read_adc_chn(ROT3_CHN));
-  tRotary[0].value = getRotaryPosition(read_adc_chn(TROT1_CHN));
-  tRotary[1].value = getRotaryPosition(read_adc_chn(TROT2_CHN));
+  wheelDataItems[ROTARY_0_IDX].value = getRotaryPosition(read_adc_chn(ROT0_CHN));
+  wheelDataItems[ROTARY_1_IDX].value = getRotaryPosition(read_adc_chn(ROT1_CHN));
+  wheelDataItems[ROTARY_2_IDX].value = getRotaryPosition(read_adc_chn(ROT2_CHN));
+  wheelDataItems[TROTARY_0_IDX].value = getRotaryPosition(read_adc_chn(TROT0_CHN));
+  wheelDataItems[TROTARY_1_IDX].value = getRotaryPosition(read_adc_chn(TROT1_CHN));
 }
 
 // 10 is error
@@ -572,4 +552,22 @@ uint8_t getRotaryPosition(uint32_t adcValue){
   if(adcValue >= ROT_RANGE_7 && adcValue < ROT_RANGE_8) {return 8;}
   if(adcValue >= ROT_RANGE_8 && adcValue < ROT_RANGE_HIGH) {return 9;}
   return 10;
+}
+
+
+void checkChangeScreen(void) {
+  uint8_t rotVal = wheelDataItems[TROTARY_1_IDX].value;
+  uint8_t screenIdx;
+
+  switch (rotVal) {
+    case 0:
+      screenIdx = RACE_SCREEN;
+    default:
+      screenIdx = RACE_SCREEN;
+  }
+
+  if(screenIdx != screenNumber) {
+    changeScreen(screenIdx);
+    screenNumber = screenIdx;
+  }
 }

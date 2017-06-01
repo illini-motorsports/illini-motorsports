@@ -279,6 +279,21 @@
 #define FREQ_1_SETTINGS_IDX     76
 #define FREQ_2_SETTINGS_IDX     77
 
+#define WHEEL_DATAITEM_SIZE     16
+#define ROTARY_0_IDX            3
+#define ROTARY_1_IDX            4
+#define ROTARY_2_IDX            5
+#define TROTARY_0_IDX           6
+#define TROTARY_1_IDX           7
+#define MOM_0_IDX               8
+#define MOM_1_IDX               9
+#define MOM_2_IDX               10
+#define MOM_3_IDX               11
+#define SWITCH_0_IDX            12
+#define SWITCH_1_IDX            13
+#define SWITCH_2_IDX            14
+#define SWITCH_3_IDX            15
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -344,8 +359,10 @@ typedef struct {
 
 // Define all screen item arrays for each screen
 screenItem raceScreenItems[10], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
+
 // Define all screen structs
 screen raceScreen, pdmDrawScreen, pdmCutScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
+
 // Define master array of all screen structs
 screen* allScreens[8];
 
@@ -353,29 +370,9 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE];
 
-// General Items
-volatile dataItem * fanSw[2], * fuelSw[2], * wtrSw[2];
-
-// Uptimes
-volatile dataItem loggerUptime, swUptime;
-
-// Wheel Buttons
-volatile dataItem rotary[3], tRotary[2], switches[4], momentaries[4];
-
-// Rear Analog Hub
-volatile dataItem susPosRR, susPosRL, engOutput, battCurrent, radInputTemp, radOutputTemp, swirlTemp, swirlPress;
-
-// Front Analog Hub
-volatile dataItem susPosFR, susPosFL, brakePressFront, brakePressRear, brakeMaxFront, brakeMinFront,brakeMaxRear, brakeMinRear, steeringAngle, accelPedalPos0, accelPedalPos1;
-
-// End Race Data
-volatile dataItem endLogNum, endNumLaps, endFastLap, endTireTempFL, endTireTempFR, endTireTempRL, endTireTempRR, endAmbientTemp, endFuelConsum;
-
-// Lap Time Ring Buffer
-volatile dataItem lapTimeBuffer[20];
-uint8_t lapTimeHead, numLaps;
+volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2];
 
 void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem
@@ -397,9 +394,6 @@ void clearScreen(void);
 void resetScreenItems(void); // Resets all the values
 uint8_t initNightMode(uint8_t on); // Night mode stuff
 void nightMode(uint8_t on);
-double getMinLap(void);
-void endRace(void);
-void displayNoErrors(void);
 
 // Redraw Functions!
 void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);

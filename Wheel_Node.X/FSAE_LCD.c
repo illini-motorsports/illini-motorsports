@@ -58,74 +58,26 @@ void initDataItems(void){
 
   // Tire temps
   for(i=0;i<TIRETEMP_DATAITEM_SIZE;i++) {
-    initDataItem(&tireTempDataItems[i],0,0,MIN_REFRESH,2,1); 
+    initDataItem(&tireTempDataItems[i],0,0,MIN_REFRESH,2,1);
   }
 
   for(i=0;i<SPM_DATAITEM_SIZE;i++) {
     initDataItem(&spmDataItems[i],0,0,MIN_REFRESH,2,1);
   }
 
-  // Rear Analog Hub
-  initDataItem(&susPosRR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&susPosRL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&engOutput,0,0,MIN_REFRESH,2,1);
-  initDataItem(&battCurrent,0,0,MIN_REFRESH,2,1);
-  initDataItem(&radInputTemp,0,0,MIN_REFRESH,2,1);
-  initDataItem(&radOutputTemp,0,0,MIN_REFRESH,2,1);
-  initDataItem(&swirlTemp,0,0,MIN_REFRESH,2,1);
-  initDataItem(&swirlPress,0,0,MIN_REFRESH,2,1);
-
-  // Front Analog Hub
-  initDataItem(&susPosFR,0,0,MIN_REFRESH,2,1);
-  initDataItem(&susPosFL,0,0,MIN_REFRESH,2,1);
-  initDataItem(&brakePressFront,0,0,MIN_REFRESH,2,1);
-  initDataItem(&brakePressRear,0,0,MIN_REFRESH,2,1);
-  initDataItem(&steeringAngle,0,0,MIN_REFRESH,2,1);
-  initDataItem(&accelPedalPos0,0,0,MIN_REFRESH,2,1);
-  initDataItem(&accelPedalPos1,0,0,MIN_REFRESH,2,1);
-  // Uptimes
-  // uptimes - 4,0
-  initDataItem(&loggerUptime,0,0,MIN_REFRESH,2,1);
-  initDataItem(&swUptime,0,0,MIN_REFRESH,2,1);
-  initDataItem(&brakeMinFront,0,0,MIN_REFRESH,2,1);
-  initDataItem(&brakeMaxFront,0,0,MIN_REFRESH,2,1);
-  initDataItem(&brakeMinRear,0,0,MIN_REFRESH,2,1);
-  initDataItem(&brakeMaxRear,0,0,MIN_REFRESH,2,1);
-  brakeMinFront.value = 100;
-  brakeMinRear.value = 100;
-
-  // EndRace
-  initDataItem(&endLogNum,0,0,1000,2,1);
-  initDataItem(&endNumLaps,0,0,1000,2,1);
-  initDataItem(&endFastLap,0,0,1000,2,1);
-  initDataItem(&endTireTempFL,0,0,1000,2,1);
-  initDataItem(&endTireTempFR,0,0,1000,2,1);
-  initDataItem(&endTireTempRL,0,0,1000,2,1);
-  initDataItem(&endTireTempRR,0,0,1000,2,1);
-  initDataItem(&endAmbientTemp,0,0,1000,2,1);
-  initDataItem(&endFuelConsum,0,0,1000,2,1);
-
   //Switches and Rotaries
-  initDataItem(&rotary[0],0,0,MIN_REFRESH,1,0);
-  initDataItem(&rotary[1],0,0,MIN_REFRESH,1,0);
-  initDataItem(&rotary[2],0,0,MIN_REFRESH,1,0);
-  initDataItem(&tRotary[0],0,0,MIN_REFRESH,1,0);
-  initDataItem(&tRotary[1],0,0,MIN_REFRESH,1,0);
-  initDataItem(&tRotary[2],0,0,MIN_REFRESH,1,0);
-  initDataItem(&switches[0],0,0,MIN_REFRESH,1,0);
-  initDataItem(&switches[1],0,0,MIN_REFRESH,1,0);
-  initDataItem(&switches[2],0,0,MIN_REFRESH,1,0);
-  initDataItem(&switches[3],0,0,MIN_REFRESH,1,0);
-  initDataItem(&momentaries[0],0,0,MIN_REFRESH,1,0);
-  initDataItem(&momentaries[1],0,0,MIN_REFRESH,1,0);
-  initDataItem(&momentaries[2],0,0,MIN_REFRESH,1,0);
-  initDataItem(&momentaries[3],0,0,MIN_REFRESH,1,0);
+  for(i=0;i<3;i++) {
+    initDataItem(&wheelDataItems[i],0,0,MIN_REFRESH,2,1);
+  }
+  for(i=3;i<WHEEL_DATAITEM_SIZE;i++) {
+    initDataItem(&wheelDataItems[i],0,0,MIN_REFRESH,1,0);
+  }
 
-  fanSw[0] = &switches[0];
+  fanSw[0] = &wheelDataItems[SWITCH_0_IDX];
   fanSw[1] = &pdmDataItems[FAN_ENABLITY_IDX];
-  fuelSw[0] = &switches[1];
+  fuelSw[0] = &wheelDataItems[SWITCH_1_IDX];
   fuelSw[1] = &pdmDataItems[FUEL_ENABLITY_IDX];
-  wtrSw[0] = &switches[2];
+  wtrSw[0] = &wheelDataItems[SWITCH_2_IDX];
   wtrSw[1] = &pdmDataItems[WTR_ENABLITY_IDX];
 }
 
@@ -151,20 +103,6 @@ void initAllScreens(void){
   foregroundColor = RA8875_BLACK;
   //initNightMode(switches[3].value);
   initNightMode(1); //TODO
-
-  // All Screens Stuff
-  /*
-     allScreens[GENERAL_SCREEN] = &generalScreen;
-     generalScreen.items = generalItems;
-     generalScreen.len = 7;
-     initScreenItem(&generalItems[0], 20, 30, 15, redrawRotary, &rotary[0]);
-     initScreenItem(&generalItems[1], 20, 30, 15, redrawRotary, &rotary[1]);
-     initScreenItem(&generalItems[2], 20, 30, 15, redrawRotary, &rotary[2]);
-     initScreenItem(&generalItems[3], 20, 30, 15, redrawFanSw, &switches[0]);
-     initScreenItem(&generalItems[4], 20, 30, 15, redrawFUELPumpSw, &switches[1]);
-     initScreenItem(&generalItems[5], 20, 30, 15, redrawWTRPumpSw, &switches[2]);
-     initScreenItem(&generalItems[6], 20, 30, 15, redrawShiftLightsRPM, &rpm);
-     */
 
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
@@ -226,31 +164,10 @@ void initAllScreens(void){
   initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0);
 
   //brake pressure
-  initScreenItem(&pdmCutItems[19], 85, 200, 15, redrawDigit,&brakePressFront);
-  initScreenItem(&pdmCutItems[20], 160, 200, 15, redrawDigit, &brakePressRear);
-
   initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
   initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdmDataItems[V12_RAIL_IDX]);
 
-
-  // End Race Screen
-  allScreens[END_RACE_SCREEN] = &endRaceScreen;
-  endRaceScreen.items = endRaceItems;
-  endRaceScreen.len = 9;
-  initScreenItem(&endRaceItems[0], 10, 30, 20, redrawDigit, &endLogNum);
-  initScreenItem(&endRaceItems[1], 10, 30, 20, redrawDigit, &endNumLaps);
-  initScreenItem(&endRaceItems[2], 10, 30, 20, redrawDigit, &endFastLap);
-  initScreenItem(&endRaceItems[3], 10, 30, 20, redrawDigit, &endTireTempFL);
-  initScreenItem(&endRaceItems[4], 10, 30, 20, redrawDigit, &endTireTempFR);
-  initScreenItem(&endRaceItems[5], 10, 30, 20, redrawDigit, &endTireTempRL);
-  initScreenItem(&endRaceItems[6], 10, 30, 20, redrawDigit, &endTireTempRR);
-  initScreenItem(&endRaceItems[3], 10, 30, 20, redrawTireTemp, &endTireTempFL);
-  initScreenItem(&endRaceItems[4], 10, 30, 20, redrawTireTemp, &endTireTempFR);
-  initScreenItem(&endRaceItems[5], 10, 30, 20, redrawTireTemp, &endTireTempRL);
-  initScreenItem(&endRaceItems[6], 10, 30, 20, redrawTireTemp, &endTireTempRR);
-  initScreenItem(&endRaceItems[7], 10, 30, 20, redrawDigit, &endAmbientTemp);
-  initScreenItem(&endRaceItems[8], 10, 30, 20, redrawDigit, &endFuelConsum);
-
+  /*
   //brake screen
   allScreens[BRAKE_SCREEN] = &brakeScreen;
   brakeScreen.items = brakeItems;
@@ -263,16 +180,7 @@ void initAllScreens(void){
   initScreenItem(&brakeItems[5], 360, 100, 20, redrawDigit, &brakeMaxRear);
   initScreenItem(&brakeItems[6], 190, 40, 20, redrawBrakeBar, &brakePressFront);
   initScreenItem(&brakeItems[7], 250, 40, 20, redrawBrakeBar, &brakePressRear);
-
-
-  // Lap Time Stuff
-  lapTimeHead = 0;
-  numLaps = 0;
-  int i;
-  for(i=0;i<20;i++){
-    initDataItem(&(lapTimeBuffer[i]),0,0,1000,2,1);
-    lapTimeBuffer[i].value = -1;
-  }
+  */
 }
 
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data){
@@ -741,51 +649,6 @@ void nightMode(uint8_t on){
   if(initNightMode(on)){
     changeScreen(screenNumber);
   }
-}
-
-void addLap(double lapTime){
-  lapTimeHead = (lapTimeHead+1)%20;
-  lapTimeBuffer[lapTimeHead].value= lapTime;
-  numLaps++;
-}
-
-double getMinLap(void){
-  uint8_t counter = lapTimeHead;
-  uint8_t iters = 0;
-  double minLap = lapTimeBuffer[counter].value;
-  while(lapTimeBuffer[counter].value != -1 && iters < 20){
-    if(minLap > lapTimeBuffer[counter].value){
-      minLap = lapTimeBuffer[counter].value;
-    }
-    counter = (counter+1)%20;
-    iters++;
-  }
-  return minLap;
-}
-
-void endRace(void){
-  endLogNum.value = 0;
-  endNumLaps.value = numLaps;
-  endFastLap.value = getMinLap();
-  endTireTempFL.value = tireTempDataItems[FL].value;
-  endTireTempFR.value = tireTempDataItems[FR].value;
-  endTireTempRL.value = tireTempDataItems[RL].value;
-  endTireTempRR.value = tireTempDataItems[RR].value;
-  endAmbientTemp.value = motecDataItems[AIR_TEMP_IDX].value;
-  endFuelConsum.value = motecDataItems[FUEL_USED_IDX].value;
-}
-
-// Error Handling Stuff
-void displayNoErrors(void){
-  // Reset error area
-  fillRect(0,200,WIDTH,HEIGHT-200,backgroundColor);
-  drawChevron(30, 210, 30, 50, foregroundColor, backgroundColor);
-  textMode();
-  textSetCursor(100, 210);
-  textTransparent(RA8875_BLACK);
-  textEnlarge(1);
-  textWrite("Illini Motorsports");
-  graphicsMode();
 }
 
 uint16_t tempColor(uint8_t temp){
