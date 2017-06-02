@@ -180,26 +180,26 @@
 //TireTemp DataItem Constants
 #define TIRETEMP_DATAITEM_SIZE  20
 
-#define FL                    0
-#define FL0                   1
-#define FL1                   2
-#define FL2                   3
-#define FL3                   4
-#define FR                    5
-#define FR0                   6
-#define FR1                   7
-#define FR2                   8
-#define FR3                   9
-#define RL                    10
-#define RL0                   11
-#define RL1                   12
-#define RL2                   13
-#define RL3                   14
-#define RR                    15
-#define RR0                   16
-#define RR1                   17
-#define RR2                   18
-#define RR3                   19
+#define FL_IDX                  0
+#define FL0_IDX                 1
+#define FL1_IDX                 2
+#define FL2_IDX                 3
+#define FL3_IDX                 4
+#define FR_IDX                  5
+#define FR0_IDX                 6
+#define FR1_IDX                 7
+#define FR2_IDX                 8
+#define FR3_IDX                 9
+#define RL_IDX                  10
+#define RL0_IDX                 11
+#define RL1_IDX                 12
+#define RL2_IDX                 13
+#define RL3_IDX                 14
+#define RR_IDX                  15
+#define RR0_IDX                 16
+#define RR1_IDX                 17
+#define RR2_IDX                 18
+#define RR3_IDX                 19
 
 #define SPM_DATAITEM_SIZE       78
                                

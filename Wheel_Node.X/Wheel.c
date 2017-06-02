@@ -326,32 +326,32 @@ void process_CAN_msg(CAN_message msg){
 
       /*Tire Temps*/
     case TIRE_TEMP_FL_ID:
-      tireTempDataItems[FL0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FL1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FL2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FL3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FL].value = (tireTempDataItems[FL0].value + tireTempDataItems[FL1].value + tireTempDataItems[FL2].value + tireTempDataItems[FL3].value)/4.0;
+      tireTempDataItems[FL0_IDX].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FL1_IDX].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FL2_IDX].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FL3_IDX].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FL_IDX].value = (tireTempDataItems[FL0_IDX].value + tireTempDataItems[FL1_IDX].value + tireTempDataItems[FL2_IDX].value + tireTempDataItems[FL3_IDX].value)/4.0;
       break;
     case TIRE_TEMP_FR_ID:
-      tireTempDataItems[FR0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FR1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FR2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FR3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[FR].value = (tireTempDataItems[FR0].value + tireTempDataItems[FR1].value + tireTempDataItems[FR2].value + tireTempDataItems[FR3].value)/4.0;
+      tireTempDataItems[FR0_IDX].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FR1_IDX].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FR2_IDX].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FR3_IDX].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[FR_IDX].value = (tireTempDataItems[FR0_IDX].value + tireTempDataItems[FR1_IDX].value + tireTempDataItems[FR2_IDX].value + tireTempDataItems[FR3_IDX].value)/4.0;
       break;
     case TIRE_TEMP_RL_ID:
-      tireTempDataItems[RL0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RL1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RL2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RL3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RL].value = (tireTempDataItems[RL0].value + tireTempDataItems[RL1].value + tireTempDataItems[RL2].value + tireTempDataItems[RL3].value)/4.0;
+      tireTempDataItems[RL0_IDX].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RL1_IDX].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RL2_IDX].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RL3_IDX].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RL_IDX].value = (tireTempDataItems[RL0_IDX].value + tireTempDataItems[RL1_IDX].value + tireTempDataItems[RL2_IDX].value + tireTempDataItems[RL3_IDX].value)/4.0;
       break;
     case TIRE_TEMP_RR_ID:
-      tireTempDataItems[RR0].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RR1].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RR2].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RR3].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
-      tireTempDataItems[RR].value = (tireTempDataItems[RR0].value + tireTempDataItems[RR1].value + tireTempDataItems[RR2].value + tireTempDataItems[RR3].value)/4.0;
+      tireTempDataItems[RR0_IDX].value = (double) (lsbArray[TIRE_TEMP_1_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RR1_IDX].value = (double) (lsbArray[TIRE_TEMP_2_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RR2_IDX].value = (double) (lsbArray[TIRE_TEMP_3_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RR3_IDX].value = (double) (lsbArray[TIRE_TEMP_4_BYTE/2]*TIRE_TEMP_SCL);
+      tireTempDataItems[RR_IDX].value = (tireTempDataItems[RR0_IDX].value + tireTempDataItems[RR1_IDX].value + tireTempDataItems[RR2_IDX].value + tireTempDataItems[RR3_IDX].value)/4.0;
       break;
 
       // SPM
@@ -432,16 +432,16 @@ void process_CAN_msg(CAN_message msg){
       spmDataItems[TCOUPLE_5_FAULT_IDX].value = lsbArray[TCOUPLE_FAULT_BYTE] & TCOUPLE_5_FAULT_MASK;
       break;
     case SPM_ID + 12:
-      spmDataItems[DIGITAL_INPUT_0_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_0_MASK;
-      spmDataItems[DIGITAL_INPUT_1_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_1_MASK;
-      spmDataItems[DIGITAL_INPUT_2_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_2_MASK;
-      spmDataItems[DIGITAL_INPUT_3_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_3_MASK;
-      spmDataItems[DIGITAL_INPUT_4_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_4_MASK;
-      spmDataItems[DIGITAL_INPUT_5_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_5_MASK;
-      spmDataItems[DIGITAL_INPUT_6_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_6_MASK;
-      spmDataItems[DIGITAL_INPUT_7_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_7_MASK;
-      spmDataItems[DIGITAL_INPUT_8_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_8_MASK;
-      spmDataItems[DIGITAL_INPUT_9_IDX ].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_9_MASK;
+      spmDataItems[DIGITAL_INPUT_0_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_0_MASK;
+      spmDataItems[DIGITAL_INPUT_1_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_1_MASK;
+      spmDataItems[DIGITAL_INPUT_2_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_2_MASK;
+      spmDataItems[DIGITAL_INPUT_3_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_3_MASK;
+      spmDataItems[DIGITAL_INPUT_4_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_4_MASK;
+      spmDataItems[DIGITAL_INPUT_5_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_5_MASK;
+      spmDataItems[DIGITAL_INPUT_6_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_6_MASK;
+      spmDataItems[DIGITAL_INPUT_7_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_7_MASK;
+      spmDataItems[DIGITAL_INPUT_8_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_8_MASK;
+      spmDataItems[DIGITAL_INPUT_9_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_9_MASK;
       spmDataItems[DIGITAL_INPUT_10_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_10_MASK;
       spmDataItems[DIGITAL_INPUT_11_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_11_MASK;
       spmDataItems[DIGITAL_INPUT_12_IDX].value = lsbArray[DIGITAL_INPUT_BYTE] & DIGITAL_INPUT_12_MASK;
@@ -453,37 +453,14 @@ void process_CAN_msg(CAN_message msg){
       spmDataItems[FREQ_COUNT_2_IDX].value = (double) (lsbArray[FREQ_COUNT_0_BYTE] * FREQ_COUNT_0_SCL);
       break;
     case SPM_ID + 13:
-      spmDataItems[PGA_0_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_0_SETTINGS_MASK) >> PGA_0_SETTINGS_SHF;
-      spmDataItems[PGA_1_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_1_SETTINGS_MASK) >> PGA_1_SETTINGS_SHF;
-      spmDataItems[PGA_2_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_2_SETTINGS_MASK) >> PGA_2_SETTINGS_SHF;
-      spmDataItems[PGA_3_SETTINGS_IDX ].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_3_SETTINGS_MASK) >> PGA_3_SETTINGS_SHF;
+      spmDataItems[PGA_0_SETTINGS_IDX].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_0_SETTINGS_MASK) >> PGA_0_SETTINGS_SHF;
+      spmDataItems[PGA_1_SETTINGS_IDX].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_1_SETTINGS_MASK) >> PGA_1_SETTINGS_SHF;
+      spmDataItems[PGA_2_SETTINGS_IDX].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_2_SETTINGS_MASK) >> PGA_2_SETTINGS_SHF;
+      spmDataItems[PGA_3_SETTINGS_IDX].value = (lsbArray[PGA_SETTINGS_BYTE] & PGA_3_SETTINGS_MASK) >> PGA_3_SETTINGS_SHF;
       spmDataItems[FREQ_0_SETTINGS_IDX].value = (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_0_SETTINGS_MASK) >> FREQ_0_SETTINGS_SHF;
       spmDataItems[FREQ_1_SETTINGS_IDX].value = (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_1_SETTINGS_MASK) >> FREQ_1_SETTINGS_SHF;
       spmDataItems[FREQ_2_SETTINGS_IDX].value = (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_2_SETTINGS_MASK) >> FREQ_2_SETTINGS_SHF;
       break;
-
-      /*Front Analog Hub*/
-      /*
-         case ANALOG_FRONT_ID + 1:
-         brakePressFront.value = (double) ((uint16_t) (lsbArray[BPF_BYTE/2]) * BRK_PRS_SCL);
-         if(brakePressFront.value > brakeMaxFront.value)
-         {
-         brakeMaxFront.value = brakePressFront.value;
-         }
-         if (brakePressFront.value < brakeMinFront.value)
-         {
-         brakeMinFront.value = brakePressFront.value;
-         }
-         brakePressRear.value = (double) ((uint16_t) (lsbArray[BPR_BYTE/2]) * BRK_PRS_SCL);
-         if(brakePressRear.value > brakeMaxRear.value)
-         {
-         brakeMaxRear.value = brakePressRear.value;
-         }
-         if (brakePressRear.value < brakeMinRear.value)
-         {
-         brakeMinRear.value = brakePressRear.value;
-         }
-         */
   }
 }
 
@@ -539,7 +516,6 @@ void updateSwVals(void){
   wheelDataItems[TROTARY_1_IDX].value = getRotaryPosition(read_adc_chn(TROT1_CHN));
 }
 
-// 10 is error
 uint8_t getRotaryPosition(uint32_t adcValue){
   return (uint8_t) (adcValue / 409.6);
 }
