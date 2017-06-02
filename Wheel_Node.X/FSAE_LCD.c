@@ -414,8 +414,9 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data, double current
     return;
   }
   // Set Backround Color
+  uint8_t warning = data->value >= data->warnThreshold;
   uint16_t fillColor;
-  if(data->value >= data->warnThreshold){
+  if(warning){
     if(data->value >= data->errThreshold){
       fillColor = errorColor;
     }else{
@@ -433,7 +434,9 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data, double current
     fillWidth += (item->size)/5;
   }
   fillRect(item->x, item->y, fillWidth, (item->size)*1.75, fillColor);
-  sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,foregroundColor,data->value);
+  if(!warning || millis%1000 > 300) { // draw number if normal, or blink at 1hz
+    sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,foregroundColor,data->value);
+  }
 }
 
 // For Single Digits with Error and Neutral Displays
