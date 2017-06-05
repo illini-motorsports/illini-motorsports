@@ -51,8 +51,8 @@
 // Thresholds
 #define RPM_ON_THRESHOLD 200.0 // rpm
 #define RPM_CRIT_CHECK   1000.0 // rpm
-#define FAN_THRESHOLD_H  90.0  // C
-#define FAN_THRESHOLD_L  84.0  // C
+#define FAN_THRESHOLD_H  80.0  // C
+#define FAN_THRESHOLD_L  70.0  // C
 #define OVERCRT_DETECT   0.01  // A
 #define CRIT_VOLTAGE     10000 // 10.0 V
 #define CRIT_OILPRES     1.2   // bar
@@ -89,8 +89,8 @@
 // Raw (bouncy) switch state definitions
 #define STR_SW_RAW    (!SW1_PORT)
 #define ON_SW_RAW     (SW2_PORT)
-#define ACT_UP_SW_RAW (!SW3_PORT)
-#define ACT_DN_SW_RAW (!SW4_PORT)
+#define ACT_UP_SW_RAW (!SW9_PORT)
+#define ACT_DN_SW_RAW (!SW8_PORT)
 #define ABS_SW_RAW    (SW5_PORT)
 #define AUX1_SW_RAW   (SW6_PORT)
 #define AUX2_SW_RAW   (!SW7_PORT)
