@@ -66,13 +66,13 @@ void main(void) {
   init_can(); // Initialize CAN
   init_rheostats(); // Initialize SPI interface for digital rheostats
 
-  //TODO: USB
-  //TODO: NVM
-
-  // init ad7490 CS
+  // Initialize AD7490 external ADC chip
   CS_AD7490_LAT = 1;
   CS_AD7490_TRIS = OUTPUT;
-  ad7490_connection = init_ad7490(1, CS_AD7490_LATBITS, CS_AD7490_LATNUM); // Initialize AD7490 external ADC chip
+  ad7490_connection = init_ad7490(5, CS_AD7490_LATBITS, CS_AD7490_LATNUM);
+
+  //TODO: USB
+  //TODO: NVM
 
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;

@@ -61,7 +61,7 @@
 
 // Timing constants (ms)
 
-#define FUEL_PRIME_DUR     500
+#define FUEL_PRIME_DUR     1000
 #define STR_MAX_DUR        4000
 #define PDL_MAX_DUR        500
 #define OVERRIDE_SW_WAIT   5000
@@ -248,7 +248,7 @@
 
 // AD7490 CS Pin definitions
 // Cast to uint32 pointer to more easily pass into functions
-#define CS_AD7490_LATBITS   (uint32_t*) (&LATAbits)
+#define CS_AD7490_LATBITS   ((uint32_t*) (&LATAbits))
 #define CS_AD7490_LATNUM    1
 
 // MOSFET Current Ratios
@@ -264,7 +264,7 @@ const double load_cutoff[NUM_CTL] = {
   10.0,  // FUEL
   100.0, // IGN
   100.0, // INJ
-  50.0,  // ABS
+  2.0,  // ABS
   60.0,  // PDLU
   60.0,  // PDLD
   20.0,  // FAN

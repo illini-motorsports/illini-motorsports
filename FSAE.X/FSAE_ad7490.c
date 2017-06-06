@@ -17,7 +17,7 @@ uint8_t ad7490ConnIdx = 0;
 SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
 
   if(!ad7490ConnIdx) {
-    init_spi(bus,1,16,3);
+    init_spi(bus, 1.0, 16, 2);
   }
 
   SPIConn * currConn = &ad7490connections[ad7490ConnIdx];
