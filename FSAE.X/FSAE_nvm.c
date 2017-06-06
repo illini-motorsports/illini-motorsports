@@ -72,7 +72,7 @@ void nvm_read_data(uint32_t address, uint8_t *bytes, uint8_t numBytes, SPIConn *
 SPIConn* init_nvm(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
   // Initialize SPI communciations to the NVM chip
   if(!nvmConnIdx) {
-    init_spi(bus, 7, 8); // init to 7 mhz
+    init_spi(bus, 7, 8, 0); // init to 7 mhz
   }
 
   SPIConn * currConn = &nvmConnections[nvmConnIdx];

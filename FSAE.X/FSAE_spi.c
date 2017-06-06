@@ -13,7 +13,7 @@
  * size can have a value of 8, 16, or 32.  This determines the message
  * size in bits of the SPI communication.
  */
-void init_spi(uint8_t bus, double mhz, uint8_t size) {
+void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
   unlock_config();
 
   uint32_t readVal;
@@ -24,6 +24,37 @@ void init_spi(uint8_t bus, double mhz, uint8_t size) {
   uint16_t brg = ceil((PBCLK2/(2.0*mhz))-1);
   if(brg > 8191) { // ensure brg fits in 13 bit register
     brg = 8191;
+  }
+
+  uint8_t mode16 = (size & 0x10) >> 4;
+  uint8_t mode32 = (size & 0x20) >> 5;
+  uint8_t ckp, cke, smp;
+  switch(mode) {
+    case 0:
+      ckp = 0;
+      smp = 0;
+      cke = 1;
+      break;
+    case 1:
+      ckp = 0;
+      smp = 1;
+      cke = 0;
+      break;
+    case 2:
+      ckp = 1;
+      smp = 0;
+      cke = 1;
+      break;
+    case 3:
+      ckp = 1;
+      smp = 1;
+      cke = 0;
+      break;
+    default:
+      ckp = 0;
+      smp = 0;
+      cke = 1;
+      break;
   }
 
   // Initialize correct bus
@@ -50,14 +81,14 @@ void init_spi(uint8_t bus, double mhz, uint8_t size) {
       SPI1STATbits.SPIROV = 0;
       SPI1CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
       SPI1CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-      SPI1CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (32-bit)
-      SPI1CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
+      SPI1CONbits.MODE32 = mode32;  // 32/16-Bit Communication Select bits (32-bit)
+      SPI1CONbits.MODE16 = mode16;  // 32/16-Bit Communication Select bits (16-bit)
       SPI1CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
       SPI1CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
       SPI1CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-      SPI1CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-      SPI1CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-      SPI1CONbits.CKP = 1;     // Clock Polarity Select (Idle state for clock is a high level)
+      SPI1CONbits.CKE = cke;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
+      SPI1CONbits.SMP = smp;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
+      SPI1CONbits.CKP = ckp;     // Clock Polarity Select (Idle state for clock is a high level)
       SPI1CONbits.ON = 1; // Enable SPI1 module
       break;
 
@@ -83,14 +114,14 @@ void init_spi(uint8_t bus, double mhz, uint8_t size) {
       SPI2STATbits.SPIROV = 0;
       SPI2CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
       SPI2CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-      SPI2CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (32-bit)
-      SPI2CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
+      SPI2CONbits.MODE32 = mode32;  // 32/16-Bit Communication Select bits (32-bit)
+      SPI2CONbits.MODE16 = mode16;  // 32/16-Bit Communication Select bits (16-bit)
       SPI2CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
       SPI2CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
       SPI2CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-      SPI2CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-      SPI2CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-      SPI2CONbits.CKP = 1;     // Clock Polarity Select (Idle state for clock is a high level)
+      SPI2CONbits.CKE = cke;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
+      SPI2CONbits.SMP = smp;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
+      SPI2CONbits.CKP = ckp;     // Clock Polarity Select (Idle state for clock is a high level)
       SPI2CONbits.ON = 1; // Enable SPI2 module
       break;
 
@@ -116,14 +147,14 @@ void init_spi(uint8_t bus, double mhz, uint8_t size) {
       SPI3STATbits.SPIROV = 0;
       SPI3CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
       SPI3CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-      SPI3CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (32-bit)
-      SPI3CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
+      SPI3CONbits.MODE32 = mode32;  // 32/16-Bit Communication Select bits (32-bit)
+      SPI3CONbits.MODE16 = mode16;  // 32/16-Bit Communication Select bits (16-bit)
       SPI3CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
       SPI3CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
       SPI3CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-      SPI3CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-      SPI3CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-      SPI3CONbits.CKP = 1;     // Clock Polarity Select (Idle state for clock is a high level)
+      SPI3CONbits.CKE = cke;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
+      SPI3CONbits.SMP = smp;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
+      SPI3CONbits.CKP = ckp;     // Clock Polarity Select (Idle state for clock is a high level)
       SPI3CONbits.ON = 1; // Enable SPI3 module
       break;
 
@@ -152,14 +183,14 @@ void init_spi(uint8_t bus, double mhz, uint8_t size) {
       SPI5STATbits.SPIROV = 0;
       SPI5CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
       SPI5CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-      SPI5CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (32-bit)
-      SPI5CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
+      SPI5CONbits.MODE32 = mode32;  // 32/16-Bit Communication Select bits (32-bit)
+      SPI5CONbits.MODE16 = mode16;  // 32/16-Bit Communication Select bits (16-bit)
       SPI5CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
       SPI5CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
       SPI5CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-      SPI5CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-      SPI5CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-      SPI5CONbits.CKP = 1;     // Clock Polarity Select (Idle state for clock is a high level)
+      SPI5CONbits.CKE = cke;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
+      SPI5CONbits.SMP = smp;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
+      SPI5CONbits.CKP = ckp;     // Clock Polarity Select (Idle state for clock is a high level)
       SPI5CONbits.ON = 1; // Enable SPI5 module
       break;
 
@@ -185,14 +216,14 @@ void init_spi(uint8_t bus, double mhz, uint8_t size) {
       SPI6STATbits.SPIROV = 0;
       SPI6CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
       SPI6CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-      SPI6CONbits.MODE32 = size & 0x20;  // 32/16-Bit Communication Select bits (32-bit)
-      SPI6CONbits.MODE16 = size & 0x10;  // 32/16-Bit Communication Select bits (16-bit)
+      SPI6CONbits.MODE32 = mode32;  // 32/16-Bit Communication Select bits (32-bit)
+      SPI6CONbits.MODE16 = mode16;  // 32/16-Bit Communication Select bits (16-bit)
       SPI6CONbits.DISSDI = 0; // receiver to ignore the unused bit slots
       SPI6CONbits.DISSDO = 0; // transmit unused bit slots with logic level 0
       SPI6CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-      SPI6CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-      SPI6CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-      SPI6CONbits.CKP = 1;     // Clock Polarity Select (Idle state for clock is a high level)
+      SPI6CONbits.CKE = cke;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
+      SPI6CONbits.SMP = smp;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
+      SPI6CONbits.CKP = ckp;     // Clock Polarity Select (Idle state for clock is a high level)
       SPI6CONbits.ON = 1; // Enable SPI6 module
       break;
   }

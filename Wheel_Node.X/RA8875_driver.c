@@ -606,7 +606,7 @@ void writeCommand(uint8_t d) {
 }
 
 SPIConn* init_ra8875(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
-  init_spi(bus, 2, 8);
+  init_spi(bus, 2, 8, 3);
   ra8875Connection.send_fp = get_send_spi(bus);
   ra8875Connection.cs_lat = cs_lat;
   ra8875Connection.cs_num = cs_num;

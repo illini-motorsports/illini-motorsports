@@ -27,7 +27,7 @@ typedef struct {
   uint8_t cs_num; // number of bit in lat register
 } SPIConn;
 
-void init_spi(uint8_t bus, double mhz, uint8_t size);
+void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode);
 
 send_spi_fp get_send_spi(uint8_t bus);
 uint32_t send_spi1(uint32_t value);

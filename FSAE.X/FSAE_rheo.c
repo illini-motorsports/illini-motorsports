@@ -5,7 +5,7 @@ uint8_t rheoConnIdx = 0;
 
 SPIConn* init_rheo(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
   if(!rheoConnIdx) {
-    init_spi(bus, 10, 16);
+    init_spi(bus, 10, 16, 0);
   }
   SPIConn *currConn = &rheoConnections[rheoConnIdx];
   currConn->send_fp = get_send_spi(bus);

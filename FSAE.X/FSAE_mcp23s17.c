@@ -5,7 +5,7 @@ uint8_t mcp23s17ConnIdx = 0;
 
 SPIConn* init_mcp23s17(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
   if(!mcp23s17ConnIdx) {
-    init_spi(bus, 3, 32);
+    init_spi(bus, 3, 32, 0);
   }
 
   SPIConn *currConn = &mcp23s17Connections[mcp23s17ConnIdx];

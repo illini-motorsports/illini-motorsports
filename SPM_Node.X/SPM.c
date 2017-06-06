@@ -206,7 +206,7 @@ void init_adcs(void) {
   analog_connections[0] = init_ad7490(1, AD7490_0_CS_LATBITS, AD7490_0_CS_LATNUM);
   analog_connections[1] = init_ad7490(1, AD7490_1_CS_LATBITS, AD7490_1_CS_LATNUM);
 
-  init_spi(1, 2, 8); // 2mhz clk, 24 bits
+  init_spi(1, 2, 8, 2); // 2mhz clk, 24 bits
 }
 
 void init_tcouples(void) {

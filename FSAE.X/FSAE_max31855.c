@@ -5,7 +5,7 @@ uint8_t max31855ConnIdx = 0;
 
 SPIConn* init_max31855(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
   if(!max31855ConnIdx) {
-    init_spi(bus, 3, 32);
+    init_spi(bus, 3, 32, 0);
   }
   SPIConn *currConn = &max31855Connections[max31855ConnIdx];
   currConn->send_fp = get_send_spi(bus);
