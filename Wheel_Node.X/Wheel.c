@@ -53,12 +53,15 @@ void main(void) {
   ROT1_TRIS = INPUT;
   ROT1_ANSEL = AN_INPUT;
   ROT1_CSS = 1;
+  ROT1_TRG = SOFTWARE;
   ROT2_TRIS = INPUT;
   ROT2_ANSEL = AN_INPUT;
   ROT2_CSS = 1;
+  ROT2_TRG = SOFTWARE;
   TROT0_TRIS = INPUT;
   TROT0_ANSEL = AN_INPUT;
   TROT0_CSS = 1;
+  TROT0_TRG = SOFTWARE;
   TROT1_TRIS = INPUT;
   TROT1_ANSEL = AN_INPUT;
   TROT1_CSS = 1;
@@ -477,7 +480,7 @@ void CANswitchStates(void){
   switchData.byte2 = (uint8_t)wheelDataItems[ROTARY_2_IDX].value << 4;
   switchData.byte2 |= (uint8_t)wheelDataItems[TROTARY_0_IDX].value;
   switchData.byte3 = (uint8_t)wheelDataItems[TROTARY_1_IDX].value << 4;
-  //CAN_send_message(WHEEL_ID + 0x1, 4, switchData);
+  CAN_send_message(WHEEL_ID + 0x1, 4, switchData);
 }
 
 void CANswitchADL(void){

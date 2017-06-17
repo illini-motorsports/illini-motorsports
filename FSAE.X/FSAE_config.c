@@ -703,7 +703,7 @@ void init_oscillator(uint8_t whl_refoclk4) {
   if (whl_refoclk4) {
     /**
      * REFO4CLK == (PBCLK1 / (2 * (RODIV + (ROTRIM / 512)))) ==
-     * (100Mhz / (2 * (128 + (0/512)))) == (100Mhz / 256) =~ 390kHz
+     * (100Mhz / (2 * (5 + (0/512)))) == (100Mhz / 10) = 10Mhz
      */
 
     // Initialize REFCLKO4 PPS pin
@@ -721,7 +721,7 @@ void init_oscillator(uint8_t whl_refoclk4) {
     REFO4CONbits.OE = 1;                    // Reference Clock Output Enable (Reference clock is driven out on REFCLKO1 pin)
 
     REFO4CONbits.DIVSWEN = 1;               // Divider Switch Enable (Divider switch is in progress)
-    REFO4CONbits.RODIV = 0b000000010000000; // Reference Clock Divider (Divide by 128)
+    REFO4CONbits.RODIV = 0b000000000000101; // Reference Clock Divider (Divide by 5)
     REFO4CONbits.DIVSWEN = 0;               // Divider Switch Enable (Divider switch is complete)
 
     // REFO4TRIM

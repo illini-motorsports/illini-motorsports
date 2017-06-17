@@ -477,12 +477,12 @@ void _tlc5955_init_spi(void) {
 
   /**
    * F_SCK = F_PBCLK2 / (2 * (SPI2BRG + 1))
-   * F_SCK = 100Mhz / (2 * (4 + 1))
-   * F_SCK = 10Mhz
+   * F_SCK = 100Mhz / (2 * (99 + 1))
+   * F_SCK = 500kHz
    */
 
   // Set the baud rate (see above equation)
-  SPI2BRG = 4;
+  SPI2BRG = 99;
 
   SPI2STATbits.SPIROV = 0;
 

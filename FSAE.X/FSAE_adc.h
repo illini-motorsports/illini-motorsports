@@ -14,9 +14,9 @@
 #include "FSAE_config.h"
 
 // ADCTRGx Settings
-#define NO_TRIGGER   0b00
-#define SOFTWARE     0b01
-#define SCAN_TRIGGER 0b11
+#define NO_TRIGGER   0b00000
+#define SOFTWARE     0b00001
+#define SCAN_TRIGGER 0b11 //TODO: This is not right
 
 // Pin definitions for PCB temperature sensor
 #define ADC_PTEMP_CHN   6
