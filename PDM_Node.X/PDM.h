@@ -89,8 +89,8 @@
 // Raw (bouncy) switch state definitions
 #define STR_SW_RAW    (!SW1_PORT)
 #define ON_SW_RAW     (SW2_PORT)
-#define ACT_UP_SW_RAW (!SW8_PORT)
-#define ACT_DN_SW_RAW (!SW9_PORT)
+#define ACT_UP_SW_RAW (!SW9_PORT)
+#define ACT_DN_SW_RAW (!SW8_PORT)
 #define ABS_SW_RAW    (SW5_PORT)
 #define AUX1_SW_RAW   (SW6_PORT)
 #define AUX2_SW_RAW   (!SW7_PORT)
@@ -129,8 +129,8 @@
 #define EN_IGN_LAT      LATDbits.LATD5
 #define EN_INJ_LAT      LATCbits.LATC14
 #define EN_ABS_LAT      LATBbits.LATB14
-#define EN_PDLU_LAT     LATEbits.LATE2
-#define EN_PDLD_LAT     LATGbits.LATG12
+#define EN_PDLU_LAT     LATGbits.LATG12
+#define EN_PDLD_LAT     LATEbits.LATE2
 #define EN_FAN_LAT      LATDbits.LATD13
 #define EN_WTR_LAT      LATBbits.LATB7
 #define EN_ECU_LAT      LATEbits.LATE4
@@ -141,8 +141,8 @@
 #define EN_IGN_PORT     PORTDbits.RD5
 #define EN_INJ_PORT     PORTCbits.RC14
 #define EN_ABS_PORT     PORTBbits.RB14
-#define EN_PDLU_PORT    PORTEbits.RE2
-#define EN_PDLD_PORT    PORTGbits.RG12
+#define EN_PDLU_PORT    PORTGbits.RG12
+#define EN_PDLD_PORT    PORTEbits.RE2
 #define EN_FAN_PORT     PORTDbits.RD13
 #define EN_WTR_PORT     PORTBbits.RB7
 #define EN_ECU_PORT     PORTEbits.RE4
@@ -153,8 +153,8 @@
 #define EN_IGN_TRIS     TRISDbits.TRISD5
 #define EN_INJ_TRIS     TRISCbits.TRISC14
 #define EN_ABS_TRIS     TRISBbits.TRISB14
-#define EN_PDLU_TRIS    TRISEbits.TRISE2
-#define EN_PDLD_TRIS    TRISGbits.TRISG12
+#define EN_PDLU_TRIS    TRISGbits.TRISG12
+#define EN_PDLD_TRIS    TRISEbits.TRISE2
 #define EN_FAN_TRIS     TRISDbits.TRISD13
 #define EN_WTR_TRIS     TRISBbits.TRISB7
 #define EN_ECU_TRIS     TRISEbits.TRISE4
@@ -172,8 +172,8 @@
 #define CS_IGN_LAT      LATDbits.LATD4
 #define CS_INJ_LAT      LATCbits.LATC13
 #define CS_ABS_LAT      LATBbits.LATB13
-#define CS_PDLU_LAT     LATGbits.LATG13
-#define CS_PDLD_LAT     LATGbits.LATG14
+#define CS_PDLU_LAT     LATGbits.LATG14
+#define CS_PDLD_LAT     LATGbits.LATG13
 #define CS_FAN_LAT      LATDbits.LATD12
 #define CS_WTR_LAT      LATBbits.LATB6
 #define CS_ECU_LAT      LATEbits.LATE3
@@ -183,8 +183,8 @@
 #define CS_IGN_TRIS     TRISDbits.TRISD4
 #define CS_INJ_TRIS     TRISCbits.TRISC13
 #define CS_ABS_TRIS     TRISBbits.TRISB13
-#define CS_PDLU_TRIS    TRISGbits.TRISG13
-#define CS_PDLD_TRIS    TRISGbits.TRISG14
+#define CS_PDLU_TRIS    TRISGbits.TRISG14
+#define CS_PDLD_TRIS    TRISGbits.TRISG13
 #define CS_FAN_TRIS     TRISDbits.TRISD12
 #define CS_WTR_TRIS     TRISBbits.TRISB6
 #define CS_ECU_TRIS     TRISEbits.TRISE3
@@ -206,8 +206,8 @@
 #define CS_IGN_LATNUM     4
 #define CS_INJ_LATNUM     13
 #define CS_ABS_LATNUM     13
-#define CS_PDLU_LATNUM    13
-#define CS_PDLD_LATNUM    14
+#define CS_PDLU_LATNUM    14
+#define CS_PDLD_LATNUM    13
 #define CS_FAN_LATNUM     12
 #define CS_WTR_LATNUM     6
 #define CS_ECU_LATNUM     3
@@ -310,8 +310,8 @@ const uint8_t ADC_CHN[NUM_LOADS] = {
   6,  // IGN
   4,  // INJ
   5,  // ABS
-  8,  // PDLU
-  9,  // PDLD
+  9,  // PDLU
+  8,  // PDLD
   10, // FAN
   11, // WTR
   3,  // ECU

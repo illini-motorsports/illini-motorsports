@@ -443,9 +443,9 @@ void process_CAN_msg(CAN_message msg) {
 
     case WHEEL_ID + 0x1:
       switch_bitmap = msg.data[SWITCH_BITS_BYTE];
-      fan_override_sw = switch_bitmap & FAN_OVER_MASK;
-      wtr_override_sw = switch_bitmap & WTR_OVER_MASK;
-      fuel_override_sw = switch_bitmap & FUEL_OVER_MASK;
+      fan_override_sw = switch_bitmap & (1 << (FAN_OVR_BITPOS - 1));
+      wtr_override_sw = switch_bitmap & (1 << (WTR_OVR_BITPOS - 1));
+      fuel_override_sw = switch_bitmap & (1 << (FUEL_OVR_BITPOS - 1));
       override_sw_tmr = millis;
       break;
   }
