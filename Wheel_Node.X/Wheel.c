@@ -33,6 +33,7 @@ void main(void) {
   CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
   auxState = 0;
   auxNumber = 0;
+  warnCount = 0;
 
   // Init Relevant Pins
   LCD_CS_LAT = 1;
@@ -87,7 +88,7 @@ void main(void) {
   init_can();
   initAllScreens();
   screenNumber = RACE_SCREEN;
-  checkChangeScreen();
+  changeScreen(screenNumber);
 
   tlc5955_startup();
 

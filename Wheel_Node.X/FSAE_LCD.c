@@ -411,7 +411,17 @@ void refreshScreenItems(void){
   int i;
   for(i = 0;i<currScreen->len;i++){
     screenItem * currItem = &currScreen->items[i];
-    if(currItem->data && millis - currItem->refreshTime >= currItem->data->refreshInterval){
+    volatile dataItem * data = currItem->data;
+    if(data && millis - currItem->refreshTime >= data->refreshInterval){
+      uint8_t warning = data->thresholdDir?data->value>=data->warnThreshold:data->value<=data->warnThreshold;
+      if(warning && !data->warningState) {
+        data->warningState = 1;
+        warnCount++;
+      }
+      if(!warning && data->warningState) {
+        data->warningState = 0;
+        warnCount--;
+      }
       currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
       currItem->currentValue = currItem->data->value;
       currItem->refreshTime = millis;
@@ -617,8 +627,9 @@ void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, doubl
   } else {
     uint8_t i;
     uint64_t colorArray[9] = {0};
+    uint64_t drawColor = warnCount?RED:BLU;
     for (i = 0; i < num_leds; i++) {
-      colorArray[i] = BLU;
+      colorArray[i] = drawColor;
     }
     tlc5955_set_main_blink(0, 0x0, NO_OVR);
     tlc5955_write_main_colors(colorArray);

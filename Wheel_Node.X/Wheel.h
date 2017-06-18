@@ -79,6 +79,7 @@
 #define TEMP_SAMP_INTV    333
 
 volatile uint32_t millis;
+uint8_t warnCount;
 
 void main(void);
 void delay(uint32_t num);
