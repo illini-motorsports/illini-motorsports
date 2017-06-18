@@ -19,6 +19,8 @@ void initDataItems(void){
   for(i=0;i<PDM_DATAITEM_SIZE;i++){
     initDataItem(&pdmDataItems[i],0,0,MIN_REFRESH,2,1);
   }
+  pdmDataItems[VBAT_RAIL_IDX].warnThreshold = 12.5;
+  pdmDataItems[VBAT_RAIL_IDX].errThreshold = 12;
 
   // Customized PDM dataitem initialization
   pdmDataItems[STR_DRAW_IDX].wholeDigits = 3;
@@ -55,6 +57,14 @@ void initDataItems(void){
   setDataItemDigits(&motecDataItems[RUN_TIME_IDX], 4, 0);
   setDataItemDigits(&motecDataItems[FUEL_INJ_DUTY_IDX], 3, 1);
   setDataItemDigits(&motecDataItems[FUEL_TRIM_IDX], 3, 1);
+  motecDataItems[OIL_PRES_IDX].warnThreshold = 1.2;
+  motecDataItems[OIL_PRES_IDX].errThreshold = 1.2;
+  motecDataItems[OIL_TEMP_IDX].thresholdDir = 1;
+  motecDataItems[OIL_TEMP_IDX].warnThreshold = 120;
+  motecDataItems[OIL_TEMP_IDX].errThreshold = 140;
+  motecDataItems[ENG_TEMP_IDX].thresholdDir = 1;
+  motecDataItems[ENG_TEMP_IDX].warnThreshold = 100;
+  motecDataItems[ENG_TEMP_IDX].errThreshold = 110;
 
   // Tire temps
   for(i=0;i<TIRETEMP_DATAITEM_SIZE;i++) {
@@ -87,6 +97,7 @@ void initDataItem(volatile dataItem* data, double warn, double err, uint32_t ref
   data->value = 0;
   data->warnThreshold = warn;
   data->errThreshold = err;
+  data->thresholdDir = 0;
   data->refreshInterval = refresh;
   data->wholeDigits = whole;
   data->decDigits = dec;
@@ -410,20 +421,25 @@ void refreshScreenItems(void){
 
 // Redraw General Data
 void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  if(!checkDataChange(data, currentValue)) {
+  uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
+  uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
+  if(!error && !checkDataChange(data, currentValue)) {
     return;
   }
   // Set Backround Color
-  uint8_t warning = data->value >= data->warnThreshold;
   uint16_t fillColor;
+  uint16_t numColor;
   if(warning){
-    if(data->value >= data->errThreshold){
+    if(error){
       fillColor = errorColor;
+      numColor = RA8875_WHITE;
     }else{
       fillColor = warningColor;
+      numColor = RA8875_BLUE;
     }
   }else{
     fillColor = backgroundColor;
+    numColor = foregroundColor;
   }
   // Calculate Fill Rectangle width
   uint16_t wholeNums, decNums;
@@ -434,8 +450,8 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data, double current
     fillWidth += (item->size)/5;
   }
   fillRect(item->x, item->y, fillWidth, (item->size)*1.75, fillColor);
-  if(!warning || millis%1000 > 300) { // draw number if normal, or blink at 1hz
-    sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,foregroundColor,data->value);
+  if(!error || millis%500 > 200) { // draw number if normal, or blink at 1hz
+    sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,numColor,data->value);
   }
 }
 
@@ -631,21 +647,28 @@ void resetScreenItems(void){
 uint8_t initNightMode(uint8_t on){
   if(on){
     if(backgroundColor == RA8875_BLACK){
-      warningColor = errorColor = backgroundColor;
+      //warningColor = errorColor = backgroundColor;
+      warningColor = errorColor = RA8875_RED;
       return 0;
     }
     backgroundColor = RA8875_BLACK;
     foregroundColor = RA8875_WHITE;
+    warningColor = RA8875_YELLOW;
+    errorColor = RA8875_RED;
   }
   else{
     if(backgroundColor == RA8875_WHITE){
-      warningColor = errorColor = backgroundColor;
+     // warningColor = errorColor = backgroundColor;
+      warningColor = RA8875_YELLOW;
+      errorColor = RA8875_RED;
       return 0;
     }
     backgroundColor = RA8875_WHITE;
     foregroundColor = RA8875_BLACK;
   }
-  warningColor = errorColor = backgroundColor;
+  //warningColor = errorColor = backgroundColor;
+  warningColor = RA8875_YELLOW;
+  errorColor = RA8875_RED;
   return 1;
 }
 

@@ -47,6 +47,11 @@ void main(void) {
   MOM2_TRIS = INPUT;
   MOM3_TRIS = INPUT;
 
+  SW2_ANSEL = DIG_INPUT;
+  SW3_ANSEL = DIG_INPUT;
+  MOM2_ANSEL = DIG_INPUT;
+  MOM3_ANSEL = DIG_INPUT;
+
   ROT0_TRIS = INPUT;
   ROT0_ANSEL = AN_INPUT;
   ROT0_CSS = 1;
@@ -520,7 +525,7 @@ void updateSwVals(void){
 }
 
 uint8_t getRotaryPosition(uint32_t adcValue){
-  return (uint8_t) (adcValue / 409.6);
+  return 9 - (uint8_t) (adcValue / 409.6);
 }
 
 void checkChangeScreen(void) {

@@ -300,6 +300,7 @@
  * value -    double value of stream
  * warnThreshold -  Value where data will enter a warning state
  * errThreshold -   Value where data will enter an error state
+ * thresholdDir - 1 if max, 0 if min
  * refreshInterval -  Maximum refresh frequency
  * wholeDigits -  Number of whole digits to display
  * decDigits -    Number of decimal digits to display
@@ -308,6 +309,7 @@ typedef struct {
   double value;
   double warnThreshold;
   double errThreshold;
+  uint8_t thresholdDir;
   uint32_t refreshInterval;
   uint8_t wholeDigits;
   uint8_t decDigits;
