@@ -1,5 +1,3 @@
-#include <proc/p32mz2048efm100.h>
-
 #include "FSAE_spi.h"
 
 /*

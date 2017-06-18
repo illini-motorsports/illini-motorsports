@@ -410,7 +410,7 @@ void refreshScreenItems(void){
 
 // Redraw General Data
 void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  if(data->value == currentValue){
+  if(!checkDataChange(data, currentValue)) {
     return;
   }
   // Set Backround Color
@@ -657,4 +657,8 @@ void nightMode(uint8_t on){
 
 uint16_t tempColor(uint8_t temp){
   return RA8875_RED;
+}
+
+uint8_t checkDataChange(volatile dataItem *data, double currentValue) {
+  return (int) (pow(10,data->decDigits)*(data->value-currentValue));
 }
