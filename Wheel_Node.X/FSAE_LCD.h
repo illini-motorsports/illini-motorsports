@@ -285,14 +285,14 @@
 #define ROTARY_2_IDX            5
 #define TROTARY_0_IDX           6
 #define TROTARY_1_IDX           7
-#define MOM_0_IDX               8
-#define MOM_1_IDX               9
-#define MOM_2_IDX               10
-#define MOM_3_IDX               11
-#define SWITCH_0_IDX            12
-#define SWITCH_1_IDX            13
-#define SWITCH_2_IDX            14
-#define SWITCH_3_IDX            15
+#define MOM_AUX_IDX             8
+#define MOM_ACK_IDX             9
+#define MOM_RDO_IDX             10
+#define MOM_NEU_IDX             11
+#define SW_ND_IDX               12
+#define SW_FAN_IDX              13
+#define SW_WTR_IDX              14
+#define SW_FUEL_IDX             15
 
 /*
  * Defines a data stream that is relevant to one or more screens

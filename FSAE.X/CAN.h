@@ -413,13 +413,13 @@
  */
 
 // From Wheel
-#define FAN_OVER_MASK         0x10
-#define WTR_OVER_MASK         0x20
-#define FUEL_OVER_MASK        0x40
-#define RADIO_BTN_MASK        0x01
-#define ROT1_MASK             0xF0
-#define ROT2_MASK             0x0F
-#define ROT3_MASK             0xF0
+#define RADIO_BTN_BITPOS      1
+#define ACK_BTN_BITPOS        2
+#define AUX_BTN_BITPOS        3
+#define FAN_OVR_BITPOS        5
+#define WTR_OVR_BITPOS        6
+#define FUEL_OVR_BITPOS       7
+#define ND_SW_BITPOS          8
 
 //PDM Bitmask bits
 #define STR_ENBL_MASK         0x10

@@ -472,13 +472,19 @@ void process_CAN_msg(CAN_message msg){
   }
 }
 
+//TODO: Use more of the MASK/BITPOS definitions from CAN.h
 void CANswitchStates(void){
   CAN_data switchData = {0};
-  int bitMask = 0;
-  int i;
-  for(i = MOM_0_IDX;i < SWITCH_3_IDX; i++) {
-    bitMask |= (uint8_t) wheelDataItems[i].value << (i - MOM_0_IDX);
-  }
+
+  uint8_t bitMask = 0;
+  bitMask |= (((uint8_t) wheelDataItems[MOM_RDO_IDX].value) & 0x1) << (RADIO_BTN_BITPOS - 1);
+  bitMask |= (((uint8_t) wheelDataItems[MOM_ACK_IDX].value) & 0x1) << (ACK_BTN_BITPOS - 1);
+  bitMask |= (((uint8_t) wheelDataItems[MOM_AUX_IDX].value) & 0x1) << (AUX_BTN_BITPOS - 1);
+  bitMask |= (((uint8_t) wheelDataItems[SW_FUEL_IDX].value) & 0x1) << (FUEL_OVR_BITPOS - 1);
+  bitMask |= (((uint8_t) wheelDataItems[SW_FAN_IDX].value) & 0x1) << (FAN_OVR_BITPOS - 1);
+  bitMask |= (((uint8_t) wheelDataItems[SW_WTR_IDX].value) & 0x1) << (WTR_OVR_BITPOS - 1);
+  bitMask |= (((uint8_t) wheelDataItems[SW_ND_IDX].value) & 0x1) << (ND_SW_BITPOS - 1);
+
   switchData.byte0 = bitMask;
   switchData.byte1 = (uint8_t)wheelDataItems[ROTARY_0_IDX].value << 4;
   switchData.byte1 |= (uint8_t)wheelDataItems[ROTARY_1_IDX].value;
@@ -507,15 +513,15 @@ double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl){
 
 void updateSwVals(void){
   // Update Switches
-  wheelDataItems[SWITCH_0_IDX].value = !SW0_PORT;
-  wheelDataItems[SWITCH_1_IDX].value = !SW1_PORT;
-  wheelDataItems[SWITCH_2_IDX].value = !SW2_PORT;
-  wheelDataItems[SWITCH_3_IDX].value = !SW3_PORT;
+  wheelDataItems[SW_ND_IDX].value = !SW0_PORT;
+  wheelDataItems[SW_FAN_IDX].value = !SW1_PORT;
+  wheelDataItems[SW_WTR_IDX].value = !SW2_PORT;
+  wheelDataItems[SW_FUEL_IDX].value = !SW3_PORT;
   // Update Momentaries
-  wheelDataItems[MOM_0_IDX].value = !MOM0_PORT;
-  wheelDataItems[MOM_1_IDX].value = !MOM1_PORT;
-  wheelDataItems[MOM_2_IDX].value = !MOM2_PORT;
-  wheelDataItems[MOM_3_IDX].value = !MOM3_PORT;
+  wheelDataItems[MOM_AUX_IDX].value = !MOM0_PORT;
+  wheelDataItems[MOM_ACK_IDX].value = !MOM1_PORT;
+  wheelDataItems[MOM_RDO_IDX].value = !MOM2_PORT;
+  wheelDataItems[MOM_NEU_IDX].value = !MOM3_PORT;
   // Update rotaries
   wheelDataItems[ROTARY_0_IDX].value = getRotaryPosition(read_adc_chn(ROT0_CHN));
   wheelDataItems[ROTARY_1_IDX].value = getRotaryPosition(read_adc_chn(ROT1_CHN));

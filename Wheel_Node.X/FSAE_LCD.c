@@ -85,11 +85,11 @@ void initDataItems(void){
   }
 
   // Special array declerations
-  fanSw[0] = &wheelDataItems[SWITCH_0_IDX];
+  fanSw[0] = &wheelDataItems[SW_FAN_IDX];
   fanSw[1] = &pdmDataItems[FAN_ENABLITY_IDX];
-  fuelSw[0] = &wheelDataItems[SWITCH_1_IDX];
+  fuelSw[0] = &wheelDataItems[SW_FUEL_IDX];
   fuelSw[1] = &pdmDataItems[FUEL_ENABLITY_IDX];
-  wtrSw[0] = &wheelDataItems[SWITCH_2_IDX];
+  wtrSw[0] = &wheelDataItems[SW_WTR_IDX];
   wtrSw[1] = &pdmDataItems[WTR_ENABLITY_IDX];
 }
 

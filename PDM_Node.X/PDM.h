@@ -89,8 +89,8 @@
 // Raw (bouncy) switch state definitions
 #define STR_SW_RAW    (!SW1_PORT)
 #define ON_SW_RAW     (SW2_PORT)
-#define ACT_UP_SW_RAW (!SW9_PORT)
-#define ACT_DN_SW_RAW (!SW8_PORT)
+#define ACT_UP_SW_RAW (!SW8_PORT)
+#define ACT_DN_SW_RAW (!SW9_PORT)
 #define ABS_SW_RAW    (SW5_PORT)
 #define AUX1_SW_RAW   (SW6_PORT)
 #define AUX2_SW_RAW   (!SW7_PORT)
