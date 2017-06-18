@@ -12,6 +12,10 @@
 volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
 volatile uint8_t darkState;
 volatile uint8_t auxState;
+uint32_t temp_samp_tmr = 0;
+
+int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
+int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 
 void main(void) {
   init_general();// Set general runtime configuration bits
@@ -99,6 +103,8 @@ void main(void) {
       CANdiag();
       CANdiagMillis = millis;
     }
+
+    sample_temp(); // Sample internal and external temperature sensors
 
     checkChangeScreen(); // Check to see if the screen should be changed
 
@@ -496,15 +502,19 @@ void CANswitchStates(void){
 
 void CANswitchADL(void){
   CAN_data rotaries = {0};
-  rotaries.halfword0 = 0x0000;
+  rotaries.halfword0 = ADL_IDX_1_3;
   rotaries.halfword1 = (uint16_t) wheelDataItems[ROTARY_0_IDX].value;
   rotaries.halfword2 = (uint16_t) wheelDataItems[ROTARY_1_IDX].value;
   rotaries.halfword3 = (uint16_t) wheelDataItems[ROTARY_2_IDX].value;
-  //CAN_send_message(ADL_ID, 8, rotaries);
+  CAN_send_message(ADL_ID, 8, rotaries);
 }
 
 void CANdiag(void){
-  return;
+  CAN_data data = {0};
+  data.halfword0 = (uint16_t) (millis / 1000);
+  data.halfword1 = pcb_temp;
+  data.halfword2 = junc_temp;
+  CAN_send_message(WHEEL_ID + 0, 6, data);
 }
 
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl){
@@ -548,5 +558,40 @@ void checkChangeScreen(void) {
   if(screenIdx != screenNumber) {
     changeScreen(screenIdx);
     screenNumber = screenIdx;
+  }
+}
+
+/**
+ * void sample_temp(void)
+ *
+ * Samples the PCB temp sensor and internal die temp sensor, then updates
+ * variables if the interval has passed.
+ */
+void sample_temp(void) {
+  if(millis - temp_samp_tmr >= TEMP_SAMP_INTV) {
+
+    /**
+     * PCB Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
+     * PCB Temp [C] = ((3.3 * (pcb_temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
+     * PCB Temp [C] = (3.3 * (pcb_temp_samp / 40.95)) - 75) [C]
+     * PCB Temp [C] = (pcb_temp_samp * 0.080586080586) - 75 [C]
+     * PCB Temp [C / 0.005] = 200 * ((pcb_temp_samp * 0.080586080586) - 75) [C / 0.005]
+     * PCB Temp [C / 0.005] = (temp_samp * 16.1172161172) - 15000 [C / 0.005]
+     */
+    uint32_t pcb_temp_samp = read_adc_chn(ADC_PTEMP_CHN);
+    pcb_temp = (((double) pcb_temp_samp) * 16.1172161172) - 15000.0;
+
+    /**
+     * Junc Temp [C] = 200 [C/V] * (1 [V] - Sample [V])
+     * Junc Temp [C] = 200 [C/V] * (1 - (3.3 * (junc_temp_samp / 4095))) [V]
+     * Junc Temp [C] = 200 [C/V] * (1 - (junc_temp_samp / 1240.9090909)) [V]
+     * Junc Temp [C] = 200 - (junc_temp_samp * 0.161172161172) [C]
+     * Junc Temp [C / 0.005] = 40000 - (junc_temp_samp * 32.234432234432) [C / 0.005]
+     */
+
+    uint32_t junc_temp_samp = read_adc_chn(ADC_JTEMP_CHN);
+    junc_temp = (int16_t) (40000.0 - (((double) junc_temp_samp) * 32.234432234432));
+
+    temp_samp_tmr = millis;
   }
 }

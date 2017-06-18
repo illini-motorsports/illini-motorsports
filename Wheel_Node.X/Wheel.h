@@ -76,6 +76,7 @@
 #define CAN_SW_STATE_FREQ 100
 #define CAN_SW_ADL_FREQ   500
 #define CAN_DIAG_FREQ     1000
+#define TEMP_SAMP_INTV    333
 
 volatile uint32_t millis;
 
@@ -89,5 +90,6 @@ void CANdiag(void);
 void updateSwVals(void);
 uint8_t getRotaryPosition(uint32_t adcValue);
 void checkChangeScreen(void);
+void sample_temp(void);
 
 #endif /* WHEEL_H */

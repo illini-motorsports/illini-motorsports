@@ -161,7 +161,7 @@ void _gpx_init_int(void) {
 
   // CONCONE
   CNCONEbits.ON = 1;         // Change Notice (CN) Control ON (CN is enabled)
-  CNCONEbits.SIDL = 0;       // Stop in Idle Control (CPU Idle does not affect CN operation)
+  //CNCONEbits.SIDL = 0;       // Stop in Idle Control (CPU Idle does not affect CN operation)
   CNCONEbits.EDGEDETECT = 1; // Change Notification Style (Edge Style)
 
   // Enable interrupts for the RE6 pin
