@@ -305,12 +305,15 @@
  * wholeDigits -  Number of whole digits to display
  * decDigits -    Number of decimal digits to display
  */
-typedef struct {
+typedef struct packed {
   double value;
   double warnThreshold;
   double errThreshold;
-  uint8_t thresholdDir;
+  unsigned thresholdDir:1;
+  unsigned warningState:1;
+  unsigned blinkState:1;
   uint32_t refreshInterval;
+  uint32_t refreshTime;
   uint8_t wholeDigits;
   uint8_t decDigits;
 } dataItem;

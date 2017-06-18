@@ -91,5 +91,6 @@ void updateSwVals(void);
 uint8_t getRotaryPosition(uint32_t adcValue);
 void checkChangeScreen(void);
 void sample_temp(void);
+void updateDataItem(volatile dataItem * data, double value);
 
 #endif /* WHEEL_H */

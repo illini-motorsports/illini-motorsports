@@ -423,7 +423,11 @@ void refreshScreenItems(void){
 void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
   uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
-  if(!error && !checkDataChange(data, currentValue)) {
+  uint8_t stale = millis - data->refreshTime > 1000;
+  if(stale) {
+    data->value = 0;
+  }
+  if(!error && !stale && !checkDataChange(data, currentValue)) {
     return;
   }
   // Set Backround Color
@@ -437,7 +441,11 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data, double current
       fillColor = warningColor;
       numColor = RA8875_BLUE;
     }
-  }else{
+  }
+  else if(stale) {
+    fillColor = errorColor;
+  }
+  else{
     fillColor = backgroundColor;
     numColor = foregroundColor;
   }
@@ -450,7 +458,7 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data, double current
     fillWidth += (item->size)/5;
   }
   fillRect(item->x, item->y, fillWidth, (item->size)*1.75, fillColor);
-  if(!error || millis%500 > 200) { // draw number if normal, or blink at 1hz
+  if(!stale && (!error || millis%500 > 200)) { // draw number if normal, or blink at 1hz
     sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,numColor,data->value);
   }
 }
