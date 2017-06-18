@@ -1,3 +1,5 @@
+#include <proc/p32mz2048efm100.h>
+
 #include "FSAE_spi.h"
 
 /*
@@ -63,6 +65,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       // Initialize SDI1/SDO1 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISBbits.TRISB9 = INPUT;
+      ANSELBbits.ANSB9 = DIG_INPUT;
       SDI1Rbits.SDI1R = 0b0101; // RPB9
       TRISBbits.TRISB10 = OUTPUT;
       RPB10Rbits.RPB10R = 0b0101; // SDO1
@@ -96,6 +99,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       // Initialize SDI2/SDO2 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISEbits.TRISE5 = INPUT;
+      ANSELEbits.ANSE5 = DIG_INPUT;
       SDI2Rbits.SDI2R = 0b0110; // RPE5
       TRISCbits.TRISC1 = OUTPUT;
       RPC1Rbits.RPC1R = 0b0110; // SDO2
@@ -129,6 +133,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       // Initialize SDI3/SDO3 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISBbits.TRISB5 = INPUT;
+      ANSELBbits.ANSB5 = DIG_INPUT;
       SDI3Rbits.SDI3R = 0b1000; // RPB5
       TRISBbits.TRISB3 = OUTPUT;
       RPB3Rbits.RPB3R = 0b0111; // SDO3
@@ -198,7 +203,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       // Initialize SDI6/SDO6 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISFbits.TRISF2 = INPUT;
-      SDI6Rbits.SDI6R = 0b1011; // RPF4
+      SDI6Rbits.SDI6R = 0b1011; // RPF2
       TRISFbits.TRISF8 = OUTPUT;
       RPF8Rbits.RPF8R = 0b1010; // SDO6
       CFGCONbits.IOLOCK = 1;
