@@ -10,7 +10,7 @@
 
 // Count number of milliseconds since start of code execution
 volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
-volatile uint8_t darkState;
+volatile uint8_t nightModeState;
 volatile uint8_t auxState;
 uint32_t temp_samp_tmr = 0;
 
@@ -82,10 +82,12 @@ void main(void) {
 
   // Initialize All the data streams
   initDataItems();
-  init_can();
   updateSwVals();
+  nightModeState = wheelDataItems[SW_ND_IDX].value;
+  init_can();
   initAllScreens();
-  changeScreen(RACE_SCREEN);
+  screenNumber = RACE_SCREEN;
+  nightMode(nightModeState);
 
   tlc5955_startup();
 
@@ -548,6 +550,10 @@ void checkChangeScreen(void) {
   uint8_t rotVal = wheelDataItems[TROTARY_1_IDX].value;
   uint8_t screenIdx;
 
+  if(nightModeState != wheelDataItems[SW_ND_IDX].value) {
+    nightModeState = wheelDataItems[SW_ND_IDX].value;
+    nightMode(nightModeState);
+  }
   switch (rotVal) {
     case 0:
       screenIdx = RACE_SCREEN;
