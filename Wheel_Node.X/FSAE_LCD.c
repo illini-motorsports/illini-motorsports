@@ -114,8 +114,6 @@ void initAllScreens(void){
   // Initialize colors
   backgroundColor = RA8875_WHITE;
   foregroundColor = RA8875_BLACK;
-  //initNightMode(switches[3].value);
-  initNightMode(1); //TODO
 
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
@@ -404,9 +402,6 @@ void changeScreen(uint8_t num){
 // A number will only be redrawn if its dataItem value has changed, and it
 // has surpassed its refresh interval
 void refreshScreenItems(void){
-  // change night mode if the switch was toggled
-  //nightMode(switches[3].value); //TODO
-
   screen* currScreen = allScreens[screenNumber];
   int i;
   for(i = 0;i<currScreen->len;i++){

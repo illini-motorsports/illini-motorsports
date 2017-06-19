@@ -84,9 +84,10 @@ void main(void) {
   // Initialize All the data streams
   initDataItems();
   updateSwVals();
-  nightModeState = wheelDataItems[SW_ND_IDX].value;
   init_can();
   initAllScreens();
+  nightModeState = wheelDataItems[SW_ND_IDX].value;
+  initNightMode(nightModeState);
   screenNumber = RACE_SCREEN;
   changeScreen(screenNumber);
 
