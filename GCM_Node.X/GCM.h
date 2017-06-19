@@ -94,18 +94,18 @@ const double gear_ratio[7] = {
 };
 
 // Pin definitions
-#define SHIFT_UP_TRIS  TRISGbits.TRISG15
-#define SHIFT_UP_ANSEL ANSELGbits.ANSG15
-#define SHIFT_UP_PORT  PORTGbits.RG15
-#define SHIFT_DN_TRIS  TRISAbits.TRISA5
-#define SHIFT_DN_ANSEL ANSELAbits.ANSA5
-#define SHIFT_DN_PORT  PORTAbits.RA5
-#define SHIFT_NT_TRIS  TRISEbits.TRISE5
-#define SHIFT_NT_ANSEL ANSELEbits.ANSE5
-#define SHIFT_NT_PORT  PORTEbits.RE5
+#define SHIFT_UP_TRIS  TRISAbits.TRISA5
+#define SHIFT_UP_ANSEL ANSELAbits.ANSA5
+#define SHIFT_UP_PORT  PORTAbits.RA5
+#define SHIFT_DN_TRIS  TRISEbits.TRISE5
+#define SHIFT_DN_ANSEL ANSELEbits.ANSE5
+#define SHIFT_DN_PORT  PORTEbits.RE5
+#define SHIFT_NT_TRIS  TRISBbits.TRISB5
+#define SHIFT_NT_ANSEL ANSELBbits.ANSB5
+#define SHIFT_NT_PORT  PORTBbits.RB5
 
-#define ACT_UP_TRIS TRISBbits.TRISB5
-#define ACT_UP_LAT  LATBbits.LATB5
+#define ACT_UP_TRIS TRISEbits.TRISE4
+#define ACT_UP_LAT  LATEbits.LATE4
 #define ACT_DN_TRIS TRISBbits.TRISB4
 #define ACT_DN_LAT  LATBbits.LATB4
 

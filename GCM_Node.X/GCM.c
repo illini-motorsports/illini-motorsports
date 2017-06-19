@@ -323,7 +323,7 @@ void process_CAN_msg(CAN_message msg) {
 
     case PDM_ID + 0x1:
       switch_bitmap = msg.data[PDM_SWITCH_BYTE];
-      kill_sw = switch_bitmap & KILL_SW_MASK;
+      kill_sw = switch_bitmap & KILL_PDM_SW_MASK;
       CAN_recv_tmr = millis;
       break;
   }
