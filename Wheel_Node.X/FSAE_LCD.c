@@ -17,10 +17,15 @@ void initDataItems(void){
 
   // Set default initialization for PDM data items
   for(i=0;i<PDM_DATAITEM_SIZE;i++){
-    initDataItem(&pdmDataItems[i],0,0,MIN_REFRESH,2,1);
+    initDataItem(&pdmDataItems[i],200,200,MIN_REFRESH,2,1);
+    pdmDataItems[i].thresholdDir = 1;
+  }
+  for(i=FUEL_CUT_IDX;i<ECU_CUT_P_IDX;i++){
+    setDataItemDigits(&pdmDataItems[i], 3, 0);
   }
   pdmDataItems[VBAT_RAIL_IDX].warnThreshold = 12.5;
   pdmDataItems[VBAT_RAIL_IDX].errThreshold = 12;
+  pdmDataItems[VBAT_RAIL_IDX].thresholdDir = 0;
 
   // Customized PDM dataitem initialization
   pdmDataItems[STR_DRAW_IDX].wholeDigits = 3;
@@ -122,37 +127,63 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
   initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
-  initScreenItem(&raceScreenItems[3], 20, 70, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
-  initScreenItem(&raceScreenItems[4], 330, 70, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
-  initScreenItem(&raceScreenItems[5], 20, 190, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
-  initScreenItem(&raceScreenItems[6], 330, 180, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
-  initScreenItem(&raceScreenItems[7], 170, 50, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
+  initScreenItem(&raceScreenItems[3], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
+  initScreenItem(&raceScreenItems[4], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
+  initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
+  initScreenItem(&raceScreenItems[6], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
+  initScreenItem(&raceScreenItems[7], 200, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
   initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &motecDataItems[ENG_RPM_IDX]);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
   pdmDrawScreen.items = pdmDrawItems;
-  pdmDrawScreen.len = 20;
-  initScreenItem(&pdmDrawItems[1], 10, 50, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[2], 85, 50, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[3], 160, 50, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[4], 235, 50, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[5], 310, 50, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[6], 385, 50, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[7], 10, 100, 15, redrawDigit, &pdmDataItems[AUX_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[8], 85, 100, 15, redrawDigit, &pdmDataItems[PDLU_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[9], 160, 100, 15, redrawDigit, &pdmDataItems[PDLD_DRAW_IDX]);
-  //changed from 5v5
-  initScreenItem(&pdmDrawItems[10], 235, 100, 15, redrawDigit, &pdmDataItems[ABS_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[11], 310, 100, 15, redrawDigit, &pdmDataItems[BVBAT_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[16], 385, 100, 15, redrawDigit, &pdmDataItems[FUEL_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[17], 10, 150, 15, redrawDigit, &pdmDataItems[ECU_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[18], 85, 150, 15, redrawDigit, &pdmDataItems[WTR_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[19], 160, 150, 15, redrawDigit, &pdmDataItems[FAN_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[15], 280, 200, 15, redrawDigit, &pdmDataItems[STR_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[0], 370, 200, 15, redrawDigit, &pdmDataItems[TOTAL_CURRENT_IDX]);
+  pdmDrawScreen.len = 33;
+  initScreenItem(&pdmDrawItems[1], 10, 30, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[2], 85, 30, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[3], 160, 30, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[4], 235, 30, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[5], 310, 30, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[6], 385, 30, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[7], 10, 80, 15, redrawDigit, &pdmDataItems[AUX_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[8], 85, 80, 15, redrawDigit, &pdmDataItems[PDLU_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[9], 160, 80, 15, redrawDigit, &pdmDataItems[PDLD_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[10], 235, 80, 15, redrawDigit, &pdmDataItems[ABS_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[11], 310, 80, 15, redrawDigit, &pdmDataItems[BVBAT_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[15], 385, 80, 15, redrawDigit, &pdmDataItems[STR_DRAW_IDX]);
+  initScreenItem(&pdmDrawItems[16], 10, 130, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[17], 85, 130, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[18], 160, 130, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[19], 235, 130, 15, redrawDigit, &pdmDataItems[ECU_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[20], 310, 130, 15, redrawDigit, &pdmDataItems[WTR_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[21], 385, 130, 15, redrawDigit, &pdmDataItems[FAN_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[22], 10, 180, 15, redrawDigit, &pdmDataItems[AUX_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[23], 85, 180, 15, redrawDigit, &pdmDataItems[PDLU_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[24], 160, 180, 15, redrawDigit, &pdmDataItems[PDLD_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[25], 235, 180, 15, redrawDigit, &pdmDataItems[ABS_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[26], 310, 180, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX]);
+  initScreenItem(&pdmDrawItems[27], 160, 230, 15, redrawDigit, &pdmDataItems[FUEL_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[28], 235, 230, 15, redrawDigit, &pdmDataItems[FAN_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[29], 310, 230, 15, redrawDigit, &pdmDataItems[WTR_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[30], 385, 230, 15, redrawDigit, &pdmDataItems[ECU_CUT_P_IDX]);
+  initScreenItem(&pdmDrawItems[31], 20, 30, 15, redrawShiftLightsRPM, &motecDataItems[ENG_RPM_IDX]);
+  initScreenItem(&pdmDrawItems[32], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 
+  allScreens[PDM_GRID_SCREEN] = &pdmGridScreen;
+  pdmGridScreen.items = pdmGridItems;
+  pdmGridScreen.len = 13;
+  initScreenItem(&pdmGridItems[1], 10, 30, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX]);
+  initScreenItem(&pdmGridItems[2], 85, 30, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX]);
+  initScreenItem(&pdmGridItems[3], 160, 30, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX]);
+  initScreenItem(&pdmGridItems[4], 235, 30, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX]);
+  initScreenItem(&pdmGridItems[5], 310, 30, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX]);
+  initScreenItem(&pdmGridItems[6], 385, 30, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX]);
+  initScreenItem(&pdmGridItems[7], 10, 70, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX]);
+  initScreenItem(&pdmGridItems[8], 85, 70, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX]);
+  initScreenItem(&pdmGridItems[9], 160, 70, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX]);
+  initScreenItem(&pdmGridItems[10], 235, 70, 15, redrawDigit, &pdmDataItems[ECU_CUT_IDX]);
+  initScreenItem(&pdmGridItems[11], 310, 70, 15, redrawDigit, &pdmDataItems[WTR_CUT_IDX]);
+  initScreenItem(&pdmGridItems[12], 385, 70, 15, redrawDigit, &pdmDataItems[FAN_CUT_IDX]);
 
   allScreens[PDM_CUT_SCREEN] = &pdmCutScreen;
   pdmCutScreen.items = pdmCutItems;
@@ -210,13 +241,13 @@ void initScreen(uint8_t num){
       textMode();
       textEnlarge(1);
       textTransparent(foregroundColor);
-      textSetCursor(0, 40);
+      textSetCursor(7, 40);
       textWrite("OIL TEMP");
-      textSetCursor(0, 140);
+      textSetCursor(0, 160);
       textWrite("OIL PRESS");
-      textSetCursor(330, 40);
+      textSetCursor(360, 40);
       textWrite("WTR TMP");
-      textSetCursor(330,140);
+      textSetCursor(370,160);
       textWrite("BAT V");
       textEnlarge(0);
       graphicsMode();
@@ -225,47 +256,95 @@ void initScreen(uint8_t num){
     case PDM_DRAW_SCREEN:
       textMode();
       textTransparent(foregroundColor);
-      textSetCursor(10,30);
+      textSetCursor(10,10);
       textWrite("IGN DRW");
-      textSetCursor(85, 30);
+      textSetCursor(85, 10);
       textWrite("INJ DRW");
-      textSetCursor(160, 30);
+      textSetCursor(160, 10);
       textWrite("FUEL DRW");
-      textSetCursor(235, 30);
+      textSetCursor(235, 10);
       textWrite("ECU DRW");
-      textSetCursor(310, 30);
+      textSetCursor(310, 10);
       textWrite("WTR DRW");
-      textSetCursor(385, 30);
+      textSetCursor(385, 10);
       textWrite("FAN DRW");
-      textSetCursor(10, 80);
+      textSetCursor(10, 60);
       textWrite("AUX DRW");
-      textSetCursor(85, 80);
+      textSetCursor(85, 60);
       textWrite("PDLU DRW");
-      textSetCursor(160,80);
+      textSetCursor(160,60);
       textWrite("PDLD DRW");
-      textSetCursor(235, 80);
-      textWrite("5V5 DRW");
-      textSetCursor(310, 80);
+      textSetCursor(235, 60);
+      textWrite("ABS DRW");
+      textSetCursor(310, 60);
       textWrite("BAT DRW");
-      textSetCursor(385, 80);
-      textWrite("FUEL P CUT");
-      textSetCursor(10, 130);
-      textWrite("ECU PCUT");
-      textSetCursor(85, 130);
-      textWrite("WTR PCUT");
-      textSetCursor(160, 130);
-      textWrite("FAN PCUT");
-      textSetCursor(10, 180);
-      textWrite("STR0 DRW");
-      textSetCursor(100, 180);
-      textWrite("STR1 DRW");
-      textSetCursor(190, 180);
-      textWrite("STR2 DRW");
-      textSetCursor(280, 180);
+      textSetCursor(385, 60);
       textWrite("STR DRW");
-      textSetCursor(370, 180);
-      textWrite("TOT DRW");
+      textSetCursor(10,110);
+      textWrite("IGN CUT");
+      textSetCursor(85, 110);
+      textWrite("INJ CUT");
+      textSetCursor(160, 110);
+      textWrite("FUEL CUT");
+      textSetCursor(235, 110);
+      textWrite("ECU CUT");
+      textSetCursor(310, 110);
+      textWrite("WTR CUT");
+      textSetCursor(385, 110);
+      textWrite("FAN CUT");
+      textSetCursor(10, 160);
+      textWrite("AUX CUT");
+      textSetCursor(85, 160);
+      textWrite("PDLU CUT");
+      textSetCursor(160,160);
+      textWrite("PDLD CUT");
+      textSetCursor(235, 160);
+      textWrite("ABS CUT");
+      textSetCursor(310, 160);
+      textWrite("BAT CUT");
+      textSetCursor(160, 210);
+      textWrite("FUEL PCT");
+      textSetCursor(235, 210);
+      textWrite("FAN PCT");
+      textSetCursor(310, 210);
+      textWrite("WTR PCT");
+      textSetCursor(385, 210);
+      textWrite("ECU PCT");
+      textEnlarge(2);
+      textSetCursor(10, 210);
+      textWrite("PDM");
+      textEnlarge(0);
       graphicsMode();
+      break;
+
+    case PDM_DRAW_SCREEN:
+      textMode();
+      textTransparent(foregroundColor);
+      textSetCursor(10,10);
+      textWrite("IGN DRW");
+      textSetCursor(85, 10);
+      textWrite("INJ DRW");
+      textSetCursor(160, 10);
+      textWrite("FUEL DRW");
+      textSetCursor(235, 10);
+      textWrite("ECU DRW");
+      textSetCursor(310, 10);
+      textWrite("WTR DRW");
+      textSetCursor(385, 10);
+      textWrite("FAN DRW");
+      graphicsMode();
+      //Horizontal Lines
+      drawLine(80,  30, 0, 200, foregroundColor);
+      drawLine(155, 30, 0, 200, foregroundColor);
+      drawLine(230, 30, 0, 200, foregroundColor);
+      drawLine(305, 30, 0, 200, foregroundColor);
+      drawLine(380, 30, 0, 200, foregroundColor);
+      //Vertical Lines
+      drawLine(10, 30, 0, 200, foregroundColor);
+      drawLine(10, 30, 0, 200, foregroundColor);
+      drawLine(10, 30, 0, 200, foregroundColor);
+      drawLine(10, 30, 0, 200, foregroundColor);
+      drawLine(10, 30, 0, 200, foregroundColor);
       break;
 
     case PDM_CUT_SCREEN:
@@ -697,5 +776,5 @@ uint16_t tempColor(uint8_t temp){
 }
 
 uint8_t checkDataChange(volatile dataItem *data, double currentValue) {
-  return (int) (pow(10,data->decDigits)*(data->value-currentValue));
+  return 1;//(int) (pow(10,data->decDigits)*(data->value-currentValue));
 }

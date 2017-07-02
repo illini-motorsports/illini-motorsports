@@ -24,8 +24,9 @@
 #define CHASSIS_SCREEN        5
 #define GENERAL_SCREEN        6
 #define BRAKE_SCREEN          7
+#define PDM_GRID_SCREEN       8
 
-#define MIN_REFRESH           100
+#define MIN_REFRESH           350
 
 #define MIN_SUS_POS           5
 #define MAX_SUS_POS           20
@@ -363,13 +364,13 @@ typedef struct {
 } screen;
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[10], pdmDrawItems[20], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
+screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
 
 // Define all screen structs
-screen raceScreen, pdmDrawScreen, pdmCutScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
+screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
 
 // Define master array of all screen structs
-screen* allScreens[8];
+screen* allScreens[9];
 
 uint8_t screenNumber, auxNumber;
 

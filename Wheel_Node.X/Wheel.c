@@ -88,7 +88,7 @@ void main(void) {
   initAllScreens();
   nightModeState = wheelDataItems[SW_ND_IDX].value;
   initNightMode(nightModeState);
-  screenNumber = RACE_SCREEN;
+  screenNumber = -1;
   changeScreen(screenNumber);
 
   tlc5955_startup();
@@ -564,8 +564,16 @@ void checkChangeScreen(void) {
   switch (rotVal) {
     case 0:
       screenIdx = RACE_SCREEN;
+      break;
+    case 1:
+      screenIdx = PDM_DRAW_SCREEN;
+      break;
+    case 2:
+      screenIdx = PDM_GRID_SCREEN;
+      break;
     default:
       screenIdx = RACE_SCREEN;
+      break;
   }
 
   if(screenIdx != screenNumber) {
