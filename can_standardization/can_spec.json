@@ -13,7 +13,7 @@
 					"unit": "s",
 					"signed": false,
 					"scale": 1,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -23,7 +23,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.005,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -33,7 +33,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.005,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				}
@@ -51,7 +51,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -61,7 +61,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -71,7 +71,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -81,7 +81,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -99,7 +99,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -109,7 +109,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -119,7 +119,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -129,7 +129,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -147,7 +147,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -157,7 +157,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -167,7 +167,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -177,7 +177,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -195,7 +195,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -205,7 +205,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -215,7 +215,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -225,7 +225,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -243,7 +243,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -253,7 +253,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -263,7 +263,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -273,7 +273,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -291,7 +291,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -301,7 +301,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -311,7 +311,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -321,7 +321,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -339,7 +339,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -349,7 +349,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -359,7 +359,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -369,7 +369,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -387,7 +387,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -397,7 +397,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -407,7 +407,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -417,7 +417,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -435,7 +435,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -445,7 +445,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -455,7 +455,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -465,7 +465,7 @@
 					"unit": "V",
 					"signed": false,
 					"scale": 0.001,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -483,7 +483,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.25,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -493,7 +493,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.25,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -503,7 +503,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.25,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -513,7 +513,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.25,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
@@ -531,7 +531,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.25,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 0,
 					"length": 2
 				},
@@ -541,7 +541,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.25,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -551,7 +551,7 @@
 					"unit": "C",
 					"signed": true,
 					"scale": 0.0625,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -569,6 +569,11 @@
 						"Reserved"
 					],
 					"byte": 6,
+					"length": 1
+				},
+				{
+					"type": "reserved",
+					"byte": 7,
 					"length": 1
 				}
 			]
@@ -609,7 +614,7 @@
 					"unit": "Hz",
 					"signed": false,
 					"scale": 1,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 2,
 					"length": 2
 				},
@@ -619,7 +624,7 @@
 					"unit": "Hz",
 					"signed": false,
 					"scale": 1,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 4,
 					"length": 2
 				},
@@ -629,12 +634,12 @@
 					"unit": "Hz",
 					"signed": false,
 					"scale": 1,
-					"offset": "0x0",
+					"offset": 0,
 					"byte": 6,
 					"length": 2
 				}
 			]
-		}
+		},
 		{
 			"id": "0x05D",
 			"node": "SPM",
@@ -685,6 +690,1520 @@
 					],
 					"byte": 2,
 					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x070",
+			"node": "Accelerometer",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Yaw Rate",
+					"type": "number",
+					"unit": "deg/s",
+					"signed": true,
+					"scale": 0.005,
+					"offset": -163.84,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"type": "reserved",
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Lateral Acceleration",
+					"type": "number",
+					"unit": "g",
+					"signed": true,
+					"scale": 0.0001274,
+					"offset": -4.17464,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"type": "reserved",
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x080",
+			"node": "Accelerometer",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Yaw Angular Acceleration",
+					"type": "number",
+					"unit": "deg/s^2",
+					"signed": true,
+					"scale": 0.125,
+					"offset": -4096,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"type": "reserved",
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Longitudinal Acceleration",
+					"type": "number",
+					"unit": "g",
+					"signed": true,
+					"scale": 0.0001274,
+					"offset": -4.17464,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"type": "reserved",
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x100",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "RPM",
+					"type": "number",
+					"unit": "",
+					"signed": true,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Throttle Position",
+					"type": "number",
+					"unit": "%",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Lambda",
+					"type": "number",
+					"unit": "",
+					"signed": true,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "ECU Battery Voltage",
+					"type": "number",
+					"unit": "V",
+					"signed": true,
+					"scale": 0.01,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x101",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Engine Coolant Temp",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Oil Temp",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Manifold Air Temp",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "Fuel Rail Temp",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x102",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Barometric Air Pressure",
+					"type": "number",
+					"unit": "bar",
+					"signed": true,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Oil Pressure",
+					"type": "number",
+					"unit": "bar",
+					"signed": true,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Manifold Air Pressure",
+					"type": "number",
+					"unit": "bar",
+					"signed": true,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "Fuel Rail Pressure",
+					"type": "number",
+					"unit": "bar",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x103",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Wheel Speed FL",
+					"type": "number",
+					"unit": "mph",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Wheel Speed FR",
+					"type": "number",
+					"unit": "mph",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Wheel Speed RL",
+					"type": "number",
+					"unit": "mph",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "Wheel Speed RR",
+					"type": "number",
+					"unit": "mph",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x104",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Drive Speed",
+					"type": "number",
+					"unit": "mph",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Ground Speed",
+					"type": "number",
+					"unit": "mph",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "GPS Speed",
+					"type": "number",
+					"unit": "mph",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "GPS Altitude",
+					"type": "number",
+					"unit": "feet",
+					"signed": true,
+					"scale": 1,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x105",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "GPS Latitude",
+					"type": "number",
+					"unit": "degrees",
+					"signed": true,
+					"scale": 0.0000001,
+					"offset": 0,
+					"byte": 0,
+					"length": 4
+				},
+				{
+					"name": "GPS Longitude",
+					"type": "number",
+					"unit": "degrees",
+					"signed": true,
+					"scale": 0.0000001,
+					"offset": 0,
+					"byte": 4,
+					"length": 4
+				}
+			]
+		},
+		{
+			"id": "0x106",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "GPS Time",
+					"type": "number",
+					"unit": "millis",
+					"signed": true,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 4
+				},
+				{
+					"name": "Run Time",
+					"type": "number",
+					"unit": "degrees",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "Fuel Used",
+					"type": "number",
+					"unit": "gal",
+					"signed": true,
+					"scale": 0.01,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x107",
+			"node": "Motec",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Fuel Inj Duty Cycle",
+					"type": "number",
+					"unit": "%",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Fuel Overall Trim",
+					"type": "number",
+					"unit": "%",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Gear Shift Force",
+					"type": "number",
+					"unit": "kN",
+					"signed": true,
+					"scale": 0.01,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				},
+				{
+					"name": "Atmospheric Air Temp",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x200",
+			"node": "GCM",
+			"bigEndian": true,
+			"dlc": 6,
+			"bytes": [
+				{
+					"name": "Uptime",
+					"type": "number",
+					"unit": "s",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "PCB Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.005,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "IC Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.005,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x201",
+			"node": "GCM",
+			"bigEndian": true,
+			"dlc": 6,
+			"bytes": [
+				{
+					"name": "Gear",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 1
+				},
+				{
+					"type": "reserved",
+					"byte": 1,
+					"length": 1
+				},
+				{
+					"name": "Gear Sensor Voltage",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.0001,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Shift Force",
+					"type": "number",
+					"unit": "N",
+					"signed": true,
+					"scale": 0.05,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x202",
+			"node": "GCM",
+			"bigEndian": true,
+			"dlc": 4,
+			"bytes": [
+				{
+					"name": "Switch",
+					"type": "bitmap",
+					"bits": 
+					[
+						"Paddle Up",
+						"Paddle Down",
+						"Neutral",
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"Reserved"
+					],
+					"byte": 0,
+					"length": 1
+				},
+				{
+					"name": "Upshift Queue",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 1,
+					"length": 1
+				},
+				{
+					"name": "Downshift Queue",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 2,
+					"length": 1
+				},
+				{
+					"name": "Neutral Queue",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 3,
+					"length": 1
+				}
+			]
+		},
+		{
+			"id": "0x300",
+			"node": "Logger",
+			"bigEndian": true,
+			"dlc": 6,
+			"bytes": [
+				{
+					"name": "Uptime",
+					"type": "number",
+					"unit": "s",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "PCB Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.005,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "IC Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.005,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x301",
+			"node": "Logger",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "VBAT Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "VBAK Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "VSUP Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "5V Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x302",
+			"node": "Logger",
+			"bigEndian": true,
+			"dlc": 2,
+			"bytes": [
+				{
+					"name": "3V3 Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x400",
+			"node": "Wheel",
+			"bigEndian": true,
+			"dlc": 6,
+			"bytes": [
+				{
+					"name": "Uptime",
+					"type": "number",
+					"unit": "s",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "PCB Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true, "scale": 0.005,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "IC Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.005,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x401",
+			"node": "Wheel",
+			"bigEndian": true,
+			"dlc": 4,
+			"bytes": [
+				{
+					"name": "I/O",
+					"type": "bitmap",
+					"bits":
+					[
+						"Fan Override SW",
+						"Water Override SW",
+						"Fuel Override SW",
+						"Night/Day SW",
+						"Radio BUT",
+						"Acknowledge BUT",
+						"Auxillary BUT",
+						"Neutral BUT"
+					],
+					"byte": 0,
+					"length": 1
+				},
+				{
+					"name": "Rotary 1",
+					"type": "nibble",
+					"side": "msb",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 1
+				},
+				{
+					"name": "Rotary 2",
+					"type": "nibble",
+					"side": "lsb",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 1
+				},
+				{
+					"name": "Rotary 3",
+					"type": "nibble",
+					"side": "msb",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 2
+				},
+				{
+					"name": "Thumb Rotary 1",
+					"type": "nibble",
+					"side": "lsb",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 2
+				},
+				{
+					"name": "Thumb Rotary 2",
+					"type": "nibble",
+					"side": "msb",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 3
+				}
+			]
+		},
+		{
+			"id": "0x500",
+			"node": "ECU",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"type": "constant",
+					"value": "0x0000",
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Rotary 1",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Rotary 2",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "Rotary 3",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x500",
+			"node": "ECU",
+			"bigEndian": false,
+			"dlc": 8,
+			"bytes": [
+				{
+					"type": "constant",
+					"value": "0x0300",
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Spoofed Gear Shift Force",
+					"type": "number",
+					"unit": "N",
+					"signed": false,
+					"scale": 0.1,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"type": "reserved",
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"type": "reserved",
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x600",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 6,
+			"bytes": [
+				{
+					"name": "Uptime",
+					"type": "number",
+					"unit": "s",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "PCB Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true, "scale": 0.005,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "IC Temperature",
+					"type": "number",
+					"unit": "C",
+					"signed": true,
+					"scale": 0.005,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x601",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "Load Enablity State",
+					"type": "bitmap",
+					"bits": 
+					[
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"STR",
+						"BVBAT",
+						"AUX",
+						"ECU",
+						"WTR",
+						"FAN",
+						"PDLD",
+						"PDLU",
+						"ABS",
+						"INJ",
+						"IGN",
+						"FUEL"
+					],
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "Load Peak Mode",
+					"type": "bitmap",
+					"bits": 
+					[
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"STR",
+						"BVBAT",
+						"AUX",
+						"ECU",
+						"WTR",
+						"FAN",
+						"PDLD",
+						"PDLU",
+						"ABS",
+						"INJ",
+						"IGN",
+						"FUEL"
+					],
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "Total Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false, 
+					"scale": 0.01,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "Switch",
+					"type": "bitmap",
+					"offset": 
+					[
+						"AUX2",
+						"AUX1",
+						"ABS",
+						"KILL",
+						"ACT_DN",
+						"ACT_UP",
+						"ON",
+						"STR"
+					],
+					"byte": 6,
+					"length": 1
+				},
+				{
+					"name": "Flag",
+					"type": "bitmap",
+					"offset": 
+					[
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"Reserved",
+						"Kill Engine",
+						"Kill Car",
+						"Over Temp",
+						"Fuel Prime"
+					],
+					"byte": 7,
+					"length": 1
+				}
+			]
+		},
+		{
+			"id": "0x602",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "VBAT Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "12V Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "5V Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "3V3 Rail",
+					"type": "number",
+					"unit": "V",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x603",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "FUEL Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "IGN Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "INJ Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "ABS Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x604",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "PDLU Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "PDLD Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "FAN Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "WTR Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x605",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "ECU Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "AUX Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "BVBAT Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "STR Current Draw",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.001,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x606",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "FUEL Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "IGN Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "INJ Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "ABS Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x607",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "PDLU Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "PDLD Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "FAN Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "WTR Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x608",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "ECU Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "AUX Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "BVBAT Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"type": "reserved",
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x609",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "FUEL Peak Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 0,
+					"length": 2
+				},
+				{
+					"name": "FAN Peak Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 2,
+					"length": 2
+				},
+				{
+					"name": "WTR Peak Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 4,
+					"length": 2
+				},
+				{
+					"name": "ECU Peak Current Cutoff",
+					"type": "number",
+					"unit": "A",
+					"signed": false,
+					"scale": 0.0025,
+					"offset": 0,
+					"byte": 6,
+					"length": 2
+				}
+			]
+		},
+		{
+			"id": "0x60A",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 8,
+			"bytes": [
+				{
+					"name": "FUEL Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 1
+				},
+				{
+					"name": "IGN Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 1,
+					"length": 1
+				},
+				{
+					"name": "INJ Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 2,
+					"length": 1
+				},
+				{
+					"name": "ABS Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 3,
+					"length": 1
+				},
+				{
+					"name": "PDLU Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 4,
+					"length": 1
+				},
+				{
+					"name": "PDLD Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 5,
+					"length": 1
+				},
+				{
+					"name": "FAN Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 6,
+					"length": 1
+				},
+				{
+					"name": "WTR Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 7,
+					"length": 1
+				}
+			]
+		},
+		{
+			"id": "0x60B",
+			"node": "PDM",
+			"bigEndian": true,
+			"dlc": 4,
+			"bytes": [
+				{
+					"name": "ECU Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 0,
+					"length": 1
+				},
+				{
+					"name": "AUX Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 1,
+					"length": 1
+				},
+				{
+					"name": "BVBAT Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 2,
+					"length": 1
+				},
+				{
+					"name": "STR Overcurrent Count",
+					"type": "number",
+					"unit": "",
+					"signed": false,
+					"scale": 1,
+					"offset": 0,
+					"byte": 3,
+					"length": 1
 				}
 			]
 		}
