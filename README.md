@@ -12,6 +12,7 @@ At the end of a competition year, we will make a new branch off of the `master` 
 
 | Branch | Contents |
 | --- | --- |
+| [![2016-2017](http://img.shields.io/badge/2016-2017-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/2016-2017) | Code from the 2016-2017 year. |
 | [![2015-2016](http://img.shields.io/badge/2015-2016-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/2015-2016) | Code from the 2015-2016 year. |
 | [![2014-2015](http://img.shields.io/badge/2014-2015-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/2014-2015) | Code from the 2014-2015 year. |
 | [![DAQ-2014](http://img.shields.io/badge/DAQ-2014-orange.svg?style=flat)](https://github.com/mass/illini-motorsports/tree/DAQ-2014) | Code from the 2013-2014 year. |
