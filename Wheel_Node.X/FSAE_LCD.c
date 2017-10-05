@@ -10,10 +10,12 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 
+uint16_t shiftRPM[6] = {13000,13000,13000,13000,13000,13000};
+
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
 void initDataItems(void){
-  int i;
+  uint16_t i;
 
   // Set default initialization for PDM data items
   for(i=0;i<PDM_DATAITEM_SIZE;i++){
@@ -100,6 +102,8 @@ void initDataItems(void){
   fuelSw[1] = &pdmDataItems[FUEL_ENABLITY_IDX];
   wtrSw[0] = &wheelDataItems[SW_WTR_IDX];
   wtrSw[1] = &pdmDataItems[WTR_ENABLITY_IDX];
+	shiftLights[0] = &motecDataItems[ENG_RPM_IDX];
+	shiftLights[1] = &gcmDataItems[GEAR_IDX];
 }
 
 void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, uint8_t whole, uint8_t dec){
@@ -136,7 +140,7 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
   initScreenItem(&raceScreenItems[6], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
   initScreenItem(&raceScreenItems[7], 200, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
-  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, &motecDataItems[ENG_RPM_IDX]);
+  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM,*shiftLights);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 
   // PDM stuff
@@ -684,26 +688,27 @@ void redrawRotary(screenItemInfo * item, volatile dataItem * data, double curren
   sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
 }
 
-uint8_t _getShiftLightsRevRange(uint16_t rpm) {
-  if (rpm > REV_RANGE_REDLINE) {
+uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
+	uint16_t maxRPM = shiftRPM[gear];
+  if (rpm > maxRPM) {
     return 10;
-  } else if (rpm > REV_RANGE_9) {
+  } else if (rpm > maxRPM - REV_SUB_9) {
     return 9;
-  } else if (rpm > REV_RANGE_8) {
+  } else if (rpm > maxRPM - REV_SUB_8) {
     return 8;
-  } else if (rpm > REV_RANGE_7) {
+  } else if (rpm > maxRPM - REV_SUB_7) {
     return 7;
-  } else if (rpm > REV_RANGE_6) {
+  } else if (rpm > maxRPM - REV_SUB_6) {
     return 6;
-  } else if (rpm > REV_RANGE_5) {
+  } else if (rpm > maxRPM - REV_SUB_5) {
     return 5;
-  } else if (rpm > REV_RANGE_4) {
+  } else if (rpm > maxRPM - REV_SUB_4) {
     return 4;
-  } else if (rpm > REV_RANGE_3) {
+  } else if (rpm > maxRPM - REV_SUB_3) {
     return 3;
-  } else if (rpm > REV_RANGE_2) {
+  } else if (rpm > maxRPM - REV_SUB_2) {
     return 2;
-  } else if (rpm > REV_RANGE_1) {
+  } else if (rpm > maxRPM - REV_SUB_1) {
     return 1;
   } else {
     return 0;
@@ -711,11 +716,14 @@ uint8_t _getShiftLightsRevRange(uint16_t rpm) {
 }
 
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
-  uint16_t rpm = (uint16_t) data->value;
-  uint8_t num_leds = _getShiftLightsRevRange(rpm);
+  uint16_t rpm = (uint16_t) data[0].value;
+  uint8_t gear = (uint8_t) data[1].value;
+  uint8_t num_leds = _getShiftLightsRevRange(rpm, gear);
+	/* worried about race condition on gear change
   if (num_leds == _getShiftLightsRevRange(((uint16_t) currentValue))) {
     return;
   }
+	*/
 
   if (num_leds == 10) {
     tlc5955_set_main_blink(1, GRN, NO_OVR);

@@ -35,16 +35,15 @@
 #define MIN_BRAKE_PRESS       0
 #define MAX_BRAKE_PRESS       250
 
-#define REV_RANGE_1           7000
-#define REV_RANGE_2           8000
-#define REV_RANGE_3           9000
-#define REV_RANGE_4           10000
-#define REV_RANGE_5           10500
-#define REV_RANGE_6           11000
-#define REV_RANGE_7           11500
-#define REV_RANGE_8           12000
-#define REV_RANGE_9           12500
-#define REV_RANGE_REDLINE     13000
+#define REV_SUB_1           	6000
+#define REV_SUB_2           	5000
+#define REV_SUB_3           	4000
+#define REV_SUB_4           	3000
+#define REV_SUB_5           	2500
+#define REV_SUB_6           	2000
+#define REV_SUB_7           	1500
+#define REV_SUB_8           	1000
+#define REV_SUB_9           	500
 
 // PDM Dataitem Constants
 #define PDM_DATAITEM_SIZE     93
@@ -380,7 +379,7 @@ volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
 volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE];
 
-volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2];
+volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2], *shiftLights[2];
 
 void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem
