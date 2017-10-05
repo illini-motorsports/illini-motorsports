@@ -17,7 +17,7 @@ volatile uint32_t millis = 0;
 volatile uint8_t gear = GEAR_FAIL; // Current gear #CHECK
 double shift_force = 0.0;          // Shift force sensor reading
 
-volatile uint8_t queue_up = 0; // Number of queued upshifts
+volatile uint8_t queue_up = 0; // Number of queued upshifts #CHECK
 volatile uint8_t queue_dn = 0; // Number of queued downshifts
 volatile uint8_t queue_nt = 0; // Number of queued neutral shifts
 
@@ -28,10 +28,10 @@ uint8_t retry_nt = 0; // Number of retried neutral shifts
 uint8_t switch_debounced = 0; // Debounced (safe) switch state
 uint8_t switch_prev = 0;      // Previous sampled value of switches
 
-volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP
+volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP #CHECK
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
 
-volatile double eng_rpm = 0;       // Engine RPM (from ECU)
+volatile double eng_rpm = 0;       // Engine RPM (from ECU) #CHECK
 volatile double bat_volt = 0;      // Battery voltage (from ECU)
 volatile double throttle_pos = 0;  // Throttle position (from ECU)
 volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from ECU)
