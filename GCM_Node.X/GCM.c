@@ -31,9 +31,11 @@ uint8_t switch_prev = 0;      // Previous sampled value of switches
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP #CHECK
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
 
+uint16_t shiftRPM[6] = {13000,13000,13000,13000,13000,13000};
+
 volatile double eng_rpm = 0;       // Engine RPM (from ECU) #CHECK
 volatile double bat_volt = 0;      // Battery voltage (from ECU)
-volatile double throttle_pos = 0;  // Throttle position (from ECU)
+volatile double throttle_pos = 0;  // Throttle position (from ECU) #CHECK
 volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from ECU)
 volatile uint8_t kill_sw = 0;      // Holds state of KILL_SW (from PDM)
 
@@ -173,6 +175,14 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 
   // Check RPM to call upshifting logic, add upshifting logic to its own function in logic functions section #CHECK
 
+  int rpm_threshold = shiftRPM[gear - 1];
+
+  if (eng_rpm >= rpm_threshold) {
+
+    try_auto_upshift();
+
+  }
+
   if (SHIFT_UP_SW != prev_switch_up ||
       SHIFT_DN_SW != prev_switch_dn) {
     send_state_can(OVERRIDE);
@@ -304,7 +314,7 @@ void sample_sensors(uint8_t is_shifting) {
  *
  * @param msg The received CAN message
  */
-void process_CAN_msg(CAN_message msg) {
+void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
   uint8_t switch_bitmap;
 
   switch (msg.id) {
@@ -372,6 +382,26 @@ void send_state_can(uint8_t override) {
 }
 
 //=========================== LOGIC FUNCTIONS ==================================
+
+// Add auto-upshift logic #CHECK
+
+/**
+ * void try_auto_upshift(void)
+ *
+ * Check to see whether to upshift. 
+*/
+void try_auto_upshift(void) {
+
+  // replace 75 with mininum throttle position
+  // check other factors (brake pressure, wheel speed, check momentary switches)
+
+  // if (throttle_pos < 75) {
+
+  //   queue_up++;
+
+  // }
+
+}
 
 /**
  * void process_upshift_press(void)
