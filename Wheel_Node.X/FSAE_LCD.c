@@ -70,6 +70,10 @@ void initDataItems(void){
   motecDataItems[ENG_TEMP_IDX].thresholdDir = 1;
   motecDataItems[ENG_TEMP_IDX].warnThreshold = 100;
   motecDataItems[ENG_TEMP_IDX].errThreshold = 110;
+  motecDataItems[WHEELSPEED_AVG_IDX].thresholdDir = 1;
+  motecDataItems[WHEELSPEED_AVG_IDX].warnThreshold = 100;
+  motecDataItems[WHEELSPEED_AVG_IDX].errThreshold = 110;
+  setDataItemDigits(&motecDataItems[WHEELSPEED_AVG_IDX], 2, 0);
 
   // Tire temps
   for(i=0;i<TIRETEMP_DATAITEM_SIZE;i++) {
@@ -207,6 +211,12 @@ void initAllScreens(void){
   initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX]);
   initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0);
 
+  // wheel speed screen
+  allScreens[WHEELSPEED_SCREEN] = &wheelSpeedScreen;
+  wheelSpeedScreen.items = wheelSpeedItems;
+  wheelSpeedScreen.len = 2;
+  initScreenItem(&wheelSpeedItems[0], 50, 70, 100, redrawDigit, &motecDataItems[WHEELSPEED_AVG_IDX]);
+  initScreenItem(&wheelSpeedItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
 
   /*
   //brake screen
@@ -317,6 +327,17 @@ void initScreen(uint8_t num){
       graphicsMode();
       break;
 
+   case WHEELSPEED_SCREEN:
+      textMode();
+      textTransparent(foregroundColor);
+      textSetCursor(10,10);
+      textEnlarge(2);
+      textWrite("FUCK ANDY");
+      textEnlarge(0);
+      graphicsMode();
+      break;
+
+/*
     case PDM_DRAW_SCREEN:
       textMode();
       textTransparent(foregroundColor);
@@ -346,7 +367,7 @@ void initScreen(uint8_t num){
       drawLine(10, 30, 0, 200, foregroundColor);
       drawLine(10, 30, 0, 200, foregroundColor);
       break;
-
+*/
     case PDM_CUT_SCREEN:
       textMode();
       textTransparent(foregroundColor);

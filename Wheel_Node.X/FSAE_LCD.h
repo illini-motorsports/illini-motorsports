@@ -15,7 +15,7 @@
 #include "RA8875_driver.h"
 
 // Define race screen constants
-#define NUM_SCREENS           8
+#define NUM_SCREENS           10
 #define RACE_SCREEN           0
 #define PDM_DRAW_SCREEN       1
 #define PDM_CUT_SCREEN        2
@@ -25,6 +25,7 @@
 #define GENERAL_SCREEN        6
 #define BRAKE_SCREEN          7
 #define PDM_GRID_SCREEN       8
+#define WHEELSPEED_SCREEN     9
 
 #define MIN_REFRESH           350
 
@@ -146,7 +147,7 @@
 #define QUEUE_NT_IDX          11
 
 //MOTEC DataItem Constants
-#define MOTEC_DATAITEM_SIZE   29
+#define MOTEC_DATAITEM_SIZE   30
 
 #define ENG_RPM_IDX           0
 #define THROTTLE_POS_IDX      1
@@ -177,6 +178,7 @@
 #define FUEL_TRIM_IDX         26
 #define SHIFT_FORCE_IDX       27
 #define AIR_TEMP_IDX          28
+#define WHEELSPEED_AVG_IDX    29
 
 //TireTemp DataItem Constants
 #define TIRETEMP_DATAITEM_SIZE  20
@@ -364,13 +366,13 @@ typedef struct {
 } screen;
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7];
+screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2];
 
 // Define all screen structs
-screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen;
+screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, wheelSpeedScreen;
 
 // Define master array of all screen structs
-screen* allScreens[9];
+screen* allScreens[NUM_SCREENS];
 
 uint8_t screenNumber, auxNumber;
 

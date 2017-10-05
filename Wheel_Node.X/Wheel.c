@@ -182,6 +182,8 @@ void process_CAN_msg(CAN_message msg){
       updateDataItem(&motecDataItems[WHEELSPEED_FR_IDX], parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL));
       updateDataItem(&motecDataItems[WHEELSPEED_RL_IDX], parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL));
       updateDataItem(&motecDataItems[WHEELSPEED_RR_IDX], parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL));
+      double whlSpdAvg = (motecDataItems[WHEELSPEED_FL_IDX].value + motecDataItems[WHEELSPEED_FR_IDX].value + motecDataItems[WHEELSPEED_RL_IDX].value + motecDataItems[WHEELSPEED_RR_IDX].value)/4.0;
+      updateDataItem(&motecDataItems[WHEELSPEED_AVG_IDX], whlSpdAvg);
       break;
     case MOTEC_ID + 4:
       updateDataItem(&motecDataItems[DRIVE_SPEED_IDX], parseMsgMotec(&msg, DRIVE_SPEED_BYTE, DRIVE_SPEED_SCL));
@@ -570,6 +572,9 @@ void checkChangeScreen(void) {
       break;
     case 2:
       screenIdx = PDM_GRID_SCREEN;
+      break;
+    case 3:
+      screenIdx = WHEELSPEED_SCREEN;
       break;
     default:
       screenIdx = RACE_SCREEN;
