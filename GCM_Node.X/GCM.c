@@ -14,7 +14,7 @@
 volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
-volatile uint8_t gear = GEAR_FAIL; // Current gear
+volatile uint8_t gear = GEAR_FAIL; // Current gear #CHECK
 double shift_force = 0.0;          // Shift force sensor reading
 
 volatile uint8_t queue_up = 0; // Number of queued upshifts
@@ -170,6 +170,8 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
   if (ADCCON2bits.EOSRDY) {
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
   }
+
+  // Check RPM to call upshifting logic, add upshifting logic to its own function in logic functions section #CHECK
 
   if (SHIFT_UP_SW != prev_switch_up ||
       SHIFT_DN_SW != prev_switch_dn) {
