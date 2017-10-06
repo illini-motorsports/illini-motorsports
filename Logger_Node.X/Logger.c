@@ -37,7 +37,9 @@ void main(void) {
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
 
-  init_ltc3350(); // Initialize supercapacitor charger IC
+  //init_ltc3350(); // Initialize supercapacitor charger IC
+
+  init_nvm_std();
 
   //TODO: USB
   //TODO: NVM
