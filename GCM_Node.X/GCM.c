@@ -15,6 +15,7 @@ volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
 volatile uint8_t gear = GEAR_FAIL; // Current gear #CHECK
+volatile uint8_t attempting_auto_upshift = 0;
 double shift_force = 0.0;          // Shift force sensor reading
 
 volatile uint8_t queue_up = 0; // Number of queued upshifts #CHECK
@@ -177,7 +178,9 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 
   int rpm_threshold = shiftRPM[gear - 1];
 
-  if (eng_rpm >= rpm_threshold) {
+  if (eng_rpm >= rpm_threshold && attempting_auto_upshift == 0) {
+
+    attempting_auto_upshift = 1;
 
     try_auto_upshift();
 
@@ -392,14 +395,16 @@ void send_state_can(uint8_t override) {
 */
 void try_auto_upshift(void) {
 
-  // replace 75 with mininum throttle position
+  
   // check other factors (brake pressure, wheel speed, check momentary switches)
 
-  // if (throttle_pos < 75) {
+  if (throttle_pos > 75) {
 
-  //   queue_up++;
+    queue_up++;
 
-  // }
+    attempting_auto_upshift = 0;
+
+  }
 
 }
 
