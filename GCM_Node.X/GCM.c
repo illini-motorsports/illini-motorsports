@@ -7,7 +7,8 @@
  * Created:     2015-2016
  */
 #include "GCM.h"
-
+// Brake pressure: 7 bars (stop auto-shifting) #CHECK
+// buttons for priming and dead man switch #CHECK
 //TODO: Add more checks/handling for stale CAN data
 
 // Count number of seconds and milliseconds since start of code execution
@@ -32,7 +33,7 @@ uint8_t switch_prev = 0;      // Previous sampled value of switches
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP #CHECK
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
 
-uint16_t shiftRPM[6] = {13000,13000,13000,13000,13000,13000};
+uint16_t shiftRPM[6] = {12444,11950,12155,12100,11150,20000};
 
 volatile double eng_rpm = 0;       // Engine RPM (from ECU) #CHECK
 volatile double bat_volt = 0;      // Battery voltage (from ECU)
