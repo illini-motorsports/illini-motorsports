@@ -9,6 +9,14 @@
 #include "GCM.h"
 // Brake pressure: 7 bars (stop auto-shifting) #CHECK
 // buttons for priming and dead man switch #CHECK
+
+volatile uint8_t gcm_mode = 0;
+volatile uint8_t attempting_auto_upshift = 0;
+uint16_t shiftRPM[6] = {12444,11950,12155,12100,11150,20000};
+volatile uint8_t throttle_pos_passed_min_auto = 0;
+volatile uint8_t radio_button = 0;
+volatile uint8_t acknowledge_button = 0;
+
 //TODO: Add more checks/handling for stale CAN data
 
 // Count number of seconds and milliseconds since start of code execution
@@ -16,7 +24,6 @@ volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
 volatile uint8_t gear = GEAR_FAIL; // Current gear #CHECK
-volatile uint8_t attempting_auto_upshift = 0;
 double shift_force = 0.0;          // Shift force sensor reading
 
 volatile uint8_t queue_up = 0; // Number of queued upshifts #CHECK
@@ -32,8 +39,6 @@ uint8_t switch_prev = 0;      // Previous sampled value of switches
 
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP #CHECK
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
-
-uint16_t shiftRPM[6] = {12444,11950,12155,12100,11150,20000};
 
 volatile double eng_rpm = 0;       // Engine RPM (from ECU) #CHECK
 volatile double bat_volt = 0;      // Battery voltage (from ECU)
@@ -175,18 +180,50 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
   }
 
+  // should engage auto upshifting
+
+  if (radio_button == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
+
+    gcm_mode = 1; // engage auto-upshifting
+
+  } else if (acknowledge_button == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
+
+    gcm_mode = 0; // disengage auto-upshifting
+
+  } else if (gcm_mode == 1) {
+
+    if (throttle_pos_passed_min_auto == 0) {
+
+      if (throttle_pos > 75) {
+
+        throttle_pos_passed_min_auto = 1;
+
+      }
+
+    } else if (throttle_pos <= 75) {
+
+      gcm_mode = 0; // disengage auto-upshifting
+
+    }
+
+  }
+
   // Check RPM to call upshifting logic, add upshifting logic to its own function in logic functions section #CHECK
 
-  int rpm_threshold = shiftRPM[gear - 1];
+  if (gcm_mode == 1) {
 
-  int testing_gear = 1;
-  int testing_all_gears = 0;
+    int rpm_threshold = shiftRPM[gear - 1];
 
-  if (eng_rpm >= rpm_threshold && attempting_auto_upshift == 0 && ((gear == testing_gear) || (testing_all_gears = 1))) {
+    int testing_gear = 1;
+    int testing_all_gears = 0;
 
-    attempting_auto_upshift = 1;
+    if (eng_rpm >= rpm_threshold && attempting_auto_upshift == 0 && ((gear == testing_gear) || (testing_all_gears = 1))) {
 
-    try_auto_upshift();
+      attempting_auto_upshift = 1;
+
+      try_auto_upshift();
+
+    }
 
   }
 
@@ -197,12 +234,14 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 
   // Check for a new shift_up switch press
   if(SHIFT_UP_SW && !prev_switch_up) {
+    gcm_mode = 0; // disengage auto-upshifting
     process_upshift_press();
   }
   prev_switch_up = SHIFT_UP_SW;
 
   // Check for a new shift_dn switch press
   if(SHIFT_DN_SW && !prev_switch_dn) {
+    gcm_mode = 0; // disengage auto-upshifting
     process_downshift_press();
   }
   prev_switch_dn = SHIFT_DN_SW;
@@ -306,6 +345,7 @@ void sample_sensors(uint8_t is_shifting) {
 
     CAN_data data = {0};
     data.byte0 = gear;
+    data.byte1 = gcm_mode;
     data.halfword1 = gear_voltage_can;
     data.halfword2 = shift_force_can;
     CAN_send_message(GCM_ID + 0x1, 6, data);
@@ -323,6 +363,7 @@ void sample_sensors(uint8_t is_shifting) {
  */
 void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
   uint8_t switch_bitmap;
+  uint8_t button_bitmap;
 
   switch (msg.id) {
     case MOTEC_ID + 0x0:
@@ -345,6 +386,14 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
       kill_sw = switch_bitmap & KILL_PDM_SW_MASK;
       CAN_recv_tmr = millis;
       break;
+
+      case WHEEL_ID + 0x1:
+        button_bitmap = msg.data[0];
+        radio_button = button_bitmap & 1;
+        acknowledge_button = button_bitmap & 2;
+        CAN_recv_tmr = millis;
+        break;
+
   }
 }
 
@@ -399,16 +448,9 @@ void send_state_can(uint8_t override) {
 */
 void try_auto_upshift(void) {
 
-  
-  // check other factors (brake pressure, wheel speed, check momentary switches)
-
-  if (throttle_pos > 75) {
-
     queue_up++;
 
     attempting_auto_upshift = 0;
-
-  }
 
 }
 
