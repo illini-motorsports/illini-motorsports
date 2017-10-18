@@ -179,7 +179,10 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 
   int rpm_threshold = shiftRPM[gear - 1];
 
-  if (eng_rpm >= rpm_threshold && attempting_auto_upshift == 0) {
+  int testing_gear = 1;
+  int testing_all_gears = 0;
+
+  if (eng_rpm >= rpm_threshold && attempting_auto_upshift == 0 && ((gear == testing_gear) || (testing_all_gears = 1))) {
 
     attempting_auto_upshift = 1;
 
