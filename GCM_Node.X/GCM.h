@@ -73,14 +73,15 @@
 #define SHIFT_ENUM_NT 2
 
 // Miscellaneous definitions
-#define PWR_CUT_SPOOF 0xE803 // Value for "spoofed" gear shift force sensor
-#define ACT_ON  0
-#define ACT_OFF 1
-#define NOT_SHIFTING 0
-#define SHIFTING     1
-#define CUT_END    0
-#define CUT_START  1
-#define CUT_RESEND 2
+#define PWR_CUT_SPOOF 			0xE803 // Value for "spoofed" gear shift force sensor
+#define ACT_ON  				0
+#define ACT_OFF 				1
+#define NOT_SHIFTING 			0
+#define SHIFTING     			1
+#define CUT_END    				0
+#define CUT_START  				1
+#define CUT_RESEND 				2
+#define MAX_AUTO_UPSHIFT_GEAR 	6
 
 // Gear ratio of standard Yamaha R6 YZF 08 transmission
 const double gear_ratio[7] = {

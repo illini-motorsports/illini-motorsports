@@ -409,7 +409,8 @@ void check_gcm_mode(void) {
 
   } else if (acknowledge_button == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
 
-    mode = 0; // disengage auto-upshifting
+    mode = NORMAL_MODE; // disengage auto-upshifting
+    queue_up = 0;
 
   } else if (mode == AUTO_UPSHIFT_MODE) {
 
@@ -422,9 +423,8 @@ void check_gcm_mode(void) {
       }
 
     } else if (throttle_pos <= 75) {
-
       mode = NORMAL_MODE; // disengage auto-upshifting
-
+      queue_up = 0;
     }
 
   }
@@ -439,26 +439,12 @@ void check_gcm_mode(void) {
  * and increment the queue if neccesary
 */
 void process_auto_upshift(void) {
-  int testing_gear = 1;
-  int testing_all_gears = 0;
-
   if (eng_rpm >= get_threshold_rpm(gear) && 
         !is_in_launch() &&
-        attempting_auto_upshift == 0 && 
-        ((gear == testing_gear) || 
-        (testing_all_gears = 1))) 
+        queue_up == 0 && 
+        gear <= MAX_AUTO_UPSHIFT_GEAR)
   {
-
-    /* 
-      TODO: need more complex logic here
-      emulate logic in process upshift press
-    */
-    attempting_auto_upshift = 1;
-
-    queue_up++;
-
-    attempting_auto_upshift = 0;
-
+    queue_up = 1;
   }
 }
 
@@ -470,7 +456,7 @@ void process_auto_upshift(void) {
 void process_upshift_press(void) {
   if (mode == AUTO_UPSHIFT_MODE) {
     mode = NORMAL_MODE;
-    // TODO: More housekeeping for unfinished auto-upshifts
+    queue_up = 0;
   }
 
   if (queue_nt == 1) {
@@ -529,7 +515,7 @@ void process_upshift_press(void) {
 void process_downshift_press(void) {
   if (mode == AUTO_UPSHIFT_MODE) {
     mode = NORMAL_MODE;
-    // TODO: More housekeeping for unfinished auto-upshifts
+    queue_up = 0;
   }
 
   if (queue_nt == 1) {
