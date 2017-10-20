@@ -44,6 +44,10 @@ volatile double bat_volt = 0;      // Battery voltage (from ECU)
 volatile double throttle_pos = 0;  // Throttle position (from ECU) #CHECK
 volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from ECU)
 volatile uint8_t kill_sw = 0;      // Holds state of KILL_SW (from PDM)
+volatile double wheel_fl_speed = 0;
+volatile double wheel_fr_speed = 0;
+volatile double wheel_rl_speed = 0;
+volatile double wheel_rr_speed = 0;
 
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
@@ -334,6 +338,18 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
       CAN_recv_tmr = millis;
       break;
 
+    case MOTEC_ID + 0x3:
+      wheel_fl_speed = ((double) ((msg.data[WHEELSPEED_FL_BYTE] << 8) |
+          msg.data[WHEELSPEED_FL_BYTE + 1])) * WHEELSPEED_FL_SCL;
+      wheel_fr_speed = ((double) ((msg.data[WHEELSPEED_FR_BYTE] << 8) |
+          msg.data[WHEELSPEED_FR_BYTE + 1])) * WHEELSPEED_FR_SCL;
+      wheel_rl_speed = ((double) ((msg.data[WHEELSPEED_RL_BYTE] << 8) |
+          msg.data[WHEELSPEED_RL_BYTE + 1])) * WHEELSPEED_RL_SCL;
+      wheel_rr_speed = ((double) ((msg.data[WHEELSPEED_RR_BYTE] << 8) |
+          msg.data[WHEELSPEED_RR_BYTE + 1])) * WHEELSPEED_RR_SCL;
+      CAN_recv_tmr = millis;
+      break;
+
     case MOTEC_ID + 0x7:
       shift_force_ecu = (uint16_t) ((msg.data[SHIFT_FORCE_BYTE] << 8) |
           msg.data[SHIFT_FORCE_BYTE + 1]);
@@ -410,21 +426,21 @@ void check_gcm_mode(void) {
   } else if (acknowledge_button == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
 
     mode = NORMAL_MODE; // disengage auto-upshifting
-    queue_up = 0;
+    queue_up = 0; // remove queued upshift
 
   } else if (mode == AUTO_UPSHIFT_MODE) {
 
-    if (throttle_pos_passed_min_auto == 0) {
+    if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position did not cross minimum while in auto-upshifting mode
 
-      if (throttle_pos > 75) {
+      if (throttle_pos > 75) { // check if throttle position crossed minimum
 
-        throttle_pos_passed_min_auto = 1;
+        throttle_pos_passed_min_auto = 1; // throttle position crossed minimum while in auto-upshifting mode
 
       }
 
-    } else if (throttle_pos <= 75) {
+    } else if (throttle_pos <= 75) { // check to see if throttle position has dropped below minimum while in auto-upshifting mode
       mode = NORMAL_MODE; // disengage auto-upshifting
-      queue_up = 0;
+      queue_up = 0; // remove queued upshift
     }
 
   }
@@ -1067,6 +1083,9 @@ uint16_t get_threshold_rpm(uint8_t gear) {
 * returns 1 if the car is currently in a launch, 0 otherwise
 */
 uint8_t is_in_launch(void) {
-  // TODO: compare front and rear wheel speed
+  if (((wheel_fl_speed + wheel_fr_speed)/ 2.0) < (LAUNCH_WHEEL_SPEED_DIFF * ((wheel_rl_speed + wheel_rr_speed)/ 2.0)))
+  {
+    return 1;
+  }
   return 0;
 }
