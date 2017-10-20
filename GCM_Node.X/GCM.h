@@ -93,6 +93,16 @@ const double gear_ratio[7] = {
   1.150
 };
 
+// Optiomal Shift RPM's for Yamaha R6 transmission
+const uint16_t shift_rpm[6] = {
+	12444,
+	11950,
+	12155,
+	12100,
+	11150,
+	20000
+};
+
 // Pin definitions
 #define SHIFT_UP_TRIS  TRISAbits.TRISA5
 #define SHIFT_UP_ANSEL ANSELAbits.ANSA5
@@ -119,6 +129,9 @@ const double gear_ratio[7] = {
 #define ADC_FORCE_CSS   ADCCSS1bits.CSS25
 #define ADC_FORCE_CHN   25
 
+// Enum for current GCM mode
+typedef enum _gcm_mode {NORMAL_MODE, AUTO_UPSHIFT_MODE} gcm_mode;
+
 /**
  * Function definitions
  */
@@ -135,9 +148,11 @@ void send_diag_can(void);
 void send_state_can(uint8_t override);
 
 // Logic functions
+void process_auto_upshift(void);
 void process_upshift_press(void);
 void process_downshift_press(void);
 uint8_t check_shift_conditions(uint8_t shift_enum);
+void check_gcm_mode(void);
 void do_shift(uint8_t shift_enum);
 void do_shift_gear_fail(uint8_t shift_enum);
 
@@ -146,5 +161,6 @@ void relax_wait(void);
 void main_loop_misc(void);
 void debounce_switches(void);
 void send_power_cut(uint8_t is_start);
+uint16_t get_threshold_rpm(uint8_t gear);
 
 #endif /* GCM_H */
