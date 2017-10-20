@@ -10,9 +10,8 @@
 // Brake pressure: 7 bars (stop auto-shifting) #CHECK
 // buttons for priming and dead man switch #CHECK
 
-volatile uint8_t gcm_mode = 0;
+volatile gcm_mode mode = NORMAL_MODE;
 volatile uint8_t attempting_auto_upshift = 0;
-uint16_t shiftRPM[6] = {12444,11950,12155,12100,11150,20000};
 volatile uint8_t throttle_pos_passed_min_auto = 0;
 volatile uint8_t radio_button = 0;
 volatile uint8_t acknowledge_button = 0;
@@ -180,68 +179,27 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
   }
 
-  // should engage auto upshifting
-
-  if (radio_button == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
-
-    gcm_mode = 1; // engage auto-upshifting
-
-  } else if (acknowledge_button == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
-
-    gcm_mode = 0; // disengage auto-upshifting
-
-  } else if (gcm_mode == 1) {
-
-    if (throttle_pos_passed_min_auto == 0) {
-
-      if (throttle_pos > 75) {
-
-        throttle_pos_passed_min_auto = 1;
-
-      }
-
-    } else if (throttle_pos <= 75) {
-
-      gcm_mode = 0; // disengage auto-upshifting
-
-    }
-
-  }
-
-  // Check RPM to call upshifting logic, add upshifting logic to its own function in logic functions section #CHECK
-
-  if (gcm_mode == 1) {
-
-    int rpm_threshold = shiftRPM[gear - 1];
-
-    int testing_gear = 1;
-    int testing_all_gears = 0;
-
-    if (eng_rpm >= rpm_threshold && attempting_auto_upshift == 0 && ((gear == testing_gear) || (testing_all_gears = 1))) {
-
-      attempting_auto_upshift = 1;
-
-      try_auto_upshift();
-
-    }
-
-  }
-
   if (SHIFT_UP_SW != prev_switch_up ||
       SHIFT_DN_SW != prev_switch_dn) {
     send_state_can(OVERRIDE);
   }
 
+  // Check to see if GCM mode should change
+  check_gcm_mode();
+
+  // Check for an auto upshift if in the correct mode
+  if(mode == AUTO_UPSHIFT_MODE) {
+    process_auto_upshift();
+  }
+
   // Check for a new shift_up switch press
   if(SHIFT_UP_SW && !prev_switch_up) {
-    gcm_mode = 0; // disengage auto-upshifting
     process_upshift_press();
   }
   prev_switch_up = SHIFT_UP_SW;
 
   // Check for a new shift_dn switch press
   if(SHIFT_DN_SW && !prev_switch_dn) {
-    gcm_mode = 0; // disengage auto-upshifting
     process_downshift_press();
   }
   prev_switch_dn = SHIFT_DN_SW;
@@ -345,7 +303,7 @@ void sample_sensors(uint8_t is_shifting) {
 
     CAN_data data = {0};
     data.byte0 = gear;
-    data.byte1 = gcm_mode;
+    data.byte1 = mode;
     data.halfword1 = gear_voltage_can;
     data.halfword2 = shift_force_can;
     CAN_send_message(GCM_ID + 0x1, 6, data);
@@ -439,19 +397,68 @@ void send_state_can(uint8_t override) {
 
 //=========================== LOGIC FUNCTIONS ==================================
 
+/**
+* void check_gcm_mode(void)
+* 
+* Check various CAN data to determine the correct GCM mode
+*/
+void check_gcm_mode(void) {
+  if (radio_button == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
+
+    mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
+
+  } else if (acknowledge_button == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
+
+    mode = 0; // disengage auto-upshifting
+
+  } else if (mode == AUTO_UPSHIFT_MODE) {
+
+    if (throttle_pos_passed_min_auto == 0) {
+
+      if (throttle_pos > 75) {
+
+        throttle_pos_passed_min_auto = 1;
+
+      }
+
+    } else if (throttle_pos <= 75) {
+
+      mode = NORMAL_MODE; // disengage auto-upshifting
+
+    }
+
+  }
+}
+
 // Add auto-upshift logic #CHECK
 
 /**
- * void try_auto_upshift(void)
+ * void process_auto_upshift(void)
  *
- * Check to see whether to upshift. 
+ * Check to see whether an automatic upshift should take place,
+ * and increment the queue if neccesary
 */
-void try_auto_upshift(void) {
+void process_auto_upshift(void) {
+  int testing_gear = 1;
+  int testing_all_gears = 0;
+
+  if (eng_rpm >= get_threshold_rpm(gear) && 
+        attempting_auto_upshift == 0 && 
+        ((gear == testing_gear) || 
+        (testing_all_gears = 1))) 
+  {
+
+    /* 
+      TODO: need more complex logic here
+      emulate logic in process upshift press
+    */
+    attempting_auto_upshift = 1;
 
     queue_up++;
 
     attempting_auto_upshift = 0;
 
+  }
 }
 
 /**
@@ -460,6 +467,11 @@ void try_auto_upshift(void) {
  * After registering an upshift press, determine if we should increment the queue
  */
 void process_upshift_press(void) {
+  if (mode == AUTO_UPSHIFT_MODE) {
+    mode = NORMAL_MODE;
+    // TODO: More housekeeping for unfinished auto-upshifts
+  }
+
   if (queue_nt == 1) {
     return;
   }
@@ -514,6 +526,11 @@ void process_upshift_press(void) {
  * After registering an downshift press, determine if we should increment the queue
  */
 void process_downshift_press(void) {
+  if (mode == AUTO_UPSHIFT_MODE) {
+    mode = NORMAL_MODE;
+    // TODO: More housekeeping for unfinished auto-upshifts
+  }
+
   if (queue_nt == 1) {
     return;
   }
@@ -1042,4 +1059,17 @@ void send_power_cut(uint8_t is_start) {
   data.halfword1 = shift_force_spoof;
   CAN_send_message(ADL_ID, 4, data);
   pwr_cut_retry_tmr = millis;
+}
+
+/**
+* uint16_t get_threshold_rpm(uint8_t gear)
+* 
+* Returns the optimal shift RPM for a given gear
+*/
+uint16_t get_threshold_rpm(uint8_t gear) {
+  if (gear == GEAR_NEUT || gear == GEAR_FAIL)
+  {
+    return 20000; // If invalid gear, return threshold above redline
+  }
+  return shift_rpm[gear - 1];
 }
