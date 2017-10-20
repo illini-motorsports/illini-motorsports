@@ -443,6 +443,7 @@ void process_auto_upshift(void) {
   int testing_all_gears = 0;
 
   if (eng_rpm >= get_threshold_rpm(gear) && 
+        !is_in_launch() &&
         attempting_auto_upshift == 0 && 
         ((gear == testing_gear) || 
         (testing_all_gears = 1))) 
@@ -1072,4 +1073,14 @@ uint16_t get_threshold_rpm(uint8_t gear) {
     return 20000; // If invalid gear, return threshold above redline
   }
   return shift_rpm[gear - 1];
+}
+
+/**
+* uint8_t is_in_launch(void)
+* 
+* returns 1 if the car is currently in a launch, 0 otherwise
+*/
+uint8_t is_in_launch(void) {
+  // TODO: compare front and rear wheel speed
+  return 0;
 }

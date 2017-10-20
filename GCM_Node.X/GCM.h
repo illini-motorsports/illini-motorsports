@@ -162,5 +162,6 @@ void main_loop_misc(void);
 void debounce_switches(void);
 void send_power_cut(uint8_t is_start);
 uint16_t get_threshold_rpm(uint8_t gear);
+uint8_t is_in_launch(void);
 
 #endif /* GCM_H */
