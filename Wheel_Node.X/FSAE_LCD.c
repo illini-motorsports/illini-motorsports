@@ -10,7 +10,7 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 
-uint16_t shiftRPM[6] = {13000,13000,13000,13000,13000,13000};
+uint16_t shiftRPM[7] = {13000,13000,13000,13000,13000,13000,13000};
 
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
@@ -131,7 +131,7 @@ void initAllScreens(void){
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
-  raceScreen.len = 10;
+  raceScreen.len = 11;
   initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
   initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
@@ -142,6 +142,7 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[7], 200, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
   initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM,*shiftLights);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
+  initScreenItem(&raceScreenItems[10], )
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
@@ -221,6 +222,14 @@ void initAllScreens(void){
   wheelSpeedScreen.len = 2;
   initScreenItem(&wheelSpeedItems[0], 50, 70, 100, redrawDigit, &motecDataItems[WHEELSPEED_AVG_IDX]);
   initScreenItem(&wheelSpeedItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
+  
+  // throttle position screen
+  allScreens[THROTTLE_SCREEN] = &throttleScreen;
+  throttleScreen.items = throttleItems;
+  throttleScreen.len = 3;
+  initScreenItem(&throttleItems[0], 50, 70, 50, redrawDigit, &motecDataItems[THROTTLE_POS_IDX]);
+  initScreenItem(&throttleItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
+  initScreenItem(&throttleItems[2], 50, 140, 50, redrawDigit, &motecDataItems[ENG_RPM_IDX]);
 
   /*
   //brake screen
@@ -338,6 +347,12 @@ void initScreen(uint8_t num){
       textEnlarge(2);
       textWrite("FUCK ANDY");
       textEnlarge(0);
+      graphicsMode();
+      break;
+      
+   case THROTTLE_SCREEN:
+      textMode();
+      textTransparent(foregroundColor);
       graphicsMode();
       break;
 
