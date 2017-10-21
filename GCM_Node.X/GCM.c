@@ -15,6 +15,8 @@ volatile uint8_t attempting_auto_upshift = 0;
 volatile uint8_t throttle_pos_passed_min_auto = 0;
 volatile uint8_t radio_button = 0;
 volatile uint8_t acknowledge_button = 0;
+volatile uint8_t auxiliary_button = 0;
+volatile uint8_t night_day_switch = 0;
 
 //TODO: Add more checks/handling for stale CAN data
 
@@ -363,8 +365,10 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
 
       case WHEEL_ID + 0x1:
         button_bitmap = msg.data[0];
-        radio_button = button_bitmap & 1;
-        acknowledge_button = button_bitmap & 2;
+        radio_button = button_bitmap & 0x01;
+        acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
+        auxiliary_button = ((uint8_t) (button_bitmap & 0x04 >> 2));
+        night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
         CAN_recv_tmr = millis;
         break;
 
@@ -419,11 +423,11 @@ void send_state_can(uint8_t override) {
 * Check various CAN data to determine the correct GCM mode
 */
 void check_gcm_mode(void) {
-  if (radio_button == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
+  if (night_day_switch == 1 && auxiliary_button == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
 
     mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
 
-  } else if (acknowledge_button == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
+  } else if (night_day_switch == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
 
     mode = NORMAL_MODE; // disengage auto-upshifting
     queue_up = 0; // remove queued upshift
