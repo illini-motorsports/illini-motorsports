@@ -82,7 +82,8 @@
 #define CUT_START  				1
 #define CUT_RESEND 				2
 #define MAX_AUTO_UPSHIFT_GEAR 	6
-#define LAUNCH_WHEEL_SPEED_DIFF 1.25
+#define LAUNCH_WHEEL_SPEED_DIFF 1.5
+#define LAUNCH_FRONT_WS		10
 
 // Gear ratio of standard Yamaha R6 YZF 08 transmission
 const double gear_ratio[7] = {
