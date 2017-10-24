@@ -367,7 +367,7 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
         button_bitmap = msg.data[0];
         radio_button = button_bitmap & 0x01;
         acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
-        auxiliary_button = ((uint8_t) (button_bitmap & 0x04 >> 2));
+        auxiliary_button = ((uint8_t) (button_bitmap & 0x04) >> 2);
         night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
         CAN_recv_tmr = millis;
         break;
@@ -423,7 +423,7 @@ void send_state_can(uint8_t override) {
 * Check various CAN data to determine the correct GCM mode
 */
 void check_gcm_mode(void) {
-  if (night_day_switch == 1 && auxiliary_button == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
+  if (night_day_switch == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
 
     mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
 
@@ -434,6 +434,7 @@ void check_gcm_mode(void) {
 
   } else if (mode == AUTO_UPSHIFT_MODE) {
 
+      /*
     if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position did not cross minimum while in auto-upshifting mode
 
       if (throttle_pos > 75) { // check if throttle position crossed minimum
@@ -446,6 +447,7 @@ void check_gcm_mode(void) {
       mode = NORMAL_MODE; // disengage auto-upshifting
       queue_up = 0; // remove queued upshift
     }
+       */
 
   }
 }
@@ -1087,7 +1089,9 @@ uint16_t get_threshold_rpm(uint8_t gear) {
 * returns 1 if the car is currently in a launch, 0 otherwise
 */
 uint8_t is_in_launch(void) {
-  if (((wheel_fl_speed + wheel_fr_speed)/ 2.0) < (LAUNCH_WHEEL_SPEED_DIFF * ((wheel_rl_speed + wheel_rr_speed)/ 2.0)))
+    double front_ws = wheel_fl_speed;
+    double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
+  if (front_ws < LAUNCH_FRONT_WS || front_ws < (LAUNCH_WHEEL_SPEED_DIFF * rear_ws))
   {
     return 1;
   }
