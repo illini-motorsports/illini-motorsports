@@ -561,6 +561,10 @@ uint8_t waitPoll(uint8_t reg, uint8_t flag){
   return 0;
 }
 
+uint8_t isDisplayOn() {
+    return readReg(RA8875_PWRR) & RA8875_PWRR_DISPON ? 1 : 0;
+}
+
 void setColor(uint16_t color, uint8_t isForeground) {
   if (isForeground) {
     writeReg(RA8875_FGCR_RED, (color & RA8875_RED) >> 11);
@@ -612,6 +616,13 @@ SPIConn* init_ra8875(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
   ra8875Connection.cs_num = cs_num;
   reset();
   initialize();
+}
+
+void reset_init() {
+  reset();
+  initialize();
+  displayOn(1);
+  GPIOX(1);// Enable TFT - display enable tied to GPIOX
 }
 
 uint8_t ra8875_send_spi(uint8_t val1, uint8_t val2, SPIConn *conn){
