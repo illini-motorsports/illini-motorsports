@@ -134,7 +134,7 @@
 #define STR_OC_COUNT_IDX      92
 
 //GCM DataItem Constants
-#define GCM_DATAITEM_SIZE     12
+#define GCM_DATAITEM_SIZE     13
 
 #define GEAR_IDX              3
 #define GEAR_VOLT_IDX         4
@@ -145,6 +145,7 @@
 #define QUEUE_UP_IDX          9
 #define QUEUE_DN_IDX          10
 #define QUEUE_NT_IDX          11
+#define MODE_IDX              12
 
 //MOTEC DataItem Constants
 #define MOTEC_DATAITEM_SIZE   30
@@ -366,7 +367,7 @@ typedef struct {
 } screen;
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2];
+screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2], autoUpItems[2], throttleItems[3];
 
 // Define all screen structs
 screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, wheelSpeedScreen, throttleScreen;
@@ -410,6 +411,7 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double curre
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
