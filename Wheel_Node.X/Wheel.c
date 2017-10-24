@@ -213,6 +213,7 @@ void process_CAN_msg(CAN_message msg){
       break;
     case GCM_ID + 1:
       updateDataItem(&gcmDataItems[GEAR_IDX], (uint8_t) (msg.data[GEAR_BYTE]) * GEAR_SCL);
+      updateDataItem(&gcmDataItems[MODE_IDX], (uint8_t) (msg.data[MODE_BYTE]));
       updateDataItem(&gcmDataItems[GEAR_VOLT_IDX], (uint16_t) (lsbArray[GEAR_VOLT_BYTE/2]) * GEAR_VOLT_SCL);
       updateDataItem(&gcmDataItems[FORCE_IDX], (int16_t) (lsbArray[FORCE_BYTE/2]) * FORCE_SCL);
       break;
@@ -575,6 +576,9 @@ void checkChangeScreen(void) {
       break;
     case 3:
       screenIdx = WHEELSPEED_SCREEN;
+      break;
+    case 4:
+      screenIdx = THROTTLE_SCREEN;
       break;
     default:
       screenIdx = RACE_SCREEN;

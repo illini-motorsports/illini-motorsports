@@ -50,7 +50,7 @@ void initDataItems(void){
 
   // Customized Motec dataitem initialization
   setDataItemDigits(&motecDataItems[ENG_RPM_IDX], 5, 0);
-  setDataItemDigits(&motecDataItems[THROTTLE_POS_IDX], 0, 2);
+  setDataItemDigits(&motecDataItems[THROTTLE_POS_IDX], 3, 0);
   setDataItemDigits(&motecDataItems[OIL_PRES_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[OIL_TEMP_IDX], 3, 0);
   setDataItemDigits(&motecDataItems[LAMBDA_IDX], 3, 1);
@@ -75,6 +75,9 @@ void initDataItems(void){
   motecDataItems[WHEELSPEED_AVG_IDX].thresholdDir = 1;
   motecDataItems[WHEELSPEED_AVG_IDX].warnThreshold = 100;
   motecDataItems[WHEELSPEED_AVG_IDX].errThreshold = 110;
+  motecDataItems[ENG_RPM_IDX].warnThreshold = 12000;
+  motecDataItems[ENG_RPM_IDX].errThreshold = 13000;
+  motecDataItems[ENG_RPM_IDX].thresholdDir = 1;
   setDataItemDigits(&motecDataItems[WHEELSPEED_AVG_IDX], 2, 0);
 
   // Tire temps
@@ -131,10 +134,10 @@ void initAllScreens(void){
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
-  raceScreen.len = 11;
+  raceScreen.len = 10;
   initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
-  initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
+  initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawGCMMode, &gcmDataItems[MODE_IDX]);
   initScreenItem(&raceScreenItems[3], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
   initScreenItem(&raceScreenItems[4], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
   initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
@@ -142,7 +145,6 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[7], 200, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
   initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM,*shiftLights);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
-  initScreenItem(&raceScreenItems[10], )
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
@@ -227,9 +229,9 @@ void initAllScreens(void){
   allScreens[THROTTLE_SCREEN] = &throttleScreen;
   throttleScreen.items = throttleItems;
   throttleScreen.len = 3;
-  initScreenItem(&throttleItems[0], 50, 70, 50, redrawDigit, &motecDataItems[THROTTLE_POS_IDX]);
+  initScreenItem(&throttleItems[0], 50, 40, 50, redrawDigit, &motecDataItems[THROTTLE_POS_IDX]);
   initScreenItem(&throttleItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
-  initScreenItem(&throttleItems[2], 50, 140, 50, redrawDigit, &motecDataItems[ENG_RPM_IDX]);
+  initScreenItem(&throttleItems[2], 50, 150, 50, redrawDigit, &motecDataItems[ENG_RPM_IDX]);
 
   /*
   //brake screen
@@ -615,6 +617,18 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double current
     fillCircle(item->x, item->y, item->size, RA8875_RED);
   }
   // Load off, switch off
+  else{
+    fillCircle(item->x, item->y, item->size, RA8875_GREY);
+  }
+}
+
+// For GCM Mode Indicator
+void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue){
+  // Auto-Upshifting Engaged
+  if(data->value == 1){
+    fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+  }
+  // Normal Mode
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
   }

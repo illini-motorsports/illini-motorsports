@@ -100,6 +100,7 @@
 
 // From GCM
 #define GEAR_BYTE           0
+#define MODE_BYTE           1
 #define GEAR_VOLT_BYTE      2
 #define FORCE_BYTE          4
 
