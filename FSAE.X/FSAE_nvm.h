@@ -52,9 +52,12 @@ typedef union uNvmStatusReg {
 // Public Interface
 SPIConn* init_nvm_std(); // Use standard settings
 SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num);
-//TODO: Add more interface functions
+uint8_t nvm_alloc(SPIConn* conn, uint32_t size);
+int8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf);
+int8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf);
 
 // Private Implementation
+//TODO: Modify/implement private functions to support new public interface
 void _nvm_write_enable(SPIConn* conn);
 void _nvm_write_status_reg(_NvmStatusReg status, SPIConn* conn);
 _NvmStatusReg _nvm_read_status_reg(SPIConn* conn);

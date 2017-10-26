@@ -8,7 +8,9 @@
  */
 #include "FSAE_nvm.h"
 
-SPIConn nvmConnections[4];
+#define _NVM_NUM_CONN 10
+
+SPIConn nvmConnections[_NVM_NUM_CONN];
 uint8_t nvmConnIdx = 0;
 
 //=============================== INTERFACE ====================================
@@ -17,13 +19,15 @@ uint8_t nvmConnIdx = 0;
  * Initializes the 25LC1024 NVM module for the standard FSAE template.
  */
 SPIConn* init_nvm_std() {
-  init_nvm(_NVM_STD_BUS, _NVM_STD_CS_LATBITS, _NVM_STD_CS_LATNUM);
+  return init_nvm(_NVM_STD_BUS, _NVM_STD_CS_LATBITS, _NVM_STD_CS_LATNUM);
 }
 
 /**
  * Initializes the 25LC1024 NVM module with user-defined settings.
  */
 SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
+  if (nvmConnIdx == _NVM_NUM_CONN) { return NULL; }
+
   // Initialize SPI communciations to the NVM chip
   if(!nvmConnIdx) {
     init_spi(bus, 10.0, 8, SPI_MODE0);
@@ -36,7 +40,47 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
 
   nvmConnIdx++;
 
+  //TODO: Access superblock if it exists, create it if it doesnt
+
   return currConn;
+}
+
+/**
+ * Allocates <size> bytes on the NVM chip corresponding to <conn>.
+ *
+ * The size of the block is stored for later use, so that the user does not have
+ * to pass in the size with each read/write call. This is intended to be used
+ * to store structs of fixed size in NVM.
+ *
+ * Returns a file descriptor that can be used to read from and write to the
+ * allocated block of memory.
+ */
+uint8_t nvm_alloc(SPIConn* conn, uint32_t size) {
+  return 0; //TODO
+}
+
+/**
+ * Reads bytes from the block specified by <fd> into <buf>.
+ *
+ * This function copies the entire block from the NVM chip to <buf>. The
+ * destination buffer must be large enough to prevent overflow!
+ *
+ * Returns 0 on success.
+ */
+int8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
+  return -1; //TODO
+}
+
+/**
+ * Writes bytes from <buf> into the block specified by <fd>.
+ *
+ * This function copies enough bytes from <buf> to fill the entire block. The
+ * source buffer must be large enough for the read!
+ *
+ * Returns 0 on success.
+ */
+int8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
+  return -1; //TODO
 }
 
 //============================= IMPLEMENTATION =================================
