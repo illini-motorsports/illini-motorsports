@@ -16,11 +16,6 @@
 
 // Microchip 25LC1024
 
-// Default NVM definitions
-#define _NVM_STD_BUS        6
-#define _NVM_STD_CS_LATBITS ((uint32_t*) (&LATDbits))
-#define _NVM_STD_CS_LATNUM  14
-
 // Struct representing the NVM chip's status register
 typedef union uNvmStatusReg {
   struct {
@@ -33,6 +28,11 @@ typedef union uNvmStatusReg {
   };
   uint8_t reg;
 } _NvmStatusReg;
+
+// NVM Errors
+#define NVM_SUCCESS  0 // No error
+#define NVM_ERR_WIP  1 // Write in progress
+#define NVM_ERR_ADDR 2 // Bad address
 
 // NVM Chip Instruction Set
 #define _NVM_IN_READ  0b00000011
@@ -47,21 +47,33 @@ typedef union uNvmStatusReg {
 #define _NVM_IN_RDID  0b10101011
 #define _NVM_IN_DPD   0b10111001
 
+// Misc Definitions
+#define _NVM_MAX_ADDR 0x1FFFF
+
+// Default NVM pin definitions
+#define _NVM_STD_BUS        6
+#define _NVM_STD_CS_LATBITS ((uint32_t*) (&LATDbits))
+#define _NVM_STD_CS_LATNUM  14
+
 // Function definitions
 
 // Public Interface
 SPIConn* init_nvm_std(); // Use standard settings
 SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num);
 uint8_t nvm_alloc(SPIConn* conn, uint32_t size);
-int8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf);
-int8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf);
+uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf);
+uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf);
+uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf);
+uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf);
 
 // Private Implementation
-//TODO: Modify/implement private functions to support new public interface
+uint8_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf);
 void _nvm_write_enable(SPIConn* conn);
-void _nvm_write_status_reg(_NvmStatusReg status, SPIConn* conn);
+uint8_t _nvm_wip(SPIConn* conn);
+
+// Private Util
 _NvmStatusReg _nvm_read_status_reg(SPIConn* conn);
-void _nvm_read_data(uint32_t address, uint8_t* bytes, uint8_t numBytes, SPIConn* conn);
-uint8_t _nvm_send_two(uint8_t one, uint8_t two, SPIConn* conn);
+void _nvm_write_status_reg(SPIConn* conn, _NvmStatusReg status);
+uint8_t _nvm_send_two(SPIConn* conn, uint8_t one, uint8_t two);
 
 #endif /* FSAE_nvm_H */

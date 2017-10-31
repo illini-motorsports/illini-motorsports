@@ -40,6 +40,13 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
 
   nvmConnIdx++;
 
+  // Write protection info to status register
+  _NvmStatusReg status = { .reg = 0x0 };
+  status.WPEN = 0;
+  status.BP1 = 0;
+  status.BP0 = 0;
+  _nvm_write_status_reg(currConn, status);
+
   //TODO: Access superblock if it exists, create it if it doesnt
 
   return currConn;
@@ -67,8 +74,8 @@ uint8_t nvm_alloc(SPIConn* conn, uint32_t size) {
  *
  * Returns 0 on success.
  */
-int8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  return -1; //TODO
+uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
+  return 1; //TODO
 }
 
 /**
@@ -79,50 +86,133 @@ int8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
  *
  * Returns 0 on success.
  */
-int8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  return -1; //TODO
+uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
+  return 1; //TODO
+}
+
+/**
+ * Reads <size> bytes from <addr> onwards into <buf>.
+ *
+ * The data is read sequentially starting from the given address until size
+ * bytes have been read and copied. If the highest memory address is reached,
+ * the read will roll over to address 0x0 and will continue.
+ *
+ * This function is non-blocking. If a write is in progress, it returns an
+ * error. No reads can happen until there is no write in progress.
+ */
+uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
+  if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
+  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_ADDR; }
+
+  spi_select(conn);
+  conn->send_fp(_NVM_IN_READ);
+  conn->send_fp((addr >> 16) & 0xFF);
+  conn->send_fp((addr >> 8) & 0xFF);
+  conn->send_fp(addr & 0xFF);
+
+  uint32_t i;
+  for (i = 0; i < size; i++) {
+    buf[i] = conn->send_fp(0x00);
+  }
+  spi_deselect(conn);
+
+  return NVM_SUCCESS;
+}
+
+/**
+ * Writes <size> bytes from <buf> to <addr>.
+ *
+ * On the 25LC1024, writes must happen on a page-by-page basis. Each page is 256
+ * bytes. Writes must not cross page boundaries. Thus, this generic write
+ * function calls the page write function as many times as needed.
+ *
+ * This function is non-blocking. If a write is in progress, it returns an
+ * error. No writes can happen until there is no write in progress.
+ */
+uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
+  if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
+  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_ADDR; }
+  if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_ADDR; }
+
+  uint32_t done = 0;
+  while (done < size) {
+    while (_nvm_wip(conn)); // Wait for previous write cycle to finish
+
+    uint32_t itr = addr + done;
+    uint8_t* bitr = &(buf[done]);
+    uint32_t left = size - done;
+
+    done += _nvm_write_page(conn, itr, left, bitr);
+  }
+
+  return NVM_SUCCESS;
 }
 
 //============================= IMPLEMENTATION =================================
 
 /**
- * Sends a message to the NVM chip to set the Write Enable Latch
+ * Helper function for _nvm_write_data() that writes data to a single page.
+ *
+ * Returns number of bytes written to the page.
+ *
+ * Do not use this function from outside of _nvm_write_data. It does not
+ * perform necessary safety checks before starting the write.
+ *
+ * Writes as many bytes as possible (or <size> if less than what's possible) to
+ * the memory location starting at <addr>. The write will not cross page
+ * boundaries.
+ */
+uint8_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
+  uint8_t offset = ((uint8_t) (addr & 0xFF));
+  uint8_t num = (uint8_t) min(256 - ((uint32_t) offset), size);
+
+  _nvm_write_enable(conn);
+
+  spi_select(conn);
+  conn->send_fp(_NVM_IN_WRITE);
+  conn->send_fp((addr >> 16) & 0xFF);
+  conn->send_fp((addr >> 8) & 0xFF);
+  conn->send_fp(addr & 0xFF);
+
+  uint32_t i;
+  for (i = 0; i < num; i++) {
+    conn->send_fp(buf[i]);
+  }
+  spi_deselect(conn);
+
+  return i;
+}
+
+/**
+ * Sets the write enable latch
  */
 void _nvm_write_enable(SPIConn* conn) {
   send_spi(_NVM_IN_WREN, conn);
 }
 
 /**
- * Sends a message to the NVM chip with new values for fields in the
- * status register.
+ * Returns whether or not there is currently a write in progress.
  */
-void _nvm_write_status_reg(_NvmStatusReg status, SPIConn* conn) {
-  _nvm_send_two(_NVM_IN_WRSR, status.reg, conn);
+uint8_t _nvm_wip(SPIConn* conn) {
+  _NvmStatusReg status = _nvm_read_status_reg(conn);
+  return status.WIP;
 }
+
+//================================== UTIL ======================================
 
 /**
  * Reads the contents of the status register.
  */
 _NvmStatusReg _nvm_read_status_reg(SPIConn* conn) {
-  _NvmStatusReg status = { .reg = _nvm_send_two(_NVM_IN_RDSR, 0x00, conn) };
+  _NvmStatusReg status = { .reg = _nvm_send_two(conn, _NVM_IN_RDSR, 0x00) };
   return status;
 }
 
 /**
- * Reads data starting from the 24 bit address into the provided byte array.
- * It will read for numBytes bytes, using the provided conn struct.
+ * Writes the contents of the status register
  */
-void _nvm_read_data(uint32_t address, uint8_t *bytes, uint8_t numBytes, SPIConn* conn){
-  uint8_t i;
-  spi_select(conn);
-  conn->send_fp(_NVM_IN_READ);
-  conn->send_fp((address >> 16) & 0xFF);
-  conn->send_fp((address >> 8) & 0xFF);
-  conn->send_fp(address & 0xFF);
-  for(i = 0;i < numBytes; i++) {
-    bytes[i] = conn->send_fp(0x00);
-  }
-  spi_deselect(conn);
+void _nvm_write_status_reg(SPIConn* conn, _NvmStatusReg status) {
+  _nvm_send_two(conn, _NVM_IN_WRSR, status.reg);
 }
 
 /**
@@ -130,7 +220,7 @@ void _nvm_read_data(uint32_t address, uint8_t *bytes, uint8_t numBytes, SPIConn*
  * chip. The response is the 8 bits clocked in during the transmission
  * of the second byte.
  */
-uint8_t _nvm_send_two(uint8_t one, uint8_t two, SPIConn* conn) {
+uint8_t _nvm_send_two(SPIConn* conn, uint8_t one, uint8_t two) {
   uint8_t resp = 0;
   spi_select(conn);
   conn->send_fp(one);
