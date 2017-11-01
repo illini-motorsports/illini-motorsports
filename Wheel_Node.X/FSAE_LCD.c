@@ -799,6 +799,25 @@ void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double c
   }
 }
 
+//For drawing a visual representation of g-forces
+void redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue)
+{
+    //outline
+    fillCircle(item->x, item->y, item->size, RA8875_BLACK);
+    
+    //inner fill
+    fillCircle(item->x, item->y, item->size - 10, RA8875_BLUE);
+    
+    //moving dot
+    fillCircle
+    (
+        (item->x + (((data[0]->value) / (-1 * LATERAL_G_OFFSET)) * item->size)), 
+        (item->y + (((data[1]->value) / (-1 * LONGITUDINAL_G_OFFSET)) * item->size)), 
+        (item->size / 10), 
+        RA8875_WHITE
+    );
+}
+
 void clearScreen(void){
   fillScreen(backgroundColor);
 }
