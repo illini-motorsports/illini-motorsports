@@ -101,7 +101,7 @@ void initDataItems(void){
   //IMU g readings
   for(i = 0; i < IMU_DATAITEM_SIZE; i++)
   {
-      initDataItem(&imuDataItems[i], 1.7, 2, MIN_REFRESH, 1, 2);
+      initDataItem(&imuDataItems[i], 0, 0, MIN_REFRESH, 1, 2);
   }
 
   // Special array declerations

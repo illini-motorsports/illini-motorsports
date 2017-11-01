@@ -482,6 +482,14 @@ void process_CAN_msg(CAN_message msg){
       updateDataItem(&spmDataItems[FREQ_1_SETTINGS_IDX], (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_1_SETTINGS_MASK) >> FREQ_1_SETTINGS_SHF);
       updateDataItem(&spmDataItems[FREQ_2_SETTINGS_IDX], (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_2_SETTINGS_MASK) >> FREQ_2_SETTINGS_SHF);
       break;
+      
+      // IMU
+    case LATERAL_G_ID:
+      updateDataItem(&imuDataItems[LATERAL_G_IDX], (double) ((lsbArray[LATERAL_G_BYTE/2] * LATERAL_G_SCL) + LATERAL_G_OFFSET));
+      break;
+    case LONGITUDINAL_G_ID:
+      updateDataItem(&imuDataItems[LONGITUDINAL_G_IDX], (double) ((lsbArray[LONGITUDINAL_G_BYTE/2] * LONGITUDINAL_G_SCL) + LONGITUDINAL_G_OFFSET));
+      break;
   }
 }
 

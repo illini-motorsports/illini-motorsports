@@ -10,21 +10,23 @@
 /**
  * CAN message IDs
  */
-#define ERROR_ID        0x00F
-#define SPM_ID          0x050
-#define MOTEC_ID        0x100
-#define GCM_ID          0x200
-#define LOGGER_ID       0x300
-#define WHEEL_ID        0x400
-#define ADL_ID          0x500
-#define PDM_ID          0x600
-#define PDM_CONFIG_ID   0x620
+#define ERROR_ID            0x00F
+#define SPM_ID              0x050
+#define MOTEC_ID            0x100
+#define GCM_ID              0x200
+#define LOGGER_ID           0x300
+#define WHEEL_ID            0x400
+#define ADL_ID              0x500
+#define PDM_ID              0x600
+#define PDM_CONFIG_ID       0x620
 
-#define BEACON_ID       0x0E5
-#define TIRE_TEMP_FL_ID 0x001
-#define TIRE_TEMP_FR_ID 0x002
-#define TIRE_TEMP_RL_ID 0x003
-#define TIRE_TEMP_RR_ID 0x004
+#define BEACON_ID           0x0E5
+#define TIRE_TEMP_FL_ID     0x001
+#define TIRE_TEMP_FR_ID     0x002
+#define TIRE_TEMP_RL_ID     0x003
+#define TIRE_TEMP_RR_ID     0x004
+#define LATERAL_G_ID        0x070
+#define LONGITUDINAL_G_ID   0x080
 
 /**
  * Byte position of channels in their CAN messages
@@ -246,6 +248,10 @@
 #define PGA_SETTINGS_BYTE     0
 #define FREQ_SETTINGS_BYTE    2
 
+//from IMU sensor
+#define LATERAL_G_BYTE        4
+#define LONGITUDINAL_G_BYTE   4
+
 /**
  * Scalars for channels
  */
@@ -409,6 +415,10 @@
 #define FREQ_COUNT_1_SCL      1 // ???
 #define FREQ_COUNT_2_SCL      1 // ???
 
+//from IMU sensor
+#define LATERAL_G_SCL         0.0001274
+#define LONGITUDINAL_G_SCL    0.0001274
+
 /**
  * Masks for bitmaps & packed messages
  */
@@ -508,6 +518,11 @@
 #define FREQ_1_SETTINGS_SHF         5
 #define FREQ_2_SETTINGS_SHF         10
 
+/**
+ * Offsets
+ */
+#define LATERAL_G_OFFSET            (-4.17464)
+#define LONGITUDINAL_G_OFFSET       (-4.17464)
 
 /**
  * ADL definitions
