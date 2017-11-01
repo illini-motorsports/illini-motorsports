@@ -111,8 +111,10 @@ void initDataItems(void){
   fuelSw[1] = &pdmDataItems[FUEL_ENABLITY_IDX];
   wtrSw[0] = &wheelDataItems[SW_WTR_IDX];
   wtrSw[1] = &pdmDataItems[WTR_ENABLITY_IDX];
-	shiftLights[0] = &motecDataItems[ENG_RPM_IDX];
-	shiftLights[1] = &gcmDataItems[GEAR_IDX];
+  shiftLights[0] = &motecDataItems[ENG_RPM_IDX];
+  shiftLights[1] = &gcmDataItems[GEAR_IDX];
+  gForce[0] = &imuDataItems[LATERAL_G_IDX];
+  gForce[1] = &imuDataItems[LONGITUDINAL_G_IDX];
 }
 
 void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, uint8_t whole, uint8_t dec){
@@ -246,7 +248,7 @@ void initAllScreens(void){
   imuScreen.len = 3;
   initScreenItem(&imuItems[0], 100, 50, 50, redrawDigit, &imuDataItems[LATERAL_G_IDX]);
   initScreenItem(&imuItems[1], 300, 50, 50, redrawDigit, &imuDataItems[LONGITUDINAL_G_IDX]);
-  initScreenItem(&imuItems[2], 200, 70, 150, redrawGforceGraph, imuDataItems);
+  initScreenItem(&imuItems[2], 200, 70, 150, redrawGforceGraph, *gForce);
   
   /*
   //brake screen
