@@ -97,6 +97,12 @@ void initDataItems(void){
   for(i=3;i<WHEEL_DATAITEM_SIZE;i++) {
     initDataItem(&wheelDataItems[i],0,0,MIN_REFRESH,1,0);
   }
+  
+  //IMU g readings
+  for(i = 0; i < IMU_DATAITEM_SIZE; i++)
+  {
+      initDataItem(&imuDataItems[i], 1.7, 2, MIN_REFRESH, 1, 2);
+  }
 
   // Special array declerations
   fanSw[0] = &wheelDataItems[SW_FAN_IDX];
@@ -233,6 +239,15 @@ void initAllScreens(void){
   initScreenItem(&throttleItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
   initScreenItem(&throttleItems[2], 50, 150, 50, redrawDigit, &motecDataItems[ENG_RPM_IDX]);
 
+  // IMU g readings screen
+  // coordinates and sizes are still to be decided upon
+  allScreens[IMU_SCREEN] = &imuScreen;
+  imuScreen.items = imuItems;
+  imuScreen.len = 3;
+  initScreenItem(&imuItems[0], 100, 50, 50, redrawDigit, &imuDataItems[LATERAL_G_IDX]);
+  initScreenItem(&imuItems[1], 300, 50, 50, redrawDigit, &imuDataItems[LONGITUDINAL_G_IDX]);
+  initScreenItem(&imuItems[2], 200, 70, 150, redrawGforceGraph, imuDataItems);
+  
   /*
   //brake screen
   allScreens[BRAKE_SCREEN] = &brakeScreen;
@@ -472,6 +487,10 @@ void initScreen(uint8_t num){
       graphicsMode();
       textEnlarge(0);
       break;
+      
+    case IMU_SCREEN:
+      //to be determined
+      break; 
   }
 }
 

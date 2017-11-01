@@ -15,7 +15,7 @@
 #include "RA8875_driver.h"
 
 // Define race screen constants
-#define NUM_SCREENS           11
+#define NUM_SCREENS           12
 #define RACE_SCREEN           0
 #define PDM_DRAW_SCREEN       1
 #define PDM_CUT_SCREEN        2
@@ -27,6 +27,7 @@
 #define PDM_GRID_SCREEN       8
 #define WHEELSPEED_SCREEN     9
 #define THROTTLE_SCREEN       10
+#define IMU_SCREEN            11
 
 #define MIN_REFRESH           350
 
@@ -298,6 +299,11 @@
 #define SW_WTR_IDX              14
 #define SW_FUEL_IDX             15
 
+//IMU dataItem constants
+#define IMU_DATAITEM_SIZE       2
+#define LATERAL_G_IDX           0
+#define LONGITUDINAL_G_IDX      1
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -367,10 +373,10 @@ typedef struct {
 } screen;
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2], autoUpItems[2], throttleItems[3];
+screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2], autoUpItems[2], throttleItems[3], imuItems[3];
 
 // Define all screen structs
-screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, wheelSpeedScreen, throttleScreen;
+screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, wheelSpeedScreen, throttleScreen, imuScreen;
 
 // Define master array of all screen structs
 screen* allScreens[NUM_SCREENS];
@@ -379,7 +385,7 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE], imuDataItems[IMU_DATAITEM_SIZE];
 
 volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2], *shiftLights[2];
 
@@ -418,6 +424,8 @@ void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double curr
 void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue);
+
 
 // Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);
