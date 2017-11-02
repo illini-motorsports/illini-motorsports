@@ -811,8 +811,8 @@ void redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double c
     //moving dot
     fillCircle
     (
-        (item->x + (((data[0]->value) / (-1 * LATERAL_G_OFFSET)) * item->size)), 
-        (item->y + (((data[1]->value) / (-1 * LONGITUDINAL_G_OFFSET)) * item->size)), 
+        (item->x + (((data[0].value) / (-1 * LATERAL_G_OFFSET)) * item->size)), 
+        (item->y + (((data[1].value) / (-1 * LONGITUDINAL_G_OFFSET)) * item->size)), 
         (item->size / 10), 
         RA8875_WHITE
     );
