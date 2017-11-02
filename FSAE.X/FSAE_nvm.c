@@ -13,6 +13,8 @@
 SPIConn nvmConnections[_NVM_NUM_CONN];
 uint8_t nvmConnIdx = 0;
 
+_NvmSuperblock superblock;
+
 //=============================== INTERFACE ====================================
 
 /**
@@ -47,23 +49,76 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
   status.BP0 = 0;
   _nvm_write_status_reg(currConn, status);
 
-  //TODO: Access superblock if it exists, create it if it doesnt
+  // Check if superblock exists and is the correct version
+  uint32_t superblock_vcode;
+  nvm_read_data(currConn, 0x0, 4, &superblock_vcode);
+
+  if (superblock_vcode == _NVM_SB_VER) {
+    //TODO: _nvm_fsck()
+    // Superblock exists and is correct version, cache in memory
+    nvm_read_data(currConn, 0x0, sizeof(_NvmSuperblock), &superblock);
+  } else {
+    // Superblock either doesn't exist, or is an old version. Create a new
+    // empty superblock with the correct version
+    memset(&superblock, 0x0, sizeof(_NvmSuperblock));
+    superblock.vcode = _NVM_SB_VER;
+    nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &superblock);
+  }
 
   return currConn;
 }
 
 /**
- * Allocates <size> bytes on the NVM chip corresponding to <conn>.
+ * Checks the file system for an existing allocated block, or attempts to
+ * create a new one. This is intended to be used to store structs of fixed
+ * size in the NVM.
  *
- * The size of the block is stored for later use, so that the user does not have
- * to pass in the size with each read/write call. This is intended to be used
- * to store structs of fixed size in NVM.
+ * First, this function checks to see if a block matching <block_id>/<vcode>
+ * is present in the file system. If so, <fd> is dereferenced and set to the
+ * index of the matching block.
  *
- * Returns a file descriptor that can be used to read from and write to the
- * allocated block of memory.
+ * If no matching blocks were found, it will attempt to find an unused node.
+ * If one is found, it will attempt to find enough contiguous pages of memory
+ * to satisfy <size>.
+ *
+ * If everything was successful, the node at <fd> will contain metadata for the
+ * newly allocated block and NVM_SUCCESS will be returned. Otherwise, the
+ * appropriate error will be returned.
  */
-uint8_t nvm_alloc(SPIConn* conn, uint32_t size) {
-  return 0; //TODO
+uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
+                  uint32_t size, uint8_t* fd) {
+  uint16_t i;
+
+  // Search for matching node
+  for (i = 0; i < 256; i++) {
+    _NvmNode node = superblock.nodes[i];
+    if (strncmp(block_id, node.block_id, 32) == 0 &&
+        vcode == node.vcode && size == node.size) {
+      *fd = i;
+      return NVM_SUCCESS;
+    }
+  }
+
+  // Search for available node
+  for (i = 0; i < 256; i++) {
+    //TODO: Verify this is ref and not copy (I've been doing too much c++)
+    _NvmNode node = superblock.nodes[i];
+    if (node.addr == 0x0) {
+      strncpy(((uint8_t*) &(node.block_id)), block_id, 32);
+      node.vcode = vcode;
+      node.size = size;
+
+      node.addr = 1; //TODO: Figure out address and mark pages as used
+
+      // Write new superblock (TODO: Only write changed memory)
+      nvm_write_data(conn, 0x0, sizeof(_NvmSuperblock), &superblock);
+
+      *fd = i;
+      return NVM_SUCCESS;
+    }
+  }
+
+  return NVM_ERR_FULL;
 }
 
 /**
@@ -75,7 +130,8 @@ uint8_t nvm_alloc(SPIConn* conn, uint32_t size) {
  * Returns 0 on success.
  */
 uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  return 1; //TODO
+  _NvmNode node = superblock.nodes[fd];
+  return nvm_read_data(conn, node.addr, node.size, buf);
 }
 
 /**
@@ -87,7 +143,8 @@ uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
  * Returns 0 on success.
  */
 uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  return 1; //TODO
+  _NvmNode node = superblock.nodes[fd];
+  return nvm_write_data(conn, node.addr, node.size, buf);
 }
 
 /**
@@ -100,9 +157,10 @@ uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
  * This function is non-blocking. If a write is in progress, it returns an
  * error. No reads can happen until there is no write in progress.
  */
-uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
+uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
   if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
-  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_ADDR; }
+  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
+  //TODO: Check addr not in superblock (round up page)
 
   spi_select(conn);
   conn->send_fp(_NVM_IN_READ);
@@ -112,7 +170,7 @@ uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf)
 
   uint32_t i;
   for (i = 0; i < size; i++) {
-    buf[i] = conn->send_fp(0x00);
+    ((uint8_t*) buf)[i] = conn->send_fp(0x00);
   }
   spi_deselect(conn);
 
@@ -129,17 +187,18 @@ uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf)
  * This function is non-blocking. If a write is in progress, it returns an
  * error. No writes can happen until there is no write in progress.
  */
-uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
+uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
   if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
-  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_ADDR; }
-  if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_ADDR; }
+  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
+  if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_SEGV; }
+  //TODO: Check addr not in superblock (round up page)
 
   uint32_t done = 0;
   while (done < size) {
     while (_nvm_wip(conn)); // Wait for previous write cycle to finish
 
     uint32_t itr = addr + done;
-    uint8_t* bitr = &(buf[done]);
+    uint8_t* bitr = &(((uint8_t*) buf)[done]);
     uint32_t left = size - done;
 
     done += _nvm_write_page(conn, itr, left, bitr);
@@ -197,8 +256,6 @@ uint8_t _nvm_wip(SPIConn* conn) {
   _NvmStatusReg status = _nvm_read_status_reg(conn);
   return status.WIP;
 }
-
-//================================== UTIL ======================================
 
 /**
  * Reads the contents of the status register.
