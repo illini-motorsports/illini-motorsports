@@ -424,35 +424,21 @@ void send_state_can(uint8_t override) {
 */
 void check_gcm_mode(void) {
   if (night_day_switch == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
-
     mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
-
   } else if (night_day_switch == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
-
     mode = NORMAL_MODE; // disengage auto-upshifting
     queue_up = 0; // remove queued upshift
-
   } else if (mode == AUTO_UPSHIFT_MODE) {
-
-      /*
     if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position did not cross minimum while in auto-upshifting mode
-
       if (throttle_pos > 75) { // check if throttle position crossed minimum
-
         throttle_pos_passed_min_auto = 1; // throttle position crossed minimum while in auto-upshifting mode
-
       }
-
     } else if (throttle_pos <= 75) { // check to see if throttle position has dropped below minimum while in auto-upshifting mode
       mode = NORMAL_MODE; // disengage auto-upshifting
       queue_up = 0; // remove queued upshift
-    }
-       */
-
+    }  
   }
 }
-
-// Add auto-upshift logic #CHECK
 
 /**
  * void process_auto_upshift(void)
@@ -463,7 +449,7 @@ void check_gcm_mode(void) {
 void process_auto_upshift(void) {
   if (eng_rpm >= get_threshold_rpm(gear) && 
         !is_in_launch() &&
-        queue_up == 0 && 
+        queue_up == 0 &&
         gear <= MAX_AUTO_UPSHIFT_GEAR)
   {
     queue_up = 1;
@@ -1089,9 +1075,9 @@ uint16_t get_threshold_rpm(uint8_t gear) {
 * returns 1 if the car is currently in a launch, 0 otherwise
 */
 uint8_t is_in_launch(void) {
-    double front_ws = wheel_fl_speed;
-    double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
-  if (front_ws < LAUNCH_FRONT_WS || front_ws < (LAUNCH_WHEEL_SPEED_DIFF * rear_ws))
+  double front_ws = wheel_fl_speed; // wheel_fr_speed sensor currently not working
+  double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0; // average rear wheel speeds
+  if (front_ws < LAUNCH_FRONT_WS || front_ws < (LAUNCH_WHEEL_SPEED_DIFF * rear_ws)) // check difference in front and rear wheel speeds
   {
     return 1;
   }
