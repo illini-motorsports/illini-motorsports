@@ -39,7 +39,6 @@
 // Misc Definitions
 #define _NVM_MAX_ADDR 0x1FFFF
 #define _NVM_SB_VER   0x0
-//TODO: define number of fd's?
 
 // Default NVM pin definitions
 #define _NVM_STD_BUS        6
@@ -61,7 +60,7 @@ typedef union uNvmStatusReg {
 
 // Struct containing metadata for a single file / block of memory
 typedef struct {
-  uint8_t block_id[32]; // String for block identifier
+  uint8_t block_id[16]; // String for block identifier
   uint32_t vcode;       // Version code of block
   uint32_t size;
   uint32_t addr;
@@ -71,6 +70,7 @@ typedef struct {
 typedef struct {
   uint32_t vcode; // Version code of superblock
   _NvmNode nodes[256];
+  uint8_t pages[512]; // Track which pages are alloc'd, 512 total
 } _NvmSuperblock;
 
 // Function definitions
@@ -89,9 +89,11 @@ uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf);
 uint8_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf);
 void _nvm_write_enable(SPIConn* conn);
 uint8_t _nvm_wip(SPIConn* conn);
-//TODO: _nvm_fsck()
 _NvmStatusReg _nvm_read_status_reg(SPIConn* conn);
 void _nvm_write_status_reg(SPIConn* conn, _NvmStatusReg status);
 uint8_t _nvm_send_two(SPIConn* conn, uint8_t one, uint8_t two);
+
+uint32_t _nvm_alloc_addr(_NvmSuperblock* sb, uint32_t size);
+//TODO: _nvm_fsck()
 
 #endif /* FSAE_nvm_H */

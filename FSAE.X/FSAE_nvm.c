@@ -8,12 +8,24 @@
  */
 #include "FSAE_nvm.h"
 
-#define _NVM_NUM_CONN 10
+#define _NVM_NUM_CONN 4
 
 SPIConn nvmConnections[_NVM_NUM_CONN];
 uint8_t nvmConnIdx = 0;
 
-_NvmSuperblock superblock;
+_NvmSuperblock superblocks[_NVM_NUM_CONN]; //TODO: Check RAM usage of this
+
+uint8_t idx(SPIConn* conn) {
+  return ((conn - nvmConnections) / sizeof(SPIConn));
+}
+
+uint16_t num_pages(uint32_t size) {
+  // Use ceil() so that blocks always start at a page boundary
+  uint16_t pages = size / 256;
+  return (size % 256) == 0 ? pages : pages + 1; // ceil
+}
+
+#define _NVM_SB_END_ADDR (((uint32_t) num_pages(sizeof(_NvmSuperblock))) * 256)
 
 //=============================== INTERFACE ====================================
 
@@ -40,8 +52,6 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
   currConn->cs_lat = cs_lat;
   currConn->cs_num = cs_num;
 
-  nvmConnIdx++;
-
   // Write protection info to status register
   _NvmStatusReg status = { .reg = 0x0 };
   status.WPEN = 0;
@@ -54,16 +64,18 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
   nvm_read_data(currConn, 0x0, 4, &superblock_vcode);
 
   if (superblock_vcode == _NVM_SB_VER) {
-    //TODO: _nvm_fsck()
     // Superblock exists and is correct version, cache in memory
-    nvm_read_data(currConn, 0x0, sizeof(_NvmSuperblock), &superblock);
+    nvm_read_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[nvmConnIdx]));
+    //TODO: _nvm_fsck()
   } else {
     // Superblock either doesn't exist, or is an old version. Create a new
     // empty superblock with the correct version
-    memset(&superblock, 0x0, sizeof(_NvmSuperblock));
-    superblock.vcode = _NVM_SB_VER;
-    nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &superblock);
+    memset(&(superblocks[nvmConnIdx]), 0x0, sizeof(_NvmSuperblock));
+    superblocks[nvmConnIdx].vcode = _NVM_SB_VER;
+    nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[nvmConnIdx]));
   }
+
+  nvmConnIdx++;
 
   return currConn;
 }
@@ -88,12 +100,13 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
 uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
                   uint32_t size, uint8_t* fd) {
   uint16_t i;
+  _NvmSuperblock* sb = &(superblocks[idx(conn)]);
 
   // Search for matching node
   for (i = 0; i < 256; i++) {
-    _NvmNode node = superblock.nodes[i];
-    if (strncmp(block_id, node.block_id, 32) == 0 &&
-        vcode == node.vcode && size == node.size) {
+    _NvmNode* node = &(sb->nodes[i]);
+    if (strncmp(block_id, node->block_id, 16) == 0 &&
+        vcode == node->vcode && size == node->size) {
       *fd = i;
       return NVM_SUCCESS;
     }
@@ -101,17 +114,18 @@ uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
 
   // Search for available node
   for (i = 0; i < 256; i++) {
-    //TODO: Verify this is ref and not copy (I've been doing too much c++)
-    _NvmNode node = superblock.nodes[i];
-    if (node.addr == 0x0) {
-      strncpy(((uint8_t*) &(node.block_id)), block_id, 32);
-      node.vcode = vcode;
-      node.size = size;
+    _NvmNode* node = &(sb->nodes[i]);
+    if (node->addr == 0x0) {
+      uint32_t addr = _nvm_alloc_addr(sb, size);
+      if (addr == 0x0) { return NVM_ERR_FULL; }
 
-      node.addr = 1; //TODO: Figure out address and mark pages as used
+      strncpy(((uint8_t*) &(node->block_id)), block_id, 16);
+      node->vcode = vcode;
+      node->size = size;
+      node->addr = addr;
 
       // Write new superblock (TODO: Only write changed memory)
-      nvm_write_data(conn, 0x0, sizeof(_NvmSuperblock), &superblock);
+      nvm_write_data(conn, 0x0, sizeof(_NvmSuperblock), sb);
 
       *fd = i;
       return NVM_SUCCESS;
@@ -130,8 +144,8 @@ uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
  * Returns 0 on success.
  */
 uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  _NvmNode node = superblock.nodes[fd];
-  return nvm_read_data(conn, node.addr, node.size, buf);
+  _NvmNode* node = &(superblocks[idx(conn)].nodes[fd]);
+  return nvm_read_data(conn, node->addr, node->size, buf);
 }
 
 /**
@@ -143,8 +157,8 @@ uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
  * Returns 0 on success.
  */
 uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  _NvmNode node = superblock.nodes[fd];
-  return nvm_write_data(conn, node.addr, node.size, buf);
+  _NvmNode* node = &(superblocks[idx(conn)].nodes[fd]);
+  return nvm_write_data(conn, node->addr, node->size, buf);
 }
 
 /**
@@ -160,7 +174,6 @@ uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
 uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
   if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
   if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
-  //TODO: Check addr not in superblock (round up page)
 
   spi_select(conn);
   conn->send_fp(_NVM_IN_READ);
@@ -191,7 +204,7 @@ uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
   if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
   if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
   if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_SEGV; }
-  //TODO: Check addr not in superblock (round up page)
+  if (addr < _NVM_SB_END_ADDR) { return NVM_ERR_SEGV; }
 
   uint32_t done = 0;
   while (done < size) {
@@ -284,4 +297,41 @@ uint8_t _nvm_send_two(SPIConn* conn, uint8_t one, uint8_t two) {
   resp = (uint8_t) conn->send_fp(two);
   spi_deselect(conn);
   return resp;
+}
+
+/**
+ * Searches for a block of consecutive memory that is large enough to fit
+ * <size> bytes.
+ *
+ * Returns starting address of the allocated block.
+ *
+ * The search starts after the end of the superblock and goes until the end
+ * of the memory. Integer number of pages are allocated. So, if 256 bytes are
+ * requested, 1 page will be allocated. But if 257 bytes are requested, 2 full
+ * pages will be allocated.
+ */
+uint32_t _nvm_alloc_addr(_NvmSuperblock* sb, uint32_t size) {
+  uint16_t pages = num_pages(size);
+  uint16_t sb_pages = num_pages(sizeof(_NvmSuperblock));
+
+  uint16_t i, j, s;
+  for (i = sb_pages, s = 0; i < 512;) {
+    for (j = i; j < 512; j++) {
+      if (sb->pages[j]) {
+        break;
+      } else if ((j - i + 1) == pages) {
+        s = i;
+        break;
+      }
+    }
+    if (s != 0) { break; }
+    i = j + 1;
+  }
+
+  if (s == 0) { return 0x0; } // Couldn't find available memory
+
+  for (i = 0; i < pages; i++) {
+    sb->pages[s + i] = 1; // Mark as allocated
+  }
+  return ((uint32_t) s) * 256;
 }
