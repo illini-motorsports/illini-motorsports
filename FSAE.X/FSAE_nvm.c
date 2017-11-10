@@ -8,12 +8,12 @@
  */
 #include "FSAE_nvm.h"
 
-#define _NVM_NUM_CONN 4
+#define _NVM_NUM_CONN 10
 
 SPIConn nvmConnections[_NVM_NUM_CONN];
 uint8_t nvmConnIdx = 0;
 
-_NvmSuperblock superblocks[_NVM_NUM_CONN]; //TODO: Check RAM usage of this
+_NvmSuperblock superblocks[_NVM_NUM_CONN];
 
 uint8_t idx(SPIConn* conn) {
   return ((conn - nvmConnections) / sizeof(SPIConn));
@@ -42,9 +42,9 @@ SPIConn* init_nvm_std() {
 SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
   if (nvmConnIdx == _NVM_NUM_CONN) { return NULL; }
 
-  // Initialize SPI communciations to the NVM chip
+  // Initialize SPI communications to the NVM chip
   if(!nvmConnIdx) {
-    init_spi(bus, 10.0, 8, SPI_MODE0);
+    init_spi(bus, 5.0, 8, SPI_MODE0); //TODO: Test out 10Mhz
   }
 
   SPIConn* currConn = &nvmConnections[nvmConnIdx];
@@ -59,6 +59,7 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
   status.BP0 = 0;
   _nvm_write_status_reg(currConn, status);
 
+  /*
   // Check if superblock exists and is the correct version
   uint32_t superblock_vcode;
   nvm_read_data(currConn, 0x0, 4, &superblock_vcode);
@@ -74,6 +75,7 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
     superblocks[nvmConnIdx].vcode = _NVM_SB_VER;
     nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[nvmConnIdx]));
   }
+   */
 
   nvmConnIdx++;
 
@@ -204,7 +206,7 @@ uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
   if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
   if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
   if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_SEGV; }
-  if (addr < _NVM_SB_END_ADDR) { return NVM_ERR_SEGV; }
+  //if (addr < _NVM_SB_END_ADDR) { return NVM_ERR_SEGV; }
 
   uint32_t done = 0;
   while (done < size) {
@@ -234,9 +236,8 @@ uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
  * the memory location starting at <addr>. The write will not cross page
  * boundaries.
  */
-uint8_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
-  uint8_t offset = ((uint8_t) (addr & 0xFF));
-  uint8_t num = (uint8_t) min(256 - ((uint32_t) offset), size);
+uint16_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
+  uint16_t num = min(256 - (addr & 0xFF), size);
 
   _nvm_write_enable(conn);
 
@@ -246,7 +247,7 @@ uint8_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* bu
   conn->send_fp((addr >> 8) & 0xFF);
   conn->send_fp(addr & 0xFF);
 
-  uint32_t i;
+  uint16_t i;
   for (i = 0; i < num; i++) {
     conn->send_fp(buf[i]);
   }
@@ -282,6 +283,7 @@ _NvmStatusReg _nvm_read_status_reg(SPIConn* conn) {
  * Writes the contents of the status register
  */
 void _nvm_write_status_reg(SPIConn* conn, _NvmStatusReg status) {
+  _nvm_write_enable(conn);
   _nvm_send_two(conn, _NVM_IN_WRSR, status.reg);
 }
 

@@ -86,7 +86,7 @@ uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf);
 uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf);
 
 // Private Implementation
-uint8_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf);
+uint16_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf);
 void _nvm_write_enable(SPIConn* conn);
 uint8_t _nvm_wip(SPIConn* conn);
 _NvmStatusReg _nvm_read_status_reg(SPIConn* conn);

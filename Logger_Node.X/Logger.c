@@ -41,12 +41,10 @@ void main(void) {
   init_can(); // Initialize CAN
 
   spi_nvm = init_nvm_std(); // Initialize NVM module
+  //TODO: USB
 
   //init_ltc3350(); // Initialize supercapacitor charger IC
 
-  //TODO: Use NVM
-
-  //TODO: USB
 
   //TODO: RTC
   //TODO: SD
