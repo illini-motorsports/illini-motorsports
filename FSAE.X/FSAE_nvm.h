@@ -1,10 +1,10 @@
 /**
  * FSAE Library NVM Header
  *
- * Processor:   PIC32MZ2048EFM100
- * Compiler:    Microchip XC32
- * Author:      Andrew Mass
- * Created:     2015-2016
+ * Processor: PIC32MZ2048EFM100
+ * Compiler:  Microchip XC32
+ * Author:    Andrew Mass
+ * Created:   2017-2018
  */
 #ifndef FSAE_nvm_H
 #define FSAE_nvm_H

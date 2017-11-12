@@ -8,15 +8,15 @@
  */
 #include "FSAE_nvm.h"
 
-#define _NVM_NUM_CONN 10
+#define NUM_CONN 10
 
-SPIConn nvmConnections[_NVM_NUM_CONN];
-uint8_t nvmConnIdx = 0;
+SPIConn connections[NUM_CONN];
+uint8_t connIdx = 0;
 
-_NvmSuperblock superblocks[_NVM_NUM_CONN];
+_NvmSuperblock superblocks[NUM_CONN];
 
 uint8_t idx(SPIConn* conn) {
-  return ((conn - nvmConnections) / sizeof(SPIConn));
+  return ((conn - connections) / sizeof(SPIConn));
 }
 
 uint16_t num_pages(uint32_t size) {
@@ -24,8 +24,6 @@ uint16_t num_pages(uint32_t size) {
   uint16_t pages = size / 256;
   return (size % 256) == 0 ? pages : pages + 1; // ceil
 }
-
-#define _NVM_SB_END_ADDR (((uint32_t) num_pages(sizeof(_NvmSuperblock))) * 256)
 
 //=============================== INTERFACE ====================================
 
@@ -40,14 +38,14 @@ SPIConn* init_nvm_std() {
  * Initializes the 25LC1024 NVM module with user-defined settings.
  */
 SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
-  if (nvmConnIdx == _NVM_NUM_CONN) { return NULL; }
+  if (connIdx == NUM_CONN) { return NULL; }
 
   // Initialize SPI communications to the NVM chip
-  if(!nvmConnIdx) {
-    init_spi(bus, 5.0, 8, SPI_MODE0); //TODO: Test out 10Mhz
+  if(!connIdx) {
+    init_spi(bus, 10.0, 8, SPI_MODE0);
   }
 
-  SPIConn* currConn = &nvmConnections[nvmConnIdx];
+  SPIConn* currConn = &connections[connIdx];
   currConn->send_fp = get_send_spi(bus);
   currConn->cs_lat = cs_lat;
   currConn->cs_num = cs_num;
@@ -65,21 +63,21 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
 
   if (superblock_vcode == _NVM_SB_VER) {
     // Superblock exists and is correct version, cache in memory
-    nvm_read_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[nvmConnIdx]));
+    nvm_read_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[connIdx]));
     //TODO: _nvm_fsck()
   } else {
     // Superblock either doesn't exist, or is an old version. Create a new
     // empty superblock with the correct version
-    memset(&(superblocks[nvmConnIdx]), 0x0, sizeof(_NvmSuperblock));
-    superblocks[nvmConnIdx].vcode = _NVM_SB_VER;
+    memset(&(superblocks[connIdx]), 0x0, sizeof(_NvmSuperblock));
+    superblocks[connIdx].vcode = _NVM_SB_VER;
     uint16_t i;
     for (i = 0; i < num_pages(sizeof(_NvmSuperblock)); i++) {
-      superblocks[nvmConnIdx].pages[i] = 1;
+      superblocks[connIdx].pages[i] = 1;
     }
-    nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[nvmConnIdx]));
+    nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[connIdx]));
   }
 
-  nvmConnIdx++;
+  connIdx++;
   return currConn;
 }
 
@@ -99,8 +97,6 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
  * If everything was successful, the node at <fd> will contain metadata for the
  * newly allocated block and NVM_SUCCESS will be returned. Otherwise, the
  * appropriate error will be returned.
- *
- * Returns 0 on success.
  */
 uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
                   uint32_t size, uint8_t* fd) {
