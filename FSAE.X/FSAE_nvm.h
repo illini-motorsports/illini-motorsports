@@ -19,9 +19,8 @@
 
 // NVM Errors
 #define NVM_SUCCESS  0 // No error
-#define NVM_ERR_WIP  1 // Write in progress
-#define NVM_ERR_SEGV 2 // Segfault! (Bad address)
-#define NVM_ERR_FULL 3 // No available blocks
+#define NVM_ERR_SEGV 1 // Segfault! (Bad address)
+#define NVM_ERR_FULL 2 // No available blocks
 
 // NVM Chip Instruction Set
 #define _NVM_IN_READ  0b00000011
@@ -38,7 +37,7 @@
 
 // Misc Definitions
 #define _NVM_MAX_ADDR 0x1FFFF
-#define _NVM_SB_VER   0x0
+#define _NVM_SB_VER   0x1
 
 // Default NVM pin definitions
 #define _NVM_STD_BUS        6
@@ -84,6 +83,7 @@ uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf);
 uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf);
 uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf);
 uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf);
+uint8_t nvm_clear_data(SPIConn* conn, uint32_t addr, uint32_t size);
 
 // Private Implementation
 uint16_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf);

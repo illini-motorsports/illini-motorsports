@@ -59,7 +59,6 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
   status.BP0 = 0;
   _nvm_write_status_reg(currConn, status);
 
-  /*
   // Check if superblock exists and is the correct version
   uint32_t superblock_vcode;
   nvm_read_data(currConn, 0x0, 4, &superblock_vcode);
@@ -73,12 +72,14 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
     // empty superblock with the correct version
     memset(&(superblocks[nvmConnIdx]), 0x0, sizeof(_NvmSuperblock));
     superblocks[nvmConnIdx].vcode = _NVM_SB_VER;
+    uint16_t i;
+    for (i = 0; i < num_pages(sizeof(_NvmSuperblock)); i++) {
+      superblocks[nvmConnIdx].pages[i] = 1;
+    }
     nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[nvmConnIdx]));
   }
-   */
 
   nvmConnIdx++;
-
   return currConn;
 }
 
@@ -98,6 +99,8 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
  * If everything was successful, the node at <fd> will contain metadata for the
  * newly allocated block and NVM_SUCCESS will be returned. Otherwise, the
  * appropriate error will be returned.
+ *
+ * Returns 0 on success.
  */
 uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
                   uint32_t size, uint8_t* fd) {
@@ -125,6 +128,9 @@ uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
       node->vcode = vcode;
       node->size = size;
       node->addr = addr;
+
+      // Clear data in allocated pages
+      nvm_clear_data(conn, addr, size);
 
       // Write new superblock (TODO: Only write changed memory)
       nvm_write_data(conn, 0x0, sizeof(_NvmSuperblock), sb);
@@ -166,16 +172,13 @@ uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
 /**
  * Reads <size> bytes from <addr> onwards into <buf>.
  *
- * The data is read sequentially starting from the given address until size
- * bytes have been read and copied. If the highest memory address is reached,
- * the read will roll over to address 0x0 and will continue.
- *
- * This function is non-blocking. If a write is in progress, it returns an
- * error. No reads can happen until there is no write in progress.
+ * Returns 0 on success.
  */
 uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
-  if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
   if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
+  if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_SEGV; }
+
+  while(_nvm_wip(conn));
 
   spi_select(conn);
   conn->send_fp(_NVM_IN_READ);
@@ -198,15 +201,10 @@ uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
  * On the 25LC1024, writes must happen on a page-by-page basis. Each page is 256
  * bytes. Writes must not cross page boundaries. Thus, this generic write
  * function calls the page write function as many times as needed.
- *
- * This function is non-blocking. If a write is in progress, it returns an
- * error. No writes can happen until there is no write in progress.
  */
 uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
-  if (_nvm_wip(conn)) { return NVM_ERR_WIP; }
   if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
   if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_SEGV; }
-  //if (addr < _NVM_SB_END_ADDR) { return NVM_ERR_SEGV; }
 
   uint32_t done = 0;
   while (done < size) {
@@ -222,12 +220,22 @@ uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
   return NVM_SUCCESS;
 }
 
+/**
+ * Clears <size> bytes of data starting at <addr>.
+ *
+ * Returns 0 on success.
+ */
+uint8_t nvm_clear_data(SPIConn* conn, uint32_t addr, uint32_t size)
+{
+  uint8_t clear[size];
+  memset(&clear, 0x0, size);
+  return nvm_write_data(conn, addr, size, &clear);
+}
+
 //============================= IMPLEMENTATION =================================
 
 /**
  * Helper function for _nvm_write_data() that writes data to a single page.
- *
- * Returns number of bytes written to the page.
  *
  * Do not use this function from outside of _nvm_write_data. It does not
  * perform necessary safety checks before starting the write.
@@ -235,6 +243,8 @@ uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
  * Writes as many bytes as possible (or <size> if less than what's possible) to
  * the memory location starting at <addr>. The write will not cross page
  * boundaries.
+ *
+ * Returns number of bytes written to the page.
  */
 uint16_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
   uint16_t num = min(256 - (addr & 0xFF), size);
@@ -272,7 +282,7 @@ uint8_t _nvm_wip(SPIConn* conn) {
 }
 
 /**
- * Reads the contents of the status register.
+ * Returns the contents of the status register.
  */
 _NvmStatusReg _nvm_read_status_reg(SPIConn* conn) {
   _NvmStatusReg status = { .reg = _nvm_send_two(conn, _NVM_IN_RDSR, 0x00) };
@@ -305,12 +315,12 @@ uint8_t _nvm_send_two(SPIConn* conn, uint8_t one, uint8_t two) {
  * Searches for a block of consecutive memory that is large enough to fit
  * <size> bytes.
  *
- * Returns starting address of the allocated block.
- *
  * The search starts after the end of the superblock and goes until the end
  * of the memory. Integer number of pages are allocated. So, if 256 bytes are
  * requested, 1 page will be allocated. But if 257 bytes are requested, 2 full
  * pages will be allocated.
+ *
+ * Returns starting address of the allocated block.
  */
 uint32_t _nvm_alloc_addr(_NvmSuperblock* sb, uint32_t size) {
   uint16_t pages = num_pages(size);
