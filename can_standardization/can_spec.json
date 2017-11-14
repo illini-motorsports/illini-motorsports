@@ -1,5 +1,5 @@
 {
-	"version": 0.1,
+	"version": "0.1",
 	"messages": [
 		{
 			"id": "0x050",
@@ -659,6 +659,9 @@
 						"PGA 2 Bit 0",
 						"PGA 2 Bit 1",
 						"PGA 2 Bit 2",
+						"PGA 3 Bit 0",
+						"PGA 3 Bit 1",
+						"PGA 3 Bit 2",
 						"Reserved",
 						"Reserved",
 						"Reserved",
@@ -1424,54 +1427,58 @@
 					"length": 1
 				},
 				{
-					"name": "Rotary 1",
 					"type": "nibble",
-					"side": "msb",
-					"unit": "",
-					"signed": false,
-					"scale": 1,
-					"offset": 0,
-					"byte": 1
+					"byte": 1,
+					"msb": {
+						"name": "Rotary 1",
+						"unit": "",
+						"signed": false,
+						"scale": 1,
+						"offset": 0
+					},
+					"lsb": {
+						"name": "Rotary 2",
+						"unit": "",
+						"signed": false,
+						"scale": 1,
+						"offset": 0
+					}
 				},
 				{
-					"name": "Rotary 2",
 					"type": "nibble",
-					"side": "lsb",
-					"unit": "",
-					"signed": false,
-					"scale": 1,
-					"offset": 0,
-					"byte": 1
+					"byte": 2,
+					"msb": {
+						"name": "Rotary 3",
+						"unit": "",
+						"signed": false,
+						"scale": 1,
+						"offset": 0
+					},
+					"lsb": {
+						"name": "Thumb Rotary 1",
+						"unit": "",
+						"signed": false,
+						"scale": 1,
+						"offset": 0
+					}
 				},
 				{
-					"name": "Rotary 3",
 					"type": "nibble",
-					"side": "msb",
-					"unit": "",
-					"signed": false,
-					"scale": 1,
-					"offset": 0,
-					"byte": 2
-				},
-				{
-					"name": "Thumb Rotary 1",
-					"type": "nibble",
-					"side": "lsb",
-					"unit": "",
-					"signed": false,
-					"scale": 1,
-					"offset": 0,
-					"byte": 2
-				},
-				{
-					"name": "Thumb Rotary 2",
-					"type": "nibble",
-					"side": "msb",
-					"unit": "",
-					"signed": false,
-					"scale": 1,
-					"offset": 0,
-					"byte": 3
+					"byte": 3,
+					"msb": {
+						"name": "Thumb Rotary 2",
+						"unit": "",
+						"signed": false,
+						"scale": 1,
+						"offset": 0
+					},
+					"lsb": {
+						"name": "Reserved",
+						"unit": "",
+						"signed": false,
+						"scale": 1,
+						"offset": 0
+					}
 				}
 			]
 		},
@@ -1659,7 +1666,7 @@
 				{
 					"name": "Switch",
 					"type": "bitmap",
-					"offset": 
+					"bits": 
 					[
 						"AUX2",
 						"AUX1",
@@ -1676,7 +1683,7 @@
 				{
 					"name": "Flag",
 					"type": "bitmap",
-					"offset": 
+					"bits": 
 					[
 						"Reserved",
 						"Reserved",
