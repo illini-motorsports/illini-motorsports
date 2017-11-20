@@ -300,9 +300,11 @@
 #define SW_FUEL_IDX             15
 
 //IMU dataItem constants
-#define IMU_DATAITEM_SIZE       2
+#define IMU_DATAITEM_SIZE       4
 #define LATERAL_G_IDX           0
 #define LONGITUDINAL_G_IDX      1
+#define YAW_RATE_IDX            2
+#define YAW_ACCEL_IDX           3
 
 /*
  * Defines a data stream that is relevant to one or more screens

@@ -25,8 +25,8 @@
 #define TIRE_TEMP_FR_ID     0x002
 #define TIRE_TEMP_RL_ID     0x003
 #define TIRE_TEMP_RR_ID     0x004
-#define LATERAL_G_ID        0x070
-#define LONGITUDINAL_G_ID   0x080
+#define IMU_FIRST_ID        0x070
+#define IMU_SECOND_ID       0x080
 
 /**
  * Byte position of channels in their CAN messages
@@ -249,6 +249,8 @@
 #define FREQ_SETTINGS_BYTE    2
 
 //from IMU sensor
+#define YAW_ACCEL_BYTE        0
+#define YAW_RATE_BYTE         0
 #define LATERAL_G_BYTE        4
 #define LONGITUDINAL_G_BYTE   4
 
@@ -418,6 +420,8 @@
 //from IMU sensor
 #define LATERAL_G_SCL         0.0001274
 #define LONGITUDINAL_G_SCL    0.0001274
+#define YAW_RATE_SCL          0.005
+#define YAW_ACCEL_SCL         0.125
 
 /**
  * Masks for bitmaps & packed messages
@@ -521,8 +525,11 @@
 /**
  * Offsets
  */
+//from IMU sensor
 #define LATERAL_G_OFFSET            (-4.17464)
 #define LONGITUDINAL_G_OFFSET       (-4.17464)
+#define YAW_RATE_OFFSET             (-163.84)
+#define YAW_ACCEL_OFFSET            (-4096)
 
 /**
  * ADL definitions
