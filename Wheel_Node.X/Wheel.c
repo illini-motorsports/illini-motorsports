@@ -590,6 +590,9 @@ void checkChangeScreen(void) {
     case 4:
       screenIdx = THROTTLE_SCREEN;
       break;
+    case 5:
+      screenIdx = IMU_SCREEN;
+      break;
     default:
       screenIdx = RACE_SCREEN;
       break;
