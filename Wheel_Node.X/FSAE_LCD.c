@@ -803,20 +803,43 @@ void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double c
 //For drawing a visual representation of g-forces
 void redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue)
 {
-    //outline
-    fillCircle(item->x, item->y, item->size, RA8875_BLACK);
+    int i = 0;
+
+    //constants for various markers representing different g values on the graph
+    uint16_t maxRadiusOuter, maxRadiusInner, outerRadii[4], innerRadii[4], maxG;
+
+    //initialize constants
+    maxRadiusOuter = item->size;
+    maxRadiusInner = item->size * 0.99;
+    maxG = (-1 * LATERAL_G_OFFSET);
     
-    //inner fill
-    fillCircle(item->x, item->y, item->size - 10, RA8875_BLUE);
+    //coordinates to draw the moving indicator
+    uint16_t dot_x = item->x + (((data[0].value) / maxG) * item->size);
+    uint16_t dot_y = item->y + (((data[1].value) / maxG) * item->size);
     
-    //moving dot
-    fillCircle
-    (
-        (item->x + (((data[0].value) / (-1 * LATERAL_G_OFFSET)) * item->size)), 
-        (item->y + (((data[1].value) / (-1 * LONGITUDINAL_G_OFFSET)) * item->size)), 
-        (item->size / 10), 
-        RA8875_WHITE
-    );
+    //radius of the moving indicator
+    uint16_t dotRad = item->size / 20;
+
+    for(i = 0; i < 4; i++)
+    {
+        outerRadii[i] = (i + 1) / maxG;
+        innerRadii[i] = outerRadii[i] * 0.99;
+    }
+    
+    //draw the base graph
+    fillCircle(item->x, item->y, maxRadiusOuter, foregroundColor);
+    fillCircle(item->x, item->y, maxRadiusInner, backgroundColor);
+ 
+    for(i = 4; i >= 0; i--)
+    {
+        fillCircle(item->x, item->y, outerRadii[i], foregroundColor);
+        fillCircle(item->x, item->y, innerRadii[i], backgroundColor);
+    }
+    
+    //draw the moving dot
+    fillCircle(dot_x, dot_y, dotRad, foregroundColor2);
+
+    //TODO: draw the x and y axes
 }
 
 void clearScreen(void){
