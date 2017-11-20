@@ -827,7 +827,7 @@ void redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double c
     }
     
     //draw the base graph
-    fillCircle(item->x, item->y, maxRadiusOuter, foregroundColor);
+    fillCircle(item->x, item->y, maxRadiusOuter, warningColor);
     fillCircle(item->x, item->y, maxRadiusInner, backgroundColor);
  
     for(i = 4; i >= 0; i--)
