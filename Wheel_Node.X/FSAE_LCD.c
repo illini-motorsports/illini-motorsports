@@ -138,6 +138,7 @@ void initAllScreens(void){
   // Initialize colors
   backgroundColor = RA8875_WHITE;
   foregroundColor = RA8875_BLACK;
+  foregroundColor2 = RA8875_GREEN;
 
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
@@ -844,6 +845,7 @@ uint8_t initNightMode(uint8_t on){
     }
     backgroundColor = RA8875_BLACK;
     foregroundColor = RA8875_WHITE;
+    foregroundColor2 = RA8875_CYAN;
     warningColor = RA8875_YELLOW;
     errorColor = RA8875_RED;
   }
@@ -856,6 +858,7 @@ uint8_t initNightMode(uint8_t on){
     }
     backgroundColor = RA8875_WHITE;
     foregroundColor = RA8875_BLACK;
+    foregroundColor2 = RA8875_GREEN;
   }
   //warningColor = errorColor = backgroundColor;
   warningColor = RA8875_YELLOW;

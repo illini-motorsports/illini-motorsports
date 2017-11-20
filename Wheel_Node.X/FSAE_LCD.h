@@ -385,7 +385,7 @@ screen* allScreens[NUM_SCREENS];
 
 uint8_t screenNumber, auxNumber;
 
-volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
+volatile uint16_t backgroundColor, foregroundColor, foregroundColor2, warningColor, errorColor;
 
 volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE], imuDataItems[IMU_DATAITEM_SIZE];
 
