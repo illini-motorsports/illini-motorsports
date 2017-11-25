@@ -320,7 +320,7 @@ void main(void) {
       }
 
       // ABS
-      set_load(ABS_IDX, 0 /*ABS_SW && !KILL_SW*/); //TODO: Reset this
+      set_load(ABS_IDX, ABS_SW && !KILL_SW);
     }
 
     /**

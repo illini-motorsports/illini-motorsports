@@ -264,7 +264,7 @@ const double load_cutoff[NUM_CTL] = {
   10.0,  // FUEL
   100.0, // IGN
   100.0, // INJ
-  2.0,  // ABS
+  70.0,  // ABS
   60.0,  // PDLU
   60.0,  // PDLD
   20.0,  // FAN
