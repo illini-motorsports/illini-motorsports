@@ -13,6 +13,11 @@
 #include "FSAE_config.h"
 #include <math.h>
 
+#define SPI_MODE0 0
+#define SPI_MODE1 1
+#define SPI_MODE2 2
+#define SPI_MODE3 3
+
 typedef uint32_t (*send_spi_fp) (uint32_t);
 
 /*
@@ -36,5 +41,15 @@ uint32_t send_spi3(uint32_t value);
 uint32_t send_spi5(uint32_t value);
 uint32_t send_spi6(uint32_t value);
 uint32_t send_spi(uint32_t value, SPIConn *conn);
+
+// Set !CS Low
+inline void spi_select(SPIConn* conn) {
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num));
+};
+
+// Set !CS High
+inline void spi_deselect(SPIConn* conn) {
+  *(conn->cs_lat) |= 1 << conn->cs_num;
+}
 
 #endif /* FSAE_SPI_H */
