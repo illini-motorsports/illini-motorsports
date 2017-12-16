@@ -18,7 +18,7 @@ uint16_t total_current_draw = 0;
 uint8_t fuel_prime_flag, over_temp_flag = 0;
 uint8_t kill_engine_flag, kill_car_flag = 0;
 uint8_t crit_volt_pending, crit_oilpres_pending, crit_oiltemp_pending,
-    crit_engtemp_pending = 0;
+        crit_engtemp_pending = 0;
 uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
 uint8_t switch_debounced = 0; // Debounced (safe) switch state
 uint8_t switch_prev = 0;      // Previous sampled value of switches
@@ -43,10 +43,10 @@ uint32_t load_tmr[NUM_LOADS] = {0};       // Millis timestamp of when load was l
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr, motec0_recv_tmr, motec1_recv_tmr,
-    motec2_recv_tmr, override_sw_tmr = 0;
+         motec2_recv_tmr, override_sw_tmr = 0;
 uint32_t fuel_prime_tmr = 0;
 uint32_t diag_send_tmr, diag_state_send_tmr, rail_volt_send_tmr,
-    load_current_send_tmr, cutoff_send_tmr, overcrt_count_send_tmr = 0;
+         load_current_send_tmr, cutoff_send_tmr, overcrt_count_send_tmr = 0;
 uint32_t temp_samp_tmr, ext_adc_samp_tmr = 0;
 uint32_t switch_debounce_tmr, overcrt_chk_tmr = 0;
 uint32_t crit_volt_tmr, crit_oilpres_tmr, crit_oiltemp_tmr, crit_engtemp_tmr, crit_idle_tmr = 0;
@@ -225,12 +225,12 @@ void main(void) {
       fuel_override_sw = 0;
     }
 
-		/**
-		 * Reset idle tmr if engine is on
-		 */
-		if (eng_rpm > 0) {
-			crit_idle_tmr = millis;
-		}
+    /**
+     * Reset idle tmr if engine is on
+     */
+    if (eng_rpm > 0) {
+      crit_idle_tmr = millis;
+    }
 
     /**
      * Respond to critical errors
@@ -427,23 +427,23 @@ void process_CAN_msg(CAN_message msg) {
   switch (msg.id) {
     case MOTEC_ID + 0:
       eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
-          msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
+            msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
       bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
-          msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
+            msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
 
       motec0_recv_tmr = millis;
       break;
     case MOTEC_ID + 1:
       eng_temp = ((double) ((msg.data[ENG_TEMP_BYTE] << 8) |
-          msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
+            msg.data[ENG_TEMP_BYTE + 1])) * ENG_TEMP_SCL;
       oil_temp = ((double) ((msg.data[OIL_TEMP_BYTE] << 8) |
-          msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
+            msg.data[OIL_TEMP_BYTE + 1])) * OIL_TEMP_SCL;
 
       motec1_recv_tmr = millis;
       break;
     case MOTEC_ID + 2:
       oil_pres = ((double) ((msg.data[OIL_PRES_BYTE] << 8) |
-          msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
+            msg.data[OIL_PRES_BYTE + 1])) * OIL_PRES_SCL;
 
       motec2_recv_tmr = millis;
       break;
@@ -583,12 +583,12 @@ void prevent_engine_blowup(void) {
     crit_volt_pending = 0;
   }
 
-	// Kill car if it has been idling for too long
-	// Someone has mistakenly left it on
-	if (millis - crit_idle_tmr >= MAX_IDLE_TIME) {
-		kill_car_flag = 1;
-		return;
-	}
+  // Kill car if it has been idling for too long
+  // Someone has mistakenly left it on
+  if (millis - crit_idle_tmr >= MAX_IDLE_TIME) {
+    kill_car_flag = 1;
+    return;
+  }
 
   if (millis - motec0_recv_tmr < BASIC_CONTROL_WAIT &&
       millis - motec1_recv_tmr < BASIC_CONTROL_WAIT &&
@@ -749,53 +749,53 @@ void send_diag_state_can(uint8_t override) {
 
     // Create load enablity bitmap
     data.halfword0 = 0x0 |
-        FUEL_EN << (15 - FUEL_IDX) |
-        IGN_EN << (15 - IGN_IDX) |
-        INJ_EN << (15 - INJ_IDX) |
-        ABS_EN << (15 - ABS_IDX) |
-        PDLU_EN << (15 - PDLU_IDX) |
-        PDLD_EN << (15 - PDLD_IDX) |
-        FAN_EN << (15 - FAN_IDX) |
-        WTR_EN << (15 - WTR_IDX) |
-        ECU_EN << (15 - ECU_IDX) |
-        AUX_EN << (15 - AUX_IDX) |
-        BVBAT_EN << (15 - BVBAT_IDX) |
-        STR_EN << (15 - STR_IDX);
+      FUEL_EN << (15 - FUEL_IDX) |
+      IGN_EN << (15 - IGN_IDX) |
+      INJ_EN << (15 - INJ_IDX) |
+      ABS_EN << (15 - ABS_IDX) |
+      PDLU_EN << (15 - PDLU_IDX) |
+      PDLD_EN << (15 - PDLD_IDX) |
+      FAN_EN << (15 - FAN_IDX) |
+      WTR_EN << (15 - WTR_IDX) |
+      ECU_EN << (15 - ECU_IDX) |
+      AUX_EN << (15 - AUX_IDX) |
+      BVBAT_EN << (15 - BVBAT_IDX) |
+      STR_EN << (15 - STR_IDX);
 
     // Create load peak mode bitmap
     data.halfword1 = 0x0 |
-        peak_state[FUEL_IDX] << (15 - FUEL_IDX) |
-        peak_state[IGN_IDX] << (15 - IGN_IDX) |
-        peak_state[INJ_IDX] << (15 - INJ_IDX) |
-        peak_state[ABS_IDX] << (15 - ABS_IDX) |
-        peak_state[PDLU_IDX] << (15 - PDLU_IDX) |
-        peak_state[PDLD_IDX] << (15 - PDLD_IDX) |
-        peak_state[FAN_IDX] << (15 - FAN_IDX) |
-        peak_state[WTR_IDX] << (15 - WTR_IDX) |
-        peak_state[ECU_IDX] << (15 - ECU_IDX) |
-        peak_state[AUX_IDX] << (15 - AUX_IDX) |
-        peak_state[BVBAT_IDX] << (15 - BVBAT_IDX) |
-        peak_state[STR_IDX] << (15 - STR_IDX);
+      peak_state[FUEL_IDX] << (15 - FUEL_IDX) |
+      peak_state[IGN_IDX] << (15 - IGN_IDX) |
+      peak_state[INJ_IDX] << (15 - INJ_IDX) |
+      peak_state[ABS_IDX] << (15 - ABS_IDX) |
+      peak_state[PDLU_IDX] << (15 - PDLU_IDX) |
+      peak_state[PDLD_IDX] << (15 - PDLD_IDX) |
+      peak_state[FAN_IDX] << (15 - FAN_IDX) |
+      peak_state[WTR_IDX] << (15 - WTR_IDX) |
+      peak_state[ECU_IDX] << (15 - ECU_IDX) |
+      peak_state[AUX_IDX] << (15 - AUX_IDX) |
+      peak_state[BVBAT_IDX] << (15 - BVBAT_IDX) |
+      peak_state[STR_IDX] << (15 - STR_IDX);
 
     data.halfword2 = total_current_draw;
 
     // Create switch state bitmap
     data.byte6 = 0x0 |
-        STR_SW << 7 |
-        ON_SW << 6 |
-        ACT_UP_SW << 5 |
-        ACT_DN_SW << 4 |
-        KILL_SW << 3 |
-        ABS_SW << 2 |
-        AUX1_SW << 1 |
-        AUX2_SW << 0;
+      STR_SW << 7 |
+      ON_SW << 6 |
+      ACT_UP_SW << 5 |
+      ACT_DN_SW << 4 |
+      KILL_SW << 3 |
+      ABS_SW << 2 |
+      AUX1_SW << 1 |
+      AUX2_SW << 0;
 
     // Create flag bitmap
     data.byte7 = 0x0 |
-        fuel_prime_flag << 7 |
-        over_temp_flag << 6 |
-        kill_car_flag << 5 |
-        kill_engine_flag << 4;
+      fuel_prime_flag << 7 |
+      over_temp_flag << 6 |
+      kill_car_flag << 5 |
+      kill_engine_flag << 4;
 
     CAN_send_message(PDM_ID + 0x1, 8, data);
     diag_state_send_tmr = millis;
