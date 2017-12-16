@@ -584,7 +584,7 @@ void checkChangeScreen(void) {
       screenIdx = PDM_GRID_SCREEN;
       break;
     case 3:
-      screenIdx = WHEELSPEED_SCREEN;
+      screenIdx = LAMBDA_SCREEN;
       break;
     case 4:
       screenIdx = THROTTLE_SCREEN;
