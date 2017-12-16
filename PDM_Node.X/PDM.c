@@ -49,7 +49,7 @@ uint32_t diag_send_tmr, diag_state_send_tmr, rail_volt_send_tmr,
     load_current_send_tmr, cutoff_send_tmr, overcrt_count_send_tmr = 0;
 uint32_t temp_samp_tmr, ext_adc_samp_tmr = 0;
 uint32_t switch_debounce_tmr, overcrt_chk_tmr = 0;
-uint32_t crit_volt_tmr, crit_oilpres_tmr, crit_oiltemp_tmr, crit_engtemp_tmr = 0;
+uint32_t crit_volt_tmr, crit_oilpres_tmr, crit_oiltemp_tmr, crit_engtemp_tmr, crit_idle_tmr = 0;
 
 /**
  * Main function
@@ -224,6 +224,13 @@ void main(void) {
       wtr_override_sw = 0;
       fuel_override_sw = 0;
     }
+
+		/**
+		 * Reset idle tmr if engine is on
+		 */
+		if (eng_rpm > 0) {
+			crit_idle_tmr = millis;
+		}
 
     /**
      * Respond to critical errors
@@ -575,6 +582,13 @@ void prevent_engine_blowup(void) {
   } else {
     crit_volt_pending = 0;
   }
+
+	// Kill car if it has been idling for too long
+	// Someone has mistakenly left it on
+	if (millis - crit_idle_tmr >= MAX_IDLE_TIME) {
+		kill_car_flag = 1;
+		return;
+	}
 
   if (millis - motec0_recv_tmr < BASIC_CONTROL_WAIT &&
       millis - motec1_recv_tmr < BASIC_CONTROL_WAIT &&
