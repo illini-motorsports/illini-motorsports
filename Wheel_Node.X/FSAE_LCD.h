@@ -414,6 +414,7 @@ void nightMode(uint8_t on);
 uint8_t checkDataChange(volatile dataItem *data, double currentValue);
 
 // Redraw Functions!
+<<<<<<< HEAD
 void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
@@ -428,6 +429,8 @@ void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, doubl
 void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
 void redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
+=======
+>>>>>>> 3e731fc... [WHL] changed function signature of redraw function
 
 // Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);

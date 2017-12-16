@@ -560,6 +560,7 @@ void refreshScreenItems(void){
         data->warningState = 0;
         warnCount--;
       }
+<<<<<<< HEAD
       currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
       if(screenNumber != IMU_SCREEN)
         currItem->currentValue = currItem->data->value;
@@ -585,6 +586,8 @@ void refreshScreenItems(void){
           }
           currItem->currentValue = longit + lateral;
       }
+=======
+>>>>>>> 3e731fc... [WHL] changed function signature of redraw function
       currItem->refreshTime = millis;
     }
   }
@@ -652,7 +655,10 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double curre
 }
 
 // For Fan Override Indicator
+<<<<<<< HEAD
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+=======
+>>>>>>> 3e731fc... [WHL] changed function signature of redraw function
   // Override
   if(data[0].value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
@@ -680,7 +686,10 @@ void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double curre
 }
 
 // For Water Pump Override Indicator
+<<<<<<< HEAD
 void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+=======
+>>>>>>> 3e731fc... [WHL] changed function signature of redraw function
   // Override
   if(data[0].value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
@@ -696,7 +705,10 @@ void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double cur
 }
 
 // For Launch Control Override Indicator
+<<<<<<< HEAD
 void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+=======
+>>>>>>> 3e731fc... [WHL] changed function signature of redraw function
   // Override
   if(data[0].value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
@@ -789,9 +801,12 @@ uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
   }
 }
 
+<<<<<<< HEAD
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
   uint16_t rpm = (uint16_t) data[0].value;
   uint8_t gear = (uint8_t) data[1].value;
+=======
+>>>>>>> 3e731fc... [WHL] changed function signature of redraw function
   uint8_t num_leds = _getShiftLightsRevRange(rpm, gear);
 	/* worried about race condition on gear change
   if (num_leds == _getShiftLightsRevRange(((uint16_t) currentValue))) {
