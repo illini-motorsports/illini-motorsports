@@ -220,3 +220,64 @@ void init_can(void) {
   CFGCONbits.IOLOCK = 1; // Peripheral Pin Select Lock (Locked)
   lock_config();
 }
+
+/**
+* Generic parsing function for a numeric CAN field.  Used in auto-generated parisng functions
+*/
+double CAN_extract_numeric(uint8_t * data, uint8_t pos, uint8_t length, 
+		Endian endianness, uint8_t sgn, double scl, double off) {
+	uint32_t rawField = CAN_parse_bytes(data, pos, length, endianness);
+	if(sgn) {
+		return (((double) ((int32_t) rawField)) - off) * scl;
+	} else {
+		return (((double) rawField) - off) * scl;
+	}
+
+}
+
+double CAN_extract_bit(uint8_t * data, uint8_t bytePos, uint8_t length, Endian endianness, uint8_t bitPos) {
+	uint32_t rawField = CAN_parse_bytes(data, bytePos, length, endianness);
+	return (double) ((rawField & (0x1 << bitPos)) >> bitPos);
+}
+
+uint32_t CAN_parse_bytes(uint8_t * data, uint8_t pos, uint8_t length, Endian endianness) {
+  uint32_t rawField = 0;
+  if(endianness == BIG) {
+    switch (length) {
+      case 1: {
+        rawField = data[pos];
+        break;
+      }
+      case 2: {
+        rawField = (data[pos] << 8) | data[pos + 1];
+        break;
+      }
+      case 4: {
+        rawField = (data[pos] << 24) | (data[pos + 1] << 16)
+        | (data[pos + 2] << 8) | data[pos + 3];
+        break;
+      }
+      default:
+        break;
+    }
+  } else {
+    switch (length) {
+      case 1: {
+        rawField = data[pos];
+        break;
+      }
+      case 2: {
+        rawField = (data[pos + 1] << 8) | data[pos];
+        break;
+      }
+      case 4: {
+        rawField = (data[pos + 3] << 24) | (data[pos + 2] << 16)
+        | (data[pos + 1] << 8) | data[pos];
+        break;
+      }
+      default:
+        break;
+    }
+  }
+	return rawField;
+}
