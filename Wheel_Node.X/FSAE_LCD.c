@@ -138,15 +138,15 @@ void initAllScreens(void){
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
   raceScreen.len = 10;
-  initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
-  initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
+  initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, (volatile dataItem*) fanSw);
+  initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw, (volatile dataItem*) fuelSw);
   initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawGCMMode, &gcmDataItems[MODE_IDX]);
   initScreenItem(&raceScreenItems[3], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
   initScreenItem(&raceScreenItems[4], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
   initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
   initScreenItem(&raceScreenItems[6], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
   initScreenItem(&raceScreenItems[7], 200, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
-  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM,*shiftLights);
+  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, (volatile dataItem*) shiftLights);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 
   // PDM stuff
@@ -180,7 +180,7 @@ void initAllScreens(void){
   initScreenItem(&pdmDrawItems[28], 235, 230, 15, redrawDigit, &pdmDataItems[FAN_CUT_P_IDX]);
   initScreenItem(&pdmDrawItems[29], 310, 230, 15, redrawDigit, &pdmDataItems[WTR_CUT_P_IDX]);
   initScreenItem(&pdmDrawItems[30], 385, 230, 15, redrawDigit, &pdmDataItems[ECU_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[31], 20, 30, 15, redrawShiftLightsRPM, &motecDataItems[ENG_RPM_IDX]);
+  initScreenItem(&pdmDrawItems[31], 20, 30, 15, redrawShiftLightsRPM, (volatile dataItem*) shiftLights);
   initScreenItem(&pdmDrawItems[32], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
 
   allScreens[PDM_GRID_SCREEN] = &pdmGridScreen;
@@ -611,12 +611,13 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double curre
 
 // For Fan Override Indicator
 void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
-  if(data[0].value){
+  if(dataArray[0]->value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
   }
   // Fan On, Switch Not toggled
-  else if(data[1].value){
+  else if(dataArray[1]->value){
     fillCircle(item->x, item->y, item->size, RA8875_RED);
   }
   // Load off, switch off
@@ -639,12 +640,13 @@ void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double curre
 
 // For Water Pump Override Indicator
 void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
-  if(data[0].value){
+  if(dataArray[0]->value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
   }
   // WTR On, Switch Not toggled
-  else if(data[1].value){
+  else if(dataArray[1]->value){
     fillCircle(item->x, item->y, item->size, RA8875_RED);
   }
   // Load off, switch off
@@ -655,12 +657,13 @@ void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double cur
 
 // For Launch Control Override Indicator
 void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
-  if(data[0].value){
+  if(dataArray[0]->value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
   }
   // FUEL On, Switch Not toggled
-  else if(data[1].value){
+  else if(dataArray[1]->value){
     fillCircle(item->x, item->y, item->size, RA8875_RED);
   }
   // Load off, switch off
@@ -748,14 +751,10 @@ uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
 }
 
 void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
-  uint16_t rpm = (uint16_t) data[0].value;
-  uint8_t gear = (uint8_t) data[1].value;
+  volatile dataItem** dataArray = (volatile dataItem**) data;
+  uint16_t rpm = (uint16_t) dataArray[0]->value;
+  uint8_t gear = (uint8_t) dataArray[1]->value;
   uint8_t num_leds = _getShiftLightsRevRange(rpm, gear);
-	/* worried about race condition on gear change
-  if (num_leds == _getShiftLightsRevRange(((uint16_t) currentValue))) {
-    return;
-  }
-	*/
 
   if (num_leds == 10) {
     tlc5955_set_main_blink(1, GRN, NO_OVR);
