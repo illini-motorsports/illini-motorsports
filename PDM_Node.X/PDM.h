@@ -66,6 +66,7 @@
 #define PDL_MAX_DUR        500
 #define OVERRIDE_SW_WAIT   5000
 #define BASIC_CONTROL_WAIT 1000
+#define MAX_IDLE_TIME      300000 // 5 mins
 
 #define TEMP_SAMP_INTV     333
 #define EXT_ADC_SAMP_INTV  10
@@ -264,7 +265,7 @@ const double load_cutoff[NUM_CTL] = {
   10.0,  // FUEL
   100.0, // IGN
   100.0, // INJ
-  70.0,  // ABS
+  100.0,  // ABS
   60.0,  // PDLU
   60.0,  // PDLD
   20.0,  // FAN
