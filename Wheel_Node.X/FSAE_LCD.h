@@ -352,7 +352,7 @@ typedef struct {
   volatile dataItem * data;
   uint32_t refreshTime;
   screenItemInfo info;
-  void (*redrawItem)(screenItemInfo *, volatile dataItem *, double);
+  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double);
 } screenItem;
 
 /*
@@ -392,7 +392,7 @@ void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
-  void (*redrawItem)(screenItemInfo *, volatile dataItem *, double),
+  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double),
   volatile dataItem* data);
 // Toggles between a few different data items on one screen
 void changeAUXType(uint8_t num);
@@ -406,18 +406,18 @@ void nightMode(uint8_t on);
 uint8_t checkDataChange(volatile dataItem *data, double currentValue);
 
 // Redraw Functions!
-void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue);
-void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
 // Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);

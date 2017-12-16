@@ -252,7 +252,7 @@ void initAllScreens(void){
   */
 }
 
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data){
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, double (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data){
   item->info.x = x;
   item->info.y = y;
   item->info.size = size;
@@ -541,15 +541,14 @@ void refreshScreenItems(void){
         data->warningState = 0;
         warnCount--;
       }
-      currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
-      currItem->currentValue = currItem->data->value;
+      currItem->currentValue = currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
       currItem->refreshTime = millis;
     }
   }
 }
 
 // Redraw General Data
-void redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
   uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
   uint8_t stale = millis - data->refreshTime > 1000;
@@ -557,7 +556,7 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data, double current
     data->value = 0;
   }
   if(!error && !stale && !checkDataChange(data, currentValue)) {
-    return;
+    return data->value;
   }
   // Set Backround Color
   uint16_t fillColor;
@@ -590,12 +589,13 @@ void redrawDigit(screenItemInfo * item, volatile dataItem * data, double current
   if(!stale && (!error || millis%500 > 200)) { // draw number if normal, or blink at 1hz
     sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,numColor,data->value);
   }
+  return data->value;
 }
 
 // For Single Digits with Error and Neutral Displays
-void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue){
   if(data->value == currentValue){
-    return;
+    return data->value;
   }
   fillRect(item->x, item->y, item->size, item->size * 1.75, backgroundColor);
   if(data->value == 0){
@@ -607,10 +607,11 @@ void redrawGearPos(screenItemInfo * item, volatile dataItem * data, double curre
   else{
     sevenSegmentDigit(item->x, item->y, item->size, foregroundColor, data->value);
   }
+  return data->value;
 }
 
 // For Fan Override Indicator
-void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
   volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
   if(dataArray[0]->value){
@@ -624,10 +625,11 @@ void redrawFanSw(screenItemInfo * item, volatile dataItem * data, double current
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
   }
+  return data->value;
 }
 
 // For GCM Mode Indicator
-void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue){
   // Auto-Upshifting Engaged
   if(data->value == 1){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
@@ -636,10 +638,11 @@ void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double curre
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
   }
+  return data->value;
 }
 
 // For Water Pump Override Indicator
-void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
   volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
   if(dataArray[0]->value){
@@ -653,10 +656,11 @@ void redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double cur
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
   }
+  return data->value;
 }
 
 // For Launch Control Override Indicator
-void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
   volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
   if(dataArray[0]->value){
@@ -670,25 +674,28 @@ void redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double cu
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
   }
+  return data->value;
 }
 
 // Uses the 4 Tire Temp sensors to draw a color gradient tire
-void redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue){
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   uint16_t fillColor = tempColor(data->value);
   uint16_t x = item->x;
   uint16_t y = item->y;
   uint16_t width = item->size / 4;
   uint16_t height = item->size * 2;
-  fillCircleSquare(x,y,width*2,height,width,tempColor(data[0].value));
-  fillCircleSquare(x+(2*width),y,width*2,height,width,tempColor(data[3].value));
-  fillRect(x+width,y,width,height,tempColor(data[1].value));
-  fillRect(x+(2*width),y,width,height,tempColor(data[2].value));
+  fillCircleSquare(x,y,width*2,height,width,tempColor(dataArray[0]->value));
+  fillCircleSquare(x+(2*width),y,width*2,height,width,tempColor(dataArray[3]->value));
+  fillRect(x+width,y,width,height,tempColor(dataArray[1]->value));
+  fillRect(x+(2*width),y,width,height,tempColor(dataArray[2]->value));
+  return dataArray[0]->value;
 }
 
 // Draws a bar with a height proportional to the suspension position
-void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
   if(data->value == currentValue){
-    return;
+    return data->value;
   }
   fillRect(item->x, item->y, item->size, item->size * 5, backgroundColor);
   if(data->value > MIN_SUS_POS){
@@ -698,12 +705,13 @@ void redrawSPBar(screenItemInfo * item, volatile dataItem * data, double current
     }
     fillRect(item->x,item->y-(item->size*5)+height,item->size,height,RA8875_RED);
   }
+  return data->value;
 }
 
 //Draw a bar with height proportional to the brake pressure
-void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
   if(data->value == currentValue){
-    return;
+    return data->value;
   }
   fillRect(item->x, item->y, item->size, item->size * 10, backgroundColor);
   if(data->value > MIN_BRAKE_PRESS){
@@ -713,14 +721,16 @@ void redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double curr
     }
     fillRect(item->x,item->y-(item->size*10)+height,item->size,height,RA8875_RED);
   }
+  return data->value;
 }
 
-void redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue){
   fillCircle(item->x, item->y, item->size, RA8875_RED);
   if(data->value == currentValue){
-    return;
+    return data->value;
   }
   sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
+  return data->value;
 }
 
 uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
@@ -750,7 +760,7 @@ uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
   }
 }
 
-void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
+double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
   volatile dataItem** dataArray = (volatile dataItem**) data;
   uint16_t rpm = (uint16_t) dataArray[0]->value;
   uint8_t gear = (uint8_t) dataArray[1]->value;
@@ -768,9 +778,10 @@ void redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, doubl
     tlc5955_set_main_blink(0, 0x0, NO_OVR);
     tlc5955_write_main_colors(colorArray);
   }
+  return data->value;
 }
 
-void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue) {
+double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue) {
   uint8_t kill = data->value ? 1 : 0;
   if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
       !kill && tlc5955_get_cluster_warn(CLUSTER_RIGHT)) {
@@ -778,6 +789,7 @@ void redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double c
       tlc5955_set_cluster_warn(CLUSTER_RIGHT, kill, RED, NO_OVR);
     }
   }
+  return data->value;
 }
 
 void clearScreen(void){
