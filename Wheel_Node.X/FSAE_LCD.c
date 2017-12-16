@@ -53,7 +53,7 @@ void initDataItems(void){
   setDataItemDigits(&motecDataItems[THROTTLE_POS_IDX], 3, 0);
   setDataItemDigits(&motecDataItems[OIL_PRES_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[OIL_TEMP_IDX], 3, 0);
-  setDataItemDigits(&motecDataItems[LAMBDA_IDX], 3, 1);
+  setDataItemDigits(&motecDataItems[LAMBDA_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[MANIFOLD_PRES_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[MANIFOLD_TEMP_IDX], 3, 0);
   setDataItemDigits(&motecDataItems[ENG_TEMP_IDX], 3, 0);
@@ -78,6 +78,9 @@ void initDataItems(void){
   motecDataItems[ENG_RPM_IDX].warnThreshold = 12000;
   motecDataItems[ENG_RPM_IDX].errThreshold = 13000;
   motecDataItems[ENG_RPM_IDX].thresholdDir = 1;
+  motecDataItems[LAMBDA_IDX].warnThreshold = 1.1;
+  motecDataItems[LAMBDA_IDX].errThreshold = 1.2;
+  motecDataItems[LAMBDA_IDX].thresholdDir = 1;
   setDataItemDigits(&motecDataItems[WHEELSPEED_AVG_IDX], 2, 0);
 
   // Tire temps
@@ -218,13 +221,13 @@ void initAllScreens(void){
   initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX]);
   initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0);
 
-  // wheel speed screen
-  allScreens[WHEELSPEED_SCREEN] = &wheelSpeedScreen;
-  wheelSpeedScreen.items = wheelSpeedItems;
-  wheelSpeedScreen.len = 2;
-  initScreenItem(&wheelSpeedItems[0], 50, 70, 100, redrawDigit, &motecDataItems[WHEELSPEED_AVG_IDX]);
-  initScreenItem(&wheelSpeedItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
-  
+  // Lambda screen
+  allScreens[LAMBDA_SCREEN] = &lambdaScreen;
+  lambdaScreen.items = lambdaItems;
+  lambdaScreen.len = 2;
+  initScreenItem(&lambdaItems[0], 25, 70, 75, redrawDigit, &motecDataItems[LAMBDA_IDX]);
+  initScreenItem(&lambdaItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
+
   // throttle position screen
   allScreens[THROTTLE_SCREEN] = &throttleScreen;
   throttleScreen.items = throttleItems;
@@ -342,7 +345,7 @@ void initScreen(uint8_t num){
       graphicsMode();
       break;
 
-   case WHEELSPEED_SCREEN:
+    case LAMBDA_SCREEN:
       textMode();
       textTransparent(foregroundColor);
       textSetCursor(10,10);

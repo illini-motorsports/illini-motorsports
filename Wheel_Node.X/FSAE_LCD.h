@@ -25,7 +25,7 @@
 #define GENERAL_SCREEN        6
 #define BRAKE_SCREEN          7
 #define PDM_GRID_SCREEN       8
-#define WHEELSPEED_SCREEN     9
+#define LAMBDA_SCREEN         9
 #define THROTTLE_SCREEN       10
 
 #define MIN_REFRESH           350
@@ -367,10 +367,10 @@ typedef struct {
 } screen;
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2], autoUpItems[2], throttleItems[3];
+screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], lambdaItems[2], autoUpItems[2], throttleItems[3];
 
 // Define all screen structs
-screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, wheelSpeedScreen, throttleScreen;
+screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, lambdaScreen, throttleScreen;
 
 // Define master array of all screen structs
 screen* allScreens[NUM_SCREENS];
