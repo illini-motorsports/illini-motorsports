@@ -28,6 +28,7 @@ void initDataItems(void){
   pdmDataItems[VBAT_RAIL_IDX].warnThreshold = 12.5;
   pdmDataItems[VBAT_RAIL_IDX].errThreshold = 12;
   pdmDataItems[VBAT_RAIL_IDX].thresholdDir = 0;
+  pdmDataItems[VBAT_RAIL_IDX].decDigits = 2;
 
   // Customized PDM dataitem initialization
   pdmDataItems[STR_DRAW_IDX].wholeDigits = 3;
@@ -144,7 +145,7 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[3], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
   initScreenItem(&raceScreenItems[4], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
   initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
-  initScreenItem(&raceScreenItems[6], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
+  initScreenItem(&raceScreenItems[6], 320, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
   initScreenItem(&raceScreenItems[7], 200, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
   initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, (volatile dataItem*) shiftLights);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
