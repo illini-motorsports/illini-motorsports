@@ -560,33 +560,6 @@ void refreshScreenItems(void){
         data->warningState = 0;
         warnCount--;
       }
-/*<<<<<<< HEAD
-      currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
-      if(screenNumber != IMU_SCREEN)
-        currItem->currentValue = currItem->data->value;
-      else
-      {
-          double lateral, longit;
-          lateral = currItem->data[0].value;
-          longit = currItem->data[1].value;
-          lateral = lateral * 100;
-          lateral = (int) lateral;
-          if(lateral < 0)
-          {
-               lateral = lateral * -1;
-               lateral += 1000;
-          }
-          longit = longit * 100;
-          longit = (int) longit;
-          longit = longit * 10000;
-          if(longit < 0)
-          {
-              longit = longit * -1;
-              longit += 10000000;
-          }
-          currItem->currentValue = longit + lateral;
-      }
-=======*/
       currItem->currentValue = currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
       currItem->refreshTime = millis;
     }
@@ -849,22 +822,28 @@ double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double
 double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue)
 {
     int i = 0;
-
+    volatile dataItem** dataArray = (volatile dataItem**) data;
+          
     //constants for various markers representing different g values on the graph
-    uint16_t maxRadiusOuter, maxRadiusInner, outerRadii[4], innerRadii[4], maxG;
-
+    uint16_t maxRadius, radii[4], maxG;
+    
+    //take a "snapshot" of the gForce CAN message
+    double lateralSnap, longitSnap;
+    lateralSnap = dataArray[0].value;
+    longitSnap = dataArray[1].value;
+    
     //initialize constants
-    maxRadiusOuter = item->size;
-    maxRadiusInner = item->size * 0.99;
+    maxRadius = item->size;
     maxG = (-1 * LATERAL_G_OFFSET);
     
     //coordinates to draw the moving indicator
-    uint16_t dot_x = item->x + (((data[0].value) / maxG) * item->size);
-    uint16_t dot_y = item->y + (((data[1].value) / maxG) * item->size);
+    uint16_t dot_x = item->x + (((lateralSnap) / maxG) * item->size);
+    uint16_t dot_y = item->y + (((longitSnap ) / maxG) * item->size);
     uint16_t oldx;
     uint16_t oldy;
     
-      double lateral, longit;
+  //determine where to erase the previous dot by mapping currentValue to coordinates
+  double lateral, longit;
   lateral = fmod(currentValue, 10000);
   if(lateral > 999)
   {
@@ -881,33 +860,54 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
   }
   longit = longit / 100;
 
-    oldx = item->x + (((lateral) / maxG) * item->size);
-     oldy = item->y + (((longit) / maxG) * item->size);
+  oldx = item->x + (((lateral) / maxG) * item->size);
+  oldy = item->y + (((longit) / maxG) * item->size);
+  
     //radius of the moving indicator
     uint16_t dotRad = item->size / 20;
 
-    for(i = 0; i < 4; i++)
-    {
-        outerRadii[i] = ((i + 1) * maxRadiusOuter) / maxG ;
-        innerRadii[i] = outerRadii[i] * 0.99;
-    }
-    
-    //draw the base graph
+    //derive radii 
+    //for(i = 0; i < 4; i++)
+    //{
 
-    //fillCircle(item->x, item->y, maxRadiusInner, backgroundColor);
+    //}
+    
+    //erase the old indicator
     fillCircle(oldx, oldy, item->size/10, backgroundColor);
+    
+    //derive radii and draw axis lines
     for(i = 2; i >= 0; i--)
     {
-        drawCircle(item->x, item->y, outerRadii[i], foregroundColor);
-        //fillCircle(item->x, item->y, innerRadii[i], backgroundColor);
+        radii[i] = ((i + 1) * maxRadius) / maxG ;
+        drawCircle(item->x, item->y, radii[i], foregroundColor);
     }
-    drawCircle(item->x, item->y, maxRadiusOuter, errorColor);    
+    drawCircle(item->x, item->y, maxRadius, errorColor);
+    
     //draw the moving dot
     fillCircle(dot_x, dot_y, dotRad, foregroundColor2);
     
-    return 0;
+    
+    //map the horizontal and lateral G snapshots to a double
+          lateralSnap = lateralSnap * 100;
+          lateralSnap = (int) lateralSnap;
+          if(lateralSnap < 0)
+          {
+               lateralSnap = lateralSnap * -1;
+               lateralSnap += 1000;
+          }
+          longitSnap = longitSnap * 100;
+          longitSnap = (int) longitSnap;
+          longitSnap = longitSnap * 10000;
+          if(longitSnap < 0)
+          {
+              longitSnap = longitSnap * -1;
+              longitSnap += 10000000;
+          }
 
-    //TODO: draw the x and y axes
+    //setting the "currentValue" to allow the function to erase a localized area in the future
+    return longitSnap + lateralSnap;
+
+    //TODO: draw the x and y axes (maybe)
 }
 
 void clearScreen(void){
