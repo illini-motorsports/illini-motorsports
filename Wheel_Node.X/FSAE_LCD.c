@@ -829,8 +829,8 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
     
     //take a "snapshot" of the gForce CAN message
     double lateralSnap, longitSnap;
-    lateralSnap = dataArray[0].value;
-    longitSnap = dataArray[1].value;
+    lateralSnap = dataArray[0]->value;
+    longitSnap = dataArray[1]->value;
     
     //initialize constants
     maxRadius = item->size;
