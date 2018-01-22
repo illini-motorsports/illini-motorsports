@@ -101,7 +101,7 @@ void initDataItems(void){
   //IMU g readings
   for(i = 0; i < IMU_DATAITEM_SIZE; i++)
   {
-      initDataItem(&imuDataItems[i], 0, 0,MIN_REFRESH, 1, 2);
+      initDataItem(&imuDataItems[i], 0, 0, 10, 1, 2);
   }
 
   // Special array declerations
@@ -246,10 +246,10 @@ void initAllScreens(void){
   // coordinates and sizes are still to be decided upon
   allScreens[IMU_SCREEN] = &imuScreen;
   imuScreen.items = imuItems;
-  imuScreen.len = 1;
-  //initScreenItem(&imuItems[0], 100, 50, 50, redrawDigit, &imuDataItems[LATERAL_G_IDX]);
-  //initScreenItem(&imuItems[1], 300, 50, 50, redrawDigit, &imuDataItems[LONGITUDINAL_G_IDX]);
-  initScreenItem(&imuItems[0], 200, 70, 150, redrawGforceGraph, *gForce);
+  imuScreen.len = 3;
+  initScreenItem(&imuItems[0], 360, 107, 20, redrawDigit, &imuDataItems[LATERAL_G_IDX]);
+  initScreenItem(&imuItems[1], 203, 235, 20, redrawDigit, &imuDataItems[LONGITUDINAL_G_IDX]);
+  initScreenItem(&imuItems[2], 239, 97, 90, redrawGforceGraph, (volatile dataItem*) gForce);
   
   /*
   //brake screen
@@ -493,6 +493,14 @@ void initScreen(uint8_t num){
       
     case IMU_SCREEN:
       //to be determined
+      textMode();
+      textTransparent(foregroundColor);
+      textSetCursor(364, 85);
+      textWrite("LATERAL");
+      textSetCursor(207, 213);
+      textWrite("LONGITUDINAL");
+      textEnlarge(0);
+      graphicsMode();
       break; 
   }
 }
@@ -550,7 +558,7 @@ void refreshScreenItems(void){
   for(i = 0;i<currScreen->len;i++){
     screenItem * currItem = &currScreen->items[i];
     volatile dataItem * data = currItem->data;
-    if(data && millis - currItem->refreshTime >= data->refreshInterval){
+    if(data && millis - currItem->refreshTime >= 20/*data->refreshInterval*/){
       uint8_t warning = data->thresholdDir?data->value>=data->warnThreshold:data->value<=data->warnThreshold;
       if(warning && !data->warningState) {
         data->warningState = 1;
@@ -857,16 +865,12 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
   oldy = item->y + (((longit) / maxG) * item->size);
   
     //radius of the moving indicator
-    uint16_t dotRad = item->size / 20;
+    uint16_t dotRad = item->size / 15;
 
-    //derive radii 
-    //for(i = 0; i < 4; i++)
-    //{
-
-    //}
-    
     //erase the old indicator
     fillCircle(oldx, oldy, item->size/10, backgroundColor);
+    //draw the moving dot
+    fillCircle(dot_x, dot_y, dotRad, foregroundColor2);
     
     //derive radii and draw axis lines
     for(i = 2; i >= 0; i--)
@@ -876,8 +880,10 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
     }
     drawCircle(item->x, item->y, maxRadius, errorColor);
     
-    //draw the moving dot
-    fillCircle(dot_x, dot_y, dotRad, foregroundColor2);
+    fillRect(item->x - item->size, item->y - item->size / 160, 2 * item->size, item->size / 80, foregroundColor);
+    fillRect(item->x - item->size / 160, item->y - item->size, item->size / 80, 2 * item->size, foregroundColor);
+        
+
     
     
     //map the horizontal and lateral G snapshots to a double
