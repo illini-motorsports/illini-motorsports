@@ -15,6 +15,7 @@
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/FSAE_spi.h"
 #include "../FSAE.X/FSAE_ad7490.h"
+#include "../FSAE.X/FSAE_mcp23s17.h"
 #include "../FSAE.X/FSAE_rheo.h"
 #include "../FSAE.X/CAN.h"
 #include "../FSAE.X/errno.h"
@@ -251,6 +252,12 @@
 // Cast to uint32 pointer to more easily pass into functions
 #define CS_AD7490_LATBITS   ((uint32_t*) (&LATAbits))
 #define CS_AD7490_LATNUM    1
+
+// MCP23s17 CS Pin definitions
+#define CS_GPIO_LAT         LATEbits.LATE7
+#define CS_GPIO_TRIS        TRISEbits.TRIS7
+#define CS_GPIO_LATBITS     ((uint32_t*) (&LATEbits))
+#define CS_GPIO_LATNUM      7
 
 // MOSFET Current Ratios
 #define CUR_RATIO   8800.0
