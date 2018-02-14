@@ -27,7 +27,8 @@ int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0; // Sampled rail voltages
 uint8_t load_state_changed = 0;
 uint16_t ad7490_samples[AD7490_NUM_CHN] = {0}; // Sample data from ad7490
-SPIConn* ad7490_connection = {0}; // Connection pointer
+SPIConn* ad7490_connection = {0}; // ADC Connection pointer
+SPIConn* gpio_connection = {0};   // GPIO Connection pointer
 
 // Load-specific state/status variables
 SPIConn *rheo_connections[NUM_CTL] = {0}; // Rheostat SPI Connections
@@ -70,6 +71,7 @@ void main(void) {
   CS_AD7490_LAT = 1;
   CS_AD7490_TRIS = OUTPUT;
   ad7490_connection = init_ad7490(5, CS_AD7490_LATBITS, CS_AD7490_LATNUM);
+  gpio_connection = init_mcp23s17(2, CS_GPIO_LATBITS, CS_GPIO_LATNUM);
 
   //TODO: USB
   //TODO: NVM
