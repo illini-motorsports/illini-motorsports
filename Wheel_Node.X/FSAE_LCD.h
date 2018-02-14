@@ -313,7 +313,6 @@
  * warnThreshold -  Value where data will enter a warning state
  * errThreshold -   Value where data will enter an error state
  * thresholdDir - 1 if max, 0 if min
- * refreshInterval -  Maximum refresh frequency
  * wholeDigits -  Number of whole digits to display
  * decDigits -    Number of decimal digits to display
  */
@@ -324,7 +323,6 @@ typedef struct packed {
   unsigned thresholdDir:1;
   unsigned warningState:1;
   unsigned blinkState:1;
-  uint32_t refreshInterval;
   uint32_t refreshTime;
   uint8_t wholeDigits;
   uint8_t decDigits;
@@ -351,6 +349,7 @@ typedef struct {
  *
  * currentValue -   Current value being displayed
  * data -     Pointer to corresponding dataItem
+ * refreshInterval -  Maximum refresh frequency
  * refreshTime -  Time that the value was previously refreshed
  * info -     Struct that contains necessary info for redrawing
  * redrawItem -   Redraw function pointer, called when the item is refreshed
@@ -358,6 +357,7 @@ typedef struct {
 typedef struct {
   double currentValue;
   volatile dataItem * data;
+  uint32_t refreshInterval;
   uint32_t refreshTime;
   screenItemInfo info;
   double (*redrawItem)(screenItemInfo *, volatile dataItem *, double);
@@ -393,15 +393,14 @@ volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2], *shiftLights[2], *gForce[2];
 
 void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem
-void initDataItem(volatile dataItem* data, double warn, double err,
-  uint32_t refresh, uint8_t whole, uint8_t dec);
+void initDataItem(volatile dataItem* data, double warn, double err, uint8_t whole, uint8_t dec);
 void setDataItemDigits(volatile dataItem* data, uint8_t whole, uint8_t dec);
 void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
   double (*redrawItem)(screenItemInfo *, volatile dataItem *, double),
-  volatile dataItem* data);
+  volatile dataItem* data, uint32_t refresh);
 // Toggles between a few different data items on one screen
 void changeAUXType(uint8_t num);
 void changeScreen(uint8_t num);
