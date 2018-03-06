@@ -517,20 +517,20 @@ void check_peak_timer(void) {
 void check_load_overcurrent(void) {
   if (millis - overcrt_chk_tmr >= OVERCRT_CHK_INTV) {
     uint8_t load_idx;
+    uint16_t load_status = mcp23s17_read_all(gpio_connection);
     for (load_idx = 0; load_idx < NUM_CTL; load_idx++) {
+      uint8_t load_on = load_status & (0x1 << GPIO_CHN[load_idx]);
       switch (overcurrent_flag[load_idx]) {
 
         case NO_OVERCRT:
-          if (load_enabled(load_idx) &&
-              load_current[load_idx] < OVERCRT_DETECT) {
+          if (load_enabled(load_idx) && !load_on) {
             overcurrent_flag[load_idx] = OVERCRT;
             overcurrent_tmr[load_idx] = millis;
           }
           break;
 
         case OVERCRT:
-          if (load_enabled(load_idx) &&
-              load_current[load_idx] < OVERCRT_DETECT) {
+          if (load_enabled(load_idx) && !load_on) {
             if (millis - overcurrent_tmr[load_idx] >= OVERCRT_RESET_WAIT) {
               disable_load(load_idx);
               overcurrent_flag[load_idx] = OVERCRT_RESET;

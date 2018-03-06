@@ -314,18 +314,34 @@ const uint32_t load_peak_duration[NUM_LOADS] = {
 
 // External ADC channel indices for all the loads
 const uint8_t ADC_CHN[NUM_LOADS] = {
-  7,  // FUEL
-  6,  // IGN
-  4,  // INJ
-  5,  // ABS
+  7,  // FUEL (LK1)
+  6,  // IGN  (LK2)
+  4,  // INJ  (LK3)
+  5,  // ABS  (L1)
+  9,  // PDLU (L3)
+  8,  // PDLD (L2)
+  10, // FAN  (L4)
+  11, // WTR  (L5)
+  3,  // ECU  (L6)
+  2,  // AUX  (L7)
+  1,  // BVBAT(LB1)
+  0   // STR  (LH1)
+};
+
+// External GPIO channel indices for all the loads
+const uint8_t GPIO_CHN[NUM_LOADS] = {
+  4,  // FUEL
+  5,  // IGN
+  6,  // INJ
+  7,  // ABS
   9,  // PDLU
   8,  // PDLD
   10, // FAN
   11, // WTR
-  3,  // ECU
-  2,  // AUX
-  1,  // BVBAT
-  0   // STR
+  12, // ECU
+  13, // AUX
+  14, // BVBAT
+  15  // STR
 };
 
 /**
