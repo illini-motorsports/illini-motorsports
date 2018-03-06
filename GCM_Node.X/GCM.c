@@ -7,16 +7,11 @@
  * Created:     2015-2016
  */
 #include "GCM.h"
-// Brake pressure: 7 bars (stop auto-shifting) #CHECK
-// buttons for priming and dead man switch #CHECK
 
-volatile gcm_mode mode = NORMAL_MODE;
+//TODO: Move to a better place
+volatile gcm_mode mode = MANUAL_MODE;
 volatile uint8_t attempting_auto_upshift = 0;
 volatile uint8_t throttle_pos_passed_min_auto = 0;
-volatile uint8_t radio_button = 0;
-volatile uint8_t acknowledge_button = 0;
-volatile uint8_t auxiliary_button = 0;
-volatile uint8_t night_day_switch = 0;
 
 //TODO: Add more checks/handling for stale CAN data
 
@@ -24,44 +19,50 @@ volatile uint8_t night_day_switch = 0;
 volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
-volatile uint8_t gear = GEAR_FAIL; // Current gear #CHECK
-double shift_force = 0.0;          // Shift force sensor reading
+volatile uint8_t gear = GEAR_FAIL;  // Current gear
+double gear_voltage = GEAR_FAIL;    // Current gear voltage
+double shift_force = 0.0;           // Shift force sensor reading
 
-volatile uint8_t queue_up = 0; // Number of queued upshifts #CHECK
-volatile uint8_t queue_dn = 0; // Number of queued downshifts
-volatile uint8_t queue_nt = 0; // Number of queued neutral shifts
+volatile uint8_t queue_up = 0;      // Number of queued upshifts
+volatile uint8_t queue_dn = 0;      // Number of queued downshifts
+volatile uint8_t queue_nt = 0;      // Number of queued neutral shifts
 
-uint8_t retry_up = 0; // Number of retried upshifts
-uint8_t retry_dn = 0; // Number of retried downshifts
-uint8_t retry_nt = 0; // Number of retried neutral shifts
+uint8_t retry_up = 0;               // Number of retried upshifts
+uint8_t retry_dn = 0;               // Number of retried downshifts
+uint8_t retry_nt = 0;               // Number of retried neutral shifts
 
-uint8_t switch_debounced = 0; // Debounced (safe) switch state
-uint8_t switch_prev = 0;      // Previous sampled value of switches
+uint8_t switch_debounced = 0;       // Debounced (safe) switch state
+uint8_t switch_prev = 0;            // Previous sampled value of switches
 
-volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP #CHECK
-volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
+volatile uint8_t prev_switch_up = 0;// Previous switch state of SHIFT_UP
+volatile uint8_t prev_switch_dn = 0;// Previous switch state of SHIFT_DN
 
-volatile double eng_rpm = 0;       // Engine RPM (from ECU) #CHECK
-volatile double bat_volt = 0;      // Battery voltage (from ECU)
-volatile double throttle_pos = 0;  // Throttle position (from ECU) #CHECK
+volatile double eng_rpm = 0;        // Engine RPM (from ECU)
+volatile double bat_volt = 0;       // Battery voltage (from ECU)
+volatile double throttle_pos = 0;   // Throttle position (from ECU)
 volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from ECU)
-volatile uint8_t kill_sw = 0;      // Holds state of KILL_SW (from PDM)
-volatile double wheel_fl_speed = 0;
-volatile double wheel_fr_speed = 0;
-volatile double wheel_rl_speed = 0;
-volatile double wheel_rr_speed = 0;
+volatile uint8_t kill_sw = 0;       // Holds state of KILL_SW (from PDM)
+volatile uint8_t radio_button = 0;  // Radio Button State from Wheel
+volatile uint8_t acknowledge_button = 0; // Acknowledge button from Wheel
+volatile uint8_t auxiliary_button = 0;  // Aux button from Wheel
+volatile uint8_t night_day_switch = 0;  // Night mode switch from Wheel
+volatile double wheel_fl_speed = 0; // Wheel Speed Front Left from ABS
+volatile double wheel_fr_speed = 0; // Wheel Speed Front Right from ABS
+volatile double wheel_rl_speed = 0; // Wheel Speed Rear Left from ABS
+volatile double wheel_rr_speed = 0; // Wheel Speed Rear Right from ABS
 
-int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
-int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
+int16_t pcb_temp = 0;               // PCB temperature reading in units of [C/0.005]
+int16_t junc_temp = 0;              // Junction temperature reading in units of [C/0.005]
 
-uint16_t shift_force_spoof = 0; // Holds desired value of gear shift force
+//TODO: Better integrate with motec connection pin
+uint16_t shift_force_spoof = 0;     // Holds desired value of gear shift force
 
 volatile uint8_t gear_fail_nt_shift = SHIFT_ENUM_NT; // Stores direction of neutral shift while in gear failure mode
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr = 0;
 uint32_t temp_samp_tmr, sensor_samp_tmr = 0;
-uint32_t diag_send_tmr, state_send_tmr = 0;
+uint32_t diag_send_tmr, state_send_tmr, sensor_send_tmr = 0;
 uint32_t switch_debounce_tmr = 0;
 volatile uint32_t lockout_tmr = 0; // Holds millis value of last lockout set
 uint32_t act_tmr = 0;              // Records the time the actuator was fired
@@ -82,26 +83,30 @@ void main(void) {
   init_termination(NOT_TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
 
-  //TODO: USB
-  //TODO: NVM
-
   // Initialize pins
-  SHIFT_UP_TRIS = INPUT;
+  // Digital Inputs
   SHIFT_UP_ANSEL = DIG_INPUT;
-  SHIFT_DN_TRIS = INPUT;
+  SHIFT_UP_TRIS = INPUT;
   SHIFT_DN_ANSEL = DIG_INPUT;
-  SHIFT_NT_TRIS = INPUT;
+  SHIFT_DN_TRIS = INPUT;
   SHIFT_NT_ANSEL = DIG_INPUT;
-  ACT_UP_TRIS = OUTPUT;
+  SHIFT_NT_TRIS = INPUT;
+
+  // Digital Outputs
   ACT_UP_LAT = ACT_OFF;
-  ACT_DN_TRIS = OUTPUT;
+  ACT_UP_TRIS = OUTPUT;
   ACT_DN_LAT = ACT_OFF;
-  ADC_GEAR_TRIS = INPUT;
+  ACT_DN_TRIS = OUTPUT;
+  MOTEC_CUT_LAT = MOTEC_CUT_OFF;
+  MOTEC_CUT_TRIS = OUTPUT;
+
+  // Analog Inputs
   ADC_GEAR_ANSEL = AN_INPUT;
   ADC_GEAR_CSS = 1;
-  ADC_FORCE_TRIS = INPUT;
+  ADC_GEAR_TRIS = INPUT;
   ADC_FORCE_ANSEL = AN_INPUT;
   ADC_FORCE_CSS = 1;
+  ADC_FORCE_TRIS = INPUT;
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
@@ -114,6 +119,9 @@ void main(void) {
 
     // Misc helper functions
     debounce_switches();
+
+    // Check to see if GCM mode should change
+    check_gcm_mode();
 
     // Analog sampling functions
     sample_temp();
@@ -135,13 +143,14 @@ void main(void) {
     }
 
     // Send power cut message again if MoTeC hasn't received it
-    if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT)) {
+    if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT) && MOTEC_CAN_BUS) {
         send_power_cut(CUT_RESEND);
     }
 
     // CAN message sending functions
     send_diag_can();
     send_state_can(NO_OVERRIDE);
+    send_sensor_can();
   }
 }
 
@@ -190,9 +199,7 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
     send_state_can(OVERRIDE);
   }
 
-  // Check to see if GCM mode should change
-  check_gcm_mode();
-
+  // TODO: Move this to main loop?
   // Check for an auto upshift if in the correct mode
   if(mode == AUTO_UPSHIFT_MODE) {
     process_auto_upshift();
@@ -229,6 +236,7 @@ void _nmi_handler(void) {
 
 //============================= ADC FUNCTIONS ==================================
 
+// TODO: Move this to library
 /**
  * void sample_temp(void)
  *
@@ -275,22 +283,21 @@ void sample_temp(void) {
 void sample_sensors(uint8_t is_shifting) {
   if (millis - sensor_samp_tmr >= SENSOR_SAMP_INTV) {
     uint32_t gear_samp = read_adc_chn(ADC_GEAR_CHN);
-    double gear_voltage =  ((((double) gear_samp) / 4095.0) * 5.0);
-    uint16_t gear_voltage_can = (uint16_t) (gear_voltage * 10000.0);
+    gear_voltage =  ((((double) gear_samp) / 4095.0) * 5.0);
 
-    if (abs(gear_voltage - 0.595) <= GEAR_VOLT_RIPPLE) {
+    if (abs(gear_voltage - gear_voltages[0]) <= GEAR_VOLT_RIPPLE) {
       gear = 1;
-    } else if (abs(gear_voltage - 1.05) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - gear_voltages[1]) <= GEAR_VOLT_RIPPLE) {
       gear = GEAR_NEUT;
-    } else if (abs(gear_voltage - 1.58) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - gear_voltages[2]) <= GEAR_VOLT_RIPPLE) {
       gear = 2;
-    } else if (abs(gear_voltage - 2.32) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - gear_voltages[3]) <= GEAR_VOLT_RIPPLE) {
       gear = 3;
-    } else if (abs(gear_voltage - 3.16) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - gear_voltages[4]) <= GEAR_VOLT_RIPPLE) {
       gear = 4;
-    } else if (abs(gear_voltage - 4.12) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - gear_voltages[5]) <= GEAR_VOLT_RIPPLE) {
       gear = 5;
-    } else if (abs(gear_voltage - 4.81) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - gear_voltages[6]) <= GEAR_VOLT_RIPPLE) {
       gear = 6;
     } else {
       gear = GEAR_FAIL;
@@ -305,14 +312,6 @@ void sample_sensors(uint8_t is_shifting) {
     uint32_t force_samp = read_adc_chn(ADC_FORCE_CHN);
     double force_voltage =  ((((double) force_samp) / 4095.0) * 5.0);
     shift_force = (428.571428571 * force_voltage) + 1071.42857143;
-    int16_t shift_force_can = (int16_t) (shift_force / FORCE_SCL);
-
-    CAN_data data = {0};
-    data.byte0 = gear;
-    data.byte1 = mode;
-    data.halfword1 = gear_voltage_can;
-    data.halfword2 = shift_force_can;
-    CAN_send_message(GCM_ID + 0x1, 6, data);
 
     sensor_samp_tmr = millis;
   }
@@ -325,7 +324,7 @@ void sample_sensors(uint8_t is_shifting) {
  *
  * @param msg The received CAN message
  */
-void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
+void process_CAN_msg(CAN_message msg) {
   uint8_t switch_bitmap;
   uint8_t button_bitmap;
 
@@ -335,11 +334,13 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
           msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
       throttle_pos = ((double) ((msg.data[THROTTLE_POS_BYTE] << 8) |
           msg.data[THROTTLE_POS_BYTE + 1])) * THROTTLE_POS_SCL;
+      // TODO: change to PDM battery voltage?
       bat_volt = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
           msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
       CAN_recv_tmr = millis;
       break;
 
+    // TODO: change to ABS wheel speed data
     case MOTEC_ID + 0x3:
       wheel_fl_speed = ((double) ((msg.data[WHEELSPEED_FL_BYTE] << 8) |
           msg.data[WHEELSPEED_FL_BYTE + 1])) * WHEELSPEED_FL_SCL;
@@ -363,15 +364,14 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
       CAN_recv_tmr = millis;
       break;
 
-      case WHEEL_ID + 0x1:
-        button_bitmap = msg.data[0];
-        radio_button = button_bitmap & 0x01;
-        acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
-        auxiliary_button = ((uint8_t) (button_bitmap & 0x04) >> 2);
-        night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
-        CAN_recv_tmr = millis;
-        break;
-
+    case WHEEL_ID + 0x1:
+      button_bitmap = msg.data[0];
+      radio_button = button_bitmap & 0x01;
+      acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
+      auxiliary_button = (uint8_t) ((button_bitmap & 0x04) >> 2);
+      night_day_switch = (uint8_t) ((button_bitmap & 0x80) >> 7);
+      CAN_recv_tmr = millis;
+      break;
   }
 }
 
@@ -415,18 +415,32 @@ void send_state_can(uint8_t override) {
   }
 }
 
+void send_sensor_can(void) {
+  if (millis - sensor_send_tmr >= SENSOR_MSG_SEND) {
+    int16_t shift_force_can = (int16_t) (shift_force / FORCE_SCL);
+    uint16_t gear_voltage_can = (uint16_t) (gear_voltage * 10000.0);
+
+    CAN_data data = {0};
+    data.byte0 = gear;
+    data.byte1 = mode;
+    data.halfword1 = gear_voltage_can;
+    data.halfword2 = shift_force_can;
+    CAN_send_message(GCM_ID + 0x1, 6, data);
+  }
+}
+
 //=========================== LOGIC FUNCTIONS ==================================
 
 /**
 * void check_gcm_mode(void)
-* 
+*
 * Check various CAN data to determine the correct GCM mode
 */
 void check_gcm_mode(void) {
   if (night_day_switch == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
     mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
   } else if (night_day_switch == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
-    mode = NORMAL_MODE; // disengage auto-upshifting
+    mode = MANUAL_MODE; // disengage auto-upshifting
     queue_up = 0; // remove queued upshift
   } else if (mode == AUTO_UPSHIFT_MODE) {
     if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position did not cross minimum while in auto-upshifting mode
@@ -434,9 +448,9 @@ void check_gcm_mode(void) {
         throttle_pos_passed_min_auto = 1; // throttle position crossed minimum while in auto-upshifting mode
       }
     } else if (throttle_pos <= 75) { // check to see if throttle position has dropped below minimum while in auto-upshifting mode
-      mode = NORMAL_MODE; // disengage auto-upshifting
+      mode = MANUAL_MODE; // disengage auto-upshifting
       queue_up = 0; // remove queued upshift
-    }  
+    }
   }
 }
 
@@ -447,7 +461,7 @@ void check_gcm_mode(void) {
  * and increment the queue if neccesary
 */
 void process_auto_upshift(void) {
-  if (eng_rpm >= get_threshold_rpm(gear) && 
+  if (eng_rpm >= get_threshold_rpm(gear) &&
         !is_in_launch() &&
         queue_up == 0 &&
         gear <= MAX_AUTO_UPSHIFT_GEAR)
@@ -463,7 +477,7 @@ void process_auto_upshift(void) {
  */
 void process_upshift_press(void) {
   if (mode == AUTO_UPSHIFT_MODE) {
-    mode = NORMAL_MODE;
+    mode = MANUAL_MODE;
     queue_up = 0;
   }
 
@@ -522,7 +536,7 @@ void process_upshift_press(void) {
  */
 void process_downshift_press(void) {
   if (mode == AUTO_UPSHIFT_MODE) {
-    mode = NORMAL_MODE;
+    mode = MANUAL_MODE;
     queue_up = 0;
   }
 
@@ -1040,25 +1054,31 @@ void debounce_switches(void) {
  * Sends the ECU a message to perform a power cut, allowing us to upshift
  * without lifting or clutching.
  *
+ * The GPIO pin will also be wired to Motec and indicate a power cut should be initiated
+ *
  * @param is_start Used to start a cut, end it, or resend the message
  */
 void send_power_cut(uint8_t is_start) {
   if (is_start == CUT_START) {
     shift_force_spoof = PWR_CUT_SPOOF;
+    MOTEC_CUT_LAT = 1;
   } else if (is_start == CUT_END) {
     shift_force_spoof = 0;
+    MOTEC_CUT_LAT = 0;
   }
 
-  CAN_data data = {0};
-  data.halfword0 = ADL_IDX_10_12;
-  data.halfword1 = shift_force_spoof;
-  CAN_send_message(ADL_ID, 4, data);
-  pwr_cut_retry_tmr = millis;
+  if(MOTEC_CAN_BUS) {
+    CAN_data data = {0};
+    data.halfword0 = ADL_IDX_10_12;
+    data.halfword1 = shift_force_spoof;
+    CAN_send_message(ADL_ID, 4, data);
+    pwr_cut_retry_tmr = millis;
+  }
 }
 
 /**
 * uint16_t get_threshold_rpm(uint8_t gear)
-* 
+*
 * Returns the optimal shift RPM for a given gear
 */
 uint16_t get_threshold_rpm(uint8_t gear) {
@@ -1071,7 +1091,7 @@ uint16_t get_threshold_rpm(uint8_t gear) {
 
 /**
 * uint8_t is_in_launch(void)
-* 
+*
 * returns 1 if the car is currently in a launch, 0 otherwise
 */
 uint8_t is_in_launch(void) {
