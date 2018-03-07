@@ -206,7 +206,7 @@
 #define RR3_IDX                 19
 
 #define SPM_DATAITEM_SIZE       78
-                               
+
 #define ANALOG_CHAN_0_IDX       3
 #define ANALOG_CHAN_1_IDX       4
 #define ANALOG_CHAN_2_IDX       5

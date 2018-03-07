@@ -35,7 +35,7 @@ void PWM1out(uint8_t p);
 void PWM2out(uint8_t p);
 
 /* Text functions */
-void textMode(void);  // Switches drawing mode to text 
+void textMode(void);  // Switches drawing mode to text
 void textSetCursor(uint16_t x, uint16_t y); // Sets the coordinates of the cursor
 void textColor(uint16_t foreColor, uint16_t bgColor);
 void textTransparent(uint16_t foreColor); // Only writes foreground pixels
@@ -45,7 +45,7 @@ void textWriteHelper(const char* buffer, uint16_t len);
 
 // Seven Segment Functions
 // Helper seven segment drawer, uses a bitmask to determine segments to draw
-void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bMask); 
+void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bMask);
 // Draws a single seven segment digit
 void sevenSegmentDigit(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t digit);
 // Draws Multiple Digits
@@ -83,7 +83,7 @@ void writeCommand(uint8_t d);
 uint8_t readData(void);
 uint8_t readReg(uint8_t reg);
 // Spams spi, can we do it better?
-uint8_t waitPoll(uint8_t reg, uint8_t flag); 
+uint8_t waitPoll(uint8_t reg, uint8_t flag);
 uint8_t isDisplayOn(); // used to determine if display is in an unresponsive error state
 
 /* GFX Helper Functions */
