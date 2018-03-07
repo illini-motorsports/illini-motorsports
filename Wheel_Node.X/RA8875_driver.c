@@ -32,7 +32,7 @@ void drawChevron(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t fg, ui
 }
 
 // Displays a decimal number using the seven segment helper functions
-void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, 
+void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums,
     uint16_t decDigits, uint16_t color, double number){
   if(decDigits == 0){
     sevenSegmentMultDigit(x, y, numWidth, numNums, color, (uint16_t) number);
@@ -42,12 +42,12 @@ void sevenSegmentDecimal(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t num
   uint16_t decNum = (number - intNum) * pow(10, decDigits);
   sevenSegmentMultDigit(x, y, numWidth, numNums - decDigits, color, intNum);
   fillCircle(x + (numWidth*1.2*(numNums - decDigits)), y + (numWidth*1.7), numWidth/10, color);
-  sevenSegmentMultDigit(x + (numWidth*1.2*(numNums - decDigits)) + numWidth/5, 
+  sevenSegmentMultDigit(x + (numWidth*1.2*(numNums - decDigits)) + numWidth/5,
       y, numWidth, decDigits, color, decNum);
 }
 
 // Displays multiple digits using the seven segment helper functions
-void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums, 
+void sevenSegmentMultDigit(uint16_t x, uint16_t y, uint16_t numWidth, uint16_t numNums,
     uint16_t color, uint16_t number){
   uint16_t offset = numWidth*1.2;
   int i = 0;
@@ -385,7 +385,7 @@ void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t fille
   waitPoll(RA8875_DCR, RA8875_DCR_CIRCLE_STATUS);
 }
 
-void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, 
+void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
     int16_t y2, uint16_t color, uint8_t filled) {
 
   /* Set Point 0 */
@@ -412,7 +412,7 @@ void triangleHelper(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
   waitPoll(RA8875_DCR, RA8875_DCR_LINESQUTRI_STATUS);
 }
 
-void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, 
+void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis,
     uint16_t color, uint8_t filled) {
 
   /* Set Center Point */
@@ -436,7 +436,7 @@ void ellipseHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t s
   waitPoll(RA8875_ELLIPSE, RA8875_ELLIPSE_STATUS);
 }
 
-void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis, 
+void curveHelper(int16_t xCenter, int16_t yCenter, int16_t longAxis, int16_t shortAxis,
     uint8_t curvePart, uint16_t color, uint8_t filled) {
   /* Set Center Point */
   writeCoordinates(0xA5, xCenter, yCenter);

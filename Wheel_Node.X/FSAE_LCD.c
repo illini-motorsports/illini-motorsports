@@ -109,8 +109,8 @@ void initDataItems(void){
   fuelSw[1] = &pdmDataItems[FUEL_ENABLITY_IDX];
   wtrSw[0] = &wheelDataItems[SW_WTR_IDX];
   wtrSw[1] = &pdmDataItems[WTR_ENABLITY_IDX];
-	shiftLights[0] = &motecDataItems[ENG_RPM_IDX];
-	shiftLights[1] = &gcmDataItems[GEAR_IDX];
+  shiftLights[0] = &motecDataItems[ENG_RPM_IDX];
+  shiftLights[1] = &gcmDataItems[GEAR_IDX];
 }
 
 void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, uint8_t whole, uint8_t dec){
@@ -355,7 +355,7 @@ void initScreen(uint8_t num){
       textEnlarge(0);
       graphicsMode();
       break;
-      
+
    case THROTTLE_SCREEN:
       textMode();
       textTransparent(foregroundColor);
@@ -735,7 +735,7 @@ double redrawRotary(screenItemInfo * item, volatile dataItem * data, double curr
 }
 
 uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
-	uint16_t maxRPM = shiftRPM[gear];
+  uint16_t maxRPM = shiftRPM[gear];
   if (rpm > maxRPM) {
     return 10;
   } else if (rpm > maxRPM - REV_SUB_9) {
