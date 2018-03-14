@@ -271,8 +271,8 @@ void main(void) {
         set_load(IGN_IDX, ON_SW && !KILL_SW);
         set_load(INJ_IDX, ON_SW && !KILL_SW);
         set_load(FUEL_IDX, ON_SW && !KILL_SW && !TEST_OUTPUTS);
-        set_load(WTR_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
-        set_load(FAN_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
+        set_load(WTR_IDX, (ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS) || ABS_SW);
+        set_load(FAN_IDX, (ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS) || ABS_SW);
 
         // STR
         if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
