@@ -76,16 +76,12 @@ void initDataItems(void){
   motecDataItems[ENG_TEMP_IDX].thresholdDir = 1;
   motecDataItems[ENG_TEMP_IDX].warnThreshold = 100;
   motecDataItems[ENG_TEMP_IDX].errThreshold = 110;
-  motecDataItems[WHEELSPEED_AVG_IDX].thresholdDir = 1;
-  motecDataItems[WHEELSPEED_AVG_IDX].warnThreshold = 100;
-  motecDataItems[WHEELSPEED_AVG_IDX].errThreshold = 110;
   motecDataItems[ENG_RPM_IDX].warnThreshold = 12000;
   motecDataItems[ENG_RPM_IDX].errThreshold = 13000;
   motecDataItems[ENG_RPM_IDX].thresholdDir = 1;
   motecDataItems[LAMBDA_IDX].warnThreshold = 1.1;
   motecDataItems[LAMBDA_IDX].errThreshold = 1.2;
   motecDataItems[LAMBDA_IDX].thresholdDir = 1;
-  setDataItemDigits(&motecDataItems[WHEELSPEED_AVG_IDX], 2, 0);
 
   // Tire temps
   for(i=0;i<TIRETEMP_DATAITEM_SIZE;i++) {
@@ -235,13 +231,6 @@ void initAllScreens(void){
   initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX], MIN_REFRESH);
   initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0, MIN_REFRESH);
 
-  // wheel speed screen
-  allScreens[WHEELSPEED_SCREEN] = &wheelSpeedScreen;
-  wheelSpeedScreen.items = wheelSpeedItems;
-  wheelSpeedScreen.len = 2;
-  initScreenItem(&wheelSpeedItems[0], 50, 70, 100, redrawDigit, &motecDataItems[WHEELSPEED_AVG_IDX], MIN_REFRESH);
-  initScreenItem(&wheelSpeedItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
-  
   // throttle position screen
   allScreens[THROTTLE_SCREEN] = &throttleScreen;
   throttleScreen.items = throttleItems;
