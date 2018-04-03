@@ -3,7 +3,7 @@
 double analog_channels[36] = {0};
 SPIConn *analog_connections[6] = {0};
 uint16_t digital_channels = 0;
-SPIConn *digital_connections[3] = {0};
+SPIConn *digital_connection = {0};
 volatile uint32_t millis = 0;
 uint32_t canAnalogMillis = 0;
 
@@ -13,13 +13,14 @@ void main(void){
   init_oscillator(0);// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
   init_adcs();// Initialize all of the ADC's
+  init_gpio(); // Initialize external digital GPIO
 
   while(1){
-    update_analog_channels();
+    //update_analog_channels();
     update_digital_channels();
 
     if(millis - canAnalogMillis > 50){
-      CANAnalogChannels();
+      //CANAnalogChannels();
       canAnalogMillis = millis;
     }
   }
@@ -28,7 +29,7 @@ void main(void){
 void CANAnalogChannels(void){
   CAN_data data = {0};
   int i;
-  for(i = 0;i<9;i++){
+  for(i = 0;i<8;i++){
     data.halfword0 = (uint16_t) (analog_channels[i*4]*ANALOG_CAN_SCL);
     data.halfword1 = (uint16_t) (analog_channels[(i*4)+1]*ANALOG_CAN_SCL);
     data.halfword2 = (uint16_t) (analog_channels[(i*4)+2]*ANALOG_CAN_SCL);
@@ -57,7 +58,7 @@ void update_analog_channels(void){
 }
 
 void update_digital_channels(void) {
-  digital_channels = mcp23s17_read_all(digital_connections[2]);
+  digital_channels = mcp23s17_read_all(digital_connection) >> 8;
 }
 
 void init_adcs(void) {
@@ -76,7 +77,5 @@ void init_gpio(void){
   GPIO_CS_TRIS = OUTPUT;
 
   // initialize all gpio chips
-  digital_connections[0] = init_mcp23s17(5, GPIO_CS_LATBITS, GPIO_CS_LATNUM);
-
-  mcp23s17_write_reg(MCP23S17_IODIR, 0xFFFF, digital_connections[2]); // digital inputs
+  digital_connection = init_mcp23s17(5, GPIO_CS_LATBITS, GPIO_CS_LATNUM);
 }

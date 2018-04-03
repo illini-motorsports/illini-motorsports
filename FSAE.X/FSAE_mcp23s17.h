@@ -26,8 +26,10 @@
 #define MCP23S17_GPIO     0x12 //Reading reads PORT, Writing writes LAT
 #define MCP23S17_OLAT     0x14 //Output Latch
 
-#define MCP23S17_READ     0b01000001 //read control byte
-#define MCP23S17_WRITE    0b01000000 //write control byte
+#define MCP23S17_CONTROL  0b0100 // Control Nibble
+#define MCP23S17_HW_ADDR  0b000  // Hardware byte address (ususally 0)
+#define MCP23S17_READ     0b1    // Read Bit
+#define MCP23S17_WRITE    0b0    // Write Bit
 
 // Struct representing the chip's control register
 typedef union {
@@ -50,7 +52,8 @@ uint16_t mcp23s17_read_all(SPIConn *conn);
 uint8_t mcp23s17_read_one(uint8_t pin, SPIConn *conn);
 void mcp23s17_write_all(uint16_t value, SPIConn *conn);
 void mcp23s17_write_one(uint8_t pin, uint8_t value, SPIConn *conn);
-uint16_t mcp23s17_read_reg(uint8_t addr, SPIConn *conn);
-void mcp23s17_write_reg(uint8_t addr, uint16_t value, SPIConn *conn);
+uint8_t mcp23s17_read_reg(uint8_t addr, SPIConn *conn);
+void mcp23s17_write_reg(uint8_t addr, uint8_t value, SPIConn *conn);
+void mcp23s17_write_reg_ctrl(uint8_t addr, uint8_t value, SPIConn *conn);
 
 #endif /* FSAE_ad7490_H */

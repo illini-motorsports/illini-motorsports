@@ -41,6 +41,7 @@ uint32_t send_spi3(uint32_t value);
 uint32_t send_spi5(uint32_t value);
 uint32_t send_spi6(uint32_t value);
 uint32_t send_spi(uint32_t value, SPIConn *conn);
+uint64_t send_spi_double(uint32_t value1, uint32_t value2, SPIConn *conn);
 
 // Set !CS Low
 inline void spi_select(SPIConn* conn) {
