@@ -19,7 +19,7 @@ void initDataItems(void){
 
   // Set default initialization for PDM data items
   for(i=0;i<PDM_DATAITEM_SIZE;i++){
-    initDataItem(&pdmDataItems[i],200,200,MIN_REFRESH,2,1);
+    initDataItem(&pdmDataItems[i],200,200,2,1);
     pdmDataItems[i].thresholdDir = 1;
   }
   for(i=FUEL_CUT_IDX;i<ECU_CUT_P_IDX;i++){
@@ -35,7 +35,7 @@ void initDataItems(void){
 
   // Set default initialization for GCM data items
   for(i=0;i<GCM_DATAITEM_SIZE;i++){
-    initDataItem(&gcmDataItems[i],0,0,MIN_REFRESH,1,0);
+    initDataItem(&gcmDataItems[i],0,0,1,0);
   }
 
   // Customized GCM dataitem initialization
@@ -46,7 +46,7 @@ void initDataItems(void){
 
   // Set default initializations for Motec data items
   for(i=0;i<MOTEC_DATAITEM_SIZE;i++) {
-    initDataItem(&motecDataItems[i],0,0,MIN_REFRESH,2,1);
+    initDataItem(&motecDataItems[i],0,0,2,1);
   }
 
   // Customized Motec dataitem initialization
@@ -89,20 +89,26 @@ void initDataItems(void){
 
   // Tire temps
   for(i=0;i<TIRETEMP_DATAITEM_SIZE;i++) {
-    initDataItem(&tireTempDataItems[i],0,0,MIN_REFRESH,2,1);
+    initDataItem(&tireTempDataItems[i],0,0,2,1);
   }
 
   // SPM
   for(i=0;i<SPM_DATAITEM_SIZE;i++) {
-    initDataItem(&spmDataItems[i],0,0,MIN_REFRESH,2,1);
+    initDataItem(&spmDataItems[i],0,0,2,1);
   }
 
   //Switches and Rotaries
   for(i=0;i<3;i++) {
-    initDataItem(&wheelDataItems[i],0,0,MIN_REFRESH,2,1);
+    initDataItem(&wheelDataItems[i],0,0,2,1);
   }
   for(i=3;i<WHEEL_DATAITEM_SIZE;i++) {
-    initDataItem(&wheelDataItems[i],0,0,MIN_REFRESH,1,0);
+    initDataItem(&wheelDataItems[i],0,0,1,0);
+  }
+  
+  //IMU g readings
+  for(i = 0; i < IMU_DATAITEM_SIZE; i++)
+  {
+      initDataItem(&imuDataItems[i], 0, 0, 1, 2);
   }
 /*
   // Special array declerations
@@ -114,15 +120,16 @@ void initDataItems(void){
   wtrSw[1] = &pdmDataItems[WTR_ENABLITY_IDX];
   shiftLights[0] = &motecDataItems[ENG_RPM_IDX];
   shiftLights[1] = &gcmDataItems[GEAR_IDX];
+  gForce[0] = &imuDataItems[LATERAL_G_IDX];
+  gForce[1] = &imuDataItems[LONGITUDINAL_G_IDX];
  */
 }
 
-void initDataItem(volatile dataItem* data, double warn, double err, uint32_t refresh, uint8_t whole, uint8_t dec){
+void initDataItem(volatile dataItem* data, double warn, double err, uint8_t whole, uint8_t dec){
   data->value = 0;
   data->warnThreshold = warn;
   data->errThreshold = err;
   data->thresholdDir = 0;
-  data->refreshInterval = refresh;
   data->wholeDigits = whole;
   data->decDigits = dec;
 }
@@ -138,6 +145,7 @@ void initAllScreens(void){
   // Initialize colors
   backgroundColor = RA8875_WHITE;
   foregroundColor = RA8875_BLACK;
+  foregroundColor2 = RA8875_GREEN;
 
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
@@ -146,103 +154,111 @@ void initAllScreens(void){
   //initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   //initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
   //initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
-  initScreenItem(&raceScreenItems[3], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX]);
-  initScreenItem(&raceScreenItems[4], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX]);
-  initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX]);
-  initScreenItem(&raceScreenItems[6], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
-  initScreenItem(&raceScreenItems[7], 200, 20, 80, redrawGearPos, &gcmDataItems[GEAR_IDX]);
+  initScreenItem(&raceScreenItems[3], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[4], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[6], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[7], 200, 20, 80, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
   //initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM,*shiftLights);
-  initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
-  initScreenItem(&raceScreenItems[10], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX]);
-  
+  initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[10], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH);
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
   pdmDrawScreen.items = pdmDrawItems;
   pdmDrawScreen.len = 33;
-  initScreenItem(&pdmDrawItems[1], 10, 30, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[2], 85, 30, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[3], 160, 30, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[4], 235, 30, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[5], 310, 30, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[6], 385, 30, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[7], 10, 80, 15, redrawDigit, &pdmDataItems[AUX_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[8], 85, 80, 15, redrawDigit, &pdmDataItems[PDLU_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[9], 160, 80, 15, redrawDigit, &pdmDataItems[PDLD_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[10], 235, 80, 15, redrawDigit, &pdmDataItems[ABS_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[11], 310, 80, 15, redrawDigit, &pdmDataItems[BVBAT_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[15], 385, 80, 15, redrawDigit, &pdmDataItems[STR_DRAW_IDX]);
-  initScreenItem(&pdmDrawItems[16], 10, 130, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[17], 85, 130, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[18], 160, 130, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[19], 235, 130, 15, redrawDigit, &pdmDataItems[ECU_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[20], 310, 130, 15, redrawDigit, &pdmDataItems[WTR_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[21], 385, 130, 15, redrawDigit, &pdmDataItems[FAN_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[22], 10, 180, 15, redrawDigit, &pdmDataItems[AUX_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[23], 85, 180, 15, redrawDigit, &pdmDataItems[PDLU_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[24], 160, 180, 15, redrawDigit, &pdmDataItems[PDLD_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[25], 235, 180, 15, redrawDigit, &pdmDataItems[ABS_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[26], 310, 180, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX]);
-  initScreenItem(&pdmDrawItems[27], 160, 230, 15, redrawDigit, &pdmDataItems[FUEL_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[28], 235, 230, 15, redrawDigit, &pdmDataItems[FAN_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[29], 310, 230, 15, redrawDigit, &pdmDataItems[WTR_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[30], 385, 230, 15, redrawDigit, &pdmDataItems[ECU_CUT_P_IDX]);
-  initScreenItem(&pdmDrawItems[31], 20, 30, 15, redrawShiftLightsRPM, (volatile dataItem*) shiftLights);
-  initScreenItem(&pdmDrawItems[32], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX]);
+  initScreenItem(&pdmDrawItems[1], 10, 30, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[2], 85, 30, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[3], 160, 30, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[4], 235, 30, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[5], 310, 30, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[6], 385, 30, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[7], 10, 80, 15, redrawDigit, &pdmDataItems[AUX_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[8], 85, 80, 15, redrawDigit, &pdmDataItems[PDLU_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[9], 160, 80, 15, redrawDigit, &pdmDataItems[PDLD_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[10], 235, 80, 15, redrawDigit, &pdmDataItems[ABS_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[11], 310, 80, 15, redrawDigit, &pdmDataItems[BVBAT_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[15], 385, 80, 15, redrawDigit, &pdmDataItems[STR_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[16], 10, 130, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[17], 85, 130, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[18], 160, 130, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[19], 235, 130, 15, redrawDigit, &pdmDataItems[ECU_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[20], 310, 130, 15, redrawDigit, &pdmDataItems[WTR_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[21], 385, 130, 15, redrawDigit, &pdmDataItems[FAN_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[22], 10, 180, 15, redrawDigit, &pdmDataItems[AUX_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[23], 85, 180, 15, redrawDigit, &pdmDataItems[PDLU_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[24], 160, 180, 15, redrawDigit, &pdmDataItems[PDLD_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[25], 235, 180, 15, redrawDigit, &pdmDataItems[ABS_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[26], 310, 180, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[27], 160, 230, 15, redrawDigit, &pdmDataItems[FUEL_CUT_P_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[28], 235, 230, 15, redrawDigit, &pdmDataItems[FAN_CUT_P_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[29], 310, 230, 15, redrawDigit, &pdmDataItems[WTR_CUT_P_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[30], 385, 230, 15, redrawDigit, &pdmDataItems[ECU_CUT_P_IDX], MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[31], 20, 30, 15, redrawShiftLightsRPM, (volatile dataItem*) shiftLights, MIN_REFRESH);
+  initScreenItem(&pdmDrawItems[32], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
 
   allScreens[PDM_GRID_SCREEN] = &pdmGridScreen;
   pdmGridScreen.items = pdmGridItems;
   pdmGridScreen.len = 13;
-  initScreenItem(&pdmGridItems[1], 10, 30, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX]);
-  initScreenItem(&pdmGridItems[2], 85, 30, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX]);
-  initScreenItem(&pdmGridItems[3], 160, 30, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX]);
-  initScreenItem(&pdmGridItems[4], 235, 30, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX]);
-  initScreenItem(&pdmGridItems[5], 310, 30, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX]);
-  initScreenItem(&pdmGridItems[6], 385, 30, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX]);
-  initScreenItem(&pdmGridItems[7], 10, 70, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX]);
-  initScreenItem(&pdmGridItems[8], 85, 70, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX]);
-  initScreenItem(&pdmGridItems[9], 160, 70, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX]);
-  initScreenItem(&pdmGridItems[10], 235, 70, 15, redrawDigit, &pdmDataItems[ECU_CUT_IDX]);
-  initScreenItem(&pdmGridItems[11], 310, 70, 15, redrawDigit, &pdmDataItems[WTR_CUT_IDX]);
-  initScreenItem(&pdmGridItems[12], 385, 70, 15, redrawDigit, &pdmDataItems[FAN_CUT_IDX]);
+  initScreenItem(&pdmGridItems[1], 10, 30, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[2], 85, 30, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[3], 160, 30, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[4], 235, 30, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[5], 310, 30, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[6], 385, 30, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[7], 10, 70, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[8], 85, 70, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[9], 160, 70, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[10], 235, 70, 15, redrawDigit, &pdmDataItems[ECU_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[11], 310, 70, 15, redrawDigit, &pdmDataItems[WTR_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmGridItems[12], 385, 70, 15, redrawDigit, &pdmDataItems[FAN_CUT_IDX], MIN_REFRESH);
 
   allScreens[PDM_CUT_SCREEN] = &pdmCutScreen;
   pdmCutScreen.items = pdmCutItems;
   pdmCutScreen.len = 21;
-  initScreenItem(&pdmCutItems[0], 10, 50, 15, redrawDigit, &pdmDataItems[PCB_TEMP_IDX]);
-  initScreenItem(&pdmCutItems[1], 85, 50, 15, redrawDigit, &pdmDataItems[IC_TEMP_IDX]);
-  initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX]);
-  initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdmDataItems[V12_RAIL_IDX]);
-  initScreenItem(&pdmCutItems[4], 310, 50, 15, redrawDigit, 0x0);
-  initScreenItem(&pdmCutItems[5], 385, 50, 15, redrawDigit, 0x0);
-  initScreenItem(&pdmCutItems[6], 10, 100, 15, redrawDigit, 0x0);
-  initScreenItem(&pdmCutItems[7], 85, 100, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX]);
-  initScreenItem(&pdmCutItems[8], 160, 100, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX]);
-  initScreenItem(&pdmCutItems[9], 235, 100, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX]);
-  initScreenItem(&pdmCutItems[10], 160, 50, 15, redrawDigit,  &pdmDataItems[ECU_CUT_IDX]);
-  initScreenItem(&pdmCutItems[12], 10, 150, 15, redrawDigit,  &pdmDataItems[FAN_CUT_IDX]);
-  initScreenItem(&pdmCutItems[13], 85, 150, 15, redrawDigit,  &pdmDataItems[AUX_CUT_IDX]);
-  initScreenItem(&pdmCutItems[14], 160, 150, 15, redrawDigit, &pdmDataItems[PDLU_CUT_IDX]);
-  initScreenItem(&pdmCutItems[15], 235, 150, 15, redrawDigit, &pdmDataItems[PDLD_CUT_IDX]);
-  initScreenItem(&pdmCutItems[16], 310, 150, 15, redrawDigit, &pdmDataItems[ABS_CUT_IDX]);
-  initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX]);
-  initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0);
+  initScreenItem(&pdmCutItems[0], 10, 50, 15, redrawDigit, &pdmDataItems[PCB_TEMP_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[1], 85, 50, 15, redrawDigit, &pdmDataItems[IC_TEMP_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[2], 235, 200, 15, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[3], 330, 200, 15, redrawDigit, &pdmDataItems[V12_RAIL_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[4], 310, 50, 15, redrawDigit, 0x0, MIN_REFRESH);
+  initScreenItem(&pdmCutItems[5], 385, 50, 15, redrawDigit, 0x0, MIN_REFRESH);
+  initScreenItem(&pdmCutItems[6], 10, 100, 15, redrawDigit, 0x0, MIN_REFRESH);
+  initScreenItem(&pdmCutItems[7], 85, 100, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[8], 160, 100, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[9], 235, 100, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[10], 160, 50, 15, redrawDigit,  &pdmDataItems[ECU_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[12], 10, 150, 15, redrawDigit,  &pdmDataItems[FAN_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[13], 85, 150, 15, redrawDigit,  &pdmDataItems[AUX_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[14], 160, 150, 15, redrawDigit, &pdmDataItems[PDLU_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[15], 235, 150, 15, redrawDigit, &pdmDataItems[PDLD_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[16], 310, 150, 15, redrawDigit, &pdmDataItems[ABS_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[17], 385, 150, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX], MIN_REFRESH);
+  initScreenItem(&pdmCutItems[18], 10, 200, 15, redrawDigit,  0x0, MIN_REFRESH);
 
-  // Lambda screen
-  allScreens[LAMBDA_SCREEN] = &lambdaScreen;
-  lambdaScreen.items = lambdaItems;
-  lambdaScreen.len = 2;
-  initScreenItem(&lambdaItems[0], 25, 70, 75, redrawDigit, &motecDataItems[LAMBDA_IDX]);
-  initScreenItem(&lambdaItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
-
+  // wheel speed screen
+  allScreens[WHEELSPEED_SCREEN] = &wheelSpeedScreen;
+  wheelSpeedScreen.items = wheelSpeedItems;
+  wheelSpeedScreen.len = 2;
+  initScreenItem(&wheelSpeedItems[0], 50, 70, 100, redrawDigit, &motecDataItems[WHEELSPEED_AVG_IDX], MIN_REFRESH);
+  initScreenItem(&wheelSpeedItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
+  
   // throttle position screen
   allScreens[THROTTLE_SCREEN] = &throttleScreen;
   throttleScreen.items = throttleItems;
   throttleScreen.len = 3;
-  initScreenItem(&throttleItems[0], 50, 40, 50, redrawDigit, &motecDataItems[THROTTLE_POS_IDX]);
-  initScreenItem(&throttleItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX]);
-  initScreenItem(&throttleItems[2], 50, 150, 50, redrawDigit, &motecDataItems[ENG_RPM_IDX]);
+  initScreenItem(&throttleItems[0], 50, 40, 50, redrawDigit, &motecDataItems[THROTTLE_POS_IDX], MIN_REFRESH);
+  initScreenItem(&throttleItems[1], 350, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
+  initScreenItem(&throttleItems[2], 50, 150, 50, redrawDigit, &motecDataItems[ENG_RPM_IDX], MIN_REFRESH);
 
+  // IMU g readings screen
+  // coordinates and sizes are still to be decided upon
+  allScreens[IMU_SCREEN] = &imuScreen;
+  imuScreen.items = imuItems;
+  imuScreen.len = 3;
+  initScreenItem(&imuItems[0], 360, 107, 20, redrawDigit, &imuDataItems[LATERAL_G_IDX], MIN_REFRESH);
+  initScreenItem(&imuItems[1], 203, 235, 20, redrawDigit, &imuDataItems[LONGITUDINAL_G_IDX], MIN_REFRESH);
+  initScreenItem(&imuItems[2], 239, 97, 90, redrawGforceGraph, (volatile dataItem*) gForce, 10);
+  
   /*
   //brake screen
   allScreens[BRAKE_SCREEN] = &brakeScreen;
@@ -259,7 +275,7 @@ void initAllScreens(void){
   */
 }
 
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, double (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data){
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, double (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data, uint32_t interval){
   item->info.x = x;
   item->info.y = y;
   item->info.size = size;
@@ -267,6 +283,7 @@ void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, dou
   item->data = data;
   item->refreshTime = millis;
   item->redrawItem = redrawItem;
+  item->refreshInterval = interval;
 }
 
 // Helper function for drawing labels and such on a new screen
@@ -482,6 +499,18 @@ void initScreen(uint8_t num){
       graphicsMode();
       textEnlarge(0);
       break;
+      
+    case IMU_SCREEN:
+      //to be determined
+      textMode();
+      textTransparent(foregroundColor);
+      textSetCursor(364, 85);
+      textWrite("LATERAL");
+      textSetCursor(207, 213);
+      textWrite("LONGITUDINAL");
+      textEnlarge(0);
+      graphicsMode();
+      break; 
   }
 }
 
@@ -538,7 +567,7 @@ void refreshScreenItems(void){
   for(i = 0;i<currScreen->len;i++){
     screenItem * currItem = &currScreen->items[i];
     volatile dataItem * data = currItem->data;
-    if(data && millis - currItem->refreshTime >= data->refreshInterval){
+    if(data && millis - currItem->refreshTime >= currItem->refreshInterval){
       uint8_t warning = data->thresholdDir?data->value>=data->warnThreshold:data->value<=data->warnThreshold;
       if(warning && !data->warningState) {
         data->warningState = 1;
@@ -799,6 +828,94 @@ double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double
   return data->value;
 }
 
+//For drawing a visual representation of g-forces
+double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue)
+{
+    int i = 0;
+    volatile dataItem** dataArray = (volatile dataItem**) data;
+          
+    //constants for various markers representing different g values on the graph
+    uint16_t maxRadius, radii[4], maxG;
+    
+    //take a "snapshot" of the gForce CAN message
+    double lateralSnap, longitSnap;
+    lateralSnap = dataArray[0]->value;
+    longitSnap = dataArray[1]->value;
+    
+    //initialize constants
+    maxRadius = item->size;
+    maxG = (-1 * LATERAL_G_OFFSET);
+    
+    //coordinates to draw the moving indicator
+    uint16_t dot_x = item->x + (((lateralSnap) / maxG) * item->size);
+    uint16_t dot_y = item->y + (((longitSnap ) / maxG) * item->size);
+    uint16_t oldx;
+    uint16_t oldy;
+    
+  //determine where to erase the previous dot by mapping currentValue to coordinates
+  double lateral, longit;
+  lateral = fmod(currentValue, 10000);
+  if(lateral > 999)
+  {
+    lateral -= 1000;
+    lateral = lateral * -1;
+  }
+  lateral = lateral / 100;
+
+  longit = (int)currentValue / 10000;
+  if(longit > 999)
+  {
+    longit-=1000;
+    longit = longit * -1;
+  }
+  longit = longit / 100;
+
+  oldx = item->x + (((lateral) / maxG) * item->size);
+  oldy = item->y + (((longit) / maxG) * item->size);
+  
+    //radius of the moving indicator
+    uint16_t dotRad = item->size / 15;
+
+    //erase the old indicator
+    fillCircle(oldx, oldy, item->size/10, backgroundColor);
+    //draw the moving dot
+    fillCircle(dot_x, dot_y, dotRad, foregroundColor2);
+    
+    //derive radii and draw axis lines
+    for(i = 2; i >= 0; i--)
+    {
+        radii[i] = ((i + 1) * maxRadius) / maxG ;
+        drawCircle(item->x, item->y, radii[i], foregroundColor);
+    }
+    drawCircle(item->x, item->y, maxRadius, errorColor);
+    
+    fillRect(item->x - item->size, item->y - item->size / 160, 2 * item->size, item->size / 80, foregroundColor);
+    fillRect(item->x - item->size / 160, item->y - item->size, item->size / 80, 2 * item->size, foregroundColor);
+        
+
+    
+    
+    //map the horizontal and lateral G snapshots to a double
+          lateralSnap = lateralSnap * 100;
+          lateralSnap = (int) lateralSnap;
+          if(lateralSnap < 0)
+          {
+               lateralSnap = lateralSnap * -1;
+               lateralSnap += 1000;
+          }
+          longitSnap = longitSnap * 100;
+          longitSnap = (int) longitSnap;
+          longitSnap = longitSnap * 10000;
+          if(longitSnap < 0)
+          {
+              longitSnap = longitSnap * -1;
+              longitSnap += 10000000;
+          }
+
+    //setting the "currentValue" to allow the function to erase a localized area in the future
+    return longitSnap + lateralSnap;
+}
+
 void clearScreen(void){
   fillScreen(backgroundColor);
 }
@@ -825,6 +942,7 @@ uint8_t initNightMode(uint8_t on){
     }
     backgroundColor = RA8875_BLACK;
     foregroundColor = RA8875_WHITE;
+    foregroundColor2 = RA8875_CYAN;
     warningColor = RA8875_YELLOW;
     errorColor = RA8875_RED;
   }
@@ -837,6 +955,7 @@ uint8_t initNightMode(uint8_t on){
     }
     backgroundColor = RA8875_WHITE;
     foregroundColor = RA8875_BLACK;
+    foregroundColor2 = RA8875_GREEN;
   }
   //warningColor = errorColor = backgroundColor;
   warningColor = RA8875_YELLOW;
