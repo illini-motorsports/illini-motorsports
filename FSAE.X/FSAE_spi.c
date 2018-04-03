@@ -59,7 +59,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
 
   // Initialize correct bus
   switch(bus) {
-    case 1:    
+    case 1:
       // Initialize SDI1/SDO1 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISBbits.TRISB9 = INPUT;
@@ -93,7 +93,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       SPI1CONbits.ON = 1; // Enable SPI1 module
       break;
 
-    case 2:    
+    case 2:
       // Initialize SDI2/SDO2 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISEbits.TRISE5 = INPUT;
@@ -127,7 +127,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       SPI2CONbits.ON = 1; // Enable SPI2 module
       break;
 
-    case 3:    
+    case 3:
       // Initialize SDI3/SDO3 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISBbits.TRISB5 = INPUT;
@@ -161,10 +161,10 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       SPI3CONbits.ON = 1; // Enable SPI3 module
       break;
 
-    case 4:    
+    case 4:
       // Not used currently
       break;
-    case 5:    
+    case 5:
       // Initialize SDI5/SDO5 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISFbits.TRISF4 = INPUT;
@@ -197,7 +197,7 @@ void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode) {
       SPI5CONbits.ON = 1; // Enable SPI5 module
       break;
 
-    case 6:    
+    case 6:
       // Initialize SDI6/SDO6 PPS pins
       CFGCONbits.IOLOCK = 0;
       TRISFbits.TRISF2 = INPUT;
@@ -294,6 +294,22 @@ uint32_t send_spi6(uint32_t value){
 uint32_t send_spi(uint32_t value, SPIConn *conn){
   *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
   uint32_t buff = conn->send_fp(value);
+  *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
+  return buff;
+}
+
+/*
+ *Double send function, which takes two values and a connection pointer.
+ *Will set CS low and send both of the values using the connection's send_spi
+ *function pointer. The first response will be the most significant 4 bytes,
+ * and the second response will be in the less significant 4 bytes.
+ * This is true even if the spi send size is less than 32 bits!!!
+ */
+uint64_t send_spi_double(uint32_t value1, uint32_t value2, SPIConn *conn) {
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
+  uint32_t buff1 = conn->send_fp(value1); // first send
+  uint32_t buff2 = conn->send_fp(value2); // second send
+  uint64_t buff = (buff1 << 32) | buff2;  // combine the return values
   *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
   return buff;
 }
