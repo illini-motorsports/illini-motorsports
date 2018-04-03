@@ -15,7 +15,7 @@
 #include "RA8875_driver.h"
 
 // Define race screen constants
-#define NUM_SCREENS           11
+#define NUM_SCREENS           12
 #define RACE_SCREEN           0
 #define PDM_DRAW_SCREEN       1
 #define PDM_CUT_SCREEN        2
@@ -27,6 +27,7 @@
 #define PDM_GRID_SCREEN       8
 #define LAMBDA_SCREEN         9
 #define THROTTLE_SCREEN       10
+#define IMU_SCREEN            11
 
 #define MIN_REFRESH           350
 
@@ -298,6 +299,13 @@
 #define SW_WTR_IDX              14
 #define SW_FUEL_IDX             15
 
+//IMU dataItem constants
+#define IMU_DATAITEM_SIZE       4
+#define LATERAL_G_IDX           0
+#define LONGITUDINAL_G_IDX      1
+#define YAW_RATE_IDX            2
+#define YAW_ACCEL_IDX           3
+
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -305,7 +313,6 @@
  * warnThreshold -  Value where data will enter a warning state
  * errThreshold -   Value where data will enter an error state
  * thresholdDir - 1 if max, 0 if min
- * refreshInterval -  Maximum refresh frequency
  * wholeDigits -  Number of whole digits to display
  * decDigits -    Number of decimal digits to display
  */
@@ -316,7 +323,6 @@ typedef struct packed {
   unsigned thresholdDir:1;
   unsigned warningState:1;
   unsigned blinkState:1;
-  uint32_t refreshInterval;
   uint32_t refreshTime;
   uint8_t wholeDigits;
   uint8_t decDigits;
@@ -343,6 +349,7 @@ typedef struct {
  *
  * currentValue -   Current value being displayed
  * data -     Pointer to corresponding dataItem
+ * refreshInterval -  Maximum refresh frequency
  * refreshTime -  Time that the value was previously refreshed
  * info -     Struct that contains necessary info for redrawing
  * redrawItem -   Redraw function pointer, called when the item is refreshed
@@ -350,6 +357,7 @@ typedef struct {
 typedef struct {
   double currentValue;
   volatile dataItem * data;
+  uint32_t refreshInterval;
   uint32_t refreshTime;
   screenItemInfo info;
   double (*redrawItem)(screenItemInfo *, volatile dataItem *, double);
@@ -367,33 +375,32 @@ typedef struct {
 } screen;
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[11], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], lambdaItems[2], autoUpItems[2], throttleItems[3];
+screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2], autoUpItems[2], throttleItems[3], imuItems[3];
 
 // Define all screen structs
-screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, lambdaScreen, throttleScreen;
+screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, wheelSpeedScreen, throttleScreen, imuScreen;
 
 // Define master array of all screen structs
 screen* allScreens[NUM_SCREENS];
 
 uint8_t screenNumber, auxNumber;
 
-volatile uint16_t backgroundColor, foregroundColor, warningColor, errorColor;
+volatile uint16_t backgroundColor, foregroundColor, foregroundColor2, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE], imuDataItems[IMU_DATAITEM_SIZE];
 
-volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2], *shiftLights[2];
+volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2], *shiftLights[2], *gForce[2];
 
 void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem
-void initDataItem(volatile dataItem* data, double warn, double err,
-  uint32_t refresh, uint8_t whole, uint8_t dec);
+void initDataItem(volatile dataItem* data, double warn, double err, uint8_t whole, uint8_t dec);
 void setDataItemDigits(volatile dataItem* data, uint8_t whole, uint8_t dec);
 void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
   double (*redrawItem)(screenItemInfo *, volatile dataItem *, double),
-  volatile dataItem* data);
+  volatile dataItem* data, uint32_t refresh);
 // Toggles between a few different data items on one screen
 void changeAUXType(uint8_t num);
 void changeScreen(uint8_t num);
@@ -418,6 +425,7 @@ double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double cu
 double redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
 // Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);

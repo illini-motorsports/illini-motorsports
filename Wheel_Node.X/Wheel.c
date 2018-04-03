@@ -491,6 +491,16 @@ void process_CAN_msg(CAN_message msg){
       updateDataItem(&spmDataItems[FREQ_1_SETTINGS_IDX], (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_1_SETTINGS_MASK) >> FREQ_1_SETTINGS_SHF);
       updateDataItem(&spmDataItems[FREQ_2_SETTINGS_IDX], (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_2_SETTINGS_MASK) >> FREQ_2_SETTINGS_SHF);
       break;
+      
+      // IMU
+    case IMU_FIRST_ID:
+      updateDataItem(&imuDataItems[YAW_RATE_IDX],  (double) ((lsbArray[YAW_RATE_BYTE/2]  * YAW_RATE_SCL)  + YAW_RATE_OFFSET));
+      updateDataItem(&imuDataItems[LATERAL_G_IDX], (double) ((lsbArray[LATERAL_G_BYTE/2] * LATERAL_G_SCL) + LATERAL_G_OFFSET));
+      break;
+    case IMU_SECOND_ID:
+      updateDataItem(&imuDataItems[YAW_ACCEL_IDX],      (double) ((lsbArray[YAW_ACCEL_BYTE/2]      * YAW_ACCEL_SCL)  + YAW_ACCEL_OFFSET));
+      updateDataItem(&imuDataItems[LONGITUDINAL_G_IDX], (double) ((lsbArray[LONGITUDINAL_G_BYTE/2] * LONGITUDINAL_G_SCL) + LONGITUDINAL_G_OFFSET));
+      break;
   }
 }
 
@@ -590,10 +600,10 @@ void checkChangeScreen(void) {
       screenIdx = THROTTLE_SCREEN;
       break;
     case 5:
-      screenIdx = RACE_SCREEN;
+      screenIdx = IMU_SCREEN;
       break;
     default:
-      screenIdx = screenNumber;
+      screenIdx = RACE_SCREEN;
       break;
   }
 
