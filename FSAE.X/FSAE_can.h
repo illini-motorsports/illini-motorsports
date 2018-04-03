@@ -23,6 +23,11 @@ typedef struct {
 } CAN_message;
 
 /**
+ * Enum making it easier to define endinaness
+ */
+typedef enum endian {BIG, LITTLE} Endian;
+
+/**
  * Data type representing a CAN data buffer
  */
 typedef union uCAN_data {
@@ -161,5 +166,11 @@ extern volatile uint32_t CAN_tx_ovf;
 void CAN_send_message(uint32_t id, uint32_t dlc, CAN_data data);
 void CAN_recv_messages(void (*handler)(CAN_message msg));
 void init_can(void);
+double CAN_extract_numeric(uint8_t * data, uint8_t position, uint8_t length, 
+		Endian endianness, uint8_t sgn, double scl, double off);
+double CAN_extract_bit(uint8_t * data, uint8_t bytePos, uint8_t length, 
+		Endian endianness, uint8_t bitPos);
+uint32_t CAN_parse_bytes(uint8_t * data, uint8_t pos, uint8_t length, Endian endianness);
+
 
 #endif /* FSAE_CAN_H */

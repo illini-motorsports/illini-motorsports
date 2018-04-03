@@ -25,7 +25,7 @@
 #define GENERAL_SCREEN        6
 #define BRAKE_SCREEN          7
 #define PDM_GRID_SCREEN       8
-#define WHEELSPEED_SCREEN     9
+#define LAMBDA_SCREEN         9
 #define THROTTLE_SCREEN       10
 #define IMU_SCREEN            11
 
@@ -207,7 +207,7 @@
 #define RR3_IDX                 19
 
 #define SPM_DATAITEM_SIZE       78
-                               
+
 #define ANALOG_CHAN_0_IDX       3
 #define ANALOG_CHAN_1_IDX       4
 #define ANALOG_CHAN_2_IDX       5
@@ -413,7 +413,6 @@ void nightMode(uint8_t on);
 uint8_t checkDataChange(volatile dataItem *data, double currentValue);
 
 // Redraw Functions!
-
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);

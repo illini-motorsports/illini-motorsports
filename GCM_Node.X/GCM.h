@@ -41,6 +41,7 @@
 
 #define DIAG_MSG_SEND    500
 #define STATE_MSG_SEND   250
+#define SENSOR_MSG_SEND  250
 
 #define LOCKOUT_DUR    50
 #define MAX_SHIFT_DUR  150
@@ -73,9 +74,13 @@
 #define SHIFT_ENUM_NT 2
 
 // Miscellaneous definitions
-#define PWR_CUT_SPOOF 			0xE803 // Value for "spoofed" gear shift force sensor
-#define ACT_ON  				0
-#define ACT_OFF 				1
+#define PWR_CUT_SPOOF 		0xE803 // Value for "spoofed" gear shift force sensor
+#define MOTEC_CUT_ON      1
+#define MOTEC_CUT_OFF     0
+// 1 if CAN should be used in conjunction with the hardwired motec connection
+#define MOTEC_CAN_BUS     1
+#define ACT_ON  				  0
+#define ACT_OFF 				  1
 #define NOT_SHIFTING 			0
 #define SHIFTING     			1
 #define CUT_END    				0
@@ -98,42 +103,56 @@ const double gear_ratio[7] = {
 
 // Optiomal Shift RPM's for Yamaha R6 transmission
 const uint16_t shift_rpm[6] = {
-	12444,
-	11950,
-	12155,
-	12100,
-	11150,
-	20000
+  12444,
+  11950,
+  12155,
+  12100,
+  11150,
+  20000
+};
+
+const double gear_voltages[7] = {
+  0.595,  // 1
+  1.05,   // Neutral
+  1.58,   // 2
+  2.32,   // 3
+  3.16,   // 4
+  4.12,   // 5
+  4.81    // 6
 };
 
 // Pin definitions
-#define SHIFT_UP_TRIS  TRISAbits.TRISA5
-#define SHIFT_UP_ANSEL ANSELAbits.ANSA5
-#define SHIFT_UP_PORT  PORTAbits.RA5
-#define SHIFT_DN_TRIS  TRISEbits.TRISE5
-#define SHIFT_DN_ANSEL ANSELEbits.ANSE5
-#define SHIFT_DN_PORT  PORTEbits.RE5
-#define SHIFT_NT_TRIS  TRISBbits.TRISB5
-#define SHIFT_NT_ANSEL ANSELBbits.ANSB5
-#define SHIFT_NT_PORT  PORTBbits.RB5
+#define SHIFT_UP_TRIS     TRISGbits.TRISG15
+#define SHIFT_UP_ANSEL    ANSELGbits.ANSG15
+#define SHIFT_UP_PORT     PORTGbits.RG15
+#define SHIFT_DN_TRIS     TRISAbits.TRISA5
+#define SHIFT_DN_ANSEL    ANSELAbits.ANSA5
+#define SHIFT_DN_PORT     PORTAbits.RA5
+#define SHIFT_NT_TRIS     TRISEbits.TRISE5
+#define SHIFT_NT_ANSEL    ANSELEbits.ANSE5
+#define SHIFT_NT_PORT     PORTEbits.RE5
 
-#define ACT_UP_TRIS TRISEbits.TRISE4
-#define ACT_UP_LAT  LATEbits.LATE4
-#define ACT_DN_TRIS TRISBbits.TRISB4
-#define ACT_DN_LAT  LATBbits.LATB4
+#define ACT_UP_TRIS       TRISEbits.TRISE7
+#define ACT_UP_LAT        LATEbits.LATE7
+#define ACT_DN_TRIS       TRISCbits.TRISC1
+#define ACT_DN_LAT        LATCbits.LATC1
 
-#define ADC_GEAR_TRIS  TRISGbits.TRISG6
-#define ADC_GEAR_ANSEL ANSELGbits.ANSG6
-#define ADC_GEAR_CSS   ADCCSS1bits.CSS14
-#define ADC_GEAR_CHN   14
+#define ADC_GEAR_TRIS     TRISGbits.TRISG6
+#define ADC_GEAR_ANSEL    ANSELGbits.ANSG6
+#define ADC_GEAR_CSS      ADCCSS1bits.CSS14
+#define ADC_GEAR_CHN      14
 
-#define ADC_FORCE_TRIS  TRISEbits.TRISE8
-#define ADC_FORCE_ANSEL ANSELEbits.ANSE8
-#define ADC_FORCE_CSS   ADCCSS1bits.CSS25
-#define ADC_FORCE_CHN   25
+#define ADC_FORCE_TRIS    TRISEbits.TRISE8
+#define ADC_FORCE_ANSEL   ANSELEbits.ANSE8
+#define ADC_FORCE_CSS     ADCCSS1bits.CSS25
+#define ADC_FORCE_CHN     25
+
+// Mapped to GPIO pin, logic translated to 5V for motec
+#define MOTEC_CUT_TRIS    TRISEbits.TRISE4
+#define MOTEC_CUT_LAT     LATEbits.LATE4
 
 // Enum for current GCM mode
-typedef enum _gcm_mode {NORMAL_MODE, AUTO_UPSHIFT_MODE} gcm_mode;
+typedef enum _gcm_mode {MANUAL_MODE, AUTO_UPSHIFT_MODE} gcm_mode;
 
 /**
  * Function definitions
@@ -149,6 +168,7 @@ void sample_sensors(uint8_t is_shifting);
 void process_CAN_msg(CAN_message msg);
 void send_diag_can(void);
 void send_state_can(uint8_t override);
+void send_sensor_can(void);
 
 // Logic functions
 void process_auto_upshift(void);

@@ -23,6 +23,9 @@ volatile uint32_t CAN_recv_tmr = 0;
 uint32_t diag_send_tmr, rail_send_tmr = 0;
 uint32_t temp_samp_tmr, rail_samp_tmr = 0;
 
+// SPI Connections
+SPIConn* spi_nvm = NULL;
+
 /**
  * Main function
  */
@@ -37,10 +40,11 @@ void main(void) {
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
 
-  init_ltc3350(); // Initialize supercapacitor charger IC
-
+  spi_nvm = init_nvm_std(); // Initialize NVM module
   //TODO: USB
-  //TODO: NVM
+
+  //init_ltc3350(); // Initialize supercapacitor charger IC
+
 
   //TODO: RTC
   //TODO: SD

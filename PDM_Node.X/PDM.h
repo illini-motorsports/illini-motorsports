@@ -15,6 +15,7 @@
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/FSAE_spi.h"
 #include "../FSAE.X/FSAE_ad7490.h"
+#include "../FSAE.X/FSAE_mcp23s17.h"
 #include "../FSAE.X/FSAE_rheo.h"
 #include "../FSAE.X/CAN.h"
 #include "../FSAE.X/errno.h"
@@ -66,6 +67,7 @@
 #define PDL_MAX_DUR        500
 #define OVERRIDE_SW_WAIT   5000
 #define BASIC_CONTROL_WAIT 1000
+#define MAX_IDLE_TIME      300000 // 5 mins
 
 #define TEMP_SAMP_INTV     333
 #define EXT_ADC_SAMP_INTV  10
@@ -251,6 +253,12 @@
 #define CS_AD7490_LATBITS   ((uint32_t*) (&LATAbits))
 #define CS_AD7490_LATNUM    1
 
+// MCP23s17 CS Pin definitions
+#define CS_GPIO_LAT         LATEbits.LATE7
+#define CS_GPIO_TRIS        TRISEbits.TRIS7
+#define CS_GPIO_LATBITS     ((uint32_t*) (&LATEbits))
+#define CS_GPIO_LATNUM      7
+
 // MOSFET Current Ratios
 #define CUR_RATIO   8800.0
 
@@ -261,32 +269,32 @@
 
 // Initial overcurrent thresholds to use for all the loads
 const double load_cutoff[NUM_CTL] = {
-  10.0,  // FUEL
-  100.0, // IGN
-  100.0, // INJ
-  2.0,  // ABS
-  60.0,  // PDLU
-  60.0,  // PDLD
-  20.0,  // FAN
-  15.0,  // WTR
-  20.0,  // ECU
-  2.0,   // AUX
-  10.0   // BVBAT
+  100.0,  // FUEL
+  100.0,  // IGN
+  100.0,  // INJ
+  100.0,  // ABS
+  100.0,  // PDLU
+  100.0,  // PDLD
+  100.0,  // FAN
+  100.0,  // WTR
+  100.0,  // ECU
+  100.0,  // AUX
+  100.0   // BVBAT
 };
 
 // Initial peak-mode overcurrent thresholds to use for all the loads
 const double load_peak_cutoff[NUM_CTL] = {
-  40.0,  // FUEL
-  0.0,   // IGN
-  0.0,   // INJ
-  0.0,   // ABS
-  0.0,   // PDLU
-  0.0,   // PDLD
-  100.0, // FAN
-  40.0,  // WTR
-  60.0,  // ECU
-  0.0,   // AUX
-  0.0    // BVBAT
+  100.0,  // FUEL
+  100.0,  // IGN
+  100.0,  // INJ
+  100.0,  // ABS
+  100.0,  // PDLU
+  100.0,  // PDLD
+  100.0,  // FAN
+  100.0,  // WTR
+  100.0,  // ECU
+  100.0,  // AUX
+  100.0   // BVBAT
 };
 
 // Duration to remain in peak-mode for all the loads
@@ -306,18 +314,34 @@ const uint32_t load_peak_duration[NUM_LOADS] = {
 
 // External ADC channel indices for all the loads
 const uint8_t ADC_CHN[NUM_LOADS] = {
-  7,  // FUEL
-  6,  // IGN
-  4,  // INJ
-  5,  // ABS
+  7,  // FUEL (LK1)
+  6,  // IGN  (LK2)
+  4,  // INJ  (LK3)
+  5,  // ABS  (L1)
+  9,  // PDLU (L3)
+  8,  // PDLD (L2)
+  10, // FAN  (L4)
+  11, // WTR  (L5)
+  3,  // ECU  (L6)
+  2,  // AUX  (L7)
+  1,  // BVBAT(LB1)
+  0   // STR  (LH1)
+};
+
+// External GPIO channel indices for all the loads
+const uint8_t GPIO_CHN[NUM_LOADS] = {
+  4,  // FUEL
+  5,  // IGN
+  6,  // INJ
+  7,  // ABS
   9,  // PDLU
   8,  // PDLD
   10, // FAN
   11, // WTR
-  3,  // ECU
-  2,  // AUX
-  1,  // BVBAT
-  0   // STR
+  12, // ECU
+  13, // AUX
+  14, // BVBAT
+  15  // STR
 };
 
 /**

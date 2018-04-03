@@ -45,7 +45,7 @@ uint16_t mcp23s17_read_all(SPIConn *conn) {
 }
 
 uint8_t mcp23s17_read_one(uint8_t pin, SPIConn *conn) {
-  return mcp23s17_read_reg(MCP23S17_GPIO, conn);
+  return mcp23s17_read_reg(MCP23S17_GPIO, conn) & (0x1 << pin) ? 1 : 0;
 }
 
 void mcp23s17_write_all(uint16_t value, SPIConn *conn) {

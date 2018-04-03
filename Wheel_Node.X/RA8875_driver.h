@@ -24,6 +24,7 @@ void displayOn(uint8_t on); // Sends an spi command to wake up screen
 void PLLinit(void);   // Initialize Clock
 void initialize(void);  // Sends commands to configure the driver
 SPIConn* init_ra8875(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num); // initializes spi and calls other init functions
+void reset_init(); // Intended to restart ra8875 after it has entered error state
 uint8_t ra8875_send_spi(uint8_t val1, uint8_t val2, SPIConn *conn); // Specialized send_spi function for RA8875
 
 /* Backlight */
@@ -34,7 +35,7 @@ void PWM1out(uint8_t p);
 void PWM2out(uint8_t p);
 
 /* Text functions */
-void textMode(void);  // Switches drawing mode to text 
+void textMode(void);  // Switches drawing mode to text
 void textSetCursor(uint16_t x, uint16_t y); // Sets the coordinates of the cursor
 void textColor(uint16_t foreColor, uint16_t bgColor);
 void textTransparent(uint16_t foreColor); // Only writes foreground pixels
@@ -44,7 +45,7 @@ void textWriteHelper(const char* buffer, uint16_t len);
 
 // Seven Segment Functions
 // Helper seven segment drawer, uses a bitmask to determine segments to draw
-void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bMask); 
+void sevenSegment(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t bMask);
 // Draws a single seven segment digit
 void sevenSegmentDigit(uint16_t x, uint16_t y, uint16_t w, uint16_t color, uint8_t digit);
 // Draws Multiple Digits
@@ -82,7 +83,8 @@ void writeCommand(uint8_t d);
 uint8_t readData(void);
 uint8_t readReg(uint8_t reg);
 // Spams spi, can we do it better?
-uint8_t waitPoll(uint8_t reg, uint8_t flag); 
+uint8_t waitPoll(uint8_t reg, uint8_t flag);
+uint8_t isDisplayOn(); // used to determine if display is in an unresponsive error state
 
 /* GFX Helper Functions */
 void circleHelper(int16_t x, int16_t y, int16_t r, uint16_t color, uint8_t filled);

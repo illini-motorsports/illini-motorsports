@@ -28,6 +28,7 @@ void initDataItems(void){
   pdmDataItems[VBAT_RAIL_IDX].warnThreshold = 12.5;
   pdmDataItems[VBAT_RAIL_IDX].errThreshold = 12;
   pdmDataItems[VBAT_RAIL_IDX].thresholdDir = 0;
+  pdmDataItems[VBAT_RAIL_IDX].decDigits = 2;
 
   // Customized PDM dataitem initialization
   pdmDataItems[STR_DRAW_IDX].wholeDigits = 3;
@@ -53,7 +54,7 @@ void initDataItems(void){
   setDataItemDigits(&motecDataItems[THROTTLE_POS_IDX], 3, 0);
   setDataItemDigits(&motecDataItems[OIL_PRES_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[OIL_TEMP_IDX], 3, 0);
-  setDataItemDigits(&motecDataItems[LAMBDA_IDX], 3, 1);
+  setDataItemDigits(&motecDataItems[LAMBDA_IDX], 1, 3);
   setDataItemDigits(&motecDataItems[MANIFOLD_PRES_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[MANIFOLD_TEMP_IDX], 3, 0);
   setDataItemDigits(&motecDataItems[ENG_TEMP_IDX], 3, 0);
@@ -64,6 +65,9 @@ void initDataItems(void){
   setDataItemDigits(&motecDataItems[RUN_TIME_IDX], 4, 0);
   setDataItemDigits(&motecDataItems[FUEL_INJ_DUTY_IDX], 3, 1);
   setDataItemDigits(&motecDataItems[FUEL_TRIM_IDX], 3, 1);
+  motecDataItems[LAMBDA_IDX].warnThreshold = 1.1;
+  motecDataItems[LAMBDA_IDX].errThreshold = 1.3;
+  motecDataItems[LAMBDA_IDX].thresholdDir = 1;
   motecDataItems[OIL_PRES_IDX].warnThreshold = 1.2;
   motecDataItems[OIL_PRES_IDX].errThreshold = 1.2;
   motecDataItems[OIL_TEMP_IDX].thresholdDir = 1;
@@ -78,6 +82,9 @@ void initDataItems(void){
   motecDataItems[ENG_RPM_IDX].warnThreshold = 12000;
   motecDataItems[ENG_RPM_IDX].errThreshold = 13000;
   motecDataItems[ENG_RPM_IDX].thresholdDir = 1;
+  motecDataItems[LAMBDA_IDX].warnThreshold = 1.1;
+  motecDataItems[LAMBDA_IDX].errThreshold = 1.2;
+  motecDataItems[LAMBDA_IDX].thresholdDir = 1;
   setDataItemDigits(&motecDataItems[WHEELSPEED_AVG_IDX], 2, 0);
 
   // Tire temps
@@ -103,7 +110,7 @@ void initDataItems(void){
   {
       initDataItem(&imuDataItems[i], 0, 0, 1, 2);
   }
-
+/*
   // Special array declerations
   fanSw[0] = &wheelDataItems[SW_FAN_IDX];
   fanSw[1] = &pdmDataItems[FAN_ENABLITY_IDX];
@@ -115,6 +122,7 @@ void initDataItems(void){
   shiftLights[1] = &gcmDataItems[GEAR_IDX];
   gForce[0] = &imuDataItems[LATERAL_G_IDX];
   gForce[1] = &imuDataItems[LONGITUDINAL_G_IDX];
+ */
 }
 
 void initDataItem(volatile dataItem* data, double warn, double err, uint8_t whole, uint8_t dec){
@@ -142,17 +150,18 @@ void initAllScreens(void){
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
-  raceScreen.len = 10;
-  initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, (volatile dataItem*) fanSw, MIN_REFRESH);
-  initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw, (volatile dataItem*) fuelSw, MIN_REFRESH);
-  initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawGCMMode, &gcmDataItems[MODE_IDX], MIN_REFRESH);
+  raceScreen.len = 11;
+  //initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
+  //initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
+  //initScreenItem(&raceScreenItems[2], 360, 20, 15, redrawWTRPumpSw, *wtrSw);
   initScreenItem(&raceScreenItems[3], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[4], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[5], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[6], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[7], 200, 70, 100, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM, (volatile dataItem*) shiftLights, MIN_REFRESH);
+  initScreenItem(&raceScreenItems[7], 200, 20, 80, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
+  //initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM,*shiftLights);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[10], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH);
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
@@ -292,6 +301,8 @@ void initScreen(uint8_t num){
       textWrite("WTR TMP");
       textSetCursor(370,160);
       textWrite("BAT V");
+      textSetCursor(200,160);
+      textWrite("LAMBDA");
       textEnlarge(0);
       graphicsMode();
       break;
@@ -360,16 +371,14 @@ void initScreen(uint8_t num){
       graphicsMode();
       break;
 
-   case WHEELSPEED_SCREEN:
+    case LAMBDA_SCREEN:
       textMode();
       textTransparent(foregroundColor);
       textSetCursor(10,10);
-      textEnlarge(2);
-      textWrite("FUCK ANDY");
       textEnlarge(0);
       graphicsMode();
       break;
-      
+
    case THROTTLE_SCREEN:
       textMode();
       textTransparent(foregroundColor);
@@ -761,7 +770,7 @@ double redrawRotary(screenItemInfo * item, volatile dataItem * data, double curr
 }
 
 uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
-	uint16_t maxRPM = shiftRPM[gear];
+  uint16_t maxRPM = shiftRPM[gear];
   if (rpm > maxRPM) {
     return 10;
   } else if (rpm > maxRPM - REV_SUB_9) {
@@ -905,8 +914,6 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
 
     //setting the "currentValue" to allow the function to erase a localized area in the future
     return longitSnap + lateralSnap;
-
-    //TODO: draw the x and y axes (maybe)
 }
 
 void clearScreen(void){

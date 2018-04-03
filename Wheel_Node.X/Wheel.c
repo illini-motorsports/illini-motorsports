@@ -9,7 +9,7 @@
 #include "Wheel.h"
 
 // Count number of milliseconds since start of code execution
-volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis;
+volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis, checkDisplayMillis;
 volatile uint8_t nightModeState;
 volatile uint8_t auxState;
 uint32_t temp_samp_tmr = 0;
@@ -30,7 +30,7 @@ void main(void) {
   STI();// Enable interrupts
 
   millis = 0;
-  CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
+  CANswStateMillis = CANswADLMillis = CANdiagMillis = checkDisplayMillis = 0;
   auxState = 0;
   auxNumber = 0;
   warnCount = 0;
@@ -88,7 +88,7 @@ void main(void) {
   initAllScreens();
   nightModeState = wheelDataItems[SW_ND_IDX].value;
   initNightMode(nightModeState);
-  screenNumber = -1;
+  screenNumber = RACE_SCREEN;
   changeScreen(screenNumber);
 
   tlc5955_startup();
@@ -106,6 +106,15 @@ void main(void) {
     if(millis - CANdiagMillis >= CAN_DIAG_FREQ){
       CANdiag();
       CANdiagMillis = millis;
+    }
+
+    // check if display is frozen every second
+    if(millis - checkDisplayMillis >= CHECK_DISPLAY_INTV){
+      if(!isDisplayOn()) {
+        reset_init();
+        changeScreen(screenNumber);
+      }
+      checkDisplayMillis = millis;
     }
 
     sample_temp(); // Sample internal and external temperature sensors
@@ -585,7 +594,7 @@ void checkChangeScreen(void) {
       screenIdx = PDM_GRID_SCREEN;
       break;
     case 3:
-      screenIdx = WHEELSPEED_SCREEN;
+      screenIdx = LAMBDA_SCREEN;
       break;
     case 4:
       screenIdx = THROTTLE_SCREEN;

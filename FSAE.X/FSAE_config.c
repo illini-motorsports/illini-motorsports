@@ -818,6 +818,80 @@ void init_timer2(void) {
   lock_config();
 }
 
+void init_timer4(uint16_t period1) {
+  unlock_config();
+
+  // Disable TMR4
+  T4CONbits.ON = 0; // Timer On (Timer is disabled)
+
+  // T4CON
+  T4CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
+  T4CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
+  T4CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
+  T4CONbits.TCKPS = 0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
+
+  // TMR4
+  TMR4 = 0; // TMR4 Count Register (0)
+
+  /**
+   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
+   * Currently, this gives a speed of 4Mhz. TMR6 uses a 1:4 prescale, meaning
+   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
+   */
+
+  // PR4
+  PR4 = period1; //how often interrupts happen
+
+  // Set up TMR4 Interrupt
+  IFS0bits.T4IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
+  IPC4bits.T4IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 6)
+  IPC4bits.T4IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T4IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+
+  // Enable TMR4
+  T4CONbits.ON = 1; // Timer On (Timer is enabled)
+
+  lock_config();
+}
+
+void init_timer6(uint16_t period2) {
+  unlock_config();
+
+  // Disable TMR6
+  T6CONbits.ON = 0; // Timer On (Timer is disabled)
+
+  // T4CON
+  T6CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
+  T6CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
+  T6CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
+  T6CONbits.TCKPS = 0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
+
+  // TMR6
+  TMR6 = 0; // TMR6 Count Register (0)
+
+  /**
+   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
+   * Currently, this gives a speed of 4Mhz. TMR6 uses a 1:4 prescale, meaning
+   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
+   */
+
+  // PR6
+  PR6 = period2; //how often interrupts happen
+
+  // Set up TMR6 Interrupt
+  IFS0bits.T6IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
+  IPC7bits.T6IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 6)
+  IPC7bits.T6IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T6IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+
+  // Enable TMR6
+  T6CONbits.ON = 1; // Timer On (Timer is enabled)
+
+  lock_config();
+}
+
+
+
 /**
  * void init_termination(uint8_t isTerm)
  *
