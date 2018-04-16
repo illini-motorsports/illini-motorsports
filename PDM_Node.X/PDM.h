@@ -327,6 +327,21 @@ const uint8_t ADC_CHN[NUM_LOADS] = {
   0   // STR  (LH1)
 };
 
+const uint16_t load_current_ratios[NUM_LOADS] = {
+  5300,  // FUEL (AUIR3314)
+  5300,  // IGN  (AUIR3314)
+  5300,  // INJ  (AUIR3314)
+  8800,  // ABS  (AUIR3313)
+  8800,  // PDLU (AUIR3313)
+  8800,  // PDLD (AUIR3313)
+  8800,  // FAN  (AUIR3313)
+  5300,  // WTR  (AUIR3314)
+  8800,  // ECU  (AUIR3313)
+  2800,  // AUX  (AUIR3315)
+  5300,  // BVBAT(AUIR3314)
+  30000  // STR  (BTS555)
+};
+
 // External GPIO channel indices for all the loads
 const uint8_t GPIO_CHN[NUM_LOADS] = {
   4,  // FUEL

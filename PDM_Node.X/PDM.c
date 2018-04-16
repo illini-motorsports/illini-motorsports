@@ -168,9 +168,11 @@ void main(void) {
   // Initialize normal and peak wiper values to general settings
   uint32_t i;
   for (i = 0; i < NUM_CTL; i++) {
-    double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_cutoff[i];
+    double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0
+      : (load_current_ratios[i] * 4.7) / load_cutoff[i];
     wiper_values[i] = res_to_wpr(fb_resistance);
-    fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0 : (CUR_RATIO * 4.7) / load_peak_cutoff[i];
+    fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0
+      : (load_current_ratios[i] * 4.7) / load_peak_cutoff[i];
     peak_wiper_values[i] = res_to_wpr(fb_resistance);
   }
 
@@ -707,12 +709,12 @@ void sample_ext_adc(void) {
     uint8_t i;
     for (i = 0; i < NUM_CTL; i++) {
       load_current[i] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[i]]) / 4095.0)
-              * 5.0 * SCL_INV * CUR_RATIO) / fb_resistances[i]));
+              * 5.0 * SCL_INV * load_current_ratios[i]) / fb_resistances[i]));
       total_current_draw += ((uint16_t) ((double) load_current[i]) * (SCL_INV_LRG / SCL_INV));
     }
 
     load_current[STR_IDX] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[STR_IDX]]) / 4095.0)
-            * 5.0 * SCL_INV_LRG * CUR_RATIO) / 500.0));
+            * 5.0 * SCL_INV_LRG * load_current_ratios[STR_IDX]) / 500.0));
     total_current_draw += load_current[STR_IDX];
 
     rail_vbat = ((uint16_t) (((((double) ad7490_samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
@@ -877,59 +879,47 @@ void send_load_current_can(void) {
 void send_cutoff_values_can(uint8_t override) {
   if ((millis - cutoff_send_tmr >= CUTOFF_VAL_SEND) || override) {
     CAN_data cutoff_value_data = {0};
+    int i;
 
-    double fuel_cutoff = (4.7 / wpr_to_res(wiper_values[FUEL_IDX])) * CUR_RATIO;
-    uint16_t fuel_cutoff_scl = (uint16_t) (fuel_cutoff * SCL_INV_CUT);
-    double ign_cutoff = (4.7 / wpr_to_res(wiper_values[IGN_IDX])) * CUR_RATIO;
-    uint16_t ign_cutoff_scl = (uint16_t) (ign_cutoff * SCL_INV_CUT);
-    double inj_cutoff = (4.7 / wpr_to_res(wiper_values[INJ_IDX])) * CUR_RATIO;
-    uint16_t inj_cutoff_scl = (uint16_t) (inj_cutoff * SCL_INV_CUT);
-    double abs_cutoff = (4.7 / wpr_to_res(wiper_values[ABS_IDX])) * CUR_RATIO;
-    uint16_t abs_cutoff_scl = (uint16_t) (abs_cutoff * SCL_INV_CUT);
+    // FUEL, IGN, INJ, ABS
+    double cutoffs[NUM_CTL] = {0};
+    uint16_t cutoffs_scl[NUM_CTL] = {0};
+    for(i = 0; i < NUM_CTL; i++) {
+      cutoffs[i] = (4.7 / wpr_to_res(wiper_values[i])) * load_current_ratios[i];
+      cutoffs_scl[i] = (uint16_t) (cutoffs[i] * SCL_INV_CUT);
+    }
 
     cutoff_value_data.doubleword = 0;
-    cutoff_value_data.halfword0 = fuel_cutoff_scl;
-    cutoff_value_data.halfword1 = ign_cutoff_scl;
-    cutoff_value_data.halfword2 = inj_cutoff_scl;
-    cutoff_value_data.halfword3 = abs_cutoff_scl;
+    cutoff_value_data.halfword0 = cutoffs_scl[0]; // FUEL
+    cutoff_value_data.halfword1 = cutoffs_scl[1]; // IGN
+    cutoff_value_data.halfword2 = cutoffs_scl[2]; // INJ
+    cutoff_value_data.halfword3 = cutoffs_scl[3]; // ABS
     CAN_send_message(PDM_ID + 0x6, 8, cutoff_value_data);
 
-    double pdlu_cutoff = (4.7 / wpr_to_res(wiper_values[PDLU_IDX])) * CUR_RATIO;
-    uint16_t pdlu_cutoff_scl = (uint16_t) (pdlu_cutoff * SCL_INV_CUT);
-    double pdld_cutoff = (4.7 / wpr_to_res(wiper_values[PDLD_IDX])) * CUR_RATIO;
-    uint16_t pdld_cutoff_scl = (uint16_t) (pdld_cutoff * SCL_INV_CUT);
-    double fan_cutoff = (4.7 / wpr_to_res(wiper_values[FAN_IDX])) * CUR_RATIO;
-    uint16_t fan_cutoff_scl = (uint16_t) (fan_cutoff * SCL_INV_CUT);
-    double wtr_cutoff = (4.7 / wpr_to_res(wiper_values[WTR_IDX])) * CUR_RATIO;
-    uint16_t wtr_cutoff_scl = (uint16_t) (wtr_cutoff * SCL_INV_CUT);
-
     cutoff_value_data.doubleword = 0;
-    cutoff_value_data.halfword0 = pdlu_cutoff_scl;
-    cutoff_value_data.halfword1 = pdld_cutoff_scl;
-    cutoff_value_data.halfword2 = fan_cutoff_scl;
-    cutoff_value_data.halfword3 = wtr_cutoff_scl;
+    cutoff_value_data.halfword0 = cutoffs_scl[4]; // PDLU
+    cutoff_value_data.halfword1 = cutoffs_scl[5]; // PDLD
+    cutoff_value_data.halfword2 = cutoffs_scl[6]; // FAN
+    cutoff_value_data.halfword3 = cutoffs_scl[7]; // WTR
     CAN_send_message(PDM_ID + 0x7, 8, cutoff_value_data);
 
-    double ecu_cutoff = (4.7 / wpr_to_res(wiper_values[ECU_IDX])) * CUR_RATIO;
-    uint16_t ecu_cutoff_scl = (uint16_t) (ecu_cutoff * SCL_INV_CUT);
-    double aux_cutoff = (4.7 / wpr_to_res(wiper_values[AUX_IDX])) * CUR_RATIO;
-    uint16_t aux_cutoff_scl = (uint16_t) (aux_cutoff * SCL_INV_CUT);
-    double bvbat_cutoff = (4.7 / wpr_to_res(wiper_values[BVBAT_IDX])) * CUR_RATIO;
-    uint16_t bvbat_cutoff_scl = (uint16_t) (bvbat_cutoff * SCL_INV_CUT);
-
     cutoff_value_data.doubleword = 0;
-    cutoff_value_data.halfword0 = ecu_cutoff_scl;
-    cutoff_value_data.halfword1 = aux_cutoff_scl;
-    cutoff_value_data.halfword2 = bvbat_cutoff_scl;
+    cutoff_value_data.halfword0 = cutoffs_scl[8]; // ECU
+    cutoff_value_data.halfword1 = cutoffs_scl[9]; // AUX
+    cutoff_value_data.halfword2 = cutoffs_scl[10];// BVBAT
     CAN_send_message(PDM_ID + 0x8, 6, cutoff_value_data);
 
-    double fuel_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FUEL_IDX])) * CUR_RATIO;
+    double fuel_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FUEL_IDX]))
+      * load_current_ratios[FUEL_IDX];
     uint16_t fuel_peak_cutoff_scl = (uint16_t) (fuel_peak_cutoff * SCL_INV_CUT);
-    double fan_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FAN_IDX])) * CUR_RATIO;
+    double fan_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[FAN_IDX]))
+      * load_current_ratios[FAN_IDX];
     uint16_t fan_peak_cutoff_scl = (uint16_t) (fan_peak_cutoff * SCL_INV_CUT);
-    double wtr_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[WTR_IDX])) * CUR_RATIO;
+    double wtr_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[WTR_IDX]))
+      * load_current_ratios[WTR_IDX];
     uint16_t wtr_peak_cutoff_scl = (uint16_t) (wtr_peak_cutoff * SCL_INV_CUT);
-    double ecu_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[ECU_IDX])) * CUR_RATIO;
+    double ecu_peak_cutoff = (4.7 / wpr_to_res(peak_wiper_values[ECU_IDX]))
+      * load_current_ratios[ECU_IDX];
     uint16_t ecu_peak_cutoff_scl = (uint16_t) (ecu_peak_cutoff * SCL_INV_CUT);
 
     cutoff_value_data.doubleword = 0;
