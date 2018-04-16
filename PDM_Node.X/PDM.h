@@ -109,7 +109,6 @@
 
 // Misc state definitions
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
-#define TEST_OUTPUTS (ABS_SW && !COMP)
 
 // Load state definitions
 #define FUEL_EN  (EN_FUEL_PORT == PWR_ON)

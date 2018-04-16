@@ -20,6 +20,7 @@ uint8_t kill_engine_flag, kill_car_flag = 0;
 uint8_t crit_volt_pending, crit_oilpres_pending, crit_oiltemp_pending,
     crit_engtemp_pending = 0;
 uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
+uint8_t wtr_override, fan_override, fuel_override, abs_override = 0;
 uint8_t switch_debounced = 0; // Debounced (safe) switch state
 uint8_t switch_prev = 0;      // Previous sampled value of switches
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
@@ -225,12 +226,21 @@ void main(void) {
       fuel_override_sw = 0;
     }
 
-		/**
-		 * Reset idle tmr if engine is on
-		 */
-		if (eng_rpm > 0) {
-			crit_idle_tmr = millis;
-		}
+    /**
+     * Load override logic
+     */
+
+    wtr_override = !AUX1_SW || wtr_override_sw;
+    fan_override = !AUX2_SW || fan_override_sw;
+    abs_override = ABS_SW;
+    fuel_override = fuel_override_sw;
+
+    /**
+     * Reset idle tmr if engine is on
+     */
+    if (eng_rpm > 0) {
+      crit_idle_tmr = millis;
+    }
 
     /**
      * Respond to critical errors
@@ -255,8 +265,7 @@ void main(void) {
       if (millis - CAN_recv_tmr > BASIC_CONTROL_WAIT ||
           millis - motec0_recv_tmr > BASIC_CONTROL_WAIT ||
           millis - motec1_recv_tmr > BASIC_CONTROL_WAIT ||
-          millis - motec2_recv_tmr > BASIC_CONTROL_WAIT ||
-          TEST_OUTPUTS) {
+          millis - motec2_recv_tmr > BASIC_CONTROL_WAIT) {
 
         /**
          * Perform basic load control
@@ -270,9 +279,9 @@ void main(void) {
 
         set_load(IGN_IDX, ON_SW && !KILL_SW);
         set_load(INJ_IDX, ON_SW && !KILL_SW);
-        set_load(FUEL_IDX, ON_SW && !KILL_SW && !TEST_OUTPUTS);
-        set_load(WTR_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
-        set_load(FAN_IDX, ON_SW && !KILL_SW && !STR_EN && !TEST_OUTPUTS);
+        set_load(FUEL_IDX, (ON_SW && !KILL_SW) || fuel_override);
+        set_load(WTR_IDX, (ON_SW && !KILL_SW && !STR_EN) || wtr_override);
+        set_load(FAN_IDX, (ON_SW && !KILL_SW && !STR_EN) || fan_override);
 
         // STR
         if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
@@ -290,10 +299,10 @@ void main(void) {
         set_load(IGN_IDX, ON_SW && !KILL_SW);
         set_load(INJ_IDX, ON_SW && !KILL_SW);
         set_load(FUEL_IDX, ON_SW && !KILL_SW &&
-            (ENG_ON || fuel_prime_flag || fuel_override_sw || STR_EN));
+            (ENG_ON || fuel_prime_flag || fuel_override || STR_EN));
         set_load(WTR_IDX, !STR_EN &&
-            (ENG_ON || over_temp_flag || wtr_override_sw || fan_override_sw));
-        set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override_sw));
+            (ENG_ON || over_temp_flag || wtr_override_sw || wtr_override));
+        set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override));
 
         // STR
         if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
@@ -327,7 +336,7 @@ void main(void) {
       }
 
       // ABS
-      set_load(ABS_IDX, ABS_SW && !KILL_SW);
+      set_load(ABS_IDX, abs_override && !KILL_SW);
     }
 
     /**
