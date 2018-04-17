@@ -36,7 +36,7 @@ SPIConn *rheo_connections[NUM_CTL] = {0}; // Rheostat SPI Connections
 uint8_t wiper_values[NUM_CTL] = {0};      // Rheostat wiper values
 uint8_t peak_wiper_values[NUM_CTL] = {0}; // Rheostat peak-mode wiper values
 uint8_t peak_state[NUM_LOADS] = {0};      // Stores whether each load is currently in peak mode
-double fb_resistances[NUM_CTL] = {0.0};   // Stores the calculated FB pin resistance for each load
+double fb_resistances[NUM_LOADS] = {0.0};   // Stores the calculated FB pin resistance for each load
 uint16_t load_current[NUM_LOADS] = {0};   // Stores the sampled current draw values for each load
 uint8_t overcurrent_flag[NUM_LOADS] = {NO_OVERCRT}; // Overcurrent state
 uint8_t overcurrent_count[NUM_LOADS] = {0};
@@ -169,10 +169,10 @@ void main(void) {
   uint32_t i;
   for (i = 0; i < NUM_CTL; i++) {
     double fb_resistance = (load_cutoff[i] == 0.0) ? 5000.0
-      : (load_current_ratios[i] * 4.7) / load_cutoff[i];
+      : (load_current_ratios[i] * VFB_CUTOFF) / load_cutoff[i];
     wiper_values[i] = res_to_wpr(fb_resistance);
     fb_resistance = (load_peak_cutoff[i] == 0.0) ? 5000.0
-      : (load_current_ratios[i] * 4.7) / load_peak_cutoff[i];
+      : (load_current_ratios[i] * VFB_CUTOFF) / load_peak_cutoff[i];
     peak_wiper_values[i] = res_to_wpr(fb_resistance);
   }
 
@@ -182,6 +182,7 @@ void main(void) {
     peak_state[i] = 0;
     fb_resistances[i] = wpr_to_res(wiper_values[i]);
   }
+  fb_resistances[STR_IDX] = 500.0; // The STR load uses a 500 Ohm resistor
 
   // Turn on state-independent loads
   enable_load(AUX_IDX);
@@ -708,19 +709,20 @@ void sample_ext_adc(void) {
 
     uint8_t i;
     for (i = 0; i < NUM_CTL; i++) {
-      load_current[i] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[i]]) / 4095.0)
-              * 5.0 * SCL_INV * load_current_ratios[i]) / fb_resistances[i]));
+      load_current[i] = (uint16_t) ((adc_to_volt(ad7490_samples[ADC_CHN[i]]) * SCL_INV
+            * load_current_ratios[i]) / fb_resistances[i]);
       total_current_draw += ((uint16_t) ((double) load_current[i]) * (SCL_INV_LRG / SCL_INV));
     }
 
-    load_current[STR_IDX] = (uint16_t) ((((((double) ad7490_samples[ADC_CHN[STR_IDX]]) / 4095.0)
-            * 5.0 * SCL_INV_LRG * load_current_ratios[STR_IDX]) / 500.0));
+    load_current[STR_IDX] = (uint16_t) ((adc_to_volt(ad7490_samples[ADC_CHN[STR_IDX]])
+          * SCL_INV_LRG * load_current_ratios[load_current_ratios[STR_IDX]])
+          / fb_resistances[STR_IDX]);
     total_current_draw += load_current[STR_IDX];
 
-    rail_vbat = ((uint16_t) (((((double) ad7490_samples[12]) / 4095.0) * 5.0 * 4) * 1000.0));
-    rail_12v = ((uint16_t) (((((double) ad7490_samples[13]) / 4095.0) * 5.0 * 4) * 1000.0));
-    rail_5v = ((uint16_t) (((((double) ad7490_samples[14]) / 4095.0) * 5.0 * 2) * 1000.0));
-    rail_3v3 = ((uint16_t) (((((double) ad7490_samples[15]) / 4095.0) * 5.0 * 1) * 1000.0));
+    rail_vbat = ((uint16_t) adc_to_volt(ad7490_samples[12]) * 4 * SCL_INV);
+    rail_12v  = ((uint16_t) adc_to_volt(ad7490_samples[13]) * 4 * SCL_INV);
+    rail_5v   = ((uint16_t) adc_to_volt(ad7490_samples[14]) * 2 * SCL_INV);
+    rail_3v3  = ((uint16_t) adc_to_volt(ad7490_samples[15]) * 1 * SCL_INV);
 
     ext_adc_samp_tmr = millis;
   }
@@ -1058,6 +1060,16 @@ uint8_t res_to_wpr(double res) {
   wiper = (wiper < 0) ? 0 : wiper;
   wiper = (wiper > 255) ? 255 : wiper;
   return ((uint8_t) wiper);
+}
+
+/**
+ * Converts raw ADC output to a voltage.
+ *
+ * @param adc_val The raw ADC output
+ * @return The corresponding voltage
+ */
+double adc_to_volt(uint16_t adc_val) {
+  return (adc_val/EXT_ADC_NUM_STEPS)*EXT_ADC_VOLT_RANGE;
 }
 
 /**

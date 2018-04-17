@@ -61,7 +61,6 @@
 #define CRIT_ENGTEMP     110.0 // C
 
 // Timing constants (ms)
-
 #define FUEL_PRIME_DUR     1000
 #define STR_MAX_DUR        4000
 #define PDL_MAX_DUR        500
@@ -258,42 +257,44 @@
 #define CS_GPIO_LATBITS     ((uint32_t*) (&LATEbits))
 #define CS_GPIO_LATNUM      7
 
-// MOSFET Current Ratios
-#define CUR_RATIO   8800.0
-
 // Current Scalar Inverse
 #define SCL_INV      1000.0
 #define SCL_INV_LRG  100.0
 #define SCL_INV_CUT  400.0
 
+// Misc Magic Numbers
+#define EXT_ADC_NUM_STEPS   4095.0
+#define EXT_ADC_VOLT_RANGE  5.0
+#define VFB_CUTOFF          4.7
+
 // Initial overcurrent thresholds to use for all the loads
 const double load_cutoff[NUM_CTL] = {
-  100.0,  // FUEL
-  100.0,  // IGN
-  100.0,  // INJ
-  100.0,  // ABS
-  100.0,  // PDLU
-  100.0,  // PDLD
-  100.0,  // FAN
-  100.0,  // WTR
-  100.0,  // ECU
-  100.0,  // AUX
-  100.0   // BVBAT
+  10.0,  // FUEL
+  60.0,  // IGN
+  60.0,  // INJ
+  100.0, // ABS
+  60.0,  // PDLU
+  60.0,  // PDLD
+  20.0,  // FAN
+  15.0,  // WTR
+  20.0,  // ECU
+  2.0,   // AUX
+  10.0   // BVBAT
 };
 
 // Initial peak-mode overcurrent thresholds to use for all the loads
 const double load_peak_cutoff[NUM_CTL] = {
-  100.0,  // FUEL
-  100.0,  // IGN
-  100.0,  // INJ
-  100.0,  // ABS
-  100.0,  // PDLU
-  100.0,  // PDLD
-  100.0,  // FAN
-  100.0,  // WTR
-  100.0,  // ECU
-  100.0,  // AUX
-  100.0   // BVBAT
+  40.0,  // FUEL
+  0.0,   // IGN
+  0.0,   // INJ
+  0.0,   // ABS
+  0.0,   // PDLU
+  0.0,   // PDLD
+  100.0, // FAN
+  40.0,  // WTR
+  60.0,  // ECU
+  0.0,   // AUX
+  0.0    // BVBAT
 };
 
 // Duration to remain in peak-mode for all the loads
@@ -389,6 +390,7 @@ void disable_load(uint8_t load_idx);
 void set_load(uint8_t load_idx, uint8_t condition);
 double wpr_to_res(uint8_t wpr);
 uint8_t res_to_wpr(double res);
+double adc_to_volt(uint16_t adc_val);
 uint8_t load_enabled(uint8_t load_idx);
 void set_en_load(uint8_t load_idx, uint8_t load_state);
 
