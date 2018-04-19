@@ -90,8 +90,8 @@
 // Raw (bouncy) switch state definitions
 #define STR_SW_RAW    (!SW1_PORT)
 #define ON_SW_RAW     (SW2_PORT)
-#define ACT_UP_SW_RAW (!SW9_PORT)
-#define ACT_DN_SW_RAW (!SW8_PORT)
+#define ACT_UP_SW_RAW (!SW4_PORT)
+#define ACT_DN_SW_RAW (!SW3_PORT)
 #define ABS_SW_RAW    (SW5_PORT)
 #define AUX1_SW_RAW   (SW6_PORT)
 #define AUX2_SW_RAW   (!SW7_PORT)
@@ -279,7 +279,7 @@ const double load_cutoff[NUM_CTL] = {
   15.0,  // WTR
   20.0,  // ECU
   2.0,   // AUX
-  10.0   // BVBAT
+  20.0   // BVBAT
 };
 
 // Initial peak-mode overcurrent thresholds to use for all the loads
