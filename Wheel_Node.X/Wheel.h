@@ -83,6 +83,7 @@ volatile uint32_t millis;
 uint8_t warnCount;
 
 void main(void);
+void init_gpio_wheel(void);
 void delay(uint32_t num);
 void process_CAN_msg(CAN_message msg);
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl);

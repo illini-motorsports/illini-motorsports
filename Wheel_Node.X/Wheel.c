@@ -9,10 +9,8 @@
 #include "Wheel.h"
 
 // Count number of milliseconds since start of code execution
-volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis, checkDisplayMillis;
+volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis, tempSampMillis;
 volatile uint8_t nightModeState;
-volatile uint8_t auxState;
-uint32_t temp_samp_tmr = 0;
 
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
@@ -26,15 +24,61 @@ void main(void) {
   init_termination(TERMINATING);
   init_tlc5955();
 
-  ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
+  ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion
   STI();// Enable interrupts
 
   millis = 0;
-  CANswStateMillis = CANswADLMillis = CANdiagMillis = checkDisplayMillis = 0;
-  auxState = 0;
+  CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
   auxNumber = 0;
   warnCount = 0;
 
+  // Initialize specific GPIO pins
+  init_gpio_wheel();
+
+  // Initialize RA8875
+  init_ra8875(1, LCD_CS_LATBITS, LCD_CS_LATNUM); // Don't store SPIConn pointer since will always use default
+  displayOn(1);
+  GPIOX(1);// Enable TFT - display enable tied to GPIOX
+
+  // Initialize All the data streams
+  initDataItems();
+  updateSwVals();
+  init_can();
+  initAllScreens();
+  nightModeState = wheelDataItems[SW_ND_IDX].value;
+  initNightMode(nightModeState);
+  screenNumber = RACE_SCREEN;
+  changeScreen(screenNumber);
+
+  tlc5955_startup();
+
+  while(1) {
+    // Send CAN messages with the correct frequency
+    if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
+      CANswitchStates();
+      CANswStateMillis = millis;
+    }
+    if(millis - CANswADLMillis >= CAN_SW_ADL_FREQ){
+      CANswitchADL();
+      CANswADLMillis = millis;
+    }
+    if(millis - CANdiagMillis >= CAN_DIAG_FREQ){
+      CANdiag();
+      CANdiagMillis = millis;
+    }
+
+    sample_temp(); // Sample internal and external temperature sensors
+
+    checkChangeScreen(); // Check to see if the screen should be changed
+
+    refreshScreenItems(); // Refresh items on screen
+  }
+}
+
+/*
+ * Initializes all the specific GPIO pins for the wheel board
+ */
+void init_gpio_wheel(void) {
   // Init Relevant Pins
   LCD_CS_LAT = 1;
   LCD_CS_TRIS = OUTPUT;
@@ -75,54 +119,6 @@ void main(void) {
   TROT1_TRIS = INPUT;
   TROT1_ANSEL = AN_INPUT;
   TROT1_CSS = 1;
-
-  // Initialize RA8875
-  init_ra8875(1, LCD_CS_LATBITS, LCD_CS_LATNUM); // Don't store SPIConn pointer since will always use default
-  displayOn(1);
-  GPIOX(1);// Enable TFT - display enable tied to GPIOX
-
-  // Initialize All the data streams
-  initDataItems();
-  updateSwVals();
-  init_can();
-  initAllScreens();
-  nightModeState = wheelDataItems[SW_ND_IDX].value;
-  initNightMode(nightModeState);
-  screenNumber = RACE_SCREEN;
-  changeScreen(screenNumber);
-
-  tlc5955_startup();
-
-  while(1) {
-    // Send CAN messages with the correct frequency
-    if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
-      CANswitchStates();
-      CANswStateMillis = millis;
-    }
-    if(millis - CANswADLMillis >= CAN_SW_ADL_FREQ){
-      CANswitchADL();
-      CANswADLMillis = millis;
-    }
-    if(millis - CANdiagMillis >= CAN_DIAG_FREQ){
-      CANdiag();
-      CANdiagMillis = millis;
-    }
-
-    // check if display is frozen every second
-    if(millis - checkDisplayMillis >= CHECK_DISPLAY_INTV){
-      if(!isDisplayOn()) {
-        reset_init();
-        changeScreen(screenNumber);
-      }
-      checkDisplayMillis = millis;
-    }
-
-    sample_temp(); // Sample internal and external temperature sensors
-
-    checkChangeScreen(); // Check to see if the screen should be changed
-
-    refreshScreenItems(); // Refresh items on screen
-  }
 }
 
 /**
@@ -491,7 +487,7 @@ void process_CAN_msg(CAN_message msg){
       updateDataItem(&spmDataItems[FREQ_1_SETTINGS_IDX], (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_1_SETTINGS_MASK) >> FREQ_1_SETTINGS_SHF);
       updateDataItem(&spmDataItems[FREQ_2_SETTINGS_IDX], (lsbArray[FREQ_SETTINGS_BYTE] & FREQ_2_SETTINGS_MASK) >> FREQ_2_SETTINGS_SHF);
       break;
-      
+
       // IMU
     case IMU_FIRST_ID:
       updateDataItem(&imuDataItems[YAW_RATE_IDX],  (double) ((lsbArray[YAW_RATE_BYTE/2]  * YAW_RATE_SCL)  + YAW_RATE_OFFSET));
@@ -620,7 +616,7 @@ void checkChangeScreen(void) {
  * variables if the interval has passed.
  */
 void sample_temp(void) {
-  if(millis - temp_samp_tmr >= TEMP_SAMP_INTV) {
+  if(millis - tempSampMillis >= TEMP_SAMP_INTV) {
 
     /**
      * PCB Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
@@ -644,6 +640,6 @@ void sample_temp(void) {
     uint32_t junc_temp_samp = read_adc_chn(ADC_JTEMP_CHN);
     junc_temp = (int16_t) (40000.0 - (((double) junc_temp_samp) * 32.234432234432));
 
-    temp_samp_tmr = millis;
+    tempSampMillis = millis;
   }
 }
