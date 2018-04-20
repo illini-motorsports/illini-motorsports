@@ -29,7 +29,6 @@ void main(void) {
 
   millis = 0;
   CANswStateMillis = CANswADLMillis = CANdiagMillis = 0;
-  auxNumber = 0;
   warnCount = 0;
 
   // Initialize specific GPIO pins

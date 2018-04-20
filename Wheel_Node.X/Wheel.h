@@ -77,7 +77,6 @@
 #define CAN_SW_ADL_FREQ   500
 #define CAN_DIAG_FREQ     1000
 #define TEMP_SAMP_INTV    333
-#define CHECK_DISPLAY_INTV 1000
 
 volatile uint32_t millis;
 uint8_t warnCount;
