@@ -78,6 +78,16 @@
 #define CAN_DIAG_FREQ     1000
 #define TEMP_SAMP_INTV    333
 
+const uint16_t shiftRPM[7] = {
+  13000,
+  13000,
+  13000,
+  13000,
+  13000,
+  13000,
+  13000
+};
+
 volatile uint32_t millis;
 uint8_t warnCount;
 

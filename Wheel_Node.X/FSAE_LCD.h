@@ -19,16 +19,7 @@
 #define RACE_SCREEN           0
 
 #define MIN_REFRESH           350
-
-#define REV_SUB_1           	6000
-#define REV_SUB_2           	5000
-#define REV_SUB_3           	4000
-#define REV_SUB_4           	3000
-#define REV_SUB_5           	2500
-#define REV_SUB_6           	2000
-#define REV_SUB_7           	1500
-#define REV_SUB_8           	1000
-#define REV_SUB_9           	500
+#define CAN_TIMEOUT           1000
 
 // PDM Dataitem Constants
 #define PDM_DATAITEM_SIZE     2
@@ -135,6 +126,19 @@ typedef struct {
   uint8_t len;
 } screen;
 
+const uint16_t shiftLightSub[10] = {
+  6000,
+  5000,
+  4000,
+  3000,
+  2500,
+  2000,
+  1500,
+  1000,
+  500,
+  0
+};
+
 // Define all screen item arrays for each screen
 screenItem raceScreenItems[7];
 
@@ -169,13 +173,11 @@ void resetScreenItems(void); // Resets all the values
 uint8_t initNightMode(uint8_t on); // Night mode stuff
 void nightMode(uint8_t on);
 uint8_t checkDataChange(volatile dataItem *data, double currentValue);
+uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear);
 
 // Redraw Functions!
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
-
-// Helper functions for colorful redraw functions
-uint16_t tempColor(uint8_t temp);
 
 #endif /* _FSAE_LCD_H */

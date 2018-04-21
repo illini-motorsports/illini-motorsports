@@ -10,8 +10,6 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 
-uint16_t shiftRPM[7] = {13000,13000,13000,13000,13000,13000,13000};
-
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
 void initDataItems(void){
@@ -175,7 +173,7 @@ void refreshScreenItems(void){
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
   uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
-  uint8_t stale = millis - data->refreshTime > 1000;
+  uint8_t stale = millis - data->refreshTime > CAN_TIMEOUT;
   if(stale) {
     data->value = 0;
   }
@@ -218,47 +216,40 @@ double redrawDigit(screenItemInfo * item, volatile dataItem * data, double curre
 
 // For Single Digits with Error and Neutral Displays
 double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  //TODO: add stale data detection
+  uint8_t stale = millis - data->refreshTime > CAN_TIMEOUT;
+
+  // Set value to 8 (impossible value) if stale
+  // Will force refresh on error condition change
+  if(stale) {
+    data->value = 8;
+  }
+
   if(data->value == currentValue){
     return data->value;
   }
-  fillRect(item->x, item->y, item->size, item->size * 1.75, backgroundColor);
-  if(data->value == 0){
-    sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_N);
-  }
-  else if(data->value == 7){
-    sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_E);
-  }
-  else{
-    sevenSegmentDigit(item->x, item->y, item->size, foregroundColor, data->value);
+  uint16_t fillColor = stale ? errorColor : backgroundColor;
+  fillRect(item->x, item->y, item->size, item->size * 1.75, fillColor);
+  if(!stale) {
+    if(data->value == 0){
+      sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_N);
+    }
+    else if(data->value == 7){
+      sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_E);
+    }
+    else{
+      sevenSegmentDigit(item->x, item->y, item->size, foregroundColor, data->value);
+    }
   }
   return data->value;
 }
 
-uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
+uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
   uint16_t maxRPM = shiftRPM[gear];
-  if (rpm > maxRPM) {
-    return 10;
-  } else if (rpm > maxRPM - REV_SUB_9) {
-    return 9;
-  } else if (rpm > maxRPM - REV_SUB_8) {
-    return 8;
-  } else if (rpm > maxRPM - REV_SUB_7) {
-    return 7;
-  } else if (rpm > maxRPM - REV_SUB_6) {
-    return 6;
-  } else if (rpm > maxRPM - REV_SUB_5) {
-    return 5;
-  } else if (rpm > maxRPM - REV_SUB_4) {
-    return 4;
-  } else if (rpm > maxRPM - REV_SUB_3) {
-    return 3;
-  } else if (rpm > maxRPM - REV_SUB_2) {
-    return 2;
-  } else if (rpm > maxRPM - REV_SUB_1) {
-    return 1;
-  } else {
-    return 0;
+  int i;
+  for(i = 9; i < 0; i--) {
+    if(rpm > maxRPM - shiftLightSub[i]) {
+      return i + 1;
+    }
   }
 }
 
@@ -278,7 +269,6 @@ void clearScreen(void){
 }
 
 // Resets the current value of all screen items on a screen
-// This means the
 void resetScreenItems(void){
   int i = 0;
   screen *currScreen = allScreens[screenNumber];
@@ -289,11 +279,9 @@ void resetScreenItems(void){
   }
 }
 
-// Immediantly returns if
 uint8_t initNightMode(uint8_t on){
   if(on){
     if(backgroundColor == RA8875_BLACK){
-      //warningColor = errorColor = backgroundColor;
       warningColor = errorColor = RA8875_RED;
       return 0;
     }
@@ -305,7 +293,6 @@ uint8_t initNightMode(uint8_t on){
   }
   else{
     if(backgroundColor == RA8875_WHITE){
-     // warningColor = errorColor = backgroundColor;
       warningColor = RA8875_YELLOW;
       errorColor = RA8875_RED;
       return 0;
@@ -314,7 +301,6 @@ uint8_t initNightMode(uint8_t on){
     foregroundColor = RA8875_BLACK;
     foregroundColor2 = RA8875_GREEN;
   }
-  //warningColor = errorColor = backgroundColor;
   warningColor = RA8875_YELLOW;
   errorColor = RA8875_RED;
   return 1;
@@ -324,10 +310,6 @@ void nightMode(uint8_t on){
   if(initNightMode(on)){
     changeScreen(screenNumber);
   }
-}
-
-uint16_t tempColor(uint8_t temp){
-  return RA8875_RED;
 }
 
 uint8_t checkDataChange(volatile dataItem *data, double currentValue) {
