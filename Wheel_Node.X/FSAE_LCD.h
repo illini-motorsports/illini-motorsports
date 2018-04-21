@@ -31,9 +31,10 @@
 #define REV_SUB_9           	500
 
 // PDM Dataitem Constants
-#define PDM_DATAITEM_SIZE     1
+#define PDM_DATAITEM_SIZE     2
 
 #define VBAT_RAIL_IDX         0
+#define KILL_SWITCH_IDX       1
 
 //GCM DataItem Constants
 #define GCM_DATAITEM_SIZE     1

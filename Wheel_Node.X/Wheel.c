@@ -181,6 +181,10 @@ void process_CAN_msg(CAN_message msg){
       updateDataItem(&gcmDataItems[GEAR_IDX], (uint8_t) (msg.data[GEAR_BYTE]) * GEAR_SCL);
       break;
 
+      /*PDM*/
+    case PDM_ID + 1:
+      updateDataItem(&pdmDataItems[KILL_SWITCH_IDX], msg.data[PDM_SWITCH_BYTE] & KILL_PDM_SW_MASK);
+      break;
     case PDM_ID + 2:
       updateDataItem(&pdmDataItems[VBAT_RAIL_IDX], (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL);
       break;
