@@ -95,28 +95,38 @@ typedef struct {
   uint16_t size;
 } screenItemInfo;
 
+/*
+ * Enables there to be multiple dataItems for a given screenItem
+ *
+ * data -             DataItem with relevant data
+ * currentValue -     Current value being displayed
+ * next -             pointer to next screenItemNode (null if end of list)
+ */
+typedef struct _screenItemNode {
+  volatile dataItem * data;
+  double currentValue;
+  struct _screenItemNode * next;
+} screenItemNode;
 
 /*
  * Defines an item that will be displayed on a specific screen
  *
- * currentValue -   Current value being displayed
- * data -     Pointer to corresponding dataItem
+ * head -             Head of a linked list of screenItemNodes containing dataItem pointers
  * refreshInterval -  Maximum refresh frequency
- * refreshTime -  Time that the value was previously refreshed
- * info -     Struct that contains necessary info for redrawing
- * redrawItem -   Redraw function pointer, called when the item is refreshed
+ * refreshTime -      Time that the value was previously refreshed
+ * info -             Struct that contains necessary info for redrawing
+ * redrawItem -       Redraw function pointer, called when the item is refreshed
  */
 typedef struct {
-  double currentValue;
-  volatile dataItem * data;
   uint32_t refreshInterval;
   uint32_t refreshTime;
+  screenItemNode head;
   screenItemInfo info;
-  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double);
+  void (*redrawItem)(screenItemInfo *, screenItemNode head);
 } screenItem;
 
 /*
- * Defines a screen
+  Defines a screen
  *
  * items -  Array of screen Items that will be on that screen
  * len -  Length of screenItem array
@@ -162,7 +172,7 @@ void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
-  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double),
+  void (*redrawItem)(screenItemInfo *, screenItemNode),
   volatile dataItem* data, uint32_t refresh);
 // Toggles between a few different data items on one screen
 void changeScreen(uint8_t num);
@@ -172,12 +182,12 @@ void clearScreen(void);
 void resetScreenItems(void); // Resets all the values
 uint8_t initNightMode(uint8_t on); // Night mode stuff
 void nightMode(uint8_t on);
-uint8_t checkDataChange(volatile dataItem *data, double currentValue);
+uint8_t checkDataChange(screenItemNode head);
 uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear);
 
 // Redraw Functions!
-double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
+void redrawDigit(screenItemInfo * item, screenItemNode head);
+void redrawGearPos(screenItemInfo * item, screenItemNode head);
+void redrawKILLCluster(screenItemInfo * item, screenItemNode head);
 
 #endif /* _FSAE_LCD_H */
