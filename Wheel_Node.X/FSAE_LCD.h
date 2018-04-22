@@ -122,7 +122,7 @@ typedef struct {
   uint32_t refreshTime;
   screenItemNode head;
   screenItemInfo info;
-  void (*redrawItem)(screenItemInfo *, screenItemNode head);
+  void (*redrawItem)(screenItemInfo *, screenItemNode *);
 } screenItem;
 
 /*
@@ -172,7 +172,7 @@ void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
-  void (*redrawItem)(screenItemInfo *, screenItemNode),
+  void (*redrawItem)(screenItemInfo *, screenItemNode *),
   volatile dataItem* data, uint32_t refresh);
 // Toggles between a few different data items on one screen
 void changeScreen(uint8_t num);
@@ -182,12 +182,12 @@ void clearScreen(void);
 void resetScreenItems(void); // Resets all the values
 uint8_t initNightMode(uint8_t on); // Night mode stuff
 void nightMode(uint8_t on);
-uint8_t checkDataChange(screenItemNode head);
+uint8_t checkDataChange(screenItemNode * head);
 uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear);
 
 // Redraw Functions!
-void redrawDigit(screenItemInfo * item, screenItemNode head);
-void redrawGearPos(screenItemInfo * item, screenItemNode head);
-void redrawKILLCluster(screenItemInfo * item, screenItemNode head);
+void redrawDigit(screenItemInfo * item, screenItemNode * head);
+void redrawGearPos(screenItemInfo * item, screenItemNode * head);
+void redrawKILLCluster(screenItemInfo * item, screenItemNode * head);
 
 #endif /* _FSAE_LCD_H */

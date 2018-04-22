@@ -100,7 +100,7 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[6], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH);
 }
 
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, screenItemNode), volatile dataItem* data, uint32_t interval){
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, screenItemNode *), volatile dataItem* data, uint32_t interval){
 
   item->info.x = x;
   item->info.y = y;
@@ -157,15 +157,15 @@ void refreshScreenItems(void){
   for(i = 0;i<currScreen->len;i++){
     screenItem * currItem = &currScreen->items[i];
     if(millis - currItem->refreshTime >= currItem->refreshInterval){
-      currItem->redrawItem(&currItem->info, currItem->head);
+      currItem->redrawItem(&currItem->info, &currItem->head);
       currItem->refreshTime = millis;
     }
   }
 }
 
 // Redraw General Data
-void redrawDigit(screenItemInfo * item, screenItemNode head){
-  volatile dataItem * data = head.data;
+void redrawDigit(screenItemInfo * item, screenItemNode * head){
+  volatile dataItem * data = head->data;
 
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
   uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
@@ -207,12 +207,12 @@ void redrawDigit(screenItemInfo * item, screenItemNode head){
   if(!stale && (!error || millis%500 > 200)) { // draw number if normal, or blink at 1hz
     sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,numColor,data->value);
   }
-  head.currentValue = data->value;
+  head->currentValue = data->value;
 }
 
 // For Single Digits with Error and Neutral Displays
-void redrawGearPos(screenItemInfo * item, screenItemNode head){
-  volatile dataItem * data = head.data;
+void redrawGearPos(screenItemInfo * item, screenItemNode * head){
+  volatile dataItem * data = head->data;
 
   uint8_t stale = millis - data->refreshTime > CAN_TIMEOUT;
 
@@ -222,7 +222,7 @@ void redrawGearPos(screenItemInfo * item, screenItemNode head){
     data->value = 8;
   }
 
-  if(data->value == head.currentValue){
+  if(data->value == head->currentValue){
     return;
   }
   uint16_t fillColor = stale ? errorColor : backgroundColor;
@@ -238,7 +238,7 @@ void redrawGearPos(screenItemInfo * item, screenItemNode head){
       sevenSegmentDigit(item->x, item->y, item->size, foregroundColor, data->value);
     }
   }
-  head.currentValue = data->value;
+  head->currentValue = data->value;
 }
 
 uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
@@ -251,8 +251,8 @@ uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
   }
 }
 
-void redrawKILLCluster(screenItemInfo * item, screenItemNode head) {
-  volatile dataItem * data = head.data;
+void redrawKILLCluster(screenItemInfo * item, screenItemNode * head) {
+  volatile dataItem * data = head->data;
   uint8_t kill = data->value ? 1 : 0;
   if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
       !kill && tlc5955_get_cluster_warn(CLUSTER_RIGHT)) {
@@ -260,7 +260,7 @@ void redrawKILLCluster(screenItemInfo * item, screenItemNode head) {
       tlc5955_set_cluster_warn(CLUSTER_RIGHT, kill, RED, NO_OVR);
     }
   }
-  head.currentValue = data->value;
+  head->currentValue = data->value;
 }
 
 void clearScreen(void){
@@ -312,9 +312,9 @@ void nightMode(uint8_t on){
   }
 }
 
-uint8_t checkDataChange(screenItemNode head) {
+uint8_t checkDataChange(screenItemNode * head) {
   screenItemNode * curr;
-  for(curr = &head; curr; curr = curr->next) {
+  for(curr = head; curr; curr = curr->next) {
     if(curr->currentValue != curr->data->value) {
       return 1;
     }
