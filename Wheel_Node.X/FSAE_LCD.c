@@ -87,17 +87,26 @@ void initAllScreens(void){
   foregroundColor = RA8875_BLACK;
   foregroundColor2 = RA8875_GREEN;
 
+  // Shift lights screenItem
+  initScreenItem(&shiftLightsItem, 0, 0, 0, redrawShiftLights, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
+  shiftLightsItem.head.next = &shiftLightsGearPos;
+  shiftLightsGearPos.next = &shiftLightsRPM;
+  shiftLightsGearPos.data = &gcmDataItems[GEAR_IDX];
+  shiftLightsGearPos.currentValue = 0;
+  shiftLightsRPM.next = NULL;
+  shiftLightsRPM.data = &motecDataItems[ENG_RPM_IDX];
+  shiftLightsRPM.currentValue = 0;
+
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
-  raceScreen.len = 7;
+  raceScreen.len = 6;
   initScreenItem(&raceScreenItems[0], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[1], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[2], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[3], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[4], 200, 20, 80, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[5], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[6], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[5], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH);
 }
 
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, screenItemNode *), volatile dataItem* data, uint32_t interval){
@@ -154,12 +163,19 @@ void changeScreen(uint8_t num){
 void refreshScreenItems(void){
   screen* currScreen = allScreens[screenNumber];
   int i;
+  screenItem * currItem;
   for(i = 0;i<currScreen->len;i++){
-    screenItem * currItem = &currScreen->items[i];
+    currItem = &currScreen->items[i];
     if(millis - currItem->refreshTime >= currItem->refreshInterval){
       currItem->redrawItem(&currItem->info, &currItem->head);
       currItem->refreshTime = millis;
     }
+  }
+  // Always redraw shift lights
+  currItem = &shiftLightsItem;
+  if(millis - currItem->refreshTime >= currItem->refreshInterval){
+    currItem->redrawItem(&currItem->info, &currItem->head);
+    currItem->refreshTime = millis;
   }
 }
 
@@ -241,7 +257,52 @@ void redrawGearPos(screenItemInfo * item, screenItemNode * head){
   head->currentValue = data->value;
 }
 
+/*
+ * Main redraw function for all shift lights functionality
+ * expects a screenItemNode with multiple data items, in the order of:
+ * [0] - kill switch state
+ * [1] - gear position
+ * [2] - RPM
+ */
+//TODO: Add error cluster
+void redrawShiftLights(screenItemInfo * item, screenItemNode * head) {
+  volatile dataItem * killSw = head->data;
+  volatile dataItem * gearPos = head->next->data;
+  volatile dataItem * RPM = head->next->next->data;
+
+  // Kill cluster redraw
+  uint8_t kill = killSw->value ? 1 : 0;
+  if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
+      !kill && tlc5955_get_cluster_warn(CLUSTER_RIGHT)) {
+    if (!tlc5955_get_startup()) {
+      tlc5955_set_cluster_warn(CLUSTER_RIGHT, kill, RED, NO_OVR);
+    }
+  }
+  head->currentValue = killSw->value;
+
+  uint8_t num_leds = getShiftLightsRevRange(RPM->value, gearPos->value);
+
+  if (num_leds == 10) {
+    tlc5955_set_main_blink(1, GRN, NO_OVR);
+  } else {
+    uint8_t i;
+    uint64_t colorArray[9] = {0};
+    uint64_t drawColor = RED;
+    for (i = 0; i < num_leds; i++) {
+      colorArray[i] = drawColor;
+    }
+    tlc5955_set_main_blink(0, 0x0, NO_OVR);
+    tlc5955_write_main_colors(colorArray);
+  }
+  head->next->currentValue = gearPos->value;
+  head->next->next->currentValue = RPM->value;
+}
+
 uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
+  if(gear < 0 || gear > 6) {
+    return 0;
+  }
+
   uint16_t maxRPM = shiftRPM[gear];
   int i;
   for(i = 9; i < 0; i--) {
@@ -249,18 +310,7 @@ uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
       return i + 1;
     }
   }
-}
-
-void redrawKILLCluster(screenItemInfo * item, screenItemNode * head) {
-  volatile dataItem * data = head->data;
-  uint8_t kill = data->value ? 1 : 0;
-  if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
-      !kill && tlc5955_get_cluster_warn(CLUSTER_RIGHT)) {
-    if (!tlc5955_get_startup()) {
-      tlc5955_set_cluster_warn(CLUSTER_RIGHT, kill, RED, NO_OVR);
-    }
-  }
-  head->currentValue = data->value;
+  return 0;
 }
 
 void clearScreen(void){

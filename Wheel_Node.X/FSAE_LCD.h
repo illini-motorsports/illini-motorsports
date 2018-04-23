@@ -42,39 +42,38 @@
 #define OIL_TEMP_IDX          4
 #define OIL_PRES_IDX          5
 
-#define WHEEL_DATAITEM_SIZE     13
+#define WHEEL_DATAITEM_SIZE   13
 
-#define ROTARY_0_IDX            0
-#define ROTARY_1_IDX            1
-#define ROTARY_2_IDX            2
-#define TROTARY_0_IDX           3
-#define TROTARY_1_IDX           4
-#define MOM_AUX_IDX             5
-#define MOM_ACK_IDX             6
-#define MOM_RDO_IDX             7
-#define MOM_NEU_IDX             8
-#define SW_ND_IDX               9
-#define SW_FAN_IDX              10
-#define SW_WTR_IDX              11
-#define SW_FUEL_IDX             12
+#define ROTARY_0_IDX          0
+#define ROTARY_1_IDX          1
+#define ROTARY_2_IDX          2
+#define TROTARY_0_IDX         3
+#define TROTARY_1_IDX         4
+#define MOM_AUX_IDX           5
+#define MOM_ACK_IDX           6
+#define MOM_RDO_IDX           7
+#define MOM_NEU_IDX           8
+#define SW_ND_IDX             9
+#define SW_FAN_IDX            10
+#define SW_WTR_IDX            11
+#define SW_FUEL_IDX           12
 
 /*
  * Defines a data stream that is relevant to one or more screens
  *
- * value -    double value of stream
+ * value -          double value of stream
  * warnThreshold -  Value where data will enter a warning state
  * errThreshold -   Value where data will enter an error state
- * thresholdDir - 1 if max, 0 if min
- * wholeDigits -  Number of whole digits to display
- * decDigits -    Number of decimal digits to display
+ * thresholdDir -   1 if max, 0 if min
+ * refreshTime -    millis of last data refresh
+ * wholeDigits -    Number of whole digits to display
+ * decDigits -      Number of decimal digits to display
  */
 typedef struct packed {
   double value;
   double warnThreshold;
   double errThreshold;
   unsigned thresholdDir:1;
-  unsigned warningState:1;
-  unsigned blinkState:1;
   uint32_t refreshTime;
   uint8_t wholeDigits;
   uint8_t decDigits;
@@ -86,7 +85,7 @@ typedef struct packed {
  *
  * x -    X coordinate
  * y -    Y coordinate
- * size -   Size of item
+ * size - Size of item
  */
 
 typedef struct {
@@ -98,9 +97,9 @@ typedef struct {
 /*
  * Enables there to be multiple dataItems for a given screenItem
  *
- * data -             DataItem with relevant data
- * currentValue -     Current value being displayed
- * next -             pointer to next screenItemNode (null if end of list)
+ * data -         DataItem with relevant data
+ * currentValue - Current value being displayed
+ * next -         pointer to next screenItemNode (null if end of list)
  */
 typedef struct _screenItemNode {
   volatile dataItem * data;
@@ -111,9 +110,9 @@ typedef struct _screenItemNode {
 /*
  * Defines an item that will be displayed on a specific screen
  *
- * head -             Head of a linked list of screenItemNodes containing dataItem pointers
  * refreshInterval -  Maximum refresh frequency
  * refreshTime -      Time that the value was previously refreshed
+ * head -             Head of a linked list of screenItemNodes containing dataItem pointers
  * info -             Struct that contains necessary info for redrawing
  * redrawItem -       Redraw function pointer, called when the item is refreshed
  */
@@ -129,7 +128,7 @@ typedef struct {
   Defines a screen
  *
  * items -  Array of screen Items that will be on that screen
- * len -  Length of screenItem array
+ * len -    Length of screenItem array
  */
 typedef struct {
   screenItem * items;
@@ -150,7 +149,9 @@ const uint16_t shiftLightSub[10] = {
 };
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[7];
+screenItem raceScreenItems[7], shiftLightsItem;
+
+screenItemNode shiftLightsGearPos, shiftLightsRPM;
 
 // Define all screen structs
 screen raceScreen;
@@ -188,6 +189,6 @@ uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear);
 // Redraw Functions!
 void redrawDigit(screenItemInfo * item, screenItemNode * head);
 void redrawGearPos(screenItemInfo * item, screenItemNode * head);
-void redrawKILLCluster(screenItemInfo * item, screenItemNode * head);
+void redrawShiftLights(screenItemInfo * item, screenItemNode * head);
 
 #endif /* _FSAE_LCD_H */

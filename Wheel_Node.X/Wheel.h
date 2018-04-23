@@ -79,13 +79,13 @@
 #define TEMP_SAMP_INTV    333
 
 const uint16_t shiftRPM[7] = {
-  13000,
-  13000,
-  13000,
-  13000,
-  13000,
-  13000,
-  13000
+  13000,  // Neutral for testing
+  12444,  // First
+  11950,  // Second
+  12155,  // Third
+  12100,  // Fourth
+  11150,  // Fifth
+  13000   // Sixth
 };
 
 volatile uint32_t millis;
