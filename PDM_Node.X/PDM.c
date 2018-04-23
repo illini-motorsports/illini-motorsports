@@ -715,14 +715,14 @@ void sample_ext_adc(void) {
     }
 
     load_current[STR_IDX] = (uint16_t) ((adc_to_volt(ad7490_samples[ADC_CHN[STR_IDX]])
-          * SCL_INV_LRG * load_current_ratios[load_current_ratios[STR_IDX]])
+          * SCL_INV_LRG * load_current_ratios[STR_IDX])
           / fb_resistances[STR_IDX]);
     total_current_draw += load_current[STR_IDX];
 
-    rail_vbat = ((uint16_t) adc_to_volt(ad7490_samples[12]) * 4 * SCL_INV);
-    rail_12v  = ((uint16_t) adc_to_volt(ad7490_samples[13]) * 4 * SCL_INV);
-    rail_5v   = ((uint16_t) adc_to_volt(ad7490_samples[14]) * 2 * SCL_INV);
-    rail_3v3  = ((uint16_t) adc_to_volt(ad7490_samples[15]) * 1 * SCL_INV);
+    rail_vbat = (uint16_t) (adc_to_volt(ad7490_samples[12]) * 4.0 * SCL_INV);
+    rail_12v  = (uint16_t) (adc_to_volt(ad7490_samples[13]) * 4.0 * SCL_INV);
+    rail_5v   = (uint16_t) (adc_to_volt(ad7490_samples[14]) * 2.0 * SCL_INV);
+    rail_3v3  = (uint16_t) (adc_to_volt(ad7490_samples[15]) * 1.0 * SCL_INV);
 
     ext_adc_samp_tmr = millis;
   }
