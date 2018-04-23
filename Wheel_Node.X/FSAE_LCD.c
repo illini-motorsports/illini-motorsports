@@ -13,8 +13,9 @@
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
 void initDataItems(void){
-  uint16_t i;
+  warningCount = 0;
 
+  uint16_t i;
   // Set default initialization for PDM data items
   for(i=0;i<PDM_DATAITEM_SIZE;i++){
     initDataItem(&pdmDataItems[i],200,200,2,1);
@@ -182,9 +183,19 @@ void refreshScreenItems(void){
 // Redraw General Data
 void redrawDigit(screenItemInfo * item, screenItemNode * head){
   volatile dataItem * data = head->data;
-
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
   uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
+
+  if(!data->warningState && (error || warning)) { // Transition into warning state
+    data->warningState = 1;
+    warningCount++;
+  }
+
+  if(data->warningState && !error && !warning) { // Transition out of warning state
+    data->warningState = 0;
+    warningCount--;
+  }
+
   uint8_t stale = millis - data->refreshTime > CAN_TIMEOUT;
   if(stale) {
     data->value = 0;
@@ -280,8 +291,15 @@ void redrawShiftLights(screenItemInfo * item, screenItemNode * head) {
   }
   head->currentValue = killSw->value;
 
-  uint8_t num_leds = getShiftLightsRevRange(RPM->value, gearPos->value);
+  // Set left warning cluster if there are any warnings on screen
+  if(warningCount && !tlc5955_get_cluster_warn(CLUSTER_LEFT) ||
+      !warningCount && tlc5955_get_cluster_warn(CLUSTER_LEFT)) {
+    if(!tlc5955_get_startup()) {
+      tlc5955_set_cluster_warn(CLUSTER_LEFT, warningCount, RED, NO_OVR);
+    }
+  }
 
+  uint8_t num_leds = getShiftLightsRevRange(RPM->value, gearPos->value);
   if (num_leds == 10) {
     tlc5955_set_main_blink(1, GRN, NO_OVR);
   } else {
@@ -320,11 +338,13 @@ void clearScreen(void){
 // Resets the current value of all screen items on a screen
 void resetScreenItems(void){
   int i = 0;
+  warningCount = 0;
   screen *currScreen = allScreens[screenNumber];
   for(;i<currScreen->len;i++){
     screenItemNode * curr;
     for(curr = &(currScreen->items[i].head); curr; curr = curr->next) {
      curr->currentValue = !(curr->data->value);
+     curr->data->warningState = 0;
     }
   }
 }

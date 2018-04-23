@@ -65,6 +65,7 @@
  * warnThreshold -  Value where data will enter a warning state
  * errThreshold -   Value where data will enter an error state
  * thresholdDir -   1 if max, 0 if min
+ * warningState -   1 if crossed threshold, 0 if normal
  * refreshTime -    millis of last data refresh
  * wholeDigits -    Number of whole digits to display
  * decDigits -      Number of decimal digits to display
@@ -74,6 +75,7 @@ typedef struct packed {
   double warnThreshold;
   double errThreshold;
   unsigned thresholdDir:1;
+  unsigned warningState:1;
   uint32_t refreshTime;
   uint8_t wholeDigits;
   uint8_t decDigits;
@@ -159,7 +161,7 @@ screen raceScreen;
 // Define master array of all screen structs
 screen* allScreens[NUM_SCREENS];
 
-uint8_t screenNumber;
+uint8_t screenNumber, warningCount;
 
 volatile uint16_t backgroundColor, foregroundColor, foregroundColor2, warningColor, errorColor;
 
