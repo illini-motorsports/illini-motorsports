@@ -117,6 +117,8 @@ typedef struct _screenItemNode {
  * head -             Head of a linked list of screenItemNodes containing dataItem pointers
  * info -             Struct that contains necessary info for redrawing
  * redrawItem -       Redraw function pointer, called when the item is refreshed
+ * label -            Label to be drawn underneath the screenItem
+ * labelSize -        Size to draw the label: 0 - 3, -1 means the label will not be drawn
  */
 typedef struct {
   uint32_t refreshInterval;
@@ -124,6 +126,8 @@ typedef struct {
   screenItemNode head;
   screenItemInfo info;
   void (*redrawItem)(screenItemInfo *, screenItemNode *);
+  char * label;
+  int8_t labelSize;
 } screenItem;
 
 /*
@@ -176,7 +180,7 @@ void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
   void (*redrawItem)(screenItemInfo *, screenItemNode *),
-  volatile dataItem* data, uint32_t refresh);
+  volatile dataItem* data, uint32_t refresh, char * label, int8_t labelSize);
 // Toggles between a few different data items on one screen
 void changeScreen(uint8_t num);
 // Continuously runs and refreshes stuff

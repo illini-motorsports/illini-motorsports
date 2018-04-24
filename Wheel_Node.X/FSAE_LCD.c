@@ -89,7 +89,7 @@ void initAllScreens(void){
   foregroundColor2 = RA8875_GREEN;
 
   // Shift lights screenItem
-  initScreenItem(&shiftLightsItem, 0, 0, 0, redrawShiftLights, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
+  initScreenItem(&shiftLightsItem, 0, 0, 0, redrawShiftLights, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH, "SHIFT LIGHTS", -1);
   shiftLightsItem.head.next = &shiftLightsGearPos;
   shiftLightsGearPos.next = &shiftLightsRPM;
   shiftLightsGearPos.data = &gcmDataItems[GEAR_IDX];
@@ -102,16 +102,15 @@ void initAllScreens(void){
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
   raceScreen.len = 6;
-  initScreenItem(&raceScreenItems[0], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[1], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[2], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[3], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[4], 200, 20, 80, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[5], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[0], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX], MIN_REFRESH, "OIL TEMP", 1);
+  initScreenItem(&raceScreenItems[1], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX], MIN_REFRESH, "ENG TEMP", 1);
+  initScreenItem(&raceScreenItems[2], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX], MIN_REFRESH, "OIL_PRESS", 1);
+  initScreenItem(&raceScreenItems[3], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH, "BAT V", 1);
+  initScreenItem(&raceScreenItems[4], 200, 20, 80, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH, "GEAR POS", -1);
+  initScreenItem(&raceScreenItems[5], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH, "LAMBDA", 1);
 }
 
-void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, screenItemNode *), volatile dataItem* data, uint32_t interval){
-
+void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, void (*redrawItem)(screenItemInfo *, screenItemNode *), volatile dataItem* data, uint32_t interval, char * label, int8_t labelSize){
   item->info.x = x;
   item->info.y = y;
   item->info.size = size;
@@ -123,34 +122,35 @@ void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, voi
   item->refreshTime = millis;
   item->redrawItem = redrawItem;
   item->refreshInterval = interval;
+  item->label = label;
+  item->labelSize = labelSize;
 }
 
 // Helper function for drawing labels and such on a new screen
 void initScreen(uint8_t num){
-  switch(num){
-    case RACE_SCREEN:
-      textMode();
-      textEnlarge(1);
-      textTransparent(foregroundColor);
-      textSetCursor(7, 40);
-      textWrite("OIL TEMP");
-      textSetCursor(0, 160);
-      textWrite("OIL PRESS");
-      textSetCursor(360, 40);
-      textWrite("WTR TMP");
-      textSetCursor(370,160);
-      textWrite("BAT V");
-      textSetCursor(200,160);
-      textWrite("LAMBDA");
-      textEnlarge(0);
-      graphicsMode();
-      break;
+  uint16_t i;
+  textMode();
+  textTransparent(foregroundColor);
+  screen * currScreen = allScreens[num];
+  for(i = 0; i < currScreen->len; i++) {
+    screenItem * item = &currScreen->items[i];
+    if(item->labelSize >= 0) {
+      textEnlarge(item->labelSize);
+      // TODO: compare text length with number of digits to determine X offset
+      uint16_t x = item->info.x;
+      uint16_t y = item->info.y - item->info.size - ((item->labelSize + 1) * 8) - 5;
+      textSetCursor(x, y);
+      textWrite(item->label);
+    }
   }
+  graphicsMode();
 }
 
 // User called function to change which screen is being displayed
 void changeScreen(uint8_t num){
-  if( num < 0 || num > NUM_SCREENS) {return;}
+  if( num < 0 || num > NUM_SCREENS) {
+    return;
+  }
   screenNumber = num;
   clearScreen();
   initScreen(num);
