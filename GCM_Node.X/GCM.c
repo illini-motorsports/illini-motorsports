@@ -278,19 +278,19 @@ void sample_sensors(uint8_t is_shifting) {
     double gear_voltage =  ((((double) gear_samp) / 4095.0) * 5.0);
     uint16_t gear_voltage_can = (uint16_t) (gear_voltage * 10000.0);
 
-    if (abs(gear_voltage - 0.595) <= GEAR_VOLT_RIPPLE) {
+    if (abs(gear_voltage - 0.747) <= GEAR_VOLT_RIPPLE) {
       gear = 1;
-    } else if (abs(gear_voltage - 1.05) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - 1.096) <= GEAR_VOLT_RIPPLE) {
       gear = GEAR_NEUT;
-    } else if (abs(gear_voltage - 1.58) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - 1.448) <= GEAR_VOLT_RIPPLE) {
       gear = 2;
-    } else if (abs(gear_voltage - 2.32) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - 2.154) <= GEAR_VOLT_RIPPLE) {
       gear = 3;
-    } else if (abs(gear_voltage - 3.16) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - 2.862) <= GEAR_VOLT_RIPPLE) {
       gear = 4;
-    } else if (abs(gear_voltage - 4.12) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - 3.574) <= GEAR_VOLT_RIPPLE) {
       gear = 5;
-    } else if (abs(gear_voltage - 4.81) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - 4.282) <= GEAR_VOLT_RIPPLE) {
       gear = 6;
     } else {
       gear = GEAR_FAIL;

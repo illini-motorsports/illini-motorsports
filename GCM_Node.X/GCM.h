@@ -107,20 +107,23 @@ const uint16_t shift_rpm[6] = {
 };
 
 // Pin definitions
-#define SHIFT_UP_TRIS  TRISAbits.TRISA5
-#define SHIFT_UP_ANSEL ANSELAbits.ANSA5
-#define SHIFT_UP_PORT  PORTAbits.RA5
-#define SHIFT_DN_TRIS  TRISEbits.TRISE5
-#define SHIFT_DN_ANSEL ANSELEbits.ANSE5
-#define SHIFT_DN_PORT  PORTEbits.RE5
-#define SHIFT_NT_TRIS  TRISBbits.TRISB5
-#define SHIFT_NT_ANSEL ANSELBbits.ANSB5
-#define SHIFT_NT_PORT  PORTBbits.RB5
+// neut = a5
+// up = e5
+// down = g15
+#define SHIFT_UP_TRIS  TRISEbits.TRISE5
+#define SHIFT_UP_ANSEL ANSELEbits.ANSE5
+#define SHIFT_UP_PORT  PORTEbits.RE5
+#define SHIFT_DN_TRIS  TRISGbits.TRISG15
+#define SHIFT_DN_ANSEL ANSELGbits.ANSG15
+#define SHIFT_DN_PORT  PORTGbits.RG15
+#define SHIFT_NT_TRIS  TRISAbits.TRISA5
+#define SHIFT_NT_ANSEL ANSELAbits.ANSA5
+#define SHIFT_NT_PORT  PORTAbits.RA5
 
-#define ACT_UP_TRIS TRISEbits.TRISE4
-#define ACT_UP_LAT  LATEbits.LATE4
-#define ACT_DN_TRIS TRISBbits.TRISB4
-#define ACT_DN_LAT  LATBbits.LATB4
+#define ACT_UP_TRIS TRISEbits.TRISE7
+#define ACT_UP_LAT  LATEbits.LATE7
+#define ACT_DN_TRIS TRISCbits.TRISC1
+#define ACT_DN_LAT  LATCbits.LATC1
 
 #define ADC_GEAR_TRIS  TRISGbits.TRISG6
 #define ADC_GEAR_ANSEL ANSELGbits.ANSG6
