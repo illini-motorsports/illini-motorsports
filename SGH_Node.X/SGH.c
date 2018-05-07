@@ -1,10 +1,9 @@
-
 #include "SGH.h"
 
 double analog_channels[8] = {0};
 SPIConn *analog_connections[3] = {0};
 volatile uint32_t millis = 0;
-uint32_t canAnalogMillis = 0;
+uint32_t canAnalogMillis, canDiagMillis;
 double strain[8] = {0};
 
 uint32_t temp_samp_tmr = 0;
@@ -20,22 +19,31 @@ void main(void){
   init_oscillator(0);// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
   init_adc(NULL); // Initialize ADC module
+  init_termination(NOT_TERMINATING);
   init_adcs();// Initialize all of the ADC's
   init_can(); // Initialize CAN
 
+  canAnalogMillis = canDiagMillis = 0;
+  ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
+  STI();// Enable interrupts
+
+
   while(1){
     update_analog_channels();
-    
     strain_calc();
-    CANAnalogChannels();
-    if(millis - canAnalogMillis > 50){
+
+    if(millis - canAnalogMillis >= CAN_ANALOG_INTV){
       CANAnalogChannels();
-      CANdiag();
       canAnalogMillis = millis;
     }
-    
+
+    if(millis - canDiagMillis >= CAN_DIAG_INTV){
+      CANdiag();
+      canDiagMillis = millis;
+    }
+
     sample_temp(); // Sample internal and external temperature sensors
-    
+
   }
 }
 
@@ -45,7 +53,7 @@ void CANAnalogChannels(void){
   for(i = 0;i<1;i++){
     data.halfword0 = (uint16_t) (analog_channels[i]/ANALOG_SGH_RAW_SCL);
     data.halfword1 = (uint16_t) (strain[i]/STRAIN_CALC_SCL);
-    
+
     CAN_send_message(SGH_ID + i + 1, 4, data);
   }
 }
@@ -58,11 +66,31 @@ void CANdiag(void){
   CAN_send_message(SGH_ID + 0, 6, data);
 }
 
+/**
+ * TMR2 Interrupt Handler
+ *
+ * Fires once every millisecond.
+ */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
   millis++;// Increment millis count
 
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
+
+/**
+ * CAN1 Interrupt Handler
+ */
+void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) {
+  if (C1INTbits.RBIF) {
+    CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
+  }
+  if (C1INTbits.RBOVIF) {
+    CAN_rx_ovf++;
+  }
+  IFS4CLR = _IFS4_CAN1IF_MASK; // Clear CAN1 Interrupt Flag
+}
+
+void process_CAN_msg(CAN_message msg) {}
 
 // reads from both ADC's at the same time, which kinda negates the point of the
 // low speed vs high speed ADC's
