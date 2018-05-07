@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   SGH.h
  * Author: Jacob Drewniak
  *
@@ -38,7 +38,9 @@
 #define VDD                     12
 #define POISSON                 0.30
 
-#define TEMP_SAMP_INTV    333
+#define TEMP_SAMP_INTV          333
+#define CAN_ANALOG_INTV         50
+#define CAN_DIAG_INTV           500
 
 uint8_t analogMappings[8] = {6,5,7,4,1,0,2,3};
 
@@ -52,6 +54,7 @@ void CANdiag(void);
 void CANAnalogChannels(void);
 
 void sample_temp(void);
+void process_CAN_msg(CAN_message msg);
 
 #endif /* SGH_H */
 
