@@ -46,7 +46,7 @@ void CANAnalogChannels(void){
     data.halfword0 = (uint16_t) (analog_channels[i]/ANALOG_SGH_RAW_SCL);
     data.halfword1 = (uint16_t) (strain[i]/STRAIN_CALC_SCL);
     
-    CAN_send_message(GCM_ID + i + 1, 4, data);
+    CAN_send_message(SGH_ID + i + 1, 4, data);
   }
 }
 
@@ -55,7 +55,7 @@ void CANdiag(void){
   data.halfword0 = (uint16_t) (millis / 1000);
   data.halfword1 = pcb_temp;
   data.halfword2 = junc_temp;
-  CAN_send_message(GCM_ID + 0, 6, data);
+  CAN_send_message(SGH_ID + 0, 6, data);
 }
 
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {

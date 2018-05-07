@@ -40,7 +40,7 @@
 
 #define TEMP_SAMP_INTV    333
 
-uint8_t analogMappings[8] = {4,5,7,6,1,0,2,3};
+uint8_t analogMappings[8] = {6,5,7,4,1,0,2,3};
 
 void main(void);
 void update_analog_channels(void);
