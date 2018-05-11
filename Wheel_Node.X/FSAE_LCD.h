@@ -28,9 +28,10 @@
 #define KILL_SWITCH_IDX       1
 
 //GCM DataItem Constants
-#define GCM_DATAITEM_SIZE     1
+#define GCM_DATAITEM_SIZE     2
 
 #define GEAR_IDX              0
+#define MODE_IDX              1
 
 //MOTEC DataItem Constants
 #define MOTEC_DATAITEM_SIZE   6

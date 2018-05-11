@@ -179,6 +179,7 @@ void process_CAN_msg(CAN_message msg){
       /*GCM*/
     case GCM_ID + 1:
       updateDataItem(&gcmDataItems[GEAR_IDX], (uint8_t) (msg.data[GEAR_BYTE]) * GEAR_SCL);
+      updateDataItem(&gcmDataItems[MODE_IDX], msg.data[MODE_BYTE]);
       break;
 
       /*PDM*/
