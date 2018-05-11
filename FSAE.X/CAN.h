@@ -14,6 +14,7 @@
 #define SPM_ID          0x050
 #define MOTEC_ID        0x100
 #define GCM_ID          0x200
+#define ABS_WS_ID       0x24A
 #define LOGGER_ID       0x300
 #define WHEEL_ID        0x400
 #define ADL_ID          0x500
@@ -281,10 +282,10 @@
 #define MANIFOLD_PRES_SCL   0.001
 #define FUEL_PRES_SCL       0.001
 
-#define WHEELSPEED_FL_SCL   0.1
-#define WHEELSPEED_FR_SCL   0.1
-#define WHEELSPEED_RL_SCL   0.1
-#define WHEELSPEED_RR_SCL   0.1
+#define WHEELSPEED_FL_SCL   0.015625
+#define WHEELSPEED_FR_SCL   0.015625
+#define WHEELSPEED_RL_SCL   0.015625
+#define WHEELSPEED_RR_SCL   0.015625
 
 #define DRIVE_SPEED_SCL     0.1
 #define GROUND_SPEED_SCL    0.1

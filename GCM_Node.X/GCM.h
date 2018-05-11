@@ -73,16 +73,16 @@
 #define SHIFT_ENUM_NT 2
 
 // Miscellaneous definitions
-#define PWR_CUT_SPOOF 			0xE803 // Value for "spoofed" gear shift force sensor
-#define ACT_ON  				0
-#define ACT_OFF 				1
+#define PWR_CUT_SPOOF 		0xE803 // Value for "spoofed" gear shift force sensor
+#define ACT_ON  				  0
+#define ACT_OFF 				  1
 #define NOT_SHIFTING 			0
 #define SHIFTING     			1
 #define CUT_END    				0
 #define CUT_START  				1
 #define CUT_RESEND 				2
-#define MAX_AUTO_UPSHIFT_GEAR 	6
-#define LAUNCH_WHEEL_SPEED_DIFF 1.5
+#define MAX_AUTO_GEAR 	  6
+#define LAUNCH_WS_DIFF    1.5
 #define LAUNCH_FRONT_WS		10
 
 // Gear ratio of standard Yamaha R6 YZF 08 transmission
@@ -110,15 +110,15 @@ const uint16_t shift_rpm[6] = {
 // neut = a5
 // up = e5
 // down = g15
-#define SHIFT_UP_TRIS  TRISEbits.TRISE5
-#define SHIFT_UP_ANSEL ANSELEbits.ANSE5
-#define SHIFT_UP_PORT  PORTEbits.RE5
-#define SHIFT_DN_TRIS  TRISGbits.TRISG15
-#define SHIFT_DN_ANSEL ANSELGbits.ANSG15
-#define SHIFT_DN_PORT  PORTGbits.RG15
-#define SHIFT_NT_TRIS  TRISAbits.TRISA5
-#define SHIFT_NT_ANSEL ANSELAbits.ANSA5
-#define SHIFT_NT_PORT  PORTAbits.RA5
+#define SHIFT_UP_TRIS  TRISGbits.TRISG15
+#define SHIFT_UP_ANSEL ANSELGbits.ANSG15
+#define SHIFT_UP_PORT  PORTGbits.RG15
+#define SHIFT_DN_TRIS  TRISAbits.TRISA5
+#define SHIFT_DN_ANSEL ANSELAbits.ANSA5
+#define SHIFT_DN_PORT  PORTAbits.RA5
+#define SHIFT_NT_TRIS  TRISEbits.TRISE5
+#define SHIFT_NT_ANSEL ANSELEbits.ANSE5
+#define SHIFT_NT_PORT  PORTEbits.RE5
 
 #define ACT_UP_TRIS TRISEbits.TRISE7
 #define ACT_UP_LAT  LATEbits.LATE7

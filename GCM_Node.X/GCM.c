@@ -326,6 +326,8 @@ void sample_sensors(uint8_t is_shifting) {
  * @param msg The received CAN message
  */
 void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
+  uint16_t * lsbArray = (uint16_t *) msg.data;
+
   uint8_t switch_bitmap;
   uint8_t button_bitmap;
 
@@ -340,21 +342,19 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
       CAN_recv_tmr = millis;
       break;
 
-    case MOTEC_ID + 0x3:
-      wheel_fl_speed = ((double) ((msg.data[WHEELSPEED_FL_BYTE] << 8) |
-          msg.data[WHEELSPEED_FL_BYTE + 1])) * WHEELSPEED_FL_SCL;
-      wheel_fr_speed = ((double) ((msg.data[WHEELSPEED_FR_BYTE] << 8) |
-          msg.data[WHEELSPEED_FR_BYTE + 1])) * WHEELSPEED_FR_SCL;
-      wheel_rl_speed = ((double) ((msg.data[WHEELSPEED_RL_BYTE] << 8) |
-          msg.data[WHEELSPEED_RL_BYTE + 1])) * WHEELSPEED_RL_SCL;
-      wheel_rr_speed = ((double) ((msg.data[WHEELSPEED_RR_BYTE] << 8) |
-          msg.data[WHEELSPEED_RR_BYTE + 1])) * WHEELSPEED_RR_SCL;
+    case ABS_WS_ID:
+      wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE/2] * WHEELSPEED_FL_SCL;
+      wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE/2] * WHEELSPEED_FR_SCL;
+      wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE/2] * WHEELSPEED_RL_SCL;
+      wheel_rr_speed = lsbArray[WHEELSPEED_RR_BYTE/2] * WHEELSPEED_RR_SCL;
+
       CAN_recv_tmr = millis;
       break;
 
     case MOTEC_ID + 0x7:
       shift_force_ecu = (uint16_t) ((msg.data[SHIFT_FORCE_BYTE] << 8) |
           msg.data[SHIFT_FORCE_BYTE + 1]);
+      CAN_recv_tmr = millis;
       break;
 
     case PDM_ID + 0x1:
@@ -363,15 +363,14 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
       CAN_recv_tmr = millis;
       break;
 
-      case WHEEL_ID + 0x1:
-        button_bitmap = msg.data[0];
-        radio_button = button_bitmap & 0x01;
-        acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
-        auxiliary_button = ((uint8_t) (button_bitmap & 0x04) >> 2);
-        night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
-        CAN_recv_tmr = millis;
-        break;
-
+    case WHEEL_ID + 0x1:
+      button_bitmap = msg.data[0];
+      radio_button = button_bitmap & 0x01;
+      acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
+      auxiliary_button = ((uint8_t) (button_bitmap & 0x04) >> 2);
+      night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
+      CAN_recv_tmr = millis;
+      break;
   }
 }
 
@@ -461,11 +460,8 @@ void check_gcm_mode(void) {
  * and increment the queue if neccesary
 */
 void process_auto_upshift(void) {
-  if (eng_rpm >= get_threshold_rpm(gear) && 
-        !is_in_launch() &&
-        queue_up == 0 && 
-        gear <= MAX_AUTO_UPSHIFT_GEAR)
-  {
+  if (eng_rpm >= get_threshold_rpm(gear) && !is_in_launch() &&
+        queue_up == 0 && gear <= MAX_AUTO_GEAR) {
     queue_up = 1;
   }
 }
@@ -1089,11 +1085,7 @@ uint16_t get_threshold_rpm(uint8_t gear) {
 * returns 1 if the car is currently in a launch, 0 otherwise
 */
 uint8_t is_in_launch(void) {
-    double front_ws = wheel_fl_speed;
-    double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
-  if (front_ws < LAUNCH_FRONT_WS || front_ws < (LAUNCH_WHEEL_SPEED_DIFF * rear_ws))
-  {
-    return 1;
-  }
-  return 0;
+  double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
+  double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
+  return front_ws < LAUNCH_FRONT_WS || front_ws < (LAUNCH_WS_DIFF * rear_ws);
 }
