@@ -28,6 +28,13 @@
 
 // Pin definitions
 
+#define VR1_PORT  PORTCbits.RC2
+#define VR1_TRIS  TRISCbits.TRISC2
+#define VR1_ANSEL ANSELCbits.ANSC2
+#define VR2_PORT  PORTCbits.RC3
+#define VR2_TRIS  TRISCbits.TRISC3
+#define VR2_ANSEL ANSELCbits.ANSC3
+
 /**
  * Function definitions
  */

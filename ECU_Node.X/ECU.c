@@ -22,6 +22,9 @@ volatile uint32_t CAN_recv_tmr = 0;
 uint32_t diag_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
 
+uint32_t tsampctr = 0;
+uint32_t tsamps[100] = {0};
+
 /**
  * Main function
  */
@@ -37,6 +40,25 @@ void main(void) {
   init_can(); // Initialize CAN
 
   // Initialize pins
+  CFGCONbits.IOLOCK = 0;
+  VR1_TRIS = INPUT;
+  VR1_ANSEL = DIG_INPUT;
+  IC1R = 0b1100;
+  VR2_TRIS = INPUT;
+  VR2_ANSEL = DIG_INPUT;
+  IC2R = 0b1100;
+  CFGCONbits.IOLOCK = 1;
+
+  // Initialize IC1 for VR1 TODO-AM: Move this
+  IC1CONbits.ON = 0;
+  init_timers_45();
+  IC1CONbits.C32 = 1;     // 32 bit timer
+  IC1CONbits.ICM = 0b001; // Edge Detect mode (rising and falling edges)
+  IFS0bits.IC1IF = 0;
+  IPC1bits.IC1IP = 3;
+  IPC1bits.IC1IS = 3;
+  IEC0bits.IC1IE = 1;
+  IC1CONbits.ON = 1;
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
@@ -45,7 +67,7 @@ void main(void) {
 
   // Main loop
   while (1) {
-    STI(); // Enable interrupts (in case anything disabled without re-enabling)
+    //STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
     /**
      * Call helper functions
@@ -54,14 +76,32 @@ void main(void) {
     // Separate logic functions
 
     // Analog sampling functions
-    sample_temp();
+    //sample_temp();
 
     // CAN message sending functions
-    send_diag_can();
+    //send_diag_can();
   }
 }
 
 //=============================== INTERRUPTS ===================================
+
+/**
+ * IC1 Interrupt Handler
+ */
+void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL3SRS))) ic1_inthnd(void) {
+  IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
+  tsamps[tsampctr++] = IC1BUF;
+
+  /*
+  if (!IC1CONbits.ICBNE) {
+    while(1);
+  }
+   */
+
+  if (tsampctr == 100) {
+    while(1);
+  }
+}
 
 /**
  * CAN1 Interrupt Handler

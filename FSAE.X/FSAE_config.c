@@ -113,7 +113,7 @@ void init_general(void) {
   // CFGCON
   CFGCONbits.DMAPRI = 0;    // DMA Read and DMA Write Arbitration Priority to SRAM (DMA uses Least Recently Serviced Arbitration)
   CFGCONbits.CPUPRI = 0;    // CPU Arbitration Priority to SRAM When Servicing an Interrupt (CPU uses Least Recently Serviced Arbitration)
-  CFGCONbits.ICACLK = 0;    // Input Capture Alternate Clock Selection (All Input Capture modules use Timer2/3 as their timebase clock)
+  CFGCONbits.ICACLK = 1;    // Input Capture Alternate Clock Selection (All Input Capture modules use an alternative timer as their timebase clock)
   CFGCONbits.OCACLK = 0;    // Output Compare Alternate Clock Selection (All Output Compare modules use Timer2/3 as their timebase clock)
   CFGCONbits.IOLOCK = 1;    // Peripheral Pin Select Lock (Peripheral Pin Select is locked. Writes to PPS registers are not allowed)
   CFGCONbits.PMDLOCK = 1;   // Peripheral Module Disable (Peripheral module is locked. Writes to PMD registers are not allowed)
@@ -886,6 +886,37 @@ void init_timer6(uint16_t period2) {
 
   // Enable TMR6
   T6CONbits.ON = 1; // Timer On (Timer is enabled)
+
+  lock_config();
+}
+
+/**
+ * void init_timers_45()
+ *
+ * Initializes Timers 4 and 5, which are combined into a 32 bit timer
+ */
+void init_timers_45() {
+  unlock_config();
+
+  // Configure TMR4/5
+  T4CON = 0x0;             // Disable TMR4
+  T5CON = 0x0;             // Disable TMR5
+
+  T4CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
+  T4CONbits.T32 = 1;       // 32 bit mode (T4 + T5)
+  T4CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
+  T4CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
+  T4CONbits.TCKPS = 0b000; // Timer Input Clock Prescale Select (1:1 prescale value)
+
+  TMR4 = 0;                // TMR4/5 Count Register
+  PR4 = 0xFFFFFFFF;        // PR4/5 Period Register
+
+  IFS0bits.T4IF = 0;       // TMR4 Interrupt Flag Status (No interrupt request has occured)
+  IEC0bits.T4IE = 0;       // TMR4 Interrupt Enable Control (Interrupt is disabled)
+  IFS0bits.T5IF = 0;       // TMR5 Interrupt Flag Status (No interrupt request has occured)
+  IEC0bits.T5IE = 0;       // TMR5 Interrupt Enable Control (Interrupt is disabled)
+
+  T4CONbits.ON = 1;        // Timer On (Timer is enabled)
 
   lock_config();
 }
