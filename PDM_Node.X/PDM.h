@@ -259,6 +259,9 @@
 #define SCL_INV_LRG  100.0
 #define SCL_INV_CUT  400.0
 
+#define VFB_CUTOFF          4.7
+#define BRK_SWITCH          0x350
+
 // Initial overcurrent thresholds to use for all the loads
 const double load_cutoff[NUM_CTL] = {
   10.0,  // FUEL
