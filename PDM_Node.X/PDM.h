@@ -266,6 +266,7 @@
 #define EXT_ADC_NUM_STEPS   4095.0
 #define EXT_ADC_VOLT_RANGE  5.0
 #define VFB_CUTOFF          4.7
+#define BRK_SWITCH          0x350
 
 // Initial overcurrent thresholds to use for all the loads
 const double load_cutoff[NUM_CTL] = {
