@@ -22,8 +22,9 @@ volatile uint32_t CAN_recv_tmr = 0;
 uint32_t diag_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
 
-uint32_t tsampctr = 0;
-uint32_t tsamps[100] = {0};
+volatile uint32_t tsampctr = 0;
+volatile uint32_t tsamps[100] = {0};
+volatile uint32_t tdeltas[100] = {0};
 
 /**
  * Main function
@@ -40,6 +41,7 @@ void main(void) {
   init_can(); // Initialize CAN
 
   // Initialize pins
+  unlock_config();
   CFGCONbits.IOLOCK = 0;
   VR1_TRIS = INPUT;
   VR1_ANSEL = DIG_INPUT;
@@ -48,6 +50,7 @@ void main(void) {
   VR2_ANSEL = DIG_INPUT;
   IC2R = 0b1100;
   CFGCONbits.IOLOCK = 1;
+  lock_config();
 
   // Initialize IC1 for VR1 TODO-AM: Move this
   IC1CONbits.ON = 0;
@@ -55,7 +58,7 @@ void main(void) {
   IC1CONbits.C32 = 1;     // 32 bit timer
   IC1CONbits.ICM = 0b001; // Edge Detect mode (rising and falling edges)
   IFS0bits.IC1IF = 0;
-  IPC1bits.IC1IP = 3;
+  IPC1bits.IC1IP = 7;
   IPC1bits.IC1IS = 3;
   IEC0bits.IC1IE = 1;
   IC1CONbits.ON = 1;
@@ -88,19 +91,22 @@ void main(void) {
 /**
  * IC1 Interrupt Handler
  */
-void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL3SRS))) ic1_inthnd(void) {
-  IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
-  tsamps[tsampctr++] = IC1BUF;
+void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_inthnd(void) {
+  while (IC1CONbits.ICBNE) {
+    uint32_t val = IC1BUF;
 
-  /*
-  if (!IC1CONbits.ICBNE) {
-    while(1);
+    ++tsampctr;
+    tsamps[tsampctr] = val;
+    tdeltas[tsampctr] = (val - tsamps[tsampctr - 1]);
+
+    //TODO: Use timer delta to calculate pulse width / frequency
   }
-   */
 
   if (tsampctr == 100) {
     while(1);
   }
+
+  IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
 }
 
 /**
