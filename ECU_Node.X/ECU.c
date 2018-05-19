@@ -26,6 +26,14 @@ volatile uint32_t tsampctr = 0;
 volatile uint32_t tsamps[100] = {0};
 volatile uint32_t tdeltas[100] = {0};
 
+// Crank wheel has 22 teeth (24 - 2). We count rising and falling edges.
+// So we should see 44 edges per turn of the crank
+volatile uint8_t edge = CRANK_EDGES - 1;
+volatile uint32_t total_edges = 0;
+
+volatile uint32_t edge_samp[CRANK_EDGES] = {0};
+volatile uint32_t edge_delta[CRANK_EDGES] = {0};
+
 /**
  * Main function
  */
@@ -68,8 +76,27 @@ void main(void) {
 
   STI(); // Enable interrupts
 
+  TRISCbits.TRISC4 = OUTPUT;
+  #define WAIT 1500
+
   // Main loop
   while (1) {
+
+    // Simulate (24-2) teeth
+    int i,j;
+    for (i = 0; i < 22; i++) {
+      for(j = 0; j < WAIT; j++);
+      LATCbits.LATC4 = 1;
+      for(j = 0; j < WAIT; j++);
+      LATCbits.LATC4 = 0;
+    }
+    // Missing tooth #1
+    for(j = 0; j < WAIT; j++);
+    for(j = 0; j < WAIT; j++);
+    // Missing tooth #2
+    for(j = 0; j < WAIT; j++);
+    for(j = 0; j < WAIT; j++);
+
     //STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
     /**
@@ -92,19 +119,22 @@ void main(void) {
  * IC1 Interrupt Handler
  */
 void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_inthnd(void) {
-  while (IC1CONbits.ICBNE) {
-    uint32_t val = IC1BUF;
+  while (!IC1CONbits.ICBNE); // Error!
 
-    ++tsampctr;
-    tsamps[tsampctr] = val;
-    tdeltas[tsampctr] = (val - tsamps[tsampctr - 1]);
+  uint32_t val = IC1BUF;
 
-    //TODO: Use timer delta to calculate pulse width / frequency
-  }
+  ++total_edges;
 
-  if (tsampctr == 100) {
-    while(1);
-  }
+  uint8_t prev = edge;
+  ++edge;
+  if (edge == CRANK_EDGES) edge = 0;
+
+  edge_samp[edge] = val;
+  edge_delta[edge] = (val - edge_samp[prev]);
+
+  //TODO: Use timer delta to calculate pulse width / frequency
+
+  while (IC1CONbits.ICBNE); // Error!
 
   IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
 }
