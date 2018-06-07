@@ -263,7 +263,7 @@ double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double
 }
 
 // For GCM Mode Indicator
-void redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue){
+double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue){
   // Auto-Upshifting Engaged
   if(data->value == 1){
     fillCircle(item->x, item->y, item->size, RA8875_RED);

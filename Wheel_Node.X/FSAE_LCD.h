@@ -180,5 +180,6 @@ uint8_t getShiftLightsRevRange(uint16_t rpm, uint8_t gear);
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue);
 
 #endif /* _FSAE_LCD_H */
