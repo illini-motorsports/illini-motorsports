@@ -244,13 +244,13 @@ void updateSwVals(void){
   // Update Switches
   wheelDataItems[SW_FAN_IDX].value = !SW0_PORT;
   wheelDataItems[SW_ND_IDX].value = !SW1_PORT;
-  wheelDataItems[SW_WTR_IDX].value = 0;//!SW2_PORT;
-  wheelDataItems[SW_FUEL_IDX].value = 0;//!SW3_PORT;
+  wheelDataItems[SW_WTR_IDX].value = !SW2_PORT;
+  wheelDataItems[SW_FUEL_IDX].value = !SW3_PORT;
   // Update Momentaries
   wheelDataItems[MOM_AUX_IDX].value = !MOM0_PORT;
   wheelDataItems[MOM_ACK_IDX].value = !MOM1_PORT;
-  wheelDataItems[MOM_RDO_IDX].value = 0;//!MOM2_PORT;
-  wheelDataItems[MOM_NEU_IDX].value = 0;//!MOM3_PORT;
+  wheelDataItems[MOM_RDO_IDX].value = !MOM2_PORT;
+  wheelDataItems[MOM_NEU_IDX].value = !MOM3_PORT;
   // Update rotaries
   wheelDataItems[ROTARY_0_IDX].value = getRotaryPosition(read_adc_chn(ROT0_CHN));
   wheelDataItems[ROTARY_1_IDX].value = getRotaryPosition(read_adc_chn(ROT1_CHN));

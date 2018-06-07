@@ -55,23 +55,23 @@
 #define SW0_PORT        PORTGbits.RG14
 #define SW1_TRIS        TRISEbits.TRISE1
 #define SW1_PORT        PORTEbits.RE1
-#define SW2_TRIS        TRISBbits.TRISB3
-#define SW2_PORT        PORTBbits.RB3
-#define SW2_ANSEL       ANSELBbits.ANSB3
-#define SW3_TRIS        TRISBbits.TRISB2
-#define SW3_PORT        PORTBbits.RB2
-#define SW3_ANSEL       ANSELBbits.ANSB2
+#define SW2_TRIS        TRISEbits.TRISE9
+#define SW2_PORT        PORTEbits.RE9
+#define SW2_ANSEL       ANSELEbits.ANSE9
+#define SW3_TRIS        TRISBbits.TRISB3
+#define SW3_PORT        PORTBbits.RB3
+#define SW3_ANSEL       ANSELBbits.ANSB3
 
 #define MOM0_TRIS       TRISEbits.TRISE0
 #define MOM0_PORT       PORTEbits.RE0
 #define MOM1_TRIS       TRISAbits.TRISA7
 #define MOM1_PORT       PORTAbits.RA7
-#define MOM2_TRIS       TRISEbits.TRISE9
-#define MOM2_PORT       PORTEbits.RE9
-#define MOM2_ANSEL      ANSELEbits.ANSE9
-#define MOM3_TRIS       TRISBbits.TRISB5
-#define MOM3_PORT       PORTBbits.RB5
-#define MOM3_ANSEL      ANSELBbits.ANSB5
+#define MOM2_TRIS       TRISBbits.TRISB5
+#define MOM2_PORT       PORTBbits.RB5
+#define MOM2_ANSEL      ANSELBbits.ANSB5
+#define MOM3_TRIS       TRISBbits.TRISB2
+#define MOM3_PORT       PORTBbits.RB2
+#define MOM3_ANSEL      ANSELBbits.ANSB2
 
 #define CAN_SW_STATE_FREQ 100
 #define CAN_SW_ADL_FREQ   500
