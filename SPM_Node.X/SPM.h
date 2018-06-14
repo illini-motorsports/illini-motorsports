@@ -38,6 +38,10 @@
 #define GPIO_CS_LATBITS         (uint32_t*) (&LATAbits)
 #define GPIO_CS_LATNUM          15
 
+#define TEMP_SAMP_INTV          333
+#define CAN_ANALOG_INTV         50
+#define CAN_DIAG_INTV           250
+
 uint8_t analogMappings[32] = {11,10,9,8,3,2,1,0,12,13,14,15,5,4,7,6,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25};
 
 void main(void);
@@ -48,5 +52,9 @@ void init_gpio();
 void init_adcs();
 
 void CANAnalogChannels(void);
+void CANDiag(void);
+
+void sample_temp(void);
+void process_CAN_msg(CAN_message msg);
 
 #endif /* SPM_H */
