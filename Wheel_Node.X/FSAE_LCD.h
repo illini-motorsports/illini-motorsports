@@ -15,17 +15,23 @@
 #include "RA8875_driver.h"
 
 // Define race screen constants
-#define NUM_SCREENS           1
+#define NUM_SCREENS           2
 #define RACE_SCREEN           0
+#define TEST_SCREEN           1
 
 #define MIN_REFRESH           350
 #define CAN_TIMEOUT           1000
 
 // PDM Dataitem Constants
-#define PDM_DATAITEM_SIZE     2
+#define PDM_DATAITEM_SIZE     7
 
 #define VBAT_RAIL_IDX         0
 #define KILL_SWITCH_IDX       1
+#define FUEL_DRW_IDX          2
+#define FUEL_OCC_IDX          3
+#define IGN_DRW_IDX           4
+#define INJ_DRW_IDX           5
+#define FAN_DRW_IDX           6
 
 //GCM DataItem Constants
 #define GCM_DATAITEM_SIZE     2
@@ -144,10 +150,10 @@ const uint16_t shiftLightSub[10] = {
 };
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[8];
+screenItem raceScreenItems[8], testScreenItems[5];
 
 // Define all screen structs
-screen raceScreen;
+screen raceScreen, testScreen;
 
 // Define master array of all screen structs
 screen* allScreens[NUM_SCREENS];

@@ -20,6 +20,8 @@ void initDataItems(void){
     initDataItem(&pdmDataItems[i],200,200,2,1);
     pdmDataItems[i].thresholdDir = 1;
   }
+  pdmDataItems[FUEL_OCC_IDX].wholeDigits = 2;
+  pdmDataItems[FUEL_OCC_IDX].decDigits = 0;
 
   // Set default initialization for GCM data items
   for(i=0;i<GCM_DATAITEM_SIZE;i++){
@@ -100,6 +102,17 @@ void initAllScreens(void){
   initScreenItem(&raceScreenItems[5], 200, 220, 15, redrawGCMMode, &gcmDataItems[MODE_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[6], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[7], 180, 210, 30, redrawDigit, &motecDataItems[FUEL_PRES_CALC_IDX], MIN_REFRESH);
+
+  // Test Screen Stuff
+  allScreens[TEST_SCREEN] = &testScreen;
+  testScreen.items = testScreenItems;
+  testScreen.len = 5;
+  // TODO: This orientation is gonna look super dumb, fix it
+  initScreenItem(&testScreenItems[0], 20, 90, 30, redrawDigit, &pdmDataItems[FUEL_DRW_IDX], MIN_REFRESH);
+  initScreenItem(&testScreenItems[1], 360, 90, 30, redrawDigit, &pdmDataItems[IGN_DRW_IDX], MIN_REFRESH);
+  initScreenItem(&testScreenItems[2], 20, 210, 30, redrawDigit, &pdmDataItems[INJ_DRW_IDX], MIN_REFRESH);
+  initScreenItem(&testScreenItems[3], 335, 210, 30, redrawDigit, &pdmDataItems[FAN_DRW_IDX], MIN_REFRESH);
+  initScreenItem(&testScreenItems[4], 200, 20, 80, redrawDigit, &pdmDataItems[FUEL_OCC_IDX], MIN_REFRESH);
 }
 
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, double (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data, uint32_t interval){
@@ -131,6 +144,22 @@ void initScreen(uint8_t num){
       // TODO: Adjust label position here
       textSetCursor(200,160);
       textWrite("FUEL PRES");
+      textEnlarge(0);
+      graphicsMode();
+      break;
+    case TEST_SCREEN:
+      textMode();
+      textEnlarge(1);
+      textTransparent(foregroundColor);
+      // TODO: These also almost definitely need to be tweaked
+      textSetCursor(7, 40);
+      textWrite("FUEL DRW");
+      textSetCursor(0, 160);
+      textWrite("INJ DRW");
+      textSetCursor(360, 40);
+      textWrite("IGN DRW");
+      textSetCursor(370,160);
+      textWrite("FAN DRW");
       textEnlarge(0);
       graphicsMode();
       break;

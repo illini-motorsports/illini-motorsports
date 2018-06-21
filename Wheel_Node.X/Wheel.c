@@ -278,6 +278,22 @@ void checkChangeScreen(void) {
     nightModeState = wheelDataItems[SW_ND_IDX].value;
     nightMode(nightModeState);
   }
+  switch (rotVal) {
+    case 0:
+      screenIdx = RACE_SCREEN;
+      break;
+    case 1:
+      screenIdx = TEST_SCREEN;
+      break;
+    default:
+      screenIdx = RACE_SCREEN;
+      break;
+  }
+
+  if(screenIdx != screenNumber) {
+    changeScreen(screenIdx);
+    screenNumber = screenIdx;
+  }
 }
 
 /**
