@@ -90,14 +90,16 @@ void initAllScreens(void){
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
-  raceScreen.len = 7;
+  raceScreen.len = 8;
   initScreenItem(&raceScreenItems[0], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[1], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[2], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[3], 335, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[4], 200, 20, 100, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[3], 350, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[4], 200, 20, 80, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
+  // TODO:You'll have to move this somewhere better, it's probably overlapping with things rn
   initScreenItem(&raceScreenItems[5], 200, 220, 15, redrawGCMMode, &gcmDataItems[MODE_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[6], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
+  initScreenItem(&raceScreenItems[7], 180, 210, 30, redrawDigit, &motecDataItems[FUEL_PRES_CALC_IDX], MIN_REFRESH);
 }
 
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, double (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data, uint32_t interval){
@@ -126,6 +128,9 @@ void initScreen(uint8_t num){
       textWrite("WTR TMP");
       textSetCursor(370,160);
       textWrite("BAT V");
+      // TODO: Adjust label position here
+      textSetCursor(200,160);
+      textWrite("FUEL PRES");
       textEnlarge(0);
       graphicsMode();
       break;

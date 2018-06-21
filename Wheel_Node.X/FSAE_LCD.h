@@ -34,7 +34,7 @@
 #define MODE_IDX              1
 
 //MOTEC DataItem Constants
-#define MOTEC_DATAITEM_SIZE   6
+#define MOTEC_DATAITEM_SIZE   9
 
 #define ENG_RPM_IDX           0
 #define THROTTLE_POS_IDX      1
@@ -42,6 +42,9 @@
 #define ENG_TEMP_IDX          3
 #define OIL_TEMP_IDX          4
 #define OIL_PRES_IDX          5
+#define MANIFOLD_PRES_IDX     6
+#define FUEL_PRES_RAW_IDX     7
+#define FUEL_PRES_CALC_IDX    8
 
 #define WHEEL_DATAITEM_SIZE     13
 
@@ -141,7 +144,7 @@ const uint16_t shiftLightSub[10] = {
 };
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[7];
+screenItem raceScreenItems[8];
 
 // Define all screen structs
 screen raceScreen;
