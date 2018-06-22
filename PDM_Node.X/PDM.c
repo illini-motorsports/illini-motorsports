@@ -309,7 +309,7 @@ void main(void) {
         //    (ENG_ON || fuel_prime_flag || fuel_override || STR_EN));
         //set_load(WTR_IDX, !STR_EN &&
         //    (ENG_ON || over_temp_flag || wtr_override_sw || wtr_override));
-        set_load(WTR_IDX, ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || fuel_override || STR_EN || over_temp_flag || wtr_override_sw || wtr_override);
+        set_load(WTR_IDX, ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || fuel_override || STR_EN || over_temp_flag || wtr_override_sw || wtr_override));
         set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override));
         set_load(AUX_IDX, ack_btn || brk_press > BRK_SWITCH);
 
