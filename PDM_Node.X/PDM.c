@@ -257,7 +257,8 @@ void main(void) {
           disable_load(i);
         }
       } else if (kill_engine_flag) {
-        disable_load(FUEL_IDX);
+        //disable_load(FUEL_IDX);
+        disable_load(WTR_IDX);
         disable_load(IGN_IDX);
         disable_load(INJ_IDX);
         disable_load(STR_IDX);
@@ -284,8 +285,9 @@ void main(void) {
 
         set_load(IGN_IDX, ON_SW && !KILL_SW);
         set_load(INJ_IDX, ON_SW && !KILL_SW);
-        set_load(FUEL_IDX, (ON_SW && !KILL_SW) || fuel_override);
-        set_load(WTR_IDX, (ON_SW && !KILL_SW && !STR_EN) || wtr_override);
+        //set_load(FUEL_IDX, (ON_SW && !KILL_SW) || fuel_override);
+        //set_load(WTR_IDX, (ON_SW && !KILL_SW && !STR_EN) || wtr_override);
+        set_load(WTR_IDX, (ON_SW && !KILL_SW) || fuel_override || wtr_override);
         set_load(FAN_IDX, (ON_SW && !KILL_SW && !STR_EN) || fan_override);
 
         // STR
@@ -303,10 +305,11 @@ void main(void) {
 
         set_load(IGN_IDX, ON_SW && !KILL_SW);
         set_load(INJ_IDX, ON_SW && !KILL_SW);
-        set_load(FUEL_IDX, ON_SW && !KILL_SW &&
-            (ENG_ON || fuel_prime_flag || fuel_override || STR_EN));
-        set_load(WTR_IDX, !STR_EN &&
-            (ENG_ON || over_temp_flag || wtr_override_sw || wtr_override));
+        //set_load(FUEL_IDX, ON_SW && !KILL_SW &&
+        //    (ENG_ON || fuel_prime_flag || fuel_override || STR_EN));
+        //set_load(WTR_IDX, !STR_EN &&
+        //    (ENG_ON || over_temp_flag || wtr_override_sw || wtr_override));
+        set_load(WTR_IDX, ON_SW && !KILL_SW && (ENG_ON || fuel_prime_flag || fuel_override || STR_EN || over_temp_flag || wtr_override_sw || wtr_override);
         set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override));
         set_load(AUX_IDX, ack_btn || brk_press > BRK_SWITCH);
 
@@ -1000,7 +1003,8 @@ void enable_load(uint8_t load_idx) {
       load_tmr[load_idx] = millis;
       load_state_changed = 1;
 
-      if (load_idx == FUEL_IDX) { fuel_prime_tmr = millis; }
+      //if (load_idx == FUEL_IDX) { fuel_prime_tmr = millis; }
+      if (load_idx == WTR_IDX) { fuel_prime_tmr = millis; }
     }
   }
 }
