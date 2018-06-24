@@ -26,13 +26,14 @@ volatile uint32_t tsampctr = 0;
 volatile uint32_t tsamps[100] = {0};
 volatile uint32_t tdeltas[100] = {0};
 
+//TODO verify edge count vs period (gap) count
 // Crank wheel has 22 teeth (24 - 2). We count rising and falling edges.
 // So we should see 44 edges per turn of the crank
-volatile uint8_t edge = CRANK_EDGES - 1;
+volatile uint8_t edge = CRANK_PERIODS - 1;// TODO
 volatile uint32_t total_edges = 0;
 
-volatile uint32_t edge_samp[CRANK_EDGES] = {0};
-volatile uint32_t edge_delta[CRANK_EDGES] = {0};
+volatile uint32_t crank_samp[CRANK_PERIODS] = {0};
+volatile uint32_t crank_delta[CRANK_PERIODS] = {0};
 
 /**
  * Main function
@@ -77,25 +78,30 @@ void main(void) {
   STI(); // Enable interrupts
 
   TRISCbits.TRISC4 = OUTPUT;
-  #define WAIT 1500
+  #define WAIT 2000
+  #define MED_WAIT 3000
+  #define LONG_WAIT 5000
+  #define SIM_OUT LATCbits.LATC4
 
   // Main loop
   while (1) {
-
-    // Simulate (24-2) teeth
     int i,j;
-    for (i = 0; i < 22; i++) {
+
+    SIM_OUT = 0; // Falling edge #1
+    for (i = 0; i < 21; i++) {
+      // Repeat: Short gap, rising edge, short gap, falling edge
       for(j = 0; j < WAIT; j++);
-      LATCbits.LATC4 = 1;
+      SIM_OUT = 1;
       for(j = 0; j < WAIT; j++);
-      LATCbits.LATC4 = 0;
+      SIM_OUT = 0;
     }
-    // Missing tooth #1
-    for(j = 0; j < WAIT; j++);
-    for(j = 0; j < WAIT; j++);
-    // Missing tooth #2
-    for(j = 0; j < WAIT; j++);
-    for(j = 0; j < WAIT; j++);
+
+    // Med gap then rising edge
+    for(j = 0; j < MED_WAIT; j++);
+    SIM_OUT = 1;
+
+    // Long gap then repeat
+    for(j = 0; j < LONG_WAIT; j++);
 
     //STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
@@ -127,10 +133,10 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
 
   uint8_t prev = edge;
   ++edge;
-  if (edge == CRANK_EDGES) edge = 0;
+  if (edge == CRANK_PERIODS) edge = 0;
 
-  edge_samp[edge] = val;
-  edge_delta[edge] = (val - edge_samp[prev]);
+  crank_samp[edge] = val;
+  crank_delta[edge] = (val - crank_samp[prev]);
 
   //TODO: Use timer delta to calculate pulse width / frequency
 

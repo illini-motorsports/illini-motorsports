@@ -25,7 +25,7 @@
 
 // Misc state definitions
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
-#define CRANK_EDGES 44
+#define CRANK_PERIODS 44
 
 // Pin definitions
 
