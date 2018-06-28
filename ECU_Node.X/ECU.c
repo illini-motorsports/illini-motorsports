@@ -26,14 +26,48 @@ volatile uint32_t tsampctr = 0;
 volatile uint32_t tsamps[100] = {0};
 volatile uint32_t tdeltas[100] = {0};
 
-//TODO verify edge count vs period (gap) count
 // Crank wheel has 22 teeth (24 - 2). We count rising and falling edges.
-// So we should see 44 edges per turn of the crank
+// So we should see 44 edges & periods per turn of the crank
 volatile uint8_t edge = CRANK_PERIODS - 1;// TODO
 volatile uint32_t total_edges = 0;
 
 volatile uint32_t crank_samp[CRANK_PERIODS] = {0};
 volatile uint32_t crank_delta[CRANK_PERIODS] = {0};
+
+volatile uint16_t deg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees
+const uint16_t CRIP = 2000; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1
+volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
+volatile uint8_t medGap, longGap = 0;
+volatile uint8_t refEdge, medEdge = 0;
+volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
+
+// Events
+// (4) Enable INJ (C1-C4)
+// (4) Disable INJ (C1-C4)
+// (4) Enable IGN (C1-C4)
+// (4) Disable IGN (C1-C4)
+// ...
+
+////////////////////////////////////////////////////////////////////////////////
+/// Engine Cycle
+///
+/// TC: TDC Compression Stroke
+/// BP: BDC Power Stroke
+/// TE: TDC Exhaust Stroke
+/// BI: BDC Intake Stroke
+///
+///   Deg | C1 | C2 | C3 | C4 |
+/// -----------------------------
+///   000 | TC | BI | TE | BP |
+///   180 | BP | TC | BI | TE |
+///   360 | TE | BP | TC | BI |
+///   540 | BI | TE | BP | TC |
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crank / CAM
+///
+/// Reference tooth is first edge after missing teeth (med gap then long gap)
 
 /**
  * Main function
@@ -79,8 +113,8 @@ void main(void) {
 
   TRISCbits.TRISC4 = OUTPUT;
   #define WAIT 2000
-  #define MED_WAIT 3000
-  #define LONG_WAIT 5000
+  #define MED_WAIT 4000
+  #define LONG_WAIT 8000
   #define SIM_OUT LATCbits.LATC4
 
   // Main loop
@@ -138,7 +172,73 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
   crank_samp[edge] = val;
   crank_delta[edge] = (val - crank_samp[prev]);
 
-  //TODO: Use timer delta to calculate pulse width / frequency
+  if (!sync) {
+    if (total_edges > CRANK_PERIODS) {
+      double gap = (double) crank_delta[edge];
+      double prevGap = (double) crank_delta[prev];
+
+      if (!medGap &&
+          (gap > (1.5 * prevGap)) && (gap < (2.5 * prevGap)))
+      {
+        // Found medium gap
+        medGap = 1;
+        medEdge = edge;
+      }
+      else if (medGap) {
+        if ((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))) {
+          // Found long gap, we are SYNC'd!
+          sync = 1;
+          deg = CRIP;
+          refEdge = edge;
+        } else {
+          // Error, didn't find long gap after med gap
+          while(1);
+        }
+      }
+    }
+  } else {
+    // Gap verification
+    //TODO: Need to verify that med gap is 2x regular gap, and long gap is 4x regular
+    double gap = (double) crank_delta[edge];
+    double prevGap = (double) crank_delta[prev];
+    if (edge == medEdge) {
+      if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
+        while(1); // Error, invalid gap
+    } else if (edge == refEdge) {
+      if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
+        while(1); // Error, invalid gap
+    } else if (prev == refEdge) {
+      if (!((prevGap > (3.5 * gap)) && (prevGap < (4.5 * gap))))
+        while(1); // Error, invalid gap
+    } else {
+      if (!((gap > (0.75 * prevGap)) && (gap < (1.25 * prevGap))))
+        while(1); // Error, invalid gap
+    }
+
+    // Set angular position
+    if (edge == refEdge) {
+      if (deg != (CRIP - 300) && deg != (CRIP + 3600 - 300))
+        while(1); // Error
+      deg += 300; // 2 missing teeth
+      if (deg > 7200) deg -= 7200;
+    } else if (edge == medEdge) {
+      deg += 150;
+      if (deg > 7200) deg -= 7200;
+    } else {
+      deg += 75; // 7.5 deg per edge
+      if (deg > 7200) deg -= 7200;
+    }
+
+
+    //TODO: Use timer delta to calculate pulse width / frequency
+
+    //TODO: Calculate 15 interrupts (one for each half degree). Calculate based
+    //   off of estimated angular speed. We should fire all 15 before another IC1
+    //   interrupt fires. If not, the engine may have accelerated or we could have
+    //   done shit wrong. For now, flag this as an error condition. In the future
+    //   we could add "catchup" logic. Set these interrupts to be fired somehow.
+    //   On each interrupt, check the eventMask array to do actions!
+  }
 
   while (IC1CONbits.ICBNE); // Error!
 
