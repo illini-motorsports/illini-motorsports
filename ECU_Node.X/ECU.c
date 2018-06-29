@@ -34,12 +34,14 @@ volatile uint32_t total_edges = 0;
 volatile uint32_t crank_samp[CRANK_PERIODS] = {0};
 volatile uint32_t crank_delta[CRANK_PERIODS] = {0};
 
-volatile uint16_t deg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees
+volatile uint16_t deg, udeg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees
 const uint16_t CRIP = 2000; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1
 volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
 volatile uint8_t medGap, longGap = 0;
 volatile uint8_t refEdge, medEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
+volatile uint8_t udeg_rem = 0;
+volatile uint32_t udeg_period = 0;
 
 // Events
 // (4) Enable INJ (C1-C4)
@@ -102,7 +104,7 @@ void main(void) {
   IC1CONbits.ICM = 0b001; // Edge Detect mode (rising and falling edges)
   IFS0bits.IC1IF = 0;
   IPC1bits.IC1IP = 7;
-  IPC1bits.IC1IS = 3;
+  IPC1bits.IC1IS = 2;
   IEC0bits.IC1IE = 1;
   IC1CONbits.ON = 1;
 
@@ -192,7 +194,7 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
           refEdge = edge;
         } else {
           // Error, didn't find long gap after med gap
-          while(1);
+          kill_engine(0 /*TODO*/);
         }
       }
     }
@@ -203,46 +205,121 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
     double prevGap = (double) crank_delta[prev];
     if (edge == medEdge) {
       if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
-        while(1); // Error, invalid gap
+        kill_engine(0 /*TODO*/); // Error, invalid gap
     } else if (edge == refEdge) {
       if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
-        while(1); // Error, invalid gap
+        kill_engine(0 /*TODO*/); // Error, invalid gap
     } else if (prev == refEdge) {
       if (!((prevGap > (3.5 * gap)) && (prevGap < (4.5 * gap))))
-        while(1); // Error, invalid gap
+        kill_engine(0 /*TODO*/); // Error, invalid gap
     } else {
       if (!((gap > (0.75 * prevGap)) && (gap < (1.25 * prevGap))))
-        while(1); // Error, invalid gap
+        kill_engine(0 /*TODO*/); // Error, invalid gap
     }
 
-    // Set angular position
+    if (udeg_rem != 0)
+      kill_engine(0 /*TODO*/); // Error
+
+    // Calculate udeg interrupts (one for each half degree). We should fire all
+    // 15 before another IC1 interrupt fires. If not, the engine may have
+    // accelerated or we could have done shit wrong. For now, flag this as an
+    // error condition. In the future we could add "catchup" logic.
+
+    // Set angular position & calculate udeg interrupts
     if (edge == refEdge) {
       if (deg != (CRIP - 300) && deg != (CRIP + 3600 - 300))
-        while(1); // Error
+        kill_engine(0 /*TODO*/); // Error
       deg += 300; // 2 missing teeth
       if (deg > 7200) deg -= 7200;
+      udeg_rem = 60;
+      udeg_period = (uint32_t) (gap / 60.0);
     } else if (edge == medEdge) {
       deg += 150;
       if (deg > 7200) deg -= 7200;
+      udeg_rem = 30;
+      udeg_period = (uint32_t) (gap / 30.0);
     } else {
       deg += 75; // 7.5 deg per edge
       if (deg > 7200) deg -= 7200;
+      udeg_rem = 15;
+      udeg_period = (uint32_t) (gap / 15.0);
     }
 
+    udeg = deg;
+    IEC0SET = _IEC0_T4IE_MASK;
+    PR4 = udeg_period;
 
     //TODO: Use timer delta to calculate pulse width / frequency
-
-    //TODO: Calculate 15 interrupts (one for each half degree). Calculate based
-    //   off of estimated angular speed. We should fire all 15 before another IC1
-    //   interrupt fires. If not, the engine may have accelerated or we could have
-    //   done shit wrong. For now, flag this as an error condition. In the future
-    //   we could add "catchup" logic. Set these interrupts to be fired somehow.
-    //   On each interrupt, check the eventMask array to do actions!
+    //TODO: Account for int flooring in udeg_period calculation
   }
 
   while (IC1CONbits.ICBNE); // Error!
 
   IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
+}
+
+void __attribute__((vector(_TIMER_4_VECTOR), interrupt(IPL7SRS))) timer4_inthnd(void) {
+  if (udeg_rem == 0)
+    kill_engine(0 /*TODO*/); // Error
+  --udeg_rem;
+
+  udeg += 5; // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+  if (udeg > 7200) udeg -= 7200;
+
+  uint32_t mask = eventMask[udeg / 5];
+  if (mask != 0) {
+    // Toggle INJ outputs
+
+    if (mask & INJ1_EN_MASK)
+      INJ1_LAT = 1;
+    else if (mask & INJ1_DS_MASK)
+      INJ1_LAT = 0;
+
+    if (mask & INJ2_EN_MASK)
+      INJ2_LAT = 1;
+    else if (mask & INJ2_DS_MASK)
+      INJ2_LAT = 0;
+
+    if (mask & INJ3_EN_MASK)
+      INJ3_LAT = 1;
+    else if (mask & INJ3_DS_MASK)
+      INJ3_LAT = 0;
+
+    if (mask & INJ4_EN_MASK)
+      INJ4_LAT = 1;
+    else if (mask & INJ4_DS_MASK)
+      INJ4_LAT = 0;
+
+    // Toggle IGN outputs
+
+    if (mask & IGN1_EN_MASK)
+      IGN1_LAT = 1;
+    else if (mask & IGN1_DS_MASK)
+      IGN1_LAT = 0;
+
+    if (mask & IGN2_EN_MASK)
+      IGN2_LAT = 1;
+    else if (mask & IGN2_DS_MASK)
+      IGN2_LAT = 0;
+
+    if (mask & IGN3_EN_MASK)
+      IGN3_LAT = 1;
+    else if (mask & IGN3_DS_MASK)
+      IGN3_LAT = 0;
+
+    if (mask & IGN4_EN_MASK)
+      IGN4_LAT = 1;
+    else if (mask & IGN4_DS_MASK)
+      IGN4_LAT = 0;
+  }
+
+  if (udeg_rem == 0) {
+    // Disable further udeg interrupts
+    PR4 = 0xFFFFFFFF;
+    IEC0CLR = _IEC0_T4IE_MASK;
+  }
+
+  IFS0CLR = _IFS0_T4IF_MASK; // Clear TMR4 Interrupt Flag
 }
 
 /**
@@ -316,6 +393,15 @@ void process_CAN_msg(CAN_message msg) {
           msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
       break;
   }
+}
+
+/**
+ *
+ */
+void kill_engine(uint16_t errno) {
+  CLI();
+  send_errno_CAN_msg(ECU_ID, errno);
+  while(1); // Do nothing until reset
 }
 
 //============================= ADC FUNCTIONS ==================================

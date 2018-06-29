@@ -911,8 +911,12 @@ void init_timers_45() {
   TMR4 = 0;                // TMR4/5 Count Register
   PR4 = 0xFFFFFFFF;        // PR4/5 Period Register
 
+  // Set up interrupt, but leave disabled for now
   IFS0bits.T4IF = 0;       // TMR4 Interrupt Flag Status (No interrupt request has occured)
+  IPC4bits.T4IP = 7;       // TMR4 Interrupt Priority (Interrupt priority is 7)
+  IPC4bits.T4IS = 3;       // TMR4 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T4IE = 0;       // TMR4 Interrupt Enable Control (Interrupt is disabled)
+
   IFS0bits.T5IF = 0;       // TMR5 Interrupt Flag Status (No interrupt request has occured)
   IEC0bits.T5IE = 0;       // TMR5 Interrupt Enable Control (Interrupt is disabled)
 
