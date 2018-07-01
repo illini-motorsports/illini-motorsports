@@ -21,6 +21,7 @@
 
 // Timing constants (ms)
 #define TEMP_SAMP_INTV     333
+#define ADJ_SAMP_INTV      50
 #define DIAG_SEND          1000
 
 // Misc state definitions
@@ -36,15 +37,35 @@
 #define VR2_TRIS  TRISCbits.TRISC3
 #define VR2_ANSEL ANSELCbits.ANSC3
 
-uint8_t dummy = 0;
-#define INJ1_LAT LATBbits.LATB7
-#define INJ2_LAT dummy
-#define INJ3_LAT dummy
-#define INJ4_LAT dummy
-#define IGN1_LAT dummy
-#define IGN2_LAT dummy
-#define IGN3_LAT dummy
-#define IGN4_LAT dummy
+#define UDEG_SIG_LAT LATBbits.LATB6
+#define UDEG_SIG_TRIS TRISBbits.TRISB6
+
+#define INJ1_LAT LATBbits.LATB8
+#define INJ2_LAT LATBbits.LATB9
+#define INJ3_LAT LATBbits.LATB10
+#define INJ4_LAT LATBbits.LATB11
+#define INJ1_TRIS TRISBbits.TRISB8
+#define INJ2_TRIS TRISBbits.TRISB9
+#define INJ3_TRIS TRISBbits.TRISB10
+#define INJ4_TRIS TRISBbits.TRISB11
+
+#define IGN1_LAT LATBbits.LATB12
+#define IGN2_LAT LATBbits.LATB13
+#define IGN3_LAT LATBbits.LATB14
+#define IGN4_LAT LATBbits.LATB15
+#define IGN1_TRIS TRISBbits.TRISB12
+#define IGN2_TRIS TRISBbits.TRISB13
+#define IGN3_TRIS TRISBbits.TRISB14
+#define IGN4_TRIS TRISBbits.TRISB15
+
+#define ADC_ADJ1_TRIS    TRISDbits.TRISD14
+#define ADC_ADJ1_ANSEL   ANSELDbits.ANSD14
+#define ADC_ADJ1_CSS     ADCCSS2bits.CSS32
+#define ADC_ADJ1_CHN     32
+#define ADC_ADJ2_TRIS    TRISDbits.TRISD15
+#define ADC_ADJ2_ANSEL   ANSELDbits.ANSD15
+#define ADC_ADJ2_CSS     ADCCSS2bits.CSS33
+#define ADC_ADJ2_CHN     33
 
 #define INJ1_EN_MASK 0b00000000000000000000000000000001
 #define INJ1_DS_MASK 0b00000000000000000000000000000010
@@ -63,6 +84,8 @@ uint8_t dummy = 0;
 #define IGN4_EN_MASK 0b00000000000000000100000000000000
 #define IGN4_DS_MASK 0b00000000000000001000000000000000
 
+#define ADD_DEG(deg, num) (deg) += (num); if ((deg) > 7200) { (deg) -= 7200; }
+
 /**
  * Function definitions
  */
@@ -72,13 +95,15 @@ void main(void);
 // Logic functions
 void process_CAN_msg(CAN_message msg);
 void kill_engine(uint16_t errno);
-void check_event_mask();
+inline void check_event_mask();
 
 // ADC sample functions
 void sample_temp(void);
+void sample_adj();
 
 // CAN message sending functions
 void send_diag_can(void);
 
 // Utility functions
 void init_adc_ecu(void);
+void init_ic1();

@@ -21,6 +21,7 @@ int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 volatile uint32_t CAN_recv_tmr = 0;
 uint32_t diag_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
+uint32_t adj_samp_tmr = 0;
 
 volatile uint32_t tsampctr = 0;
 volatile uint32_t tsamps[100] = {0};
@@ -28,7 +29,7 @@ volatile uint32_t tdeltas[100] = {0};
 
 // Crank wheel has 22 teeth (24 - 2). We count rising and falling edges.
 // So we should see 44 edges & periods per turn of the crank
-volatile uint8_t edge = CRANK_PERIODS - 1;// TODO
+volatile uint8_t edge = CRANK_PERIODS - 1;
 volatile uint32_t total_edges = 0;
 
 volatile uint32_t crank_samp[CRANK_PERIODS] = {0};
@@ -42,6 +43,7 @@ volatile uint8_t refEdge, medEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
+volatile uint32_t sim_wait = 0;
 
 // Events
 // (4) Enable INJ (C1-C4)
@@ -64,6 +66,15 @@ volatile uint32_t udeg_period = 0;
 ///   180 | BP | TC | BI | TE |
 ///   360 | TE | BP | TC | BI |
 ///   540 | BI | TE | BP | TC |
+///
+/// End of Injection: 100 to 300 degrees before TDC compression, increasing with RPM
+/// Start of Injection: EoI - Pulse Width
+/// - INJ_PULSE_WIDTH 100 (for now)
+///
+/// For ignition, at some point before desired spark, we bring high to begin
+///   charging the coil. At the moment of desired spark, we bring low to spark.
+/// End of Ignition: ~30 deg before TDC compression
+/// Start of Ignition: EoI - Dwell Time (~3ms, depends on battery voltage)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,8 +95,10 @@ void main(void) {
   init_adc(init_adc_ecu); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
+  init_timer6_ecu();
 
   // Initialize pins
+
   unlock_config();
   CFGCONbits.IOLOCK = 0;
   VR1_TRIS = INPUT;
@@ -97,59 +110,98 @@ void main(void) {
   CFGCONbits.IOLOCK = 1;
   lock_config();
 
-  // Initialize IC1 for VR1 TODO-AM: Move this
-  IC1CONbits.ON = 0;
-  init_timers_45();
-  IC1CONbits.C32 = 1;     // 32 bit timer
-  IC1CONbits.ICM = 0b001; // Edge Detect mode (rising and falling edges)
-  IFS0bits.IC1IF = 0;
-  IPC1bits.IC1IP = 7;
-  IPC1bits.IC1IS = 2;
-  IEC0bits.IC1IE = 1;
-  IC1CONbits.ON = 1;
+  INJ1_TRIS = OUTPUT;
+  INJ2_TRIS = OUTPUT;
+  INJ3_TRIS = OUTPUT;
+  INJ4_TRIS = OUTPUT;
+  IGN1_TRIS = OUTPUT;
+  IGN2_TRIS = OUTPUT;
+  IGN3_TRIS = OUTPUT;
+  IGN4_TRIS = OUTPUT;
+  INJ1_LAT = 0;
+  INJ2_LAT = 0;
+  INJ3_LAT = 0;
+  INJ4_LAT = 0;
+  IGN1_LAT = 0;
+  IGN2_LAT = 0;
+  IGN3_LAT = 0;
+  IGN4_LAT = 0;
 
-  init_timer6_ecu();
+  UDEG_SIG_TRIS = OUTPUT;
+  UDEG_SIG_LAT = 0;
 
-  //TODO: Set actual angles lol
-  eventMask[020] |= INJ1_EN_MASK;
-  eventMask[060] |= INJ1_DS_MASK;
+  // Set some test angles for injection and ignition
+  eventMask[520*2] |= INJ1_DS_MASK;
+  eventMask[700*2] |= INJ2_DS_MASK;
+  eventMask[160*2] |= INJ3_DS_MASK;
+  eventMask[340*2] |= INJ4_DS_MASK;
+  eventMask[(520-100)*2] |= INJ1_EN_MASK;
+  eventMask[(700-100)*2] |= INJ2_EN_MASK;
+  eventMask[(160-100)*2] |= INJ3_EN_MASK;
+  eventMask[(340-100)*2] |= INJ4_EN_MASK;
+  eventMask[690*2] |= IGN1_DS_MASK;
+  eventMask[150*2] |= IGN2_DS_MASK;
+  eventMask[330*2] |= IGN3_DS_MASK;
+  eventMask[510*2] |= IGN4_DS_MASK;
+  eventMask[(690-75)*2] |= IGN1_EN_MASK;
+  eventMask[(150-75)*2] |= IGN2_EN_MASK;
+  eventMask[(330-75)*2] |= IGN3_EN_MASK;
+  eventMask[(510-75)*2] |= IGN4_EN_MASK;
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
 
+  init_ic1(); // Initialize IC1 for VR1 crank signal
+
   STI(); // Enable interrupts
 
+  //////////////////////////////////////////////////////////////////////////////
+  //TODO: For testing/simulation
   TRISCbits.TRISC4 = OUTPUT;
-  #define WAIT 200000
-  #define MED_WAIT 400000
-  #define LONG_WAIT 800000
   #define SIM_OUT LATCbits.LATC4
+  SIM_OUT = 0;
 
-  TRISBbits.TRISB6 = OUTPUT;
-  TRISBbits.TRISB7 = OUTPUT;
-  #define WIG_OUT LATBbits.LATB6
+  TRISGbits.TRISG6 = OUTPUT;
+  #define SIM_SYNC_OUT LATGbits.LATG6
+  SIM_SYNC_OUT = 0;
+
+  sim_wait = 200000;
+  int k = 0;
+  //////////////////////////////////////////////////////////////////////////////
 
   // Main loop
   while (1) {
     int i,j;
 
+    uint32_t med_wait = sim_wait * 2;
+    uint32_t long_wait = sim_wait * 4;
+
     SIM_OUT = 0; // Falling edge #1
     for (i = 0; i < 21; i++) {
       // Repeat: Short gap, rising edge, short gap, falling edge
-      for(j = 0; j < WAIT; j++);
+      for(j = 0; j < sim_wait; j++);
       SIM_OUT = 1;
-      for(j = 0; j < WAIT; j++);
+      for(j = 0; j < sim_wait; j++);
       SIM_OUT = 0;
+
+      // Simulate sync signal somewhere in the middle
+      if (k % 2) {
+        if (i == 15)
+          SIM_SYNC_OUT = 1;
+        else if (i == 18)
+          SIM_SYNC_OUT = 0;
+      }
     }
 
     // Med gap then rising edge
-    for(j = 0; j < MED_WAIT; j++);
+    for(j = 0; j < med_wait; j++);
     SIM_OUT = 1;
 
     // Long gap then repeat
-    for(j = 0; j < LONG_WAIT; j++);
+    for(j = 0; j < long_wait; j++);
+    ++k;
 
-    //STI(); // Enable interrupts (in case anything disabled without re-enabling)
+    STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
     /**
      * Call helper functions
@@ -159,6 +211,7 @@ void main(void) {
 
     // Analog sampling functions
     //sample_temp();
+    sample_adj();
 
     // CAN message sending functions
     //send_diag_can();
@@ -209,6 +262,8 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
       }
     }
   } else {
+    T6CONCLR = _T6CON_ON_MASK; // Disable further udeg interrupts
+
     // Gap verification
     //TODO: Need to verify that med gap is 2x regular gap, and long gap is 4x regular
     double gap = (double) crank_delta[edge];
@@ -227,26 +282,29 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
         kill_engine(4 /*TODO*/); // Error, invalid gap
     }
 
-    if (udeg_rem != 0)
-      kill_engine(5 /*TODO*/); // Error
+    // Catch up if we skipped a udeg interrupt
+    while (udeg_rem != 0) {
+      if (udeg_rem > 2)
+        kill_engine(5 /*TODO*/); // Error
+      --udeg_rem;
+      ADD_DEG(udeg, 5); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+      check_event_mask();
+    }
 
     // Calculate udeg interrupts (one for each half degree). We should fire all
     // 15 before another IC1 interrupt fires. If not, the engine may have
-    // accelerated or we could have done shit wrong. For now, flag this as an
-    // error condition. In the future we could add "catchup" logic.
+    // accelerated or we could have done shit wrong. In this case, we can do some
+    // catchup logic. But this should be limited to just a few missed interrupts
 
     // Set angular position & calculate udeg interrupts
     if (edge == refEdge) {
       if (deg != (CRIP - 300) && deg != (CRIP + 3600 - 300))
         kill_engine(6 /*TODO*/); // Error
-      deg += 300; // 2 missing teeth
-      if (deg > 7200) deg -= 7200;
+      ADD_DEG(deg, 300); // 2 missing teeth
     } else if (edge == medEdge) {
-      deg += 150;
-      if (deg > 7200) deg -= 7200;
+      ADD_DEG(deg, 150);
     } else {
-      deg += 75; // 7.5 deg per edge
-      if (deg > 7200) deg -= 7200;
+      ADD_DEG(deg, 75); // 7.5 deg per edge
     }
 
     if (edge == refEdge) {
@@ -284,14 +342,14 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
 }
 
 void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
+  UDEG_SIG_LAT = !UDEG_SIG_LAT;
+
   if (udeg_rem == 0)
-    kill_engine(7 /*TODO*/); // Error
+    kill_engine(7 /*TODO*/); // Error, should have disabled interrupts
+
   --udeg_rem;
 
-  udeg += 5; // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
-  if (udeg > 7200) udeg -= 7200;
-
-  WIG_OUT = !WIG_OUT;
+  ADD_DEG(udeg, 5); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
 
   check_event_mask();
 
@@ -387,7 +445,7 @@ void kill_engine(uint16_t errno) {
 /**
  *
  */
-void check_event_mask() {
+inline void check_event_mask() {
   uint32_t mask = eventMask[udeg / 5];
   if (mask == 0) return;
 
@@ -473,6 +531,20 @@ void sample_temp(void) {
   }
 }
 
+/**
+ * Samples the adjustment potentiometers. Currently used to adjust sim engine speed
+ */
+void sample_adj() {
+  if(millis - adj_samp_tmr >= ADJ_SAMP_INTV) {
+    uint32_t adj1_samp = read_adc_chn(ADC_ADJ1_CHN);
+    uint32_t adj2_samp = read_adc_chn(ADC_ADJ2_CHN);
+
+    sim_wait = adj1_samp * 50;
+
+    adj_samp_tmr = millis;
+  }
+}
+
 //============================= CAN FUNCTIONS ==================================
 
 /**
@@ -501,5 +573,31 @@ void send_diag_can(void) {
  * all other pins.
  */
 void init_adc_ecu(void) {
+  // Initialize pins
+  ADC_ADJ1_TRIS = INPUT;
+  ADC_ADJ1_ANSEL = AN_INPUT;
+  ADC_ADJ1_CSS = 1;
 
+  ADC_ADJ2_TRIS = INPUT;
+  ADC_ADJ2_ANSEL = AN_INPUT;
+  ADC_ADJ2_CSS = 1;
+}
+
+/**
+ *
+ */
+void init_ic1() {
+  IC1CONbits.ON = 0;
+
+  init_timers_45();
+
+  IC1CONbits.C32 = 1;     // 32 bit timer
+  IC1CONbits.ICM = 0b001; // Edge Detect mode (rising and falling edges)
+
+  IFS0bits.IC1IF = 0;
+  IPC1bits.IC1IP = 7;
+  IPC1bits.IC1IS = 2;
+  IEC0bits.IC1IE = 1;
+
+  IC1CONbits.ON = 1;
 }

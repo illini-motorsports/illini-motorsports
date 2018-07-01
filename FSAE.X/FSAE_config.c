@@ -629,7 +629,8 @@ void init_oscillator(uint8_t whl_refoclk4) {
   // PB3DIV
   PB3DIVbits.ON = 1;            // Peripheral Bus 3 Output Clock Enable (Output clock is enabled)
   while(!PB3DIVbits.PBDIVRDY);
-  PB3DIVbits.PBDIV = 0b0110001; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
+  PB3DIVbits.PBDIV = 0b0000011; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 4)
+  //PB3DIVbits.PBDIV = 0b0110001; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
 
   // PB4DIV
   PB4DIVbits.ON = 1;            // Peripheral Bus 4 Output Clock Enable (Output clock is enabled)
@@ -764,6 +765,7 @@ void init_timer1(void) {
 
   // PR1
   PR1 = 0xF424; // PR1 Period Register (62500)
+  //TODO: Broken due to PBCLK3
 
   // Set up TMR1 Interrupt
   IFS0bits.T1IF = 0; // TMR1 Interrupt Flag Status (No interrupt request has occured)
@@ -798,13 +800,13 @@ void init_timer2(void) {
   TMR2 = 0; // TMR2 Count Register (0)
 
   /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR2 uses a 1:4 prescale, meaning
-   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
+   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 4.
+   * Currently, this gives a speed of 50Mhz. TMR2 uses a 1:4 prescale, meaning
+   * 1 millisecond should be equal to 50000 / 4  == 125000 TMR2 cycles.
    */
 
   // PR2
-  PR2 = 0x3E8; // PR2 Period Register (1000)
+  PR2 = 0x30D4; // PR2 Period Register (12500)
 
   // Set up TMR2 Interrupt
   IFS0bits.T2IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
@@ -841,6 +843,7 @@ void init_timer4(uint16_t period1) {
 
   // PR4
   PR4 = period1; //how often interrupts happen
+  //TODO: Broken due to PBCLK3
 
   // Set up TMR4 Interrupt
   IFS0bits.T4IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
@@ -868,6 +871,7 @@ void init_timer6(uint16_t period2) {
 
   // TMR6
   TMR6 = 0; // TMR6 Count Register (0)
+  //TODO: Broken due to PBCLK3
 
   /**
    * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
