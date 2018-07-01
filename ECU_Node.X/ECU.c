@@ -108,16 +108,26 @@ void main(void) {
   IEC0bits.IC1IE = 1;
   IC1CONbits.ON = 1;
 
+  init_timer6_ecu();
+
+  //TODO: Set actual angles lol
+  eventMask[020] |= INJ1_EN_MASK;
+  eventMask[060] |= INJ1_DS_MASK;
+
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
 
   STI(); // Enable interrupts
 
   TRISCbits.TRISC4 = OUTPUT;
-  #define WAIT 2000
-  #define MED_WAIT 4000
-  #define LONG_WAIT 8000
+  #define WAIT 200000
+  #define MED_WAIT 400000
+  #define LONG_WAIT 800000
   #define SIM_OUT LATCbits.LATC4
+
+  TRISBbits.TRISB6 = OUTPUT;
+  TRISBbits.TRISB7 = OUTPUT;
+  #define WIG_OUT LATBbits.LATB6
 
   // Main loop
   while (1) {
@@ -205,20 +215,20 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
     double prevGap = (double) crank_delta[prev];
     if (edge == medEdge) {
       if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
-        kill_engine(0 /*TODO*/); // Error, invalid gap
+        kill_engine(1 /*TODO*/); // Error, invalid gap
     } else if (edge == refEdge) {
       if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
-        kill_engine(0 /*TODO*/); // Error, invalid gap
+        kill_engine(2 /*TODO*/); // Error, invalid gap
     } else if (prev == refEdge) {
       if (!((prevGap > (3.5 * gap)) && (prevGap < (4.5 * gap))))
-        kill_engine(0 /*TODO*/); // Error, invalid gap
+        kill_engine(3 /*TODO*/); // Error, invalid gap
     } else {
       if (!((gap > (0.75 * prevGap)) && (gap < (1.25 * prevGap))))
-        kill_engine(0 /*TODO*/); // Error, invalid gap
+        kill_engine(4 /*TODO*/); // Error, invalid gap
     }
 
     if (udeg_rem != 0)
-      kill_engine(0 /*TODO*/); // Error
+      kill_engine(5 /*TODO*/); // Error
 
     // Calculate udeg interrupts (one for each half degree). We should fire all
     // 15 before another IC1 interrupt fires. If not, the engine may have
@@ -228,26 +238,41 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
     // Set angular position & calculate udeg interrupts
     if (edge == refEdge) {
       if (deg != (CRIP - 300) && deg != (CRIP + 3600 - 300))
-        kill_engine(0 /*TODO*/); // Error
+        kill_engine(6 /*TODO*/); // Error
       deg += 300; // 2 missing teeth
       if (deg > 7200) deg -= 7200;
-      udeg_rem = 60;
-      udeg_period = (uint32_t) (gap / 60.0);
     } else if (edge == medEdge) {
       deg += 150;
       if (deg > 7200) deg -= 7200;
-      udeg_rem = 30;
-      udeg_period = (uint32_t) (gap / 30.0);
     } else {
       deg += 75; // 7.5 deg per edge
       if (deg > 7200) deg -= 7200;
-      udeg_rem = 15;
+    }
+
+    if (edge == refEdge) {
+      // Expecting normal gap after long gap
+      udeg_rem = 14;
+      udeg_period = (uint32_t) (gap / 60.0);
+    } else if (edge == medEdge) {
+      // Expecting long gap after med gap
+      udeg_rem = 59;
+      udeg_period = (uint32_t) (gap / 30.0);
+    } else if (edge == medEdge - 1) {
+      // Expecting med gap after normal gap
+      udeg_rem = 29;
+      udeg_period = (uint32_t) (gap / 15.0);
+    } else {
+      // Expecting normal gap after normal gap
+      udeg_rem = 14;
       udeg_period = (uint32_t) (gap / 15.0);
     }
 
     udeg = deg;
-    IEC0SET = _IEC0_T4IE_MASK;
-    PR4 = udeg_period;
+    check_event_mask();
+
+    TMR6 = 0x0;
+    PR6 = udeg_period;
+    T6CONSET = _T6CON_ON_MASK;
 
     //TODO: Use timer delta to calculate pulse width / frequency
     //TODO: Account for int flooring in udeg_period calculation
@@ -258,68 +283,22 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
   IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
 }
 
-void __attribute__((vector(_TIMER_4_VECTOR), interrupt(IPL7SRS))) timer4_inthnd(void) {
+void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
   if (udeg_rem == 0)
-    kill_engine(0 /*TODO*/); // Error
+    kill_engine(7 /*TODO*/); // Error
   --udeg_rem;
 
   udeg += 5; // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
   if (udeg > 7200) udeg -= 7200;
 
-  uint32_t mask = eventMask[udeg / 5];
-  if (mask != 0) {
-    // Toggle INJ outputs
+  WIG_OUT = !WIG_OUT;
 
-    if (mask & INJ1_EN_MASK)
-      INJ1_LAT = 1;
-    else if (mask & INJ1_DS_MASK)
-      INJ1_LAT = 0;
+  check_event_mask();
 
-    if (mask & INJ2_EN_MASK)
-      INJ2_LAT = 1;
-    else if (mask & INJ2_DS_MASK)
-      INJ2_LAT = 0;
+  if (udeg_rem == 0)
+    T6CONCLR = _T6CON_ON_MASK; // Disable further udeg interrupts
 
-    if (mask & INJ3_EN_MASK)
-      INJ3_LAT = 1;
-    else if (mask & INJ3_DS_MASK)
-      INJ3_LAT = 0;
-
-    if (mask & INJ4_EN_MASK)
-      INJ4_LAT = 1;
-    else if (mask & INJ4_DS_MASK)
-      INJ4_LAT = 0;
-
-    // Toggle IGN outputs
-
-    if (mask & IGN1_EN_MASK)
-      IGN1_LAT = 1;
-    else if (mask & IGN1_DS_MASK)
-      IGN1_LAT = 0;
-
-    if (mask & IGN2_EN_MASK)
-      IGN2_LAT = 1;
-    else if (mask & IGN2_DS_MASK)
-      IGN2_LAT = 0;
-
-    if (mask & IGN3_EN_MASK)
-      IGN3_LAT = 1;
-    else if (mask & IGN3_DS_MASK)
-      IGN3_LAT = 0;
-
-    if (mask & IGN4_EN_MASK)
-      IGN4_LAT = 1;
-    else if (mask & IGN4_DS_MASK)
-      IGN4_LAT = 0;
-  }
-
-  if (udeg_rem == 0) {
-    // Disable further udeg interrupts
-    PR4 = 0xFFFFFFFF;
-    IEC0CLR = _IEC0_T4IE_MASK;
-  }
-
-  IFS0CLR = _IFS0_T4IF_MASK; // Clear TMR4 Interrupt Flag
+  IFS0CLR = _IFS0_T6IF_MASK; // Clear TMR6 Interrupt Flag
 }
 
 /**
@@ -400,8 +379,61 @@ void process_CAN_msg(CAN_message msg) {
  */
 void kill_engine(uint16_t errno) {
   CLI();
+  uint16_t for_debugger = errno;
   send_errno_CAN_msg(ECU_ID, errno);
   while(1); // Do nothing until reset
+}
+
+/**
+ *
+ */
+void check_event_mask() {
+  uint32_t mask = eventMask[udeg / 5];
+  if (mask == 0) return;
+
+  // Toggle INJ outputs
+
+  if (mask & INJ1_EN_MASK)
+    INJ1_LAT = 1;
+  else if (mask & INJ1_DS_MASK)
+    INJ1_LAT = 0;
+
+  if (mask & INJ2_EN_MASK)
+    INJ2_LAT = 1;
+  else if (mask & INJ2_DS_MASK)
+    INJ2_LAT = 0;
+
+  if (mask & INJ3_EN_MASK)
+    INJ3_LAT = 1;
+  else if (mask & INJ3_DS_MASK)
+    INJ3_LAT = 0;
+
+  if (mask & INJ4_EN_MASK)
+    INJ4_LAT = 1;
+  else if (mask & INJ4_DS_MASK)
+    INJ4_LAT = 0;
+
+  // Toggle IGN outputs
+
+  if (mask & IGN1_EN_MASK)
+    IGN1_LAT = 1;
+  else if (mask & IGN1_DS_MASK)
+    IGN1_LAT = 0;
+
+  if (mask & IGN2_EN_MASK)
+    IGN2_LAT = 1;
+  else if (mask & IGN2_DS_MASK)
+    IGN2_LAT = 0;
+
+  if (mask & IGN3_EN_MASK)
+    IGN3_LAT = 1;
+  else if (mask & IGN3_DS_MASK)
+    IGN3_LAT = 0;
+
+  if (mask & IGN4_EN_MASK)
+    IGN4_LAT = 1;
+  else if (mask & IGN4_DS_MASK)
+    IGN4_LAT = 0;
 }
 
 //============================= ADC FUNCTIONS ==================================

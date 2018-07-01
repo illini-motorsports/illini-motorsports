@@ -37,7 +37,7 @@
 #define VR2_ANSEL ANSELCbits.ANSC3
 
 uint8_t dummy = 0;
-#define INJ1_LAT dummy
+#define INJ1_LAT LATBbits.LATB7
 #define INJ2_LAT dummy
 #define INJ3_LAT dummy
 #define INJ4_LAT dummy
@@ -72,6 +72,7 @@ void main(void);
 // Logic functions
 void process_CAN_msg(CAN_message msg);
 void kill_engine(uint16_t errno);
+void check_event_mask();
 
 // ADC sample functions
 void sample_temp(void);

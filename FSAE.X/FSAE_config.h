@@ -54,6 +54,7 @@ void init_timer2(void);
 void init_timer4(uint16_t period1);
 void init_timer6(uint16_t period2);
 void init_timers_45();
+void init_timer6_ecu();
 void init_termination(uint8_t isTerm);
 
 #endif /* FSAE_CONFIG_H */
