@@ -43,7 +43,7 @@ volatile uint8_t refEdge, medEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
-volatile uint32_t sim_wait = 0;
+volatile int32_t sim_wait = -1;
 
 // Events
 // (4) Enable INJ (C1-C4)
@@ -118,17 +118,17 @@ void main(void) {
   IGN2_TRIS = OUTPUT;
   IGN3_TRIS = OUTPUT;
   IGN4_TRIS = OUTPUT;
-  INJ1_LAT = 0;
-  INJ2_LAT = 0;
-  INJ3_LAT = 0;
-  INJ4_LAT = 0;
-  IGN1_LAT = 0;
-  IGN2_LAT = 0;
-  IGN3_LAT = 0;
-  IGN4_LAT = 0;
+  LATBCLR = INJ1_LAT;
+  LATBCLR = INJ2_LAT;
+  LATBCLR = INJ3_LAT;
+  LATBCLR = INJ4_LAT;
+  LATBCLR = IGN1_LAT;
+  LATBCLR = IGN2_LAT;
+  LATBCLR = IGN3_LAT;
+  LATBCLR = IGN4_LAT;
 
   UDEG_SIG_TRIS = OUTPUT;
-  UDEG_SIG_LAT = 0;
+  UDEG_SIG_CLR();
 
   // Set some test angles for injection and ignition
   eventMask[520*2] |= INJ1_DS_MASK;
@@ -165,41 +165,42 @@ void main(void) {
   #define SIM_SYNC_OUT LATGbits.LATG6
   SIM_SYNC_OUT = 0;
 
-  sim_wait = 200000;
   int k = 0;
   //////////////////////////////////////////////////////////////////////////////
 
   // Main loop
   while (1) {
-    int i,j;
+    if (sim_wait != -1) {
+      int i,j;
 
-    uint32_t med_wait = sim_wait * 2;
-    uint32_t long_wait = sim_wait * 4;
+      uint32_t med_wait = sim_wait * 2;
+      uint32_t long_wait = sim_wait * 4;
 
-    SIM_OUT = 0; // Falling edge #1
-    for (i = 0; i < 21; i++) {
-      // Repeat: Short gap, rising edge, short gap, falling edge
-      for(j = 0; j < sim_wait; j++);
-      SIM_OUT = 1;
-      for(j = 0; j < sim_wait; j++);
-      SIM_OUT = 0;
+      SIM_OUT = 0; // Falling edge #1
+      for (i = 0; i < 21; i++) {
+        // Repeat: Short gap, rising edge, short gap, falling edge
+        for(j = 0; j < sim_wait; j++);
+        SIM_OUT = 1;
+        for(j = 0; j < sim_wait; j++);
+        SIM_OUT = 0;
 
-      // Simulate sync signal somewhere in the middle
-      if (k % 2) {
-        if (i == 15)
-          SIM_SYNC_OUT = 1;
-        else if (i == 18)
-          SIM_SYNC_OUT = 0;
+        // Simulate sync signal somewhere in the middle
+        if (k % 2) {
+          if (i == 15)
+            SIM_SYNC_OUT = 1;
+          else if (i == 18)
+            SIM_SYNC_OUT = 0;
+        }
       }
+
+      // Med gap then rising edge
+      for(j = 0; j < med_wait; j++);
+      SIM_OUT = 1;
+
+      // Long gap then repeat
+      for(j = 0; j < long_wait; j++);
+      ++k;
     }
-
-    // Med gap then rising edge
-    for(j = 0; j < med_wait; j++);
-    SIM_OUT = 1;
-
-    // Long gap then repeat
-    for(j = 0; j < long_wait; j++);
-    ++k;
 
     STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
@@ -223,7 +224,7 @@ void main(void) {
 /**
  * IC1 Interrupt Handler
  */
-void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_inthnd(void) {
+void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_inthnd(void) {
   while (!IC1CONbits.ICBNE); // Error!
 
   uint32_t val = IC1BUF;
@@ -287,7 +288,7 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
       if (udeg_rem > 2)
         kill_engine(5 /*TODO*/); // Error
       --udeg_rem;
-      ADD_DEG(udeg, 5); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+      ADD_DEG(udeg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
       check_event_mask();
     }
 
@@ -300,11 +301,11 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
     if (edge == refEdge) {
       if (deg != (CRIP - 300) && deg != (CRIP + 3600 - 300))
         kill_engine(6 /*TODO*/); // Error
-      ADD_DEG(deg, 300); // 2 missing teeth
+      ADD_DEG(deg, 60)
     } else if (edge == medEdge) {
-      ADD_DEG(deg, 150);
+      ADD_DEG(deg, 30);
     } else {
-      ADD_DEG(deg, 75); // 7.5 deg per edge
+      ADD_DEG(deg, 15); // 7.5 deg per edge
     }
 
     if (edge == refEdge) {
@@ -341,20 +342,31 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL7SRS))) ic1_in
   IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
 }
 
+/**
+ * Timer6 Interrupt Handler
+ *
+ * This interrupt is used for each fast 0.5deg interval. All it does is update
+ * 'udeg' and check the event mask for actions.
+ *
+ * Note: We must not call any functions from this handler! Calling any function
+ * causes much more context switching code to be inserted, as the compiler freaks
+ * out and doesn't know which registers need to be saved. Macro functions are OK.
+ *
+ * Optimized w/o check_event_mask: 44 instructions
+ * Optimized w/ check_event_mask:  154 instructions
+ * Unoptimized w/ check_event_mask: 273 instructions!
+ *
+ * check_event_mask not optimized: 138 instructions
+ * check_event_mask optimized: 110 instructions
+ */
 void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
-  UDEG_SIG_LAT = !UDEG_SIG_LAT;
+  UDEG_SIG_INV();
 
-  if (udeg_rem == 0)
-    kill_engine(7 /*TODO*/); // Error, should have disabled interrupts
-
-  --udeg_rem;
-
-  ADD_DEG(udeg, 5); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
-
-  check_event_mask();
-
-  if (udeg_rem == 0)
+  if (--udeg_rem == 0)
     T6CONCLR = _T6CON_ON_MASK; // Disable further udeg interrupts
+
+  ADD_DEG(udeg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+  check_event_mask();
 
   IFS0CLR = _IFS0_T6IF_MASK; // Clear TMR6 Interrupt Flag
 }
@@ -389,7 +401,7 @@ void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL5SRS))) timer1_inthnd(
  *
  * Fires once every millisecond.
  */
-void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(void) {
+void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(void) {
   millis++; // Increment millis count
 
   //TODO: Move this?
@@ -442,58 +454,6 @@ void kill_engine(uint16_t errno) {
   while(1); // Do nothing until reset
 }
 
-/**
- *
- */
-inline void check_event_mask() {
-  uint32_t mask = eventMask[udeg / 5];
-  if (mask == 0) return;
-
-  // Toggle INJ outputs
-
-  if (mask & INJ1_EN_MASK)
-    INJ1_LAT = 1;
-  else if (mask & INJ1_DS_MASK)
-    INJ1_LAT = 0;
-
-  if (mask & INJ2_EN_MASK)
-    INJ2_LAT = 1;
-  else if (mask & INJ2_DS_MASK)
-    INJ2_LAT = 0;
-
-  if (mask & INJ3_EN_MASK)
-    INJ3_LAT = 1;
-  else if (mask & INJ3_DS_MASK)
-    INJ3_LAT = 0;
-
-  if (mask & INJ4_EN_MASK)
-    INJ4_LAT = 1;
-  else if (mask & INJ4_DS_MASK)
-    INJ4_LAT = 0;
-
-  // Toggle IGN outputs
-
-  if (mask & IGN1_EN_MASK)
-    IGN1_LAT = 1;
-  else if (mask & IGN1_DS_MASK)
-    IGN1_LAT = 0;
-
-  if (mask & IGN2_EN_MASK)
-    IGN2_LAT = 1;
-  else if (mask & IGN2_DS_MASK)
-    IGN2_LAT = 0;
-
-  if (mask & IGN3_EN_MASK)
-    IGN3_LAT = 1;
-  else if (mask & IGN3_DS_MASK)
-    IGN3_LAT = 0;
-
-  if (mask & IGN4_EN_MASK)
-    IGN4_LAT = 1;
-  else if (mask & IGN4_DS_MASK)
-    IGN4_LAT = 0;
-}
-
 //============================= ADC FUNCTIONS ==================================
 
 /**
@@ -539,7 +499,8 @@ void sample_adj() {
     uint32_t adj1_samp = read_adc_chn(ADC_ADJ1_CHN);
     uint32_t adj2_samp = read_adc_chn(ADC_ADJ2_CHN);
 
-    sim_wait = adj1_samp * 50;
+    if (adj1_samp >= 250)
+      sim_wait = adj1_samp * 2;
 
     adj_samp_tmr = millis;
   }
@@ -595,7 +556,7 @@ void init_ic1() {
   IC1CONbits.ICM = 0b001; // Edge Detect mode (rising and falling edges)
 
   IFS0bits.IC1IF = 0;
-  IPC1bits.IC1IP = 7;
+  IPC1bits.IC1IP = 6;
   IPC1bits.IC1IS = 2;
   IEC0bits.IC1IE = 1;
 

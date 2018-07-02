@@ -770,7 +770,7 @@ void init_timer1(void) {
   // Set up TMR1 Interrupt
   IFS0bits.T1IF = 0; // TMR1 Interrupt Flag Status (No interrupt request has occured)
   IPC1bits.T1IP = 5; // TMR1 Interrupt Priority (Interrupt priority is 5)
-  IPC1bits.T1IS = 3; // TMR1 Interrupt Subpriority (Interrupt subpriority is 3)
+  IPC1bits.T1IS = 2; // TMR1 Interrupt Subpriority (Interrupt subpriority is 2)
   IEC0bits.T1IE = 1; // TMR1 Interrupt Enable Control (Interrupt is enabled)
 
   // Enable TMR1
@@ -810,7 +810,7 @@ void init_timer2(void) {
 
   // Set up TMR2 Interrupt
   IFS0bits.T2IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
-  IPC2bits.T2IP = 6; // TMR2 Interrupt Priority (Interrupt priority is 6)
+  IPC2bits.T2IP = 5; // TMR2 Interrupt Priority (Interrupt priority is 5)
   IPC2bits.T2IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T2IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
 
