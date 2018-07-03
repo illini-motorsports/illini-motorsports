@@ -43,7 +43,7 @@ volatile uint8_t refEdge, medEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
-volatile int32_t sim_wait = -1;
+volatile uint32_t sim_wait = 0;
 
 // Events
 // (4) Enable INJ (C1-C4)
@@ -165,46 +165,41 @@ void main(void) {
   #define SIM_SYNC_OUT LATGbits.LATG6
   SIM_SYNC_OUT = 0;
 
-  int k = 0;
+  int i,j,k = 0;
   //////////////////////////////////////////////////////////////////////////////
+
+  while (sim_wait == 0)
+    sample_adj();
 
   // Main loop
   while (1) {
-    if (sim_wait != -1) {
-      int i,j;
+    uint32_t med_wait = sim_wait * 2;
+    uint32_t long_wait = sim_wait * 4;
 
-      uint32_t med_wait = sim_wait * 2;
-      uint32_t long_wait = sim_wait * 4;
-
-      // TODO: Make this timer based rather than instruction spinning. I think
-      // this is why the readings are getting less stable as the simulation gets
-      // faster.
-
-      SIM_OUT = 0; // Falling edge #1
-      for (i = 0; i < 21; i++) {
-        // Repeat: Short gap, rising edge, short gap, falling edge
-        for(j = 0; j < sim_wait; j++);
-        SIM_OUT = 1;
-        for(j = 0; j < sim_wait; j++);
-        SIM_OUT = 0;
-
-        // Simulate sync signal somewhere in the middle
-        if (k % 2) {
-          if (i == 15)
-            SIM_SYNC_OUT = 1;
-          else if (i == 18)
-            SIM_SYNC_OUT = 0;
-        }
-      }
-
-      // Med gap then rising edge
-      for(j = 0; j < med_wait; j++);
+    SIM_OUT = 0; // Falling edge #1
+    for (i = 0; i < 21; i++) {
+      // Repeat: Short gap, rising edge, short gap, falling edge
+      for(j = 0; j < sim_wait; j++);
       SIM_OUT = 1;
+      for(j = 0; j < sim_wait; j++);
+      SIM_OUT = 0;
 
-      // Long gap then repeat
-      for(j = 0; j < long_wait; j++);
-      ++k;
+      // Simulate sync signal somewhere in the middle
+      if (k % 2) {
+        if (i == 15)
+          SIM_SYNC_OUT = 1;
+        else if (i == 18)
+          SIM_SYNC_OUT = 0;
+      }
     }
+
+    // Med gap then rising edge
+    for(j = 0; j < med_wait; j++);
+    SIM_OUT = 1;
+
+    // Long gap then repeat
+    for(j = 0; j < long_wait; j++);
+    ++k;
 
     STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
@@ -271,7 +266,8 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
 
     // Gap verification
     //TODO: Need to verify that med gap is 2x regular gap, and long gap is 4x regular
-    double gap = (double) crank_delta[edge];
+    uint32_t delta = crank_delta[edge];
+    double gap = (double) delta;
     double prevGap = (double) crank_delta[prev];
     if (edge == medEdge) {
       if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
@@ -315,19 +311,19 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
     if (edge == refEdge) {
       // Expecting normal gap after long gap
       udeg_rem = 14;
-      udeg_period = (uint32_t) (gap / 60.0);
+      udeg_period = delta / 60;
     } else if (edge == medEdge) {
       // Expecting long gap after med gap
       udeg_rem = 59;
-      udeg_period = (uint32_t) (gap / 30.0);
+      udeg_period = delta / 30;
     } else if (edge == medEdge - 1) {
       // Expecting med gap after normal gap
       udeg_rem = 29;
-      udeg_period = (uint32_t) (gap / 15.0);
+      udeg_period = delta / 15;
     } else {
       // Expecting normal gap after normal gap
       udeg_rem = 14;
-      udeg_period = (uint32_t) (gap / 15.0);
+      udeg_period = delta / 15;
     }
 
     udeg = deg;
@@ -446,16 +442,6 @@ void process_CAN_msg(CAN_message msg) {
           msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
       break;
   }
-}
-
-/**
- *
- */
-void kill_engine(uint16_t errno) {
-  CLI();
-  uint16_t for_debugger = errno;
-  send_errno_CAN_msg(ECU_ID, errno);
-  while(1); // Do nothing until reset
 }
 
 //============================= ADC FUNCTIONS ==================================

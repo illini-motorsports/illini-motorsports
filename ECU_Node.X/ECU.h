@@ -94,7 +94,6 @@ void main(void);
 
 // Logic functions
 void process_CAN_msg(CAN_message msg);
-void kill_engine(uint16_t errno);
 
 // ADC sample functions
 void sample_temp(void);
@@ -112,6 +111,14 @@ void init_ic1();
 #define ADD_DEG(deg, num) \
   if (((deg) += (num)) >= 1440) { \
     (deg) -= 1440; \
+  }
+
+#define kill_engine(errno) \
+  {\
+    CLI();\
+    uint16_t for_debugger = (errno);\
+    send_errno_CAN_msg(ECU_ID, (errno));\
+    while(1); /*Do nothing until reset*/\
   }
 
 #define check_event_mask() \
