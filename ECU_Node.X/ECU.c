@@ -36,7 +36,7 @@ volatile uint32_t crank_samp[CRANK_PERIODS] = {0};
 volatile uint32_t crank_delta[CRANK_PERIODS] = {0};
 
 volatile uint16_t deg, udeg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees
-const uint16_t CRIP = 2000; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1
+const uint16_t CRIP = 400; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1
 volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
 volatile uint8_t medGap, longGap = 0;
 volatile uint8_t refEdge, medEdge = 0;
@@ -176,6 +176,10 @@ void main(void) {
       uint32_t med_wait = sim_wait * 2;
       uint32_t long_wait = sim_wait * 4;
 
+      // TODO: Make this timer based rather than instruction spinning. I think
+      // this is why the readings are getting less stable as the simulation gets
+      // faster.
+
       SIM_OUT = 0; // Falling edge #1
       for (i = 0; i < 21; i++) {
         // Repeat: Short gap, rising edge, short gap, falling edge
@@ -299,7 +303,7 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
 
     // Set angular position & calculate udeg interrupts
     if (edge == refEdge) {
-      if (deg != (CRIP - 300) && deg != (CRIP + 3600 - 300))
+      if (deg != (CRIP - 60) && deg != (CRIP + 720 - 60))
         kill_engine(6 /*TODO*/); // Error
       ADD_DEG(deg, 60)
     } else if (edge == medEdge) {
