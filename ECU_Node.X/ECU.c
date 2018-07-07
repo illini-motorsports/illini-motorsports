@@ -165,7 +165,8 @@ void main(void) {
   #define SIM_SYNC_OUT LATGbits.LATG6
   SIM_SYNC_OUT = 0;
 
-  int i,j,k = 0;
+  uint32_t i,j,k = 0;
+  uint32_t med_wait, long_wait;
   //////////////////////////////////////////////////////////////////////////////
 
   while (sim_wait == 0)
@@ -173,8 +174,8 @@ void main(void) {
 
   // Main loop
   while (1) {
-    uint32_t med_wait = sim_wait * 2;
-    uint32_t long_wait = sim_wait * 4;
+    med_wait = sim_wait * 2;
+    long_wait = sim_wait * 4;
 
     SIM_OUT = 0; // Falling edge #1
     for (i = 0; i < 21; i++) {
