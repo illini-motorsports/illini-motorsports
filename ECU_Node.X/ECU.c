@@ -499,11 +499,14 @@ void sample_adj() {
     if (adj1_samp >= 250)
       sim_wait = adj1_samp * 2;
 
-    uint32_t old1 = deg_mod(520, -inj_pulse_width) * 2;
-    uint32_t old2 = deg_mod(700, -inj_pulse_width) * 2;
-    uint32_t old3 = deg_mod(160, -inj_pulse_width) * 2;
-    uint32_t old4 = deg_mod(340, -inj_pulse_width) * 2;
+    int32_t old_pulse_width = inj_pulse_width;
     inj_pulse_width = adj2_samp / 20;
+
+    uint32_t old1 = deg_mod(520, -old_pulse_width) * 2;
+    uint32_t old2 = deg_mod(700, -old_pulse_width) * 2;
+    uint32_t old3 = deg_mod(160, -old_pulse_width) * 2;
+    uint32_t old4 = deg_mod(340, -old_pulse_width) * 2;
+
     uint32_t new1 = deg_mod(520, -inj_pulse_width) * 2;
     uint32_t new2 = deg_mod(700, -inj_pulse_width) * 2;
     uint32_t new3 = deg_mod(160, -inj_pulse_width) * 2;
@@ -518,7 +521,39 @@ void sample_adj() {
     eventMask[new3] |= INJ3_EN_MASK;
     eventMask[new4] |= INJ4_EN_MASK;
 
-    //TODO: We need to enable/disable INJ signals here if we "skipped" them
+    /**
+     * We need to enable INJ signals if we "skipped" them.
+     *
+     * - New pulse shorter than old pulse
+     *      1   2    3      4
+     *        |-----------|
+     * old ___|           |___
+     *            |-------|
+     * new _______|       |___
+     *
+     * 2,3: Pulse too long this cycle.
+
+     * - New pulse longer than old pulse
+     *      1   2    3      4
+     *            |-------|
+     * old _______|       |___
+     *        |-----------|
+     * new ___|           |___
+     *
+     * 2: Skipped enable, so enable now. Pulse too short this cycle.
+     * 3: Pulse too short this cycle.
+     */
+
+    if (inj_pulse_width > old_pulse_width) {
+      if (deg_between(udeg, new1, old1))
+        INJ1_SET();
+      if (deg_between(udeg, new2, old2))
+        INJ2_SET();
+      if (deg_between(udeg, new3, old3))
+        INJ3_SET();
+      if (deg_between(udeg, new4, old4))
+        INJ4_SET();
+    }
 
     adj_samp_tmr = millis;
   }
@@ -595,4 +630,21 @@ uint32_t deg_mod(int32_t start, int32_t offset)
   if (res >= 720)
     return (res - 720);
   return res;
+}
+
+/**
+ * Returns whether t is in the range of [a,b] in the
+ * 1440 degree domain.
+ *
+ * Note: t, a, and b must be in the range of [0,1440). a must
+ * also be "before" b in the range.
+ */
+uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b)
+{
+  if (a < b) // Not shifted around 0/1440
+    return (t >= a) && (t <= b);
+  else if (a > b) // Shifted around 0/1440
+    return (t >= a) || (t <= b);
+  else
+    return (t == a);
 }

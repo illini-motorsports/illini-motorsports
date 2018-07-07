@@ -114,6 +114,7 @@ void send_diag_can(void);
 void init_adc_ecu(void);
 void init_ic1();
 uint32_t deg_mod(int32_t start, int32_t offset);
+uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b);
 
 // Macro functions
 
