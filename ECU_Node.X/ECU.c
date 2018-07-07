@@ -44,6 +44,7 @@ volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of 
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
 volatile uint32_t sim_wait = 0;
+volatile int32_t inj_pulse_width = -1;
 
 // Events
 // (4) Enable INJ (C1-C4)
@@ -118,14 +119,14 @@ void main(void) {
   IGN2_TRIS = OUTPUT;
   IGN3_TRIS = OUTPUT;
   IGN4_TRIS = OUTPUT;
-  LATBCLR = INJ1_LAT;
-  LATBCLR = INJ2_LAT;
-  LATBCLR = INJ3_LAT;
-  LATBCLR = INJ4_LAT;
-  LATBCLR = IGN1_LAT;
-  LATBCLR = IGN2_LAT;
-  LATBCLR = IGN3_LAT;
-  LATBCLR = IGN4_LAT;
+  INJ1_CLR();
+  INJ2_CLR();
+  INJ3_CLR();
+  INJ4_CLR();
+  IGN1_CLR();
+  IGN2_CLR();
+  IGN3_CLR();
+  IGN4_CLR();
 
   UDEG_SIG_TRIS = OUTPUT;
   UDEG_SIG_CLR();
@@ -135,10 +136,7 @@ void main(void) {
   eventMask[700*2] |= INJ2_DS_MASK;
   eventMask[160*2] |= INJ3_DS_MASK;
   eventMask[340*2] |= INJ4_DS_MASK;
-  eventMask[(520-100)*2] |= INJ1_EN_MASK;
-  eventMask[(700-100)*2] |= INJ2_EN_MASK;
-  eventMask[(160-100)*2] |= INJ3_EN_MASK;
-  eventMask[(340-100)*2] |= INJ4_EN_MASK;
+
   eventMask[690*2] |= IGN1_DS_MASK;
   eventMask[150*2] |= IGN2_DS_MASK;
   eventMask[330*2] |= IGN3_DS_MASK;
@@ -169,7 +167,7 @@ void main(void) {
   uint32_t med_wait, long_wait;
   //////////////////////////////////////////////////////////////////////////////
 
-  while (sim_wait == 0)
+  while (sim_wait == 0 || inj_pulse_width == -1)
     sample_adj();
 
   // Main loop
@@ -238,6 +236,9 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
   crank_samp[edge] = val;
   crank_delta[edge] = (val - crank_samp[prev]);
 
+  /**
+   * Not synced: Detect med/ref edges
+   */
   if (!sync) {
     if (total_edges > CRANK_PERIODS) {
       double gap = (double) crank_delta[edge];
@@ -262,7 +263,12 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
         }
       }
     }
-  } else {
+  }
+
+  /**
+   * Synced: Verify gaps and set udeg interrupts
+   */
+  else {
     T6CONCLR = _T6CON_ON_MASK; // Disable further udeg interrupts
 
     // Gap verification
@@ -493,6 +499,27 @@ void sample_adj() {
     if (adj1_samp >= 250)
       sim_wait = adj1_samp * 2;
 
+    uint32_t old1 = deg_mod(520, -inj_pulse_width) * 2;
+    uint32_t old2 = deg_mod(700, -inj_pulse_width) * 2;
+    uint32_t old3 = deg_mod(160, -inj_pulse_width) * 2;
+    uint32_t old4 = deg_mod(340, -inj_pulse_width) * 2;
+    inj_pulse_width = adj2_samp / 20;
+    uint32_t new1 = deg_mod(520, -inj_pulse_width) * 2;
+    uint32_t new2 = deg_mod(700, -inj_pulse_width) * 2;
+    uint32_t new3 = deg_mod(160, -inj_pulse_width) * 2;
+    uint32_t new4 = deg_mod(340, -inj_pulse_width) * 2;
+
+    eventMask[old1] &= ~INJ1_EN_MASK;
+    eventMask[old2] &= ~INJ2_EN_MASK;
+    eventMask[old3] &= ~INJ3_EN_MASK;
+    eventMask[old4] &= ~INJ4_EN_MASK;
+    eventMask[new1] |= INJ1_EN_MASK;
+    eventMask[new2] |= INJ2_EN_MASK;
+    eventMask[new3] |= INJ3_EN_MASK;
+    eventMask[new4] |= INJ4_EN_MASK;
+
+    //TODO: We need to enable/disable INJ signals here if we "skipped" them
+
     adj_samp_tmr = millis;
   }
 }
@@ -552,4 +579,20 @@ void init_ic1() {
   IEC0bits.IC1IE = 1;
 
   IC1CONbits.ON = 1;
+}
+
+/**
+ * Returns (start + offset), shifted around 720 degrees.
+ *
+ * Note: This only supports values of (start + offset) from
+ * -720 degrees to 1439 degrees.
+ */
+uint32_t deg_mod(int32_t start, int32_t offset)
+{
+  int32_t res = start + offset;
+  if (res < 0)
+    return (res + 720);
+  if (res >= 720)
+    return (res - 720);
+  return res;
 }

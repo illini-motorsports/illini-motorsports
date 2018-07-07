@@ -42,23 +42,31 @@
 #define UDEG_SIG_INV() (LATBINV = (1<<6))
 #define UDEG_SIG_SET() (LATBSET = (1<<6))
 
-#define INJ1_LAT (1<<8)
-#define INJ2_LAT (1<<9)
-#define INJ3_LAT (1<<10)
-#define INJ4_LAT (1<<11)
 #define INJ1_TRIS TRISBbits.TRISB8
 #define INJ2_TRIS TRISBbits.TRISB9
 #define INJ3_TRIS TRISBbits.TRISB10
 #define INJ4_TRIS TRISBbits.TRISB11
+#define INJ1_CLR() (LATBCLR = (1<<8))
+#define INJ1_SET() (LATBSET = (1<<8))
+#define INJ2_CLR() (LATBCLR = (1<<9))
+#define INJ2_SET() (LATBSET = (1<<9))
+#define INJ3_CLR() (LATBCLR = (1<<10))
+#define INJ3_SET() (LATBSET = (1<<10))
+#define INJ4_CLR() (LATBCLR = (1<<11))
+#define INJ4_SET() (LATBSET = (1<<11))
 
-#define IGN1_LAT (1<<12)
-#define IGN2_LAT (1<<13)
-#define IGN3_LAT (1<<14)
-#define IGN4_LAT (1<<15)
 #define IGN1_TRIS TRISBbits.TRISB12
 #define IGN2_TRIS TRISBbits.TRISB13
 #define IGN3_TRIS TRISBbits.TRISB14
 #define IGN4_TRIS TRISBbits.TRISB15
+#define IGN1_CLR() (LATBCLR = (1<<12))
+#define IGN1_SET() (LATBSET = (1<<12))
+#define IGN2_CLR() (LATBCLR = (1<<13))
+#define IGN2_SET() (LATBSET = (1<<13))
+#define IGN3_CLR() (LATBCLR = (1<<14))
+#define IGN3_SET() (LATBSET = (1<<14))
+#define IGN4_CLR() (LATBCLR = (1<<15))
+#define IGN4_SET() (LATBSET = (1<<15))
 
 #define ADC_ADJ1_TRIS    TRISDbits.TRISD14
 #define ADC_ADJ1_ANSEL   ANSELDbits.ANSD14
@@ -105,6 +113,7 @@ void send_diag_can(void);
 // Utility functions
 void init_adc_ecu(void);
 void init_ic1();
+uint32_t deg_mod(int32_t start, int32_t offset);
 
 // Macro functions
 
@@ -116,6 +125,8 @@ void init_ic1();
 #define kill_engine(errno) \
   {\
     CLI();\
+    INJ1_CLR(); INJ2_CLR(); INJ3_CLR(); INJ4_CLR();\
+    IGN1_CLR(); IGN2_CLR(); IGN3_CLR(); IGN4_CLR();\
     uint16_t for_debugger = (errno);\
     send_errno_CAN_msg(ECU_ID, (errno));\
     while(1); /*Do nothing until reset*/\
@@ -127,38 +138,38 @@ void init_ic1();
     if (mask != 0) { \
     /* Toggle INJ outputs*/ \
     if (mask & INJ1_EN_MASK) \
-      LATBSET = INJ1_LAT; \
-    else if (mask & INJ1_DS_MASK)\
-      LATBCLR = INJ1_LAT; \
+      INJ1_SET();\
+    if (mask & INJ1_DS_MASK)\
+      INJ1_CLR();\
     if (mask & INJ2_EN_MASK)\
-      LATBSET = INJ2_LAT;\
-    else if (mask & INJ2_DS_MASK)\
-      LATBCLR = INJ2_LAT;\
+      INJ2_SET();\
+    if (mask & INJ2_DS_MASK)\
+      INJ2_CLR();\
     if (mask & INJ3_EN_MASK)\
-      LATBSET = INJ3_LAT;\
-    else if (mask & INJ3_DS_MASK)\
-      LATBCLR = INJ3_LAT;\
+      INJ3_SET();\
+    if (mask & INJ3_DS_MASK)\
+      INJ3_CLR();\
     if (mask & INJ4_EN_MASK)\
-      LATBSET = INJ4_LAT;\
-    else if (mask & INJ4_DS_MASK)\
-      LATBCLR = INJ4_LAT;\
+      INJ4_SET();\
+    if (mask & INJ4_DS_MASK)\
+      INJ4_CLR();\
     /* Toggle IGN outputs*/\
-    if (mask & IGN1_EN_MASK)\
-      LATBSET = IGN1_LAT;\
-    else if (mask & IGN1_DS_MASK)\
-      LATBCLR = IGN1_LAT;\
+    if (mask & IGN1_EN_MASK) \
+      IGN1_SET();\
+    if (mask & IGN1_DS_MASK)\
+      IGN1_CLR();\
     if (mask & IGN2_EN_MASK)\
-      LATBSET = IGN2_LAT;\
-    else if (mask & IGN2_DS_MASK)\
-      LATBCLR = IGN2_LAT;\
+      IGN2_SET();\
+    if (mask & IGN2_DS_MASK)\
+      IGN2_CLR();\
     if (mask & IGN3_EN_MASK)\
-      LATBSET = IGN3_LAT;\
-    else if (mask & IGN3_DS_MASK)\
-      LATBCLR = IGN3_LAT;\
+      IGN3_SET();\
+    if (mask & IGN3_DS_MASK)\
+      IGN3_CLR();\
     if (mask & IGN4_EN_MASK)\
-      LATBSET = IGN4_LAT;\
-    else if (mask & IGN4_DS_MASK)\
-      LATBCLR = IGN4_LAT;\
+      IGN4_SET();\
+    if (mask & IGN4_DS_MASK)\
+      IGN4_CLR();\
     }\
   }
 
