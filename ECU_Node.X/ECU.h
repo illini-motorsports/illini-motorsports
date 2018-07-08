@@ -21,7 +21,7 @@
 
 // Timing constants (ms)
 #define TEMP_SAMP_INTV     333
-#define ADJ_SAMP_INTV      50
+#define ADJ_SAMP_INTV      200
 #define DIAG_SEND          1000
 
 // Misc state definitions
@@ -128,7 +128,6 @@ uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b);
     CLI();\
     INJ1_CLR(); INJ2_CLR(); INJ3_CLR(); INJ4_CLR();\
     IGN1_CLR(); IGN2_CLR(); IGN3_CLR(); IGN4_CLR();\
-    uint16_t for_debugger = (errno);\
     send_errno_CAN_msg(ECU_ID, (errno));\
     while(1); /*Do nothing until reset*/\
   }

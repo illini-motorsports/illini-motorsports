@@ -23,10 +23,6 @@ uint32_t diag_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
 uint32_t adj_samp_tmr = 0;
 
-volatile uint32_t tsampctr = 0;
-volatile uint32_t tsamps[100] = {0};
-volatile uint32_t tdeltas[100] = {0};
-
 // Crank wheel has 22 teeth (24 - 2). We count rising and falling edges.
 // So we should see 44 edges & periods per turn of the crank
 volatile uint8_t edge = CRANK_PERIODS - 1;
@@ -43,7 +39,6 @@ volatile uint8_t refEdge, medEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
-volatile uint32_t sim_wait = 0;
 volatile int32_t inj_pulse_width = -1;
 
 // Events
@@ -153,53 +148,11 @@ void main(void) {
 
   STI(); // Enable interrupts
 
-  //////////////////////////////////////////////////////////////////////////////
-  //TODO: For testing/simulation
-  TRISCbits.TRISC4 = OUTPUT;
-  #define SIM_OUT LATCbits.LATC4
-  SIM_OUT = 0;
-
-  TRISGbits.TRISG6 = OUTPUT;
-  #define SIM_SYNC_OUT LATGbits.LATG6
-  SIM_SYNC_OUT = 0;
-
-  uint32_t i,j,k = 0;
-  uint32_t med_wait, long_wait;
-  //////////////////////////////////////////////////////////////////////////////
-
-  while (sim_wait == 0 || inj_pulse_width == -1)
+  while (inj_pulse_width == -1)
     sample_adj();
 
   // Main loop
   while (1) {
-    med_wait = sim_wait * 2;
-    long_wait = sim_wait * 4;
-
-    SIM_OUT = 0; // Falling edge #1
-    for (i = 0; i < 21; i++) {
-      // Repeat: Short gap, rising edge, short gap, falling edge
-      for(j = 0; j < sim_wait; j++);
-      SIM_OUT = 1;
-      for(j = 0; j < sim_wait; j++);
-      SIM_OUT = 0;
-
-      // Simulate sync signal somewhere in the middle
-      if (k % 2) {
-        if (i == 15)
-          SIM_SYNC_OUT = 1;
-        else if (i == 18)
-          SIM_SYNC_OUT = 0;
-      }
-    }
-
-    // Med gap then rising edge
-    for(j = 0; j < med_wait; j++);
-    SIM_OUT = 1;
-
-    // Long gap then repeat
-    for(j = 0; j < long_wait; j++);
-    ++k;
-
     STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
     /**
@@ -209,11 +162,11 @@ void main(void) {
     // Separate logic functions
 
     // Analog sampling functions
-    //sample_temp();
+    sample_temp();
     sample_adj();
 
     // CAN message sending functions
-    //send_diag_can();
+    send_diag_can();
   }
 }
 
@@ -223,7 +176,12 @@ void main(void) {
  * IC1 Interrupt Handler
  */
 void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_inthnd(void) {
-  while (!IC1CONbits.ICBNE); // Error!
+  // Disable further udeg interrupts
+  T6CONCLR = _T6CON_ON_MASK;
+  IFS0CLR = _IFS0_T6IF_MASK;
+
+  if (!IC1CONbits.ICBNE)
+    kill_engine(7 /*TODO*/); // Error
 
   uint32_t val = IC1BUF;
 
@@ -269,8 +227,6 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
    * Synced: Verify gaps and set udeg interrupts
    */
   else {
-    T6CONCLR = _T6CON_ON_MASK; // Disable further udeg interrupts
-
     // Gap verification
     //TODO: Need to verify that med gap is 2x regular gap, and long gap is 4x regular
     uint32_t delta = crank_delta[edge];
@@ -286,13 +242,13 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
       if (!((prevGap > (3.5 * gap)) && (prevGap < (4.5 * gap))))
         kill_engine(3 /*TODO*/); // Error, invalid gap
     } else {
-      if (!((gap > (0.75 * prevGap)) && (gap < (1.25 * prevGap))))
+      if (!((gap > (0.9 * prevGap)) && (gap < (1.1 * prevGap))))
         kill_engine(4 /*TODO*/); // Error, invalid gap
     }
 
     // Catch up if we skipped a udeg interrupt
     while (udeg_rem != 0) {
-      if (udeg_rem > 2)
+      if (udeg_rem > 0) //TODO: Make greater than 0 when we move to a real/variable engine
         kill_engine(5 /*TODO*/); // Error
       --udeg_rem;
       ADD_DEG(udeg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
@@ -336,15 +292,24 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
     udeg = deg;
     check_event_mask();
 
-    TMR6 = 0x0;
+    uint32_t startDelay = TMR4 - val;
+    while (startDelay > udeg_period) {
+      --udeg_rem;
+      ADD_DEG(udeg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+      check_event_mask();
+      startDelay -= udeg_period;
+    }
+
     PR6 = udeg_period;
+    TMR6 = startDelay; // 1st udeg period accounts for this long interrupt
     T6CONSET = _T6CON_ON_MASK;
 
     //TODO: Use timer delta to calculate pulse width / frequency
     //TODO: Account for int flooring in udeg_period calculation
   }
 
-  while (IC1CONbits.ICBNE); // Error!
+  if (IC1CONbits.ICBNE)
+    kill_engine(8 /*TODO*/); // Error
 
   IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
 }
@@ -489,15 +454,12 @@ void sample_temp(void) {
 }
 
 /**
- * Samples the adjustment potentiometers. Currently used to adjust sim engine speed
+ * Samples the adjustment potentiometers. Currently used to adjust injector pulse width
  */
 void sample_adj() {
   if(millis - adj_samp_tmr >= ADJ_SAMP_INTV) {
     uint32_t adj1_samp = read_adc_chn(ADC_ADJ1_CHN);
     uint32_t adj2_samp = read_adc_chn(ADC_ADJ2_CHN);
-
-    if (adj1_samp >= 250)
-      sim_wait = adj1_samp * 2;
 
     int32_t old_pulse_width = inj_pulse_width;
     inj_pulse_width = adj2_samp / 20;
@@ -511,6 +473,8 @@ void sample_adj() {
     uint32_t new2 = deg_mod(700, -inj_pulse_width) * 2;
     uint32_t new3 = deg_mod(160, -inj_pulse_width) * 2;
     uint32_t new4 = deg_mod(340, -inj_pulse_width) * 2;
+
+    CLI(); // Begin critical section
 
     eventMask[old1] &= ~INJ1_EN_MASK;
     eventMask[old2] &= ~INJ2_EN_MASK;
@@ -556,6 +520,8 @@ void sample_adj() {
     }
 
     adj_samp_tmr = millis;
+
+    STI();
   }
 }
 
