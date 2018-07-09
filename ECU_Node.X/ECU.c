@@ -86,7 +86,6 @@ void main(void) {
   init_gpio_pins(); // Set all I/O pins to low outputs
   //init_peripheral_modules(); // Disable unused peripheral modules
   init_oscillator(0); // Initialize oscillator configuration bits
-  init_timer1(); // Initialize timer1 (seconds)
   init_timer2(); // Initialize timer2 (millis)
   init_adc(init_adc_ecu); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
@@ -359,27 +358,17 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
 }
 
 /**
- * TMR1 Interrupt Handler
- *
- * Fires once every second.
- */
-void __attribute__((vector(_TIMER_1_VECTOR), interrupt(IPL5SRS))) timer1_inthnd(void) {
-  seconds++; // Increment seconds count
-  IFS0CLR = _IFS0_T1IF_MASK; // Clear TMR1 Interrupt Flag
-}
-
-/**
  * TMR2 Interrupt Handler
  *
  * Fires once every millisecond.
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(void) {
-  millis++; // Increment millis count
+  ++millis;
+  if (millis % 1000 == 0)
+    ++seconds;
 
-  //TODO: Move this?
-  if (ADCCON2bits.EOSRDY) {
+  if (ADCCON2bits.EOSRDY)
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
-  }
 
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }

@@ -741,44 +741,6 @@ void init_oscillator(uint8_t whl_refoclk4) {
   lock_config();
 }
 
-void init_timer1(void) {
-  unlock_config();
-
-  // Disable TMR1
-  T1CONbits.ON = 0; // Timer On (Timer is disabled)
-
-  // T1CON
-  T1CONbits.TCS = 0;      // Timer Clock Source Select (Internal peripheral clock)
-  T1CONbits.SIDL = 0;     // Stop in Idle Mode (Continue operation even in Idle mode)
-  T1CONbits.TWDIS = 1;    // Asynchronous Timer Write Disable (Writes to TMR1 are ignored until pending write operation completes)
-  T1CONbits.TGATE = 0;    // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
-  T1CONbits.TCKPS = 0b10; // Timer Input Clock Prescale Select (1:64 prescale value)
-
-  // TMR1
-  TMR1 = 0; // TMR1 Count Register (0)
-
-  /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR1 uses a 1:64 prescale, meaning
-   * 1 second should be equal to 4000000 / 64 == 62500 TMR1 cycles.
-   */
-
-  // PR1
-  PR1 = 0xF424; // PR1 Period Register (62500)
-  //TODO: Broken due to PBCLK3
-
-  // Set up TMR1 Interrupt
-  IFS0bits.T1IF = 0; // TMR1 Interrupt Flag Status (No interrupt request has occured)
-  IPC1bits.T1IP = 5; // TMR1 Interrupt Priority (Interrupt priority is 5)
-  IPC1bits.T1IS = 2; // TMR1 Interrupt Subpriority (Interrupt subpriority is 2)
-  IEC0bits.T1IE = 1; // TMR1 Interrupt Enable Control (Interrupt is enabled)
-
-  // Enable TMR1
-  T1CONbits.ON = 1; // Timer On (Timer is enabled)
-
-  lock_config();
-}
-
 /**
  * void init_timer2(void)
  *
