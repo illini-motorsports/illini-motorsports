@@ -179,14 +179,11 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
   T6CONCLR = _T6CON_ON_MASK;
   IFS0CLR = _IFS0_T6IF_MASK;
 
-  if (!IC1CONbits.ICBNE)
-    kill_engine(7 /*TODO*/); // Error
-
-  uint32_t val = IC1BUF;
+  register uint32_t val = IC1BUF;
 
   ++total_edges;
 
-  uint8_t prev = edge;
+  register uint8_t prev = edge;
   ++edge;
   if (edge == CRANK_PERIODS) edge = 0;
 
@@ -307,9 +304,6 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
     //TODO: Account for int flooring in udeg_period calculation
   }
 
-  if (IC1CONbits.ICBNE)
-    kill_engine(8 /*TODO*/); // Error
-
   IFS0CLR = _IFS0_IC1IF_MASK; // Clear IC1 Interrupt Flag
 }
 
@@ -319,18 +313,15 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
  * This interrupt is used for each fast 0.5deg interval. All it does is update
  * 'udeg' and check the event mask for actions.
  *
- * Note: We must not call any functions from this handler! Calling any function
- * causes much more context switching code to be inserted, as the compiler freaks
- * out and doesn't know which registers need to be saved. Macro functions are OK.
- *
- * Optimized w/o check_event_mask: 44 instructions
- * Optimized w/ check_event_mask:  154 instructions
- * Unoptimized w/ check_event_mask: 273 instructions!
- *
- * check_event_mask not optimized: 138 instructions
- * check_event_mask optimized: 110 instructions
+ * Note: We must not call any non-inlined functions from this handler! Calling
+ * any non-inlined function causes much more context switching code to be
+ * inserted, as the compiler freaks out and doesn't know which registers need
+ * to be saved. Macro and/or inlined functions are OK.
  */
-void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
+void
+__attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS), no_fpu))
+timer6_inthnd(void)
+{
   UDEG_SIG_INV();
 
   if (--udeg_rem == 0)
@@ -602,4 +593,59 @@ uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b)
     return (t >= a) || (t <= b);
   else
     return (t == a);
+}
+
+void
+__attribute__((noreturn, always_inline))
+kill_engine(uint16_t errno)
+{
+  CLI();
+  INJ1_CLR(); INJ2_CLR(); INJ3_CLR(); INJ4_CLR();
+  IGN1_CLR(); IGN2_CLR(); IGN3_CLR(); IGN4_CLR();
+  register uint16_t for_debugger = errno;
+  while(1); // Do nothing until reset
+}
+
+void
+__attribute__((always_inline))
+check_event_mask()
+{
+  register uint32_t mask = eventMask[udeg];
+  if (mask != 0) {
+    // Toggle INJ outputs
+    if (mask & INJ1_EN_MASK)
+      INJ1_SET();
+    if (mask & INJ1_DS_MASK)
+      INJ1_CLR();
+    if (mask & INJ2_EN_MASK)
+      INJ2_SET();
+    if (mask & INJ2_DS_MASK)
+      INJ2_CLR();
+    if (mask & INJ3_EN_MASK)
+      INJ3_SET();
+    if (mask & INJ3_DS_MASK)
+      INJ3_CLR();
+    if (mask & INJ4_EN_MASK)
+      INJ4_SET();
+    if (mask & INJ4_DS_MASK)
+      INJ4_CLR();
+
+    // Toggle IGN outputs
+    if (mask & IGN1_EN_MASK)
+      IGN1_SET();
+    if (mask & IGN1_DS_MASK)
+      IGN1_CLR();
+    if (mask & IGN2_EN_MASK)
+      IGN2_SET();
+    if (mask & IGN2_DS_MASK)
+      IGN2_CLR();
+    if (mask & IGN3_EN_MASK)
+      IGN3_SET();
+    if (mask & IGN3_DS_MASK)
+      IGN3_CLR();
+    if (mask & IGN4_EN_MASK)
+      IGN4_SET();
+    if (mask & IGN4_DS_MASK)
+      IGN4_CLR();
+  }
 }

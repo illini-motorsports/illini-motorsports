@@ -115,6 +115,8 @@ void init_adc_ecu(void);
 void init_ic1();
 uint32_t deg_mod(int32_t start, int32_t offset);
 uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b);
+inline void kill_engine(uint16_t errno);
+inline void check_event_mask();
 
 // Macro functions
 
@@ -122,54 +124,3 @@ uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b);
   if (((deg) += (num)) >= 1440) { \
     (deg) -= 1440; \
   }
-
-#define kill_engine(errno) \
-  {\
-    CLI();\
-    INJ1_CLR(); INJ2_CLR(); INJ3_CLR(); INJ4_CLR();\
-    IGN1_CLR(); IGN2_CLR(); IGN3_CLR(); IGN4_CLR();\
-    send_errno_CAN_msg(ECU_ID, (errno));\
-    while(1); /*Do nothing until reset*/\
-  }
-
-#define check_event_mask() \
-  {\
-    uint32_t mask = eventMask[udeg]; \
-    if (mask != 0) { \
-    /* Toggle INJ outputs*/ \
-    if (mask & INJ1_EN_MASK) \
-      INJ1_SET();\
-    if (mask & INJ1_DS_MASK)\
-      INJ1_CLR();\
-    if (mask & INJ2_EN_MASK)\
-      INJ2_SET();\
-    if (mask & INJ2_DS_MASK)\
-      INJ2_CLR();\
-    if (mask & INJ3_EN_MASK)\
-      INJ3_SET();\
-    if (mask & INJ3_DS_MASK)\
-      INJ3_CLR();\
-    if (mask & INJ4_EN_MASK)\
-      INJ4_SET();\
-    if (mask & INJ4_DS_MASK)\
-      INJ4_CLR();\
-    /* Toggle IGN outputs*/\
-    if (mask & IGN1_EN_MASK) \
-      IGN1_SET();\
-    if (mask & IGN1_DS_MASK)\
-      IGN1_CLR();\
-    if (mask & IGN2_EN_MASK)\
-      IGN2_SET();\
-    if (mask & IGN2_DS_MASK)\
-      IGN2_CLR();\
-    if (mask & IGN3_EN_MASK)\
-      IGN3_SET();\
-    if (mask & IGN3_DS_MASK)\
-      IGN3_CLR();\
-    if (mask & IGN4_EN_MASK)\
-      IGN4_SET();\
-    if (mask & IGN4_DS_MASK)\
-      IGN4_CLR();\
-    }\
-  }
-
