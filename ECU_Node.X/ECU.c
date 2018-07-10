@@ -174,7 +174,10 @@ void main(void) {
 /**
  * IC1 Interrupt Handler
  */
-void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_inthnd(void) {
+void
+__attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS), no_fpu))
+ic1_inthnd(void)
+{
   // Disable further udeg interrupts
   T6CONCLR = _T6CON_ON_MASK;
   IFS0CLR = _IFS0_T6IF_MASK;
@@ -189,31 +192,34 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
 
   crank_samp[edge] = val;
   crank_delta[edge] = (val - crank_samp[prev]);
+  register uint32_t delta = crank_delta[edge];
+
+  // For gap verification, we use integer division with a max divisor of 8. We are
+  // only interested in the ratio of the new gap to previous, so we can multiply
+  // each by 8 to ensure we don't lose any resolution from int division truncating.
+  register uint32_t gap = delta * 8;
+  register uint32_t prevGap = crank_delta[prev] * 8;
 
   /**
    * Not synced: Detect med/ref edges
    */
   if (!sync) {
     if (total_edges > CRANK_PERIODS) {
-      double gap = (double) crank_delta[edge];
-      double prevGap = (double) crank_delta[prev];
-
       if (!medGap &&
-          (gap > (1.5 * prevGap)) && (gap < (2.5 * prevGap)))
+          (gap > (prevGap * 3 / 2)) && (gap < (prevGap * 5 / 2)))
       {
         // Found medium gap
         medGap = 1;
         medEdge = edge;
       }
       else if (medGap) {
-        if ((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))) {
+        if ((gap > (prevGap * 7 / 4)) && (gap < (prevGap * 9 / 4))) {
           // Found long gap, we are SYNC'd!
           sync = 1;
           deg = CRIP;
           refEdge = edge;
         } else {
-          // Error, didn't find long gap after med gap
-          kill_engine(0 /*TODO*/);
+          kill_engine(0); // Error, didn't find long gap after med gap
         }
       }
     }
@@ -224,42 +230,35 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
    */
   else {
     // Gap verification
-    //TODO: Need to verify that med gap is 2x regular gap, and long gap is 4x regular
-    uint32_t delta = crank_delta[edge];
-    double gap = (double) delta;
-    double prevGap = (double) crank_delta[prev];
-    if (edge == medEdge) {
-      if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
-        kill_engine(1 /*TODO*/); // Error, invalid gap
-    } else if (edge == refEdge) {
-      if (!((gap > (1.75 * prevGap)) && (gap < (2.25 * prevGap))))
-        kill_engine(2 /*TODO*/); // Error, invalid gap
+    if (edge == medEdge || edge == refEdge) {
+      if (!((gap > (prevGap * 7 / 4)) && (gap < (prevGap * 9 / 4))))
+        kill_engine(1); // Error, invalid gap
     } else if (prev == refEdge) {
-      if (!((prevGap > (3.5 * gap)) && (prevGap < (4.5 * gap))))
-        kill_engine(3 /*TODO*/); // Error, invalid gap
+      if (!((prevGap > (gap * 7 / 2)) && (prevGap < (gap * 9 / 2))))
+        kill_engine(2); // Error, invalid gap
     } else {
-      if (!((gap > (0.9 * prevGap)) && (gap < (1.1 * prevGap))))
-        kill_engine(4 /*TODO*/); // Error, invalid gap
+      if (!((gap > (prevGap * 7 / 8)) && (gap < (prevGap * 9 / 8))))
+        kill_engine(3); // Error, invalid gap
     }
 
-    // Catch up if we skipped a udeg interrupt
+    // Catch up if we skipped udeg interrupts
     while (udeg_rem != 0) {
       if (udeg_rem > 0) //TODO: Make greater than 0 when we move to a real/variable engine
-        kill_engine(5 /*TODO*/); // Error
+        kill_engine(4);
       --udeg_rem;
-      ADD_DEG(udeg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+      ADD_DEG(udeg, 1);
       check_event_mask();
     }
 
     // Calculate udeg interrupts (one for each half degree). We should fire all
-    // 15 before another IC1 interrupt fires. If not, the engine may have
-    // accelerated or we could have done shit wrong. In this case, we can do some
-    // catchup logic. But this should be limited to just a few missed interrupts
+    // before another IC1 interrupt fires. If not, the engine may have accelerated.
+    // In this case, we can do some catchup logic. But this should be limited
+    // to just a few missed interrupts.
 
     // Set angular position & calculate udeg interrupts
     if (edge == refEdge) {
       if (deg != (CRIP - 60) && deg != (CRIP + 720 - 60))
-        kill_engine(6 /*TODO*/); // Error
+        kill_engine(6); // Error
       ADD_DEG(deg, 60)
     } else if (edge == medEdge) {
       ADD_DEG(deg, 30);
@@ -288,6 +287,7 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
     udeg = deg;
     check_event_mask();
 
+    // Skip a few udeg interrupts if this interrupt took a long time
     uint32_t startDelay = TMR4 - val;
     while (startDelay > udeg_period) {
       --udeg_rem;
@@ -300,6 +300,7 @@ void __attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) ic1_in
     TMR6 = startDelay; // 1st udeg period accounts for this long interrupt
     T6CONSET = _T6CON_ON_MASK;
 
+    //TODO: Need to verify that med gap is 2x regular gap, and long gap is 4x regular
     //TODO: Use timer delta to calculate pulse width / frequency
     //TODO: Account for int flooring in udeg_period calculation
   }
@@ -600,9 +601,9 @@ __attribute__((noreturn, always_inline))
 kill_engine(uint16_t errno)
 {
   CLI();
+  register uint16_t for_debugger = errno;
   INJ1_CLR(); INJ2_CLR(); INJ3_CLR(); INJ4_CLR();
   IGN1_CLR(); IGN2_CLR(); IGN3_CLR(); IGN4_CLR();
-  register uint16_t for_debugger = errno;
   while(1); // Do nothing until reset
 }
 
