@@ -31,10 +31,10 @@ volatile uint32_t total_edges = 0;
 volatile uint32_t crank_samp[CRANK_PERIODS] = {0};
 volatile uint32_t crank_delta[CRANK_PERIODS] = {0};
 
-volatile uint16_t deg, udeg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees
-const uint16_t CRIP = 400; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1
+volatile uint16_t deg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees [deg/2]
+const uint16_t CRIP = 463; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1 [deg]
 volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
-volatile uint8_t medGap, longGap = 0;
+volatile uint8_t medGap = 0;
 volatile uint8_t refEdge, medEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
@@ -90,10 +90,10 @@ void main(void) {
   init_adc(init_adc_ecu); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
-  init_timer6_ecu();
 
   // Initialize pins
 
+  // VR1, VR2
   unlock_config();
   CFGCONbits.IOLOCK = 0;
   VR1_TRIS = INPUT;
@@ -105,6 +105,7 @@ void main(void) {
   CFGCONbits.IOLOCK = 1;
   lock_config();
 
+  // INJ[1-4], IGN[1-4]
   INJ1_TRIS = OUTPUT;
   INJ2_TRIS = OUTPUT;
   INJ3_TRIS = OUTPUT;
@@ -121,9 +122,6 @@ void main(void) {
   IGN2_CLR();
   IGN3_CLR();
   IGN4_CLR();
-
-  UDEG_SIG_TRIS = OUTPUT;
-  UDEG_SIG_CLR();
 
   // Set some test angles for injection and ignition
   eventMask[520*2] |= INJ1_DS_MASK;
@@ -143,6 +141,7 @@ void main(void) {
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
 
+  init_timer6_ecu(); // Initialize TMR6 for udeg interrupts
   init_ic1(); // Initialize IC1 for VR1 crank signal
 
   STI(); // Enable interrupts
@@ -216,8 +215,16 @@ ic1_inthnd(void)
         if ((gap > (prevGap * 7 / 4)) && (gap < (prevGap * 9 / 4))) {
           // Found long gap, we are SYNC'd!
           sync = 1;
-          deg = CRIP;
           refEdge = edge;
+          deg = (CRIP * 2);
+
+          // We expect a normal gap (7.5 degrees) after a the long ref gap. We
+          // aren't going to generate udeg interrupts until the next edge, so we
+          // need to fake 14 udeg interrupts worth of deg advancement. In reality,
+          // deg is currently equal to CRIP here.
+          ADD_DEG(deg, 14);
+
+          //TODO: Should only sync directly after a SYNC pulse
         } else {
           kill_engine(0); // Error, didn't find long gap after med gap
         }
@@ -246,25 +253,24 @@ ic1_inthnd(void)
       if (udeg_rem > 0) //TODO: Make greater than 0 when we move to a real/variable engine
         kill_engine(4);
       --udeg_rem;
-      ADD_DEG(udeg, 1);
+      ADD_DEG(deg, 1);
       check_event_mask();
     }
+
+    // This tooth edge also counts as one half degree (we set N-1 udeg interrupts)
+    ADD_DEG(deg, 1);
+    check_event_mask();
+
+    // Check to make sure everything is still sync'd properly
+    // TODO: If refEdge == 1, then this check always fails. deg short by 15. WTF?
+    if (edge == refEdge && !
+        (deg == (CRIP * 2) || deg == (deg_mod(CRIP, 360) * 2)))
+      kill_engine(6);
 
     // Calculate udeg interrupts (one for each half degree). We should fire all
     // before another IC1 interrupt fires. If not, the engine may have accelerated.
     // In this case, we can do some catchup logic. But this should be limited
     // to just a few missed interrupts.
-
-    // Set angular position & calculate udeg interrupts
-    if (edge == refEdge) {
-      if (deg != (CRIP - 60) && deg != (CRIP + 720 - 60))
-        kill_engine(6); // Error
-      ADD_DEG(deg, 60)
-    } else if (edge == medEdge) {
-      ADD_DEG(deg, 30);
-    } else {
-      ADD_DEG(deg, 15); // 7.5 deg per edge
-    }
 
     if (edge == refEdge) {
       // Expecting normal gap after long gap
@@ -284,14 +290,11 @@ ic1_inthnd(void)
       udeg_period = delta / 15;
     }
 
-    udeg = deg;
-    check_event_mask();
-
     // Skip a few udeg interrupts if this interrupt took a long time
     uint32_t startDelay = TMR4 - val;
     while (startDelay > udeg_period) {
       --udeg_rem;
-      ADD_DEG(udeg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+      ADD_DEG(deg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
       check_event_mask();
       startDelay -= udeg_period;
     }
@@ -323,12 +326,10 @@ void
 __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS), no_fpu))
 timer6_inthnd(void)
 {
-  UDEG_SIG_INV();
-
   if (--udeg_rem == 0)
     T6CONCLR = _T6CON_ON_MASK; // Disable further udeg interrupts
 
-  ADD_DEG(udeg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
+  ADD_DEG(deg, 1); // 0.5deg per interrupt (7.5deg per edge, 15 int/edge)
   check_event_mask();
 
   IFS0CLR = _IFS0_T6IF_MASK; // Clear TMR6 Interrupt Flag
@@ -490,13 +491,13 @@ void sample_adj() {
      */
 
     if (inj_pulse_width > old_pulse_width) {
-      if (deg_between(udeg, new1, old1))
+      if (deg_between(deg, new1, old1))
         INJ1_SET();
-      if (deg_between(udeg, new2, old2))
+      if (deg_between(deg, new2, old2))
         INJ2_SET();
-      if (deg_between(udeg, new3, old3))
+      if (deg_between(deg, new3, old3))
         INJ3_SET();
-      if (deg_between(udeg, new4, old4))
+      if (deg_between(deg, new4, old4))
         INJ4_SET();
     }
 
@@ -611,7 +612,7 @@ void
 __attribute__((always_inline))
 check_event_mask()
 {
-  register uint32_t mask = eventMask[udeg];
+  register uint32_t mask = eventMask[deg];
   if (mask != 0) {
     // Toggle INJ outputs
     if (mask & INJ1_EN_MASK)

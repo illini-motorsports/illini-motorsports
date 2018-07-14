@@ -37,11 +37,6 @@
 #define VR2_TRIS  TRISCbits.TRISC3
 #define VR2_ANSEL ANSELCbits.ANSC3
 
-#define UDEG_SIG_TRIS TRISBbits.TRISB6
-#define UDEG_SIG_CLR() (LATBCLR = (1<<6))
-#define UDEG_SIG_INV() (LATBINV = (1<<6))
-#define UDEG_SIG_SET() (LATBSET = (1<<6))
-
 #define INJ1_TRIS TRISBbits.TRISB8
 #define INJ2_TRIS TRISBbits.TRISB9
 #define INJ3_TRIS TRISBbits.TRISB10
