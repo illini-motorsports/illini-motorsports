@@ -141,6 +141,7 @@ void main(void) {
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
 
+  init_sync_int(); // Initialize SYNC signal change notice interrupts
   init_timer6_ecu(); // Initialize TMR6 for udeg interrupts
   init_ic1(); // Initialize IC1 for VR1 crank signal
 
@@ -333,6 +334,26 @@ timer6_inthnd(void)
   check_event_mask();
 
   IFS0CLR = _IFS0_T6IF_MASK; // Clear TMR6 Interrupt Flag
+}
+
+/**
+ * PortC Change Notice Interrupt Handler
+ *
+ * This interrupt is used to detect pulses in the sync signal.
+ */
+void
+__attribute((vector(_CHANGE_NOTICE_C_VECTOR), interrupt(IPL3SRS)))
+cnc_inthnd(void)
+{
+  uint32_t dummy = PORTC; // Clear mismatch condition
+
+  if (SYNC_PORT) {
+    //TODO
+  } else {
+    //TODO
+  }
+
+  IFS3CLR = _IFS3_CNCIF_MASK;
 }
 
 /**
@@ -546,7 +567,30 @@ void init_adc_ecu(void) {
 }
 
 /**
- *
+ * Initializes the change notice interrupt for the SYNC signal.
+ */
+void init_sync_int()
+{
+  SYNC_TRIS = INPUT;
+  SYNC_ANSEL = DIG_INPUT;
+
+  // CONCONC
+  CNCONCbits.ON = 1;         // Change Notice (CN) Control ON (CN is enabled)
+  CNCONCbits.EDGEDETECT = 1; // Change Notification Style (Edge Style)
+
+  CNENCbits.CNIEC1 = 1; // Enable interrupts for the RC1 pin
+
+  uint32_t dummy = PORTC; // Clear mismatch condition
+
+  // Configure change notification interrupt
+  IFS3CLR = _IFS3_CNCIF_MASK; // CNC Interrupt Flag Status (No interrupt request has occurred)
+  IPC30bits.CNCIP = 3;        // CNC Interrupt Priority (Interrupt priority is 3)
+  IPC30bits.CNCIS = 3;        // CNC Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC3SET = _IEC3_CNCIE_MASK; // CNC Interrupt Enable Control (Interrupt is enabled)
+}
+
+/**
+ * Initializes the input capture module, used for the main crank tooth edge timing logic.
  */
 void init_ic1() {
   IC1CONbits.ON = 0;

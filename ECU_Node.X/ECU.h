@@ -37,6 +37,10 @@
 #define VR2_TRIS  TRISCbits.TRISC3
 #define VR2_ANSEL ANSELCbits.ANSC3
 
+#define SYNC_TRIS TRISCbits.TRISC1
+#define SYNC_ANSEL ANSELCbits.ANSC1
+#define SYNC_PORT PORTCbits.RC1
+
 #define INJ1_TRIS TRISBbits.TRISB8
 #define INJ2_TRIS TRISBbits.TRISB9
 #define INJ3_TRIS TRISBbits.TRISB10
@@ -107,6 +111,7 @@ void send_diag_can(void);
 
 // Utility functions
 void init_adc_ecu(void);
+void init_sync_int();
 void init_ic1();
 uint32_t deg_mod(int32_t start, int32_t offset);
 uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b);
