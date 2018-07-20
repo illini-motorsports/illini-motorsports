@@ -34,6 +34,7 @@ volatile uint32_t crank_delta[CRANK_PERIODS] = {0};
 volatile uint16_t deg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees [deg/2]
 const uint16_t CRIP = 463; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1 [deg]
 volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
+volatile uint32_t sync_edge = 0; // Last crank edge count when we detected a falling SYNC edge
 volatile uint8_t medGap = 0;
 volatile uint8_t refEdge, medEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
@@ -214,18 +215,25 @@ ic1_inthnd(void)
       }
       else if (medGap) {
         if ((gap > (prevGap * 7 / 4)) && (gap < (prevGap * 9 / 4))) {
-          // Found long gap, we are SYNC'd!
-          sync = 1;
-          refEdge = edge;
-          deg = (CRIP * 2);
+          if (total_edges > sync_edge && total_edges - sync_edge <= 10) {
+            // Found long gap after SYNC pulse, we are SYNC'd!
+            sync = 1;
+            refEdge = edge;
+            deg = (CRIP * 2);
 
-          // We expect a normal gap (7.5 degrees) after a the long ref gap. We
-          // aren't going to generate udeg interrupts until the next edge, so we
-          // need to fake 14 udeg interrupts worth of deg advancement. In reality,
-          // deg is currently equal to CRIP here.
-          ADD_DEG(deg, 14);
+            // Disable further SYNC change notification interrupts
+            CNCONCbits.ON = 0;
+            IEC3CLR = _IEC3_CNCIE_MASK;
+            IFS3CLR = _IFS3_CNCIF_MASK;
 
-          //TODO: Should only sync directly after a SYNC pulse
+            // We expect a normal gap (7.5 degrees) after a the long ref gap. We
+            // aren't going to generate udeg interrupts until the next edge, so we
+            // need to fake 14 udeg interrupts worth of deg advancement. In reality,
+            // deg is currently equal to CRIP here.
+            ADD_DEG(deg, 14);
+          } else {
+            medGap = 0; // Reset, try again after sync pulse
+          }
         } else {
           kill_engine(0); // Error, didn't find long gap after med gap
         }
@@ -339,7 +347,7 @@ timer6_inthnd(void)
 /**
  * PortC Change Notice Interrupt Handler
  *
- * This interrupt is used to detect pulses in the sync signal.
+ * This interrupt is used to detect pulses in the SYNC signal.
  */
 void
 __attribute((vector(_CHANGE_NOTICE_C_VECTOR), interrupt(IPL3SRS)))
@@ -347,11 +355,8 @@ cnc_inthnd(void)
 {
   uint32_t dummy = PORTC; // Clear mismatch condition
 
-  if (SYNC_PORT) {
-    //TODO
-  } else {
-    //TODO
-  }
+  if (!SYNC_PORT) // Detect SYNC falling edges
+    sync_edge = total_edges;
 
   IFS3CLR = _IFS3_CNCIF_MASK;
 }
@@ -576,7 +581,7 @@ void init_sync_int()
 
   // CONCONC
   CNCONCbits.ON = 1;         // Change Notice (CN) Control ON (CN is enabled)
-  CNCONCbits.EDGEDETECT = 1; // Change Notification Style (Edge Style)
+  CNCONCbits.EDGEDETECT = 0; // Change Notification Style (Mismatch Style)
 
   CNENCbits.CNIEC1 = 1; // Enable interrupts for the RC1 pin
 
