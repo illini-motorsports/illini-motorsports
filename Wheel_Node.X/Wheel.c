@@ -25,6 +25,7 @@ void main(void) {
   init_adc(NULL);
   init_termination(TERMINATING);
   init_tlc5955();
+  init_can();
 
   ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion?
   STI();// Enable interrupts
@@ -84,7 +85,6 @@ void main(void) {
   // Initialize All the data streams
   initDataItems();
   updateSwVals();
-  init_can();
   initAllScreens();
   nightModeState = wheelDataItems[SW_ND_IDX].value;
   initNightMode(nightModeState);

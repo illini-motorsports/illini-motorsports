@@ -15,6 +15,7 @@
 #define SPM_ID              0x050
 #define MOTEC_ID            0x100
 #define GCM_ID              0x200
+#define SGH_ID              0x203
 #define LOGGER_ID           0x300
 #define WHEEL_ID            0x400
 #define ADL_ID              0x500
@@ -230,6 +231,8 @@
 #define ANALOG_CHAN_33_BYTE   2
 #define ANALOG_CHAN_34_BYTE   4
 #define ANALOG_CHAN_35_BYTE   6
+#define ANALOG_SGH_RAW_BYTE   0
+#define STRAIN_CALC_SCL_BYTE  2
 
 #define TCOUPLE_0_BYTE        0
 #define TCOUPLE_1_BYTE        2
@@ -407,6 +410,8 @@
 #define ANALOG_CHAN_33_SCL    0.001
 #define ANALOG_CHAN_34_SCL    0.001
 #define ANALOG_CHAN_35_SCL    0.001
+#define ANALOG_SGH_RAW_SCL    0.001
+#define STRAIN_CALC_SCL       0.000001
 
 #define TCOUPLE_SCL         0.25
 

@@ -13,13 +13,13 @@ volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
 // State/status variables determined by various sources
-volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu = 0; // From ECU
+volatile double eng_rpm, oil_pres, oil_temp, eng_temp, bat_volt_ecu, brk_press = 0; // From ECU
 uint16_t total_current_draw = 0;
 uint8_t fuel_prime_flag, over_temp_flag = 0;
 uint8_t kill_engine_flag, kill_car_flag = 0;
 uint8_t crit_volt_pending, crit_oilpres_pending, crit_oiltemp_pending,
         crit_engtemp_pending = 0;
-uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw = 0;
+uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw, ack_btn = 0;
 uint8_t wtr_override, fan_override, fuel_override, abs_override = 0;
 uint8_t switch_debounced = 0; // Debounced (safe) switch state
 uint8_t switch_prev = 0;      // Previous sampled value of switches
@@ -184,7 +184,7 @@ void main(void) {
   fb_resistances[STR_IDX] = 500.0; // The STR load uses a 500 Ohm resistor
 
   // Turn on state-independent loads
-  enable_load(AUX_IDX);
+//  enable_load(AUX_IDX);
   enable_load(BVBAT_IDX);
   enable_load(ECU_IDX);
 
@@ -307,6 +307,7 @@ void main(void) {
         set_load(WTR_IDX, !STR_EN &&
             (ENG_ON || over_temp_flag || wtr_override_sw || wtr_override));
         set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override));
+        set_load(AUX_IDX, ack_btn || brk_press > BRK_SWITCH);
 
         // STR
         if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
@@ -450,17 +451,21 @@ void process_CAN_msg(CAN_message msg) {
 
       motec2_recv_tmr = millis;
       break;
+    case MOTEC_ID + 6:
+      brk_press = ( ((msg.data[6] << 8) |
+            msg.data[7]));
+      break;
 
     case WHEEL_ID + 0x1:
       switch_bitmap = msg.data[SWITCH_BITS_BYTE];
       fan_override_sw = switch_bitmap & (1 << (FAN_OVR_BITPOS - 1));
       wtr_override_sw = switch_bitmap & (1 << (WTR_OVR_BITPOS - 1));
       fuel_override_sw = switch_bitmap & (1 << (FUEL_OVR_BITPOS - 1));
+      ack_btn = switch_bitmap & (1 << ACK_BTN_BITPOS);
       override_sw_tmr = millis;
       break;
   }
 }
-
 /**
  * void debounce_switches(void)
  *

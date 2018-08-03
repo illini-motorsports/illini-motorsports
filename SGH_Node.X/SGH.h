@@ -1,5 +1,12 @@
-#ifndef SPM_H
-#define SPM_H
+/*
+ * File:   SGH.h
+ * Author: Jacob Drewniak
+ *
+ * Created on May 1, 2018, 11:56 PM
+ */
+
+#ifndef SGH_H
+#define SGH_H
 
 #include <sys/types.h>
 #include "../FSAE.X/FSAE_config.h"
@@ -16,45 +23,38 @@
 // ***************************
 // SPI Defs
 #define CS_HS_ADC_0 0
-#define CS_HS_ADC_1 1
 
 // ***************************
 // GPIO Defs
 // ***************************
 // Pin numbers are created by: 16*CHIP_NUM + 8*(BANK=='B') + PIN_NUM
-#define ADC_0_CS_TRIS           TRISAbits.TRISA9
-#define ADC_1_CS_TRIS           TRISAbits.TRISA10
-#define ADC_0_CS_LAT            LATAbits.LATA9
-#define ADC_1_CS_LAT            LATAbits.LATA10
+#define ADC_0_CS_TRIS           TRISAbits.TRISA10
+#define ADC_0_CS_LAT            LATAbits.LATA10
 #define ADC_0_CS_LATBITS        (uint32_t*) (&LATAbits)
-#define ADC_1_CS_LATBITS        (uint32_t*) (&LATAbits)
-#define ADC_0_CS_LATNUM         9
-#define ADC_1_CS_LATNUM         10
+#define ADC_0_CS_LATNUM         10
 
-#define ANALOG_CAN_SCL          1000
-
-#define GPIO_CS_TRIS            TRISAbits.TRISA15
-#define GPIO_CS_LAT             LATAbits.LATA15
-#define GPIO_CS_LATBITS         (uint32_t*) (&LATAbits)
-#define GPIO_CS_LATNUM          15
+#define GAIN                    304.03
+#define GAUGE_FACTOR            2.155
+#define VDD                     12
+#define POISSON                 0.30
 
 #define TEMP_SAMP_INTV          333
 #define CAN_ANALOG_INTV         50
-#define CAN_DIAG_INTV           250
+#define CAN_DIAG_INTV           500
 
-uint8_t analogMappings[32] = {11,10,9,8,3,2,1,0,12,13,14,15,5,4,7,6,23,22,21,20,19,18,17,16,28,29,30,31,27,26,25};
+uint8_t analogMappings[8] = {6,5,7,4,1,0,2,3};
 
 void main(void);
 void update_analog_channels(void);
-void update_digital_channels(void);
+void strain_calc(void);
 
-void init_gpio();
 void init_adcs();
 
+void CANdiag(void);
 void CANAnalogChannels(void);
-void CANDiag(void);
 
 void sample_temp(void);
 void process_CAN_msg(CAN_message msg);
 
-#endif /* SPM_H */
+#endif /* SGH_H */
+
