@@ -835,7 +835,7 @@ void init_timer6(uint16_t period2) {
 
   // Set up TMR6 Interrupt
   IFS0bits.T6IF = 0; // TMR6 Interrupt Flag Status (No interrupt request has occured)
-  IPC7bits.T6IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 7)
+  IPC7bits.T6IP = 7; // TMR6 Interrupt Priority (Interrupt priority is 7)
   IPC7bits.T6IS = 3; // TMR6 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T6IE = 1; // TMR6 Interrupt Enable Control (Interrupt is enabled)
 
