@@ -325,6 +325,7 @@ void init_peripheral_modules(void) {
   SPI4CONbits.ON = 0;
   PMD5bits.SPI4MD = 1;
 
+#ifndef ECM064
   // SPI5
   SPI5CONbits.ON = 0;
   PMD5bits.SPI5MD = 1;
@@ -332,7 +333,8 @@ void init_peripheral_modules(void) {
   // SPI6
   SPI6CONbits.ON = 0;
   PMD5bits.SPI6MD = 1;
-
+#endif
+  
   // I2C1
   I2C1CONbits.ON = 0;
   PMD5bits.I2C1MD = 1;
@@ -417,6 +419,7 @@ void init_peripheral_modules(void) {
 
 void init_gpio_pins(void) {
   // Set to outputs
+#ifndef ECM064
   TRISAbits.TRISA0 = OUTPUT;
   TRISAbits.TRISA1 = OUTPUT;
   TRISAbits.TRISA2 = OUTPUT;
@@ -429,6 +432,7 @@ void init_gpio_pins(void) {
   TRISAbits.TRISA10 = OUTPUT;
   TRISAbits.TRISA14 = OUTPUT;
   TRISAbits.TRISA15 = OUTPUT;
+#endif
 
   // TRISB
   TRISBbits.TRISB0 = OUTPUT;
@@ -511,6 +515,7 @@ void init_gpio_pins(void) {
   // Drive to logic level low
 
   // LATA
+#ifndef ECM064
   LATAbits.LATA0 = 0;
   LATAbits.LATA1 = 0;
   LATAbits.LATA2 = 0;
@@ -523,6 +528,7 @@ void init_gpio_pins(void) {
   LATAbits.LATA10 = 0;
   LATAbits.LATA14 = 0;
   LATAbits.LATA15 = 0;
+#endif
 
   // LATB
   LATBbits.LATB0 = 0;

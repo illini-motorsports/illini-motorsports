@@ -281,7 +281,6 @@
         <property key="UART5" value="true"/>
         <property key="UART6" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
-        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>
@@ -554,18 +553,18 @@
             <linkerLibProjectItem>
               <makeArtifact PL="../FSAE.X"
                             CT="3"
-                            CN="default"
-                            AC="true"
+                            CN="ECM064"
+                            AC="false"
                             BL="true"
                             WD="../FSAE.X"
-                            BC="${MAKE}  -f Makefile CONF=default"
-                            DBC="${MAKE}  -f Makefile CONF=default TYPE_IMAGE=DEBUG_RUN"
-                            CC="rm -rf &quot;build/default&quot; &quot;dist/default&quot;"
-                            OP="dist/default/production/FSAE.X.a"
-                            DOP="dist/default/debug/FSAE.X.a"
-                            FL="dist/default/production/FSAE.X.a"
-                            PD="dist/default/production/FSAE.X."
-                            DD="dist/default/debug/FSAE.X.">
+                            BC="${MAKE}  -f Makefile CONF=ECM064"
+                            DBC="${MAKE}  -f Makefile CONF=ECM064 TYPE_IMAGE=DEBUG_RUN"
+                            CC="rm -rf &quot;build/ECM064&quot; &quot;dist/ECM064&quot;"
+                            OP="dist/ECM064/production/FSAE.X.a"
+                            DOP="dist/ECM064/debug/FSAE.X.a"
+                            FL="dist/ECM064/production/FSAE.X.a"
+                            PD="dist/ECM064/production/FSAE.X."
+                            DD="dist/ECM064/debug/FSAE.X.">
               </makeArtifact>
             </linkerLibProjectItem>
           </linkerLibItems>
@@ -813,7 +812,6 @@
         <property key="UART5" value="true"/>
         <property key="UART6" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
-        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="true"/>

@@ -36,8 +36,13 @@
 #define NOT_TERMINATING 0
 
 // Pin definitions for programmable termination
-#define TERM_TRIS TRISAbits.TRISA2
-#define TERM_LAT  LATAbits.LATA2
+#ifndef ECM064
+  #define TERM_TRIS TRISAbits.TRISA2
+  #define TERM_LAT  LATAbits.LATA2
+#else
+  #define TERM_TRIS TRISBbits.TRISB2
+  #define TERM_LAT  LATBbits.LATB2
+#endif
 
 #define CLI() asm volatile("di; ehb;")
 #define STI() asm volatile("ei;")
