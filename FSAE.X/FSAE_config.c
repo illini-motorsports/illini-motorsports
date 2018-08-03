@@ -630,7 +630,6 @@ void init_oscillator(uint8_t whl_refoclk4) {
   PB3DIVbits.ON = 1;            // Peripheral Bus 3 Output Clock Enable (Output clock is enabled)
   while(!PB3DIVbits.PBDIVRDY);
   PB3DIVbits.PBDIV = 0b0000011; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 4)
-  //PB3DIVbits.PBDIV = 0b0110001; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
 
   // PB4DIV
   PB4DIVbits.ON = 1;            // Peripheral Bus 4 Output Clock Enable (Output clock is enabled)
@@ -742,9 +741,7 @@ void init_oscillator(uint8_t whl_refoclk4) {
 }
 
 /**
- * void init_timer2(void)
- *
- * Initializes Timer 2, which is configured to generate an interrupt every 1 ms
+ * Initializes Timer2, which is configured to generate an interrupt every 1 ms
  */
 void init_timer2(void) {
   unlock_config();
@@ -797,21 +794,14 @@ void init_timer4(uint16_t period1) {
   // TMR4
   TMR4 = 0; // TMR4 Count Register (0)
 
-  /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR6 uses a 1:4 prescale, meaning
-   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
-   */
-
   // PR4
   PR4 = period1; //how often interrupts happen
-  //TODO: Broken due to PBCLK3
 
   // Set up TMR4 Interrupt
-  IFS0bits.T4IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
-  IPC4bits.T4IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 6)
-  IPC4bits.T4IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC0bits.T4IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+  IFS0bits.T4IF = 0; // TMR4 Interrupt Flag Status (No interrupt request has occured)
+  IPC4bits.T4IP = 7; // TMR4 Interrupt Priority (Interrupt priority is 7)
+  IPC4bits.T4IS = 3; // TMR4 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T4IE = 1; // TMR4 Interrupt Enable Control (Interrupt is enabled)
 
   // Enable TMR4
   T4CONbits.ON = 1; // Timer On (Timer is enabled)
@@ -833,22 +823,15 @@ void init_timer6(uint16_t period2) {
 
   // TMR6
   TMR6 = 0; // TMR6 Count Register (0)
-  //TODO: Broken due to PBCLK3
-
-  /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR6 uses a 1:4 prescale, meaning
-   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
-   */
 
   // PR6
   PR6 = period2; //how often interrupts happen
 
   // Set up TMR6 Interrupt
-  IFS0bits.T6IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
-  IPC7bits.T6IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 6)
-  IPC7bits.T6IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC0bits.T6IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+  IFS0bits.T6IF = 0; // TMR6 Interrupt Flag Status (No interrupt request has occured)
+  IPC7bits.T6IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 7)
+  IPC7bits.T6IS = 3; // TMR6 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T6IE = 1; // TMR6 Interrupt Enable Control (Interrupt is enabled)
 
   // Enable TMR6
   T6CONbits.ON = 1; // Timer On (Timer is enabled)
@@ -857,9 +840,7 @@ void init_timer6(uint16_t period2) {
 }
 
 /**
- * void init_timers_45()
- *
- * Initializes Timers 4 and 5, which are combined into a 32 bit timer
+ * Initializes timers 4 and 5, which are combined into a 32 bit timer
  */
 void init_timers_45() {
   unlock_config();
@@ -877,7 +858,6 @@ void init_timers_45() {
   TMR4 = 0;                // TMR4/5 Count Register
   PR4 = 0xFFFFFFFF;        // PR4/5 Period Register
 
-  // Set up interrupt, but leave disabled for now
   IFS0bits.T4IF = 0;       // TMR4 Interrupt Flag Status (No interrupt request has occured)
   IPC4bits.T4IP = 0;       // TMR4 Interrupt Priority (Interrupt priority is 0)
   IPC4bits.T4IS = 0;       // TMR4 Interrupt Subpriority (Interrupt subpriority is 0)
@@ -891,6 +871,10 @@ void init_timers_45() {
   lock_config();
 }
 
+/**
+ * Initializes Timer6 with fastest frequency and highest possible interrupt
+ * priority. Leaves disabled as we will enable it later in other code.
+ */
 void init_timer6_ecu() {
   unlock_config();
 
