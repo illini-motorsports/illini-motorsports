@@ -111,6 +111,7 @@ void send_diag_can(void);
 
 // Utility functions
 void init_adc_ecu(void);
+void init_timer6_ecu();
 void init_sync_int();
 void init_ic1();
 uint32_t deg_mod(int32_t start, int32_t offset);

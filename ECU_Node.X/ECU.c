@@ -572,6 +572,35 @@ void init_adc_ecu(void) {
 }
 
 /**
+ * Initializes Timer6 with fastest frequency and highest possible interrupt
+ * priority. Leaves disabled as we will enable it later in other code.
+ */
+void init_timer6_ecu() {
+  unlock_config();
+
+  // Configure TMR6
+  T6CON = 0x0;             // Disable TMR6
+
+  T6CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
+  T6CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
+  T6CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
+  T6CONbits.TCKPS = 0b000; // Timer Input Clock Prescale Select (1:1 prescale value)
+
+  TMR6 = 0;                // TMR6 Count Register
+  PR6 = 0xFFFFFFFF;        // PR6 Period Register
+
+  // Set up interrupt, but leave disabled for now
+  IFS0bits.T6IF = 0;       // TMR6 Interrupt Flag Status (No interrupt request has occured)
+  IPC7bits.T6IP = 7;       // TMR6 Interrupt Priority (Interrupt priority is 7)
+  IPC7bits.T6IS = 3;       // TMR6 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T6IE = 1;       // TMR6 Interrupt Enable Control (Interrupt is enabled)
+
+  T6CONbits.ON = 0;        // Timer On (Timer is disabled)
+
+  lock_config();
+}
+
+/**
  * Initializes the change notice interrupt for the SYNC signal.
  */
 void init_sync_int()
