@@ -12,8 +12,6 @@
  * Generic initialization function for all UART busses
  */
 void init_uart(uint8_t bus, double baud) {
-  unlock_config();
-
   /**
    * BRG = (F_PB / (4 * BAUD)) - 1
    * (BRGH = 0)
@@ -25,13 +23,30 @@ void init_uart(uint8_t bus, double baud) {
   //TODO-AM: Initialize other busses
   switch(bus) {
     case 1:
-      //TODO-AM: Init PPS pins?
       //TODO-AM: Disable/enable interrupts
 
+      unlock_config();
+      TRISDbits.TRISD11 = OUTPUT;
+      RPD11Rbits.RPD11R = 0b0001; // U1TX
+
+      TRISDbits.TRISD10 = INPUT;
+      U1RXRbits.U1RXR = 0b0011; // D10
+      lock_config();
+
+      U1STA = 0;
+      U1MODE = 0;
+
       U1BRG = brg;
+
       IEC3bits.U1TXIE = 0;
-      U1STAbits.UTXEN = 1;
+      IFS3bits.U1TXIF = 0;
+
       U1MODEbits.ON = 1;
+      U1MODEbits.UEN = 0b00;
+
+      U1STAbits.URXEN = 1;
+      U1STAbits.UTXEN = 1;
+
       break;
 
     case 2:
@@ -49,8 +64,6 @@ void init_uart(uint8_t bus, double baud) {
     case 6:
       break;
   }
-
-  lock_config();
 }
 
 /**

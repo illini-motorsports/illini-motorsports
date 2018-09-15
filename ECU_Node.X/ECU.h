@@ -15,6 +15,8 @@
 #include "../FSAE.X/FSAE_can.h"
 #include "../FSAE.X/FSAE_config.h"
 #include "../FSAE.X/FSAE_spi.h"
+#include "../FSAE.X/FSAE_usb.h"
+#include "../FSAE.X/FSAE_uart.h"
 
 // Thresholds
 #define RPM_ON_THRESHOLD 200.0 // rpm

@@ -151,6 +151,10 @@ void main(void) {
   while (inj_pulse_width == -1)
     sample_adj();
 
+  init_uart(1, 38400);
+  UARTConn conn;
+  conn.send_fp = uart_get_send(1);
+
   // Main loop
   while (1) {
     STI(); // Enable interrupts (in case anything disabled without re-enabling)
@@ -383,8 +387,14 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(void) {
   ++millis;
-  if (millis % 1000 == 0)
+  if (millis % 1000 == 0) {
     ++seconds;
+
+    IFS3bits.U1TXIF = 0;
+    while(!U1STAbits.TRMT);
+    U1TXREG = 0xAA;
+    while(!U1STAbits.TRMT);
+  }
 
   if (ADCCON2bits.EOSRDY)
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion

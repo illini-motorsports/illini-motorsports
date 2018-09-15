@@ -19,6 +19,8 @@
       <itemPath>FSAE_tlc5955.h</itemPath>
       <itemPath>FSAE_ltc3350.h</itemPath>
       <itemPath>FSAE_pwm.h</itemPath>
+      <itemPath>FSAE_uart.h</itemPath>
+      <itemPath>FSAE_usb.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -41,6 +43,8 @@
       <itemPath>FSAE_tlc5955.c</itemPath>
       <itemPath>FSAE_ltc3350.c</itemPath>
       <itemPath>FSAE_pwm.c</itemPath>
+      <itemPath>FSAE_uart.c</itemPath>
+      <itemPath>FSAE_usb.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
