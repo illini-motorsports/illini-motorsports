@@ -152,8 +152,7 @@ void main(void) {
     sample_adj();
 
   init_uart(1, 38400);
-  UARTConn conn;
-  conn.send_fp = uart_get_send(1);
+  IEC3SET = _IEC3_U1TXIE_MASK; //TODO: Only enable in library
 
   // Main loop
   while (1) {
@@ -175,6 +174,27 @@ void main(void) {
 }
 
 //=============================== INTERRUPTS ===================================
+//
+
+/**
+ * UART1 Transmit Interrupt Handler
+ */
+void
+__attribute__((vector(_UART1_TX_VECTOR), interrupt(IPL2SRS)))
+u1tx_inthnd(void)
+{
+  if (U1STAbits.UTXBF) { // Error!
+    IFS3CLR = _IFS3_U1TXIF_MASK;
+    return;
+  }
+
+  while (!U1STAbits.UTXBF) {
+    // TODO: Write next byte from active buffer transfer
+    U1TXREG = 0xAA;
+  }
+
+  IFS3CLR = _IFS3_U1TXIF_MASK;
+}
 
 /**
  * IC1 Interrupt Handler
@@ -387,14 +407,8 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(void) {
   ++millis;
-  if (millis % 1000 == 0) {
+  if (millis % 1000 == 0)
     ++seconds;
-
-    IFS3bits.U1TXIF = 0;
-    while(!U1STAbits.TRMT);
-    U1TXREG = 0xAA;
-    while(!U1STAbits.TRMT);
-  }
 
   if (ADCCON2bits.EOSRDY)
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion

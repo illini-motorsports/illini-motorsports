@@ -13,39 +13,47 @@
  */
 void init_uart(uint8_t bus, double baud) {
   /**
-   * BRG = (F_PB / (4 * BAUD)) - 1
+   * BRG = (F_PB / (16 * BAUD)) - 1
    * (BRGH = 0)
    */
-  //TODO: Switch from 38400
-  uint16_t brg = ((uint16_t) ((PBCLK2 * 1000000) / (16.0 * 38400.0))) - 1;
+  uint16_t brg = ((uint16_t) ((PBCLK2 * 1000000) / (16.0 * baud))) - 1;
+
+  //TODO: Initialize other busses
 
   // Initialize correct bus
-  //TODO-AM: Initialize other busses
   switch(bus) {
     case 1:
-      //TODO-AM: Disable/enable interrupts
-
       unlock_config();
-      TRISDbits.TRISD11 = OUTPUT;
+      CFGCONbits.IOLOCK = 0;
       RPD11Rbits.RPD11R = 0b0001; // U1TX
-
-      TRISDbits.TRISD10 = INPUT;
       U1RXRbits.U1RXR = 0b0011; // D10
+      CFGCONbits.IOLOCK = 1;
       lock_config();
 
-      U1STA = 0;
       U1MODE = 0;
+      U1STA = 0;
+
+      // Set up transmit interrupt (leave disabled until transmitting)
+      IPC28bits.U1TXIP = 2;
+      IPC28bits.U1TXIS = 3;
+      IEC3CLR = _IEC3_U1TXIE_MASK;
+      IFS3CLR = _IFS3_U1TXIF_MASK;
+      U1STAbits.UTXISEL = 0b00; // Interrupt fires when at least one space available
+
+      //TODO: Set up receive interrupt
 
       U1BRG = brg;
 
-      IEC3bits.U1TXIE = 0;
-      IFS3bits.U1TXIF = 0;
-
+      U1MODEbits.UEN = 0b00; // Only using U1TX and U1RX
+      U1MODEbits.BRGH = 0; // Standard (16x) baud rate mode
+      U1MODEbits.PDSEL = 0b00; // 8 bit, no parity
+      U1MODEbits.STSEL = 0b0; // 1 stop bit
       U1MODEbits.ON = 1;
-      U1MODEbits.UEN = 0b00;
 
       U1STAbits.URXEN = 1;
       U1STAbits.UTXEN = 1;
+
+      IFS3CLR = _IFS3_U1TXIF_MASK;
 
       break;
 
@@ -83,6 +91,6 @@ uart_send_fp uart_get_send(uint8_t bus) {
 }
 
 uint8_t _uart_send1(uint8_t val) {
-  //TODO-AM: Send data and return response
+  //TODO: Send data and return response
   return val;
 }
