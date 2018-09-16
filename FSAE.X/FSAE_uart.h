@@ -17,17 +17,15 @@
 #define UART_ERR_INIT    2 // UART bus is not initialized
 #define UART_ERR_TX_SIZE 3 // TX buffer write too large
 #define UART_ERR_TX_WIP  4 // TX buffer write already in progress
+#define UART_ERR_INV_BUS 5 // Invalid bus number (1-6)
 
 typedef uint8_t (*uart_write_byte_fp) (uint8_t);
 
 /**
- * Struct used for all UART communication in the FSAE library. UART functions
- * will take a UARTBus pointer as an argument to communicate with a specific
- * UART bus.
+ * Struct used to store internal state of UART busses.
  */
 typedef struct {
   uint8_t init;
-  uint8_t bus;
   uart_write_byte_fp write_byte_fp;
   uint8_t wip;   // Buffer write in progress
   uint8_t* iter; // Current position in the buffer write
@@ -35,9 +33,9 @@ typedef struct {
 } UARTBus;
 
 // Public Interface
-UARTBus* init_uart(uint8_t busNum, double baud);
-uint8_t uart_write_byte(UARTBus* conn, uint8_t val);
-uint8_t uart_write_buffer(UARTBus* conn, uint8_t* buf, uint32_t len);
+uint8_t init_uart(uint8_t busNum, double baud);
+uint8_t uart_write_byte(uint8_t busNum, uint8_t val);
+uint8_t uart_write_buffer(uint8_t busNum, uint8_t* buf, uint32_t len);
 
 // Private Implementation
 void _uart_init(uint8_t bus, double baud);

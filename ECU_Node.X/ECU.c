@@ -42,8 +42,6 @@ volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
 volatile int32_t inj_pulse_width = -1;
 
-UARTBus* uartBus = NULL;
-
 // Events
 // (4) Enable INJ (C1-C4)
 // (4) Disable INJ (C1-C4)
@@ -153,7 +151,7 @@ void main(void) {
   while (inj_pulse_width == -1)
     sample_adj();
 
-  uartBus = init_uart(1, 38400);
+  init_uart(1, 38400);
 
   // Main loop
   while (1) {
@@ -390,7 +388,7 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(
   ++millis;
   if (millis % 1000 == 0) {
     ++seconds;
-    uart_write_byte(uartBus, 0xAA);
+    uart_write_byte(1, 0xAA);
   }
 
   if (ADCCON2bits.EOSRDY)

@@ -22,19 +22,18 @@ uint8_t txBuffers[6][TX_BUF_SIZE];
  * time. UART has no concept of chip select. Attempting to init a UART bus which
  * has already been initialized will return NULL.
  */
-UARTBus* init_uart(uint8_t busNum, double baud) {
-  if (busNum < 1 || busNum > 6) { return NULL; }
+uint8_t init_uart(uint8_t busNum, double baud) {
+  if (busNum < 1 || busNum > 6) { return UART_ERR_INV_BUS; }
 
   UARTBus* bus = &busses[busNum - 1];
-  if (bus->init) { return NULL; }
+  if (bus->init) { return UART_ERR_INIT; }
 
   _uart_init(busNum, baud);
 
-  bus->bus = busNum;
   bus->write_byte_fp = _uart_get_write_byte(busNum);
   bus->init = 1;
 
-  return bus;
+  return UART_SUCCESS;
 }
 
 /**
@@ -44,7 +43,9 @@ UARTBus* init_uart(uint8_t busNum, double baud) {
  * Returns UART_ERR_TXBF if the TX buffer is full
  * Returns UART_ERR_INIT if the bus was not yet initialized
  */
-uint8_t uart_write_byte(UARTBus* bus, uint8_t val) {
+uint8_t uart_write_byte(uint8_t busNum, uint8_t val) {
+  if (busNum < 1 || busNum > 6) { return UART_ERR_INV_BUS; }
+  UARTBus* bus = &(busses[busNum - 1]);
   if (!bus->init) { return UART_ERR_INIT; }
   return bus->write_byte_fp(val);
 }
@@ -63,17 +64,21 @@ uint8_t uart_write_byte(UARTBus* bus, uint8_t val) {
  * Returns UART_ERR_TX_SIZE if the buffer to transfer is too large
  * Returns UART_ERR_TX_WIP if a buffer transfer is already in progress
  */
-uint8_t uart_write_buffer(UARTBus* bus, uint8_t* buf, uint32_t len) {
+uint8_t uart_write_buffer(uint8_t busNum, uint8_t* buf, uint32_t len) {
+  if (busNum < 1 || busNum > 6) { return UART_ERR_INV_BUS; }
+  UARTBus* bus = &(busses[busNum - 1]);
+
   if (!bus->init) { return UART_ERR_INIT; }
   if (len > TX_BUF_SIZE) { return UART_ERR_TX_SIZE; }
   if (bus->wip) { return UART_ERR_TX_WIP; }
+
   bus->wip = 1;
-  bus->iter = txBuffers[bus->bus];
+  bus->iter = txBuffers[busNum - 1];
   bus->end = bus->iter + len;
   memcpy(bus->iter, buf, len);
 
   // Enable TX interrupt to transfer from internal buffer to UART FIFO
-  switch (bus->bus) {
+  switch (busNum - 1) {
     case 1: IEC3SET = _IEC3_U1TXIE_MASK; break;
     case 2: break;
     case 3: break;
