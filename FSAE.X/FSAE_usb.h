@@ -27,8 +27,8 @@ static uint8_t usb_connected = 0;
 // Function definitions
 
 // Public Interface
-UARTConn* init_usb_std(); // Use standard settings
-UARTConn* init_usb(uint8_t bus);
+//UARTConn* init_usb_std(); // Use standard settings
+//UARTConn* init_usb(uint8_t bus);
 
 // Private Implementation
 void _usb_connected(void);

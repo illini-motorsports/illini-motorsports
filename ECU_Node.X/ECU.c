@@ -42,6 +42,8 @@ volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
 volatile int32_t inj_pulse_width = -1;
 
+UARTBus* uartBus = NULL;
+
 // Events
 // (4) Enable INJ (C1-C4)
 // (4) Disable INJ (C1-C4)
@@ -151,8 +153,7 @@ void main(void) {
   while (inj_pulse_width == -1)
     sample_adj();
 
-  init_uart(1, 38400);
-  IEC3SET = _IEC3_U1TXIE_MASK; //TODO: Only enable in library
+  uartBus = init_uart(1, 38400);
 
   // Main loop
   while (1) {
@@ -175,26 +176,6 @@ void main(void) {
 
 //=============================== INTERRUPTS ===================================
 //
-
-/**
- * UART1 Transmit Interrupt Handler
- */
-void
-__attribute__((vector(_UART1_TX_VECTOR), interrupt(IPL2SRS)))
-u1tx_inthnd(void)
-{
-  if (U1STAbits.UTXBF) { // Error!
-    IFS3CLR = _IFS3_U1TXIF_MASK;
-    return;
-  }
-
-  while (!U1STAbits.UTXBF) {
-    // TODO: Write next byte from active buffer transfer
-    U1TXREG = 0xAA;
-  }
-
-  IFS3CLR = _IFS3_U1TXIF_MASK;
-}
 
 /**
  * IC1 Interrupt Handler
@@ -407,8 +388,10 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(void) {
   ++millis;
-  if (millis % 1000 == 0)
+  if (millis % 1000 == 0) {
     ++seconds;
+    uart_write_byte(uartBus, 0xAA);
+  }
 
   if (ADCCON2bits.EOSRDY)
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion

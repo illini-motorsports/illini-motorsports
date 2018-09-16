@@ -8,12 +8,9 @@
  */
 #include "FSAE_usb.h"
 
-#define NUM_CONN 10
-UARTConn connections[NUM_CONN];
-uint8_t connIdx = 0;
-
 //=============================== INTERFACE ====================================
 
+# if 0
 /**
  * Initializes the FTDI FT230X USB module for the standard FSAE template.
  */
@@ -52,6 +49,7 @@ UARTConn* init_usb(uint8_t bus) {
 
   return currConn;
 }
+#endif
 
 //============================= IMPLEMENTATION =================================
 
