@@ -113,7 +113,7 @@ void init_general(void) {
   // CFGCON
   CFGCONbits.DMAPRI = 0;    // DMA Read and DMA Write Arbitration Priority to SRAM (DMA uses Least Recently Serviced Arbitration)
   CFGCONbits.CPUPRI = 0;    // CPU Arbitration Priority to SRAM When Servicing an Interrupt (CPU uses Least Recently Serviced Arbitration)
-  CFGCONbits.ICACLK = 0;    // Input Capture Alternate Clock Selection (All Input Capture modules use Timer2/3 as their timebase clock)
+  CFGCONbits.ICACLK = 1;    // Input Capture Alternate Clock Selection (All Input Capture modules use an alternative timer as their timebase clock)
   CFGCONbits.OCACLK = 0;    // Output Compare Alternate Clock Selection (All Output Compare modules use Timer2/3 as their timebase clock)
   CFGCONbits.IOLOCK = 1;    // Peripheral Pin Select Lock (Peripheral Pin Select is locked. Writes to PPS registers are not allowed)
   CFGCONbits.PMDLOCK = 1;   // Peripheral Module Disable (Peripheral module is locked. Writes to PMD registers are not allowed)
@@ -325,6 +325,7 @@ void init_peripheral_modules(void) {
   SPI4CONbits.ON = 0;
   PMD5bits.SPI4MD = 1;
 
+#ifndef ECM064
   // SPI5
   SPI5CONbits.ON = 0;
   PMD5bits.SPI5MD = 1;
@@ -332,7 +333,8 @@ void init_peripheral_modules(void) {
   // SPI6
   SPI6CONbits.ON = 0;
   PMD5bits.SPI6MD = 1;
-
+#endif
+  
   // I2C1
   I2C1CONbits.ON = 0;
   PMD5bits.I2C1MD = 1;
@@ -417,6 +419,7 @@ void init_peripheral_modules(void) {
 
 void init_gpio_pins(void) {
   // Set to outputs
+#ifndef ECM064
   TRISAbits.TRISA0 = OUTPUT;
   TRISAbits.TRISA1 = OUTPUT;
   TRISAbits.TRISA2 = OUTPUT;
@@ -429,6 +432,7 @@ void init_gpio_pins(void) {
   TRISAbits.TRISA10 = OUTPUT;
   TRISAbits.TRISA14 = OUTPUT;
   TRISAbits.TRISA15 = OUTPUT;
+#endif
 
   // TRISB
   TRISBbits.TRISB0 = OUTPUT;
@@ -511,6 +515,7 @@ void init_gpio_pins(void) {
   // Drive to logic level low
 
   // LATA
+#ifndef ECM064
   LATAbits.LATA0 = 0;
   LATAbits.LATA1 = 0;
   LATAbits.LATA2 = 0;
@@ -523,6 +528,7 @@ void init_gpio_pins(void) {
   LATAbits.LATA10 = 0;
   LATAbits.LATA14 = 0;
   LATAbits.LATA15 = 0;
+#endif
 
   // LATB
   LATBbits.LATB0 = 0;
@@ -629,7 +635,7 @@ void init_oscillator(uint8_t whl_refoclk4) {
   // PB3DIV
   PB3DIVbits.ON = 1;            // Peripheral Bus 3 Output Clock Enable (Output clock is enabled)
   while(!PB3DIVbits.PBDIVRDY);
-  PB3DIVbits.PBDIV = 0b0110001; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 50)
+  PB3DIVbits.PBDIV = 0b0000011; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 4)
 
   // PB4DIV
   PB4DIVbits.ON = 1;            // Peripheral Bus 4 Output Clock Enable (Output clock is enabled)
@@ -740,47 +746,8 @@ void init_oscillator(uint8_t whl_refoclk4) {
   lock_config();
 }
 
-void init_timer1(void) {
-  unlock_config();
-
-  // Disable TMR1
-  T1CONbits.ON = 0; // Timer On (Timer is disabled)
-
-  // T1CON
-  T1CONbits.TCS = 0;      // Timer Clock Source Select (Internal peripheral clock)
-  T1CONbits.SIDL = 0;     // Stop in Idle Mode (Continue operation even in Idle mode)
-  T1CONbits.TWDIS = 1;    // Asynchronous Timer Write Disable (Writes to TMR1 are ignored until pending write operation completes)
-  T1CONbits.TGATE = 0;    // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
-  T1CONbits.TCKPS = 0b10; // Timer Input Clock Prescale Select (1:64 prescale value)
-
-  // TMR1
-  TMR1 = 0; // TMR1 Count Register (0)
-
-  /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR1 uses a 1:64 prescale, meaning
-   * 1 second should be equal to 4000000 / 64 == 62500 TMR1 cycles.
-   */
-
-  // PR1
-  PR1 = 0xF424; // PR1 Period Register (62500)
-
-  // Set up TMR1 Interrupt
-  IFS0bits.T1IF = 0; // TMR1 Interrupt Flag Status (No interrupt request has occured)
-  IPC1bits.T1IP = 5; // TMR1 Interrupt Priority (Interrupt priority is 5)
-  IPC1bits.T1IS = 3; // TMR1 Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC0bits.T1IE = 1; // TMR1 Interrupt Enable Control (Interrupt is enabled)
-
-  // Enable TMR1
-  T1CONbits.ON = 1; // Timer On (Timer is enabled)
-
-  lock_config();
-}
-
 /**
- * void init_timer2(void)
- *
- * Initializes Timer 2, which is configured to generate an interrupt every 1 ms
+ * Initializes Timer2, which is configured to generate an interrupt every 1 ms
  */
 void init_timer2(void) {
   unlock_config();
@@ -798,17 +765,17 @@ void init_timer2(void) {
   TMR2 = 0; // TMR2 Count Register (0)
 
   /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR2 uses a 1:4 prescale, meaning
-   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
+   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 4.
+   * Currently, this gives a speed of 50Mhz. TMR2 uses a 1:4 prescale, meaning
+   * 1 millisecond should be equal to 50000 / 4  == 125000 TMR2 cycles.
    */
 
   // PR2
-  PR2 = 0x3E8; // PR2 Period Register (1000)
+  PR2 = 0x30D4; // PR2 Period Register (12500)
 
   // Set up TMR2 Interrupt
   IFS0bits.T2IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
-  IPC2bits.T2IP = 6; // TMR2 Interrupt Priority (Interrupt priority is 6)
+  IPC2bits.T2IP = 5; // TMR2 Interrupt Priority (Interrupt priority is 5)
   IPC2bits.T2IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T2IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
 
@@ -833,20 +800,14 @@ void init_timer4(uint16_t period1) {
   // TMR4
   TMR4 = 0; // TMR4 Count Register (0)
 
-  /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR6 uses a 1:4 prescale, meaning
-   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
-   */
-
   // PR4
   PR4 = period1; //how often interrupts happen
 
   // Set up TMR4 Interrupt
-  IFS0bits.T4IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
-  IPC4bits.T4IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 6)
-  IPC4bits.T4IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC0bits.T4IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+  IFS0bits.T4IF = 0; // TMR4 Interrupt Flag Status (No interrupt request has occured)
+  IPC4bits.T4IP = 7; // TMR4 Interrupt Priority (Interrupt priority is 7)
+  IPC4bits.T4IS = 3; // TMR4 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T4IE = 1; // TMR4 Interrupt Enable Control (Interrupt is enabled)
 
   // Enable TMR4
   T4CONbits.ON = 1; // Timer On (Timer is enabled)
@@ -869,20 +830,14 @@ void init_timer6(uint16_t period2) {
   // TMR6
   TMR6 = 0; // TMR6 Count Register (0)
 
-  /**
-   * The clock source is PBCLK3, which is configured to run at SYSCLOCK / 50.
-   * Currently, this gives a speed of 4Mhz. TMR6 uses a 1:4 prescale, meaning
-   * 1 millisecond should be equal to 4000 / 4  == 1000 TMR2 cycles.
-   */
-
   // PR6
   PR6 = period2; //how often interrupts happen
 
   // Set up TMR6 Interrupt
-  IFS0bits.T6IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
-  IPC7bits.T6IP = 7; // TMR2 Interrupt Priority (Interrupt priority is 6)
-  IPC7bits.T6IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC0bits.T6IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
+  IFS0bits.T6IF = 0; // TMR6 Interrupt Flag Status (No interrupt request has occured)
+  IPC7bits.T6IP = 7; // TMR6 Interrupt Priority (Interrupt priority is 7)
+  IPC7bits.T6IS = 3; // TMR6 Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC0bits.T6IE = 1; // TMR6 Interrupt Enable Control (Interrupt is enabled)
 
   // Enable TMR6
   T6CONbits.ON = 1; // Timer On (Timer is enabled)
@@ -890,7 +845,37 @@ void init_timer6(uint16_t period2) {
   lock_config();
 }
 
+/**
+ * Initializes timers 4 and 5, which are combined into a 32 bit timer
+ */
+void init_timers_45() {
+  unlock_config();
 
+  // Configure TMR4/5
+  T4CON = 0x0;             // Disable TMR4
+  T5CON = 0x0;             // Disable TMR5
+
+  T4CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
+  T4CONbits.T32 = 1;       // 32 bit mode (T4 + T5)
+  T4CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
+  T4CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
+  T4CONbits.TCKPS = 0b000; // Timer Input Clock Prescale Select (1:1 prescale value)
+
+  TMR4 = 0;                // TMR4/5 Count Register
+  PR4 = 0xFFFFFFFF;        // PR4/5 Period Register
+
+  IFS0bits.T4IF = 0;       // TMR4 Interrupt Flag Status (No interrupt request has occured)
+  IPC4bits.T4IP = 0;       // TMR4 Interrupt Priority (Interrupt priority is 0)
+  IPC4bits.T4IS = 0;       // TMR4 Interrupt Subpriority (Interrupt subpriority is 0)
+  IEC0bits.T4IE = 0;       // TMR4 Interrupt Enable Control (Interrupt is disabled)
+
+  IFS0bits.T5IF = 0;       // TMR5 Interrupt Flag Status (No interrupt request has occured)
+  IEC0bits.T5IE = 0;       // TMR5 Interrupt Enable Control (Interrupt is disabled)
+
+  T4CONbits.ON = 1;        // Timer On (Timer is enabled)
+
+  lock_config();
+}
 
 /**
  * void init_termination(uint8_t isTerm)

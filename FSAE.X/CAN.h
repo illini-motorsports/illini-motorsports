@@ -11,6 +11,7 @@
  * CAN message IDs
  */
 #define ERROR_ID            0x00F
+#define ECU_ID              0x020
 #define SPM_ID              0x050
 #define MOTEC_ID            0x100
 #define GCM_ID              0x200

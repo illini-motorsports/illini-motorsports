@@ -1,0 +1,10 @@
+device PIC32MZ2048EFM100
+hwtool PICkit3
+
+set programoptions.eraseb4program true
+
+program /home/mass/development/illini-motorsports/ECU_Node.X/dist/default/debug/ECU_Node.X.debug.elf
+sleep 1500
+
+Reset MCLR
+sleep 1500
