@@ -22,6 +22,7 @@ can-translator/out.txt
 *.lo
 *.o
 *.obj
+*.lst
 
 # Compiled Dynamic libraries
 *.so

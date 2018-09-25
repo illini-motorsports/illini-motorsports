@@ -36,8 +36,13 @@
 #define NOT_TERMINATING 0
 
 // Pin definitions for programmable termination
-#define TERM_TRIS TRISAbits.TRISA2
-#define TERM_LAT  LATAbits.LATA2
+#ifndef ECM064
+  #define TERM_TRIS TRISAbits.TRISA2
+  #define TERM_LAT  LATAbits.LATA2
+#else
+  #define TERM_TRIS TRISBbits.TRISB2
+  #define TERM_LAT  LATBbits.LATB2
+#endif
 
 #define CLI() asm volatile("di; ehb;")
 #define STI() asm volatile("ei;")
@@ -49,10 +54,10 @@ void init_general(void);
 void init_peripheral_modules(void);
 void init_gpio_pins(void);
 void init_oscillator(uint8_t whl_refoclk4);
-void init_timer1(void);
 void init_timer2(void);
 void init_timer4(uint16_t period1);
 void init_timer6(uint16_t period2);
+void init_timers_45();
 void init_termination(uint8_t isTerm);
 
 #endif /* FSAE_CONFIG_H */
