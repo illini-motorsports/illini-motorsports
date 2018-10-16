@@ -23,8 +23,6 @@ uint32_t diag_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
 uint32_t adj_samp_tmr = 0;
 
-// Crank wheel has 22 teeth (24 - 2). We count rising and falling edges.
-// So we should see 44 edges & periods per turn of the crank
 volatile uint8_t edge = CRANK_PERIODS - 1;
 volatile uint32_t total_edges = 0;
 
@@ -35,8 +33,7 @@ volatile uint16_t deg = 0; // Engine cycle angular position. From 0.0 to 720.0 d
 const uint16_t CRIP = 463; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1 [deg]
 volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
 volatile uint32_t sync_edge = 0; // Last crank edge count when we detected a falling SYNC edge
-volatile uint8_t medGap = 0;
-volatile uint8_t refEdge, medEdge = 0;
+volatile uint8_t refEdge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
@@ -48,6 +45,20 @@ volatile int32_t inj_pulse_width = -1;
 // (4) Enable IGN (C1-C4)
 // (4) Disable IGN (C1-C4)
 // ...
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crank / CAM
+///
+/// The crank wheel has 22 teeth (24 - 2 pattern). We count rising and falling
+/// edges, so we will see 44 edges and gaps/periods per turn of the crankshaft.
+///
+/// Each tooth corresponds to 15 degrees (360/24), so each edge corresponds to
+/// 7.5 degrees. The long "gap" really takes up 2.5 teeth worth of angular
+/// rotation. In total, we get ((21.5 * 15) + (2.5 * 15)) = 360 degrees. Note
+/// that this ECU performs all angular measurements/calculations in half degree
+/// increments, which is why we add 15 to deg for each edge we see.
+///
+/// Reference tooth edge is first edge after missing teeth (long gap).
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Engine Cycle
@@ -73,11 +84,9 @@ volatile int32_t inj_pulse_width = -1;
 /// End of Ignition: ~30 deg before TDC compression
 /// Start of Ignition: EoI - Dwell Time (~3ms, depends on battery voltage)
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Crank / CAM
-///
-/// Reference tooth is first edge after missing teeth (med gap then long gap)
+//TODO: Deadman switch timer to detect loss of sync (reset and allow another sync later)
+//TODO: Track over/under estimation for udeg interrupts
+//TODO: Rising & falling edges are not exaclty 50% of period
 
 /**
  * Main function
@@ -205,39 +214,24 @@ ic1_inthnd(void)
    * Not synced: Detect med/ref edges
    */
   if (!sync) {
-    if (total_edges > CRANK_PERIODS) {
-      if (!medGap &&
-          (gap > (prevGap * 3 / 2)) && (gap < (prevGap * 5 / 2)))
-      {
-        // Found medium gap
-        medGap = 1;
-        medEdge = edge;
-      }
-      else if (medGap) {
-        if ((gap > (prevGap * 7 / 4)) && (gap < (prevGap * 9 / 4))) {
-          if (total_edges > sync_edge && total_edges - sync_edge <= 10) {
-            // Found long gap after SYNC pulse, we are SYNC'd!
-            sync = 1;
-            refEdge = edge;
-            deg = (CRIP * 2);
+    if ((total_edges > 2 * CRANK_PERIODS) &&
+        ((gap > (prevGap * 9 / 2)) && (gap < (prevGap * 11 / 2))) &&
+        (total_edges > sync_edge && total_edges - sync_edge <= 10)) {
+      // Found long gap after SYNC pulse, we are SYNC'd!
+      sync = 1;
+      refEdge = edge;
+      deg = (CRIP * 2);
 
-            // Disable further SYNC change notification interrupts
-            CNCONCbits.ON = 0;
-            IEC3CLR = _IEC3_CNCIE_MASK;
-            IFS3CLR = _IFS3_CNCIF_MASK;
+      // Disable further SYNC change notification interrupts
+      CNCONCbits.ON = 0;
+      IEC3CLR = _IEC3_CNCIE_MASK;
+      IFS3CLR = _IFS3_CNCIF_MASK;
 
-            // We expect a normal gap (7.5 degrees) after a the long ref gap. We
-            // aren't going to generate udeg interrupts until the next edge, so we
-            // need to fake 14 udeg interrupts worth of deg advancement. In reality,
-            // deg is currently equal to CRIP here.
-            ADD_DEG(deg, 14);
-          } else {
-            medGap = 0; // Reset, try again after sync pulse
-          }
-        } else {
-          kill_engine(0); // Error, didn't find long gap after med gap
-        }
-      }
+      // We expect a normal gap (7.5 degrees) after the long ref gap. We
+      // aren't going to generate udeg interrupts until the next edge, so we
+      // need to fake 14 udeg interrupts worth of deg advancement. In reality,
+      // deg is currently equal to CRIP here.
+      ADD_DEG(deg, 14);
     }
   }
 
@@ -246,21 +240,21 @@ ic1_inthnd(void)
    */
   else {
     // Gap verification
-    if (edge == medEdge || edge == refEdge) {
-      if (!((gap > (prevGap * 7 / 4)) && (gap < (prevGap * 9 / 4))))
-        kill_engine(1); // Error, invalid gap
+    if (edge == refEdge) {
+      if (!((gap > (prevGap * 9 / 2)) && (gap < (prevGap * 11 / 2))))
+        kill_engine(0); // Error, invalid gap
     } else if (prev == refEdge) {
-      if (!((prevGap > (gap * 7 / 2)) && (prevGap < (gap * 9 / 2))))
-        kill_engine(2); // Error, invalid gap
+      if (!((prevGap > (gap * 9 / 2)) && (prevGap < (gap * 11 / 2))))
+        kill_engine(1); // Error, invalid gap
     } else {
-      if (!((gap > (prevGap * 7 / 8)) && (gap < (prevGap * 9 / 8))))
-        kill_engine(3); // Error, invalid gap
+      if (!((gap > (prevGap * 3 / 4)) && (gap < (prevGap * 5 / 4))))
+        kill_engine(2); // Error, invalid gap
     }
 
     // Catch up if we skipped udeg interrupts
     while (udeg_rem != 0) {
-      if (udeg_rem > 0) //TODO: Make greater than 0 when we move to a real/variable engine
-        kill_engine(4);
+      if (udeg_rem > 3)
+        kill_engine(3);
       --udeg_rem;
       ADD_DEG(deg, 1);
       check_event_mask();
@@ -274,7 +268,7 @@ ic1_inthnd(void)
     // TODO: If refEdge == 1, then this check always fails. deg short by 15. WTF?
     if (edge == refEdge && !
         (deg == (CRIP * 2) || deg == (deg_mod(CRIP, 360) * 2)))
-      kill_engine(6);
+      kill_engine(4);
 
     // Calculate udeg interrupts (one for each half degree). We should fire all
     // before another IC1 interrupt fires. If not, the engine may have accelerated.
@@ -284,14 +278,10 @@ ic1_inthnd(void)
     if (edge == refEdge) {
       // Expecting normal gap after long gap
       udeg_rem = 14;
-      udeg_period = delta / 60;
-    } else if (edge == medEdge) {
-      // Expecting long gap after med gap
-      udeg_rem = 59;
-      udeg_period = delta / 30;
-    } else if (edge == medEdge - 1) {
-      // Expecting med gap after normal gap
-      udeg_rem = 29;
+      udeg_period = delta / 75;
+    } else if (edge == refEdge - 1) {
+      // Expecting long gap after normal gap
+      udeg_rem = 74;
       udeg_period = delta / 15;
     } else {
       // Expecting normal gap after normal gap
@@ -312,7 +302,6 @@ ic1_inthnd(void)
     TMR6 = startDelay; // 1st udeg period accounts for this long interrupt
     T6CONSET = _T6CON_ON_MASK;
 
-    //TODO: Need to verify that med gap is 2x regular gap, and long gap is 4x regular
     //TODO: Use timer delta to calculate pulse width / frequency
     //TODO: Account for int flooring in udeg_period calculation
   }
