@@ -19,7 +19,7 @@ int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr = 0;
-uint32_t diag_send_tmr = 0;
+uint32_t diag_send_tmr, diag_state_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
 uint32_t adj_samp_tmr = 0;
 
@@ -28,16 +28,19 @@ volatile uint32_t total_edges = 0;
 
 volatile uint32_t crank_samp[CRANK_PERIODS] = {0};
 volatile uint32_t crank_delta[CRANK_PERIODS] = {0};
+volatile double rpm_samp[CRANK_PERIODS] = {0.0};
 
 volatile uint16_t deg = 0; // Engine cycle angular position. From 0.0 to 720.0 degrees [deg/2]
 const uint16_t CRIP = 463; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1 [deg]
 volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
 volatile uint32_t sync_edge = 0; // Last crank edge count when we detected a falling SYNC edge
-volatile uint8_t refEdge = 0;
+volatile uint8_t ref_edge = 0;
 volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
 volatile int32_t inj_pulse_width = -1;
+volatile uint8_t starts = 0;
+volatile uint8_t stops = 0;
 
 // Events
 // (4) Enable INJ (C1-C4)
@@ -176,6 +179,7 @@ void main(void) {
 
     // CAN message sending functions
     send_diag_can();
+    send_diag_state_can();
   }
 }
 
@@ -185,7 +189,7 @@ void main(void) {
  * IC1 Interrupt Handler
  */
 void
-__attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS), no_fpu))
+__attribute__((vector(_INPUT_CAPTURE_1_VECTOR), interrupt(IPL6SRS))) //TODO: no_fpu
 ic1_inthnd(void)
 {
   // Disable further udeg interrupts
@@ -210,17 +214,35 @@ ic1_inthnd(void)
   register uint32_t gap = delta * 8;
   register uint32_t prevGap = crank_delta[prev] * 8;
 
+  // To calculate instantaneous RPM (between the last edge and this edge), we
+  // need to know degrees travelled and the time elapsed. Either 7.5 or 37.5 deg.
+  // Timer45 operates at a 1:1 ratio to PBCLK3 at 50MHz. So each cycle is 20ns.
+  // RPM = (DEG * 60e9 [ns/min] / (DEL * 20 [ns])) / 360 [deg/rev]
+  eng_rpm = ((edge == ref_edge ? 37.5 : 7.5) * 8.33333333333e6 / delta);
+  rpm_samp[edge] = eng_rpm;
+
   /**
-   * Not synced: Detect med/ref edges
+   * RPM too low, don't sync yet and stop/reset if we were synced
    */
-  if (!sync) {
+  if (eng_rpm < RPM_ON_THRESHOLD) {
+    if (sync) {
+      ++stops;
+      reset_state();
+    }
+  }
+
+  /**
+   * Not synced: Detect ref edges
+   */
+  else if (!sync) {
     if ((total_edges > 2 * CRANK_PERIODS) &&
         ((gap > (prevGap * 9 / 2)) && (gap < (prevGap * 11 / 2))) &&
         (total_edges > sync_edge && total_edges - sync_edge <= 10)) {
       // Found long gap after SYNC pulse, we are SYNC'd!
       sync = 1;
-      refEdge = edge;
+      ref_edge = edge;
       deg = (CRIP * 2);
+      ++starts;
 
       // Disable further SYNC change notification interrupts
       CNCONCbits.ON = 0;
@@ -240,10 +262,10 @@ ic1_inthnd(void)
    */
   else {
     // Gap verification
-    if (edge == refEdge) {
+    if (edge == ref_edge) {
       if (!((gap > (prevGap * 9 / 2)) && (gap < (prevGap * 11 / 2))))
         kill_engine(0); // Error, invalid gap
-    } else if (prev == refEdge) {
+    } else if (prev == ref_edge) {
       if (!((prevGap > (gap * 9 / 2)) && (prevGap < (gap * 11 / 2))))
         kill_engine(1); // Error, invalid gap
     } else {
@@ -265,8 +287,8 @@ ic1_inthnd(void)
     check_event_mask();
 
     // Check to make sure everything is still sync'd properly
-    // TODO: If refEdge == 1, then this check always fails. deg short by 15. WTF?
-    if (edge == refEdge && !
+    // TODO: If ref_edge == 1, then this check always fails. deg short by 15. WTF?
+    if (edge == ref_edge && !
         (deg == (CRIP * 2) || deg == (deg_mod(CRIP, 360) * 2)))
       kill_engine(4);
 
@@ -275,11 +297,11 @@ ic1_inthnd(void)
     // In this case, we can do some catchup logic. But this should be limited
     // to just a few missed interrupts.
 
-    if (edge == refEdge) {
+    if (edge == ref_edge) {
       // Expecting normal gap after long gap
       udeg_rem = 14;
       udeg_period = delta / 75;
-    } else if (edge == refEdge - 1) {
+    } else if (edge == ref_edge - 1) {
       // Expecting long gap after normal gap
       udeg_rem = 74;
       udeg_period = delta / 15;
@@ -302,7 +324,6 @@ ic1_inthnd(void)
     TMR6 = startDelay; // 1st udeg period accounts for this long interrupt
     T6CONSET = _T6CON_ON_MASK;
 
-    //TODO: Use timer delta to calculate pulse width / frequency
     //TODO: Account for int flooring in udeg_period calculation
   }
 
@@ -406,9 +427,7 @@ void process_CAN_msg(CAN_message msg) {
   CAN_recv_tmr = millis; // Record time of latest received CAN message
 
   switch (msg.id) {
-    case MOTEC_ID + 0:
-      eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
-          msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
+    default:
       break;
   }
 }
@@ -524,11 +543,6 @@ void sample_adj() {
 
 //============================= CAN FUNCTIONS ==================================
 
-/**
- * void send_diag_can(void)
- *
- * Sends the diagnostic CAN message if the interval has passed.
- */
 void send_diag_can(void) {
   if (millis - diag_send_tmr >= DIAG_SEND) {
     CAN_data data = {0};
@@ -538,6 +552,21 @@ void send_diag_can(void) {
 
     CAN_send_message(ECU_ID + 0, 6, data);
     diag_send_tmr = millis;
+  }
+}
+
+void send_diag_state_can(void) {
+  if (millis - diag_state_send_tmr >= DIAG_STATE_SEND) {
+    CAN_data data = {0};
+    data.halfword0 = (uint16_t) eng_rpm;
+    data.halfword1 = deg;
+    data.byte4 = sync;
+    data.byte5 = 0x0;
+    data.byte6 = starts;
+    data.byte7 = stops;
+
+    CAN_send_message(ECU_ID + 1, 8, data);
+    diag_state_send_tmr = millis;
   }
 }
 
@@ -717,4 +746,36 @@ check_event_mask()
     if (mask & IGN4_DS_MASK)
       IGN4_CLR();
   }
+}
+
+void
+__attribute__((always_inline))
+reset_state()
+{
+  CLI(); // Begin critical section
+
+  INJ1_CLR(); INJ2_CLR(); INJ3_CLR(); INJ4_CLR();
+  IGN1_CLR(); IGN2_CLR(); IGN3_CLR(); IGN4_CLR();
+
+  sync = 0;
+  sync_edge = 0;
+  init_sync_int(); // Enable SYNC interrupts again
+
+  ref_edge = 0;
+  edge = CRANK_PERIODS - 1;
+  total_edges = 0;
+
+  deg = 0;
+
+  uint8_t i;
+  for (i = 0; i < CRANK_PERIODS; ++i) {
+    crank_samp[i] = 0;
+    crank_delta[i] = 0;
+    rpm_samp[i] = 0.0;
+  }
+
+  udeg_rem = 0;
+  udeg_period = 0;
+
+  STI(); // End critical section
 }

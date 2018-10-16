@@ -17,15 +17,15 @@
 #include "../FSAE.X/FSAE_spi.h"
 
 // Thresholds
-#define RPM_ON_THRESHOLD 200.0 // rpm
+#define RPM_ON_THRESHOLD 100.0 // rpm
 
 // Timing constants (ms)
 #define TEMP_SAMP_INTV     333
 #define ADJ_SAMP_INTV      200
 #define DIAG_SEND          1000
+#define DIAG_STATE_SEND    250
 
 // Misc state definitions
-#define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
 #define CRANK_PERIODS 44
 
 // Pin definitions
@@ -108,6 +108,7 @@ void sample_adj();
 
 // CAN message sending functions
 void send_diag_can(void);
+void send_diag_state_can(void);
 
 // Utility functions
 void init_adc_ecu(void);
@@ -118,6 +119,7 @@ uint32_t deg_mod(int32_t start, int32_t offset);
 uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b);
 inline void kill_engine(uint16_t errno);
 inline void check_event_mask();
+inline void reset_state();
 
 // Macro functions
 
