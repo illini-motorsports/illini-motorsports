@@ -22,6 +22,7 @@ volatile uint32_t CAN_recv_tmr = 0;
 uint32_t diag_send_tmr, diag_state_send_tmr = 0;
 uint32_t temp_samp_tmr = 0;
 uint32_t adj_samp_tmr = 0;
+volatile uint32_t edge_tmr = 0;
 
 volatile uint8_t edge = CRANK_PERIODS - 1;
 volatile uint32_t total_edges = 0;
@@ -62,6 +63,22 @@ volatile uint8_t stops = 0;
 /// increments, which is why we add 15 to deg for each edge we see.
 ///
 /// Reference tooth edge is first edge after missing teeth (long gap).
+
+// 1.18479, 1.21436, 1.22477, 1.23768, 1.24, 1.19805
+// 1.18085, 1.20999
+
+// Duty Cycle: 53.6, 57.1, 53.6, 51.9, 53.6, 53.6, 54.5
+// 56.4, 55.4, 53.6, 54.4, 55.4
+
+// Med: 3ms
+// Short: 2.64ms
+// Long: 13.84ms
+// Med(ish): 2.84ms
+// Med: 3.12ms
+// Short: 2.6ms
+// Med: 3.08ms
+
+// Med, Short, Long, Med(ish), Med, Short
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Engine Cycle
@@ -180,6 +197,14 @@ void main(void) {
     // CAN message sending functions
     send_diag_can();
     send_diag_state_can();
+    
+    if (millis - edge_tmr > 250) {
+      eng_rpm = 0.0;
+      if (sync) {
+        ++stops;
+        reset_state();
+      }
+    }
   }
 }
 
@@ -207,6 +232,8 @@ ic1_inthnd(void)
   crank_samp[edge] = val;
   crank_delta[edge] = (val - crank_samp[prev]);
   register uint32_t delta = crank_delta[edge];
+  
+  edge_tmr = millis; // For deadman timer
 
   // For gap verification, we use integer division with a max divisor of 8. We are
   // only interested in the ratio of the new gap to previous, so we can multiply
@@ -263,19 +290,19 @@ ic1_inthnd(void)
   else {
     // Gap verification
     if (edge == ref_edge) {
-      if (!((gap > (prevGap * 9 / 2)) && (gap < (prevGap * 11 / 2))))
+      if (!((gap > (prevGap * 5 / 2)) && (gap < (prevGap * 20 / 2)))) // 2.5,10
         kill_engine(0); // Error, invalid gap
     } else if (prev == ref_edge) {
-      if (!((prevGap > (gap * 9 / 2)) && (prevGap < (gap * 11 / 2))))
+      if (!((prevGap > (gap * 8 / 2)) && (prevGap < (gap * 12 / 2))))
         kill_engine(1); // Error, invalid gap
     } else {
-      if (!((gap > (prevGap * 3 / 4)) && (gap < (prevGap * 5 / 4))))
+      if (!((gap > (prevGap * 1 / 4)) && (gap < (prevGap * 8 / 4)))) // 0.25,2
         kill_engine(2); // Error, invalid gap
     }
 
     // Catch up if we skipped udeg interrupts
     while (udeg_rem != 0) {
-      if (udeg_rem > 3)
+      if (udeg_rem > 5)
         kill_engine(3);
       --udeg_rem;
       ADD_DEG(deg, 1);
@@ -694,7 +721,7 @@ uint8_t deg_between(uint32_t t, uint32_t a, uint32_t b)
 }
 
 void
-__attribute__((noreturn, always_inline))
+//__attribute__((noreturn, always_inline))
 kill_engine(uint16_t errno)
 {
   CLI();
@@ -705,7 +732,7 @@ kill_engine(uint16_t errno)
 }
 
 void
-__attribute__((always_inline))
+//__attribute__((always_inline))
 check_event_mask()
 {
   register uint32_t mask = eventMask[deg];
@@ -749,7 +776,7 @@ check_event_mask()
 }
 
 void
-__attribute__((always_inline))
+//__attribute__((always_inline))
 reset_state()
 {
   CLI(); // Begin critical section
