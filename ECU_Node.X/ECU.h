@@ -17,7 +17,7 @@
 #include "../FSAE.X/FSAE_spi.h"
 
 // Thresholds
-#define RPM_ON_THRESHOLD 50.0 // rpm
+#define RPM_ON_THRESHOLD 100.0 // rpm
 
 // Timing constants (ms)
 #define TEMP_SAMP_INTV     333
@@ -27,6 +27,7 @@
 
 // Misc state definitions
 #define CRANK_PERIODS 44
+#define INVALID_EDGE 0xFF
 
 // Pin definitions
 

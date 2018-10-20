@@ -35,13 +35,14 @@ volatile uint16_t deg = 0; // Engine cycle angular position. From 0.0 to 720.0 d
 const uint16_t CRIP = 463; // Crank Reference Index Position. Offset from ref tooth to TDC Comp C1 [deg]
 volatile uint8_t sync = 0; // Whether or not the timing logic has acquired sync
 volatile uint32_t sync_edge = 0; // Last crank edge count when we detected a falling SYNC edge
-volatile uint8_t ref_edge = 0;
-volatile uint32_t eventMask[720 * 2] = {0}; // One eventMask per half degree of engine cycle
+volatile uint8_t ref_edge = INVALID_EDGE;
+volatile uint32_t event_mask[720 * 2] = {0}; // One event_mask per half degree of engine cycle
 volatile uint8_t udeg_rem = 0;
 volatile uint32_t udeg_period = 0;
 volatile int32_t inj_pulse_width = -1;
 volatile uint8_t starts = 0;
 volatile uint8_t stops = 0;
+volatile uint8_t med_gap = 0; // Expecting a medium (8 deg) gap next
 
 // Events
 // (4) Enable INJ (C1-C4)
@@ -56,29 +57,20 @@ volatile uint8_t stops = 0;
 /// The crank wheel has 22 teeth (24 - 2 pattern). We count rising and falling
 /// edges, so we will see 44 edges and gaps/periods per turn of the crankshaft.
 ///
-/// Each tooth corresponds to 15 degrees (360/24), so each edge corresponds to
-/// 7.5 degrees. The long "gap" really takes up 2.5 teeth worth of angular
-/// rotation. In total, we get ((21.5 * 15) + (2.5 * 15)) = 360 degrees. Note
-/// that this ECU performs all angular measurements/calculations in half degree
-/// increments, which is why we add 15 to deg for each edge we see.
+/// Each tooth on the crank wheel corresponds to 15 degrees (360/24). When
+/// passed through the VR sensor and input circuitry, this produces one square
+/// wave period. The duty cycle of this signal is not 50%, it turns out to be
+/// something like ~54%, which gives us 8 degree and 7 degree edges.
 ///
-/// Reference tooth edge is first edge after missing teeth (long gap).
-
-// 1.18479, 1.21436, 1.22477, 1.23768, 1.24, 1.19805
-// 1.18085, 1.20999
-
-// Duty Cycle: 53.6, 57.1, 53.6, 51.9, 53.6, 53.6, 54.5
-// 56.4, 55.4, 53.6, 54.4, 55.4
-
-// Med: 3ms
-// Short: 2.64ms
-// Long: 13.84ms
-// Med(ish): 2.84ms
-// Med: 3.12ms
-// Short: 2.6ms
-// Med: 3.08ms
-
-// Med, Short, Long, Med(ish), Med, Short
+/// |--------| 7 deg |--------| 7 deg |-----------------| 7 deg |--------| 7 deg |
+/// | 8 deg  |_______| 8 deg  |_______|      38 deg     |-------| 8 deg  |-------|
+///
+/// The two missing teeth add 30 degrees to the reference edge, for a total of
+/// 38 degrees. This gives a total of (21*(8+7) + 38 + 7) = 360 degrees. The
+/// reference tooth edge is defined as the first edge after the missing teeth.
+//
+/// Note that this ECU performs all angular measurements/calculations in
+/// half degree increments, which is why we add 16/14 to deg for each edge.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Engine Cycle
@@ -104,9 +96,7 @@ volatile uint8_t stops = 0;
 /// End of Ignition: ~30 deg before TDC compression
 /// Start of Ignition: EoI - Dwell Time (~3ms, depends on battery voltage)
 
-//TODO: Deadman switch timer to detect loss of sync (reset and allow another sync later)
 //TODO: Track over/under estimation for udeg interrupts
-//TODO: Rising & falling edges are not exaclty 50% of period
 
 /**
  * Main function
@@ -154,19 +144,19 @@ void main(void) {
   IGN4_CLR();
 
   // Set some test angles for injection and ignition
-  eventMask[520*2] |= INJ1_DS_MASK;
-  eventMask[700*2] |= INJ2_DS_MASK;
-  eventMask[160*2] |= INJ3_DS_MASK;
-  eventMask[340*2] |= INJ4_DS_MASK;
+  event_mask[520*2] |= INJ1_DS_MASK;
+  event_mask[700*2] |= INJ2_DS_MASK;
+  event_mask[160*2] |= INJ3_DS_MASK;
+  event_mask[340*2] |= INJ4_DS_MASK;
 
-  eventMask[690*2] |= IGN1_DS_MASK;
-  eventMask[150*2] |= IGN2_DS_MASK;
-  eventMask[330*2] |= IGN3_DS_MASK;
-  eventMask[510*2] |= IGN4_DS_MASK;
-  eventMask[(690-75)*2] |= IGN1_EN_MASK;
-  eventMask[(150-75)*2] |= IGN2_EN_MASK;
-  eventMask[(330-75)*2] |= IGN3_EN_MASK;
-  eventMask[(510-75)*2] |= IGN4_EN_MASK;
+  event_mask[690*2] |= IGN1_DS_MASK;
+  event_mask[150*2] |= IGN2_DS_MASK;
+  event_mask[330*2] |= IGN3_DS_MASK;
+  event_mask[510*2] |= IGN4_DS_MASK;
+  event_mask[(690-75)*2] |= IGN1_EN_MASK;
+  event_mask[(150-75)*2] |= IGN2_EN_MASK;
+  event_mask[(330-75)*2] |= IGN3_EN_MASK;
+  event_mask[(510-75)*2] |= IGN4_EN_MASK;
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
@@ -197,8 +187,9 @@ void main(void) {
     // CAN message sending functions
     send_diag_can();
     send_diag_state_can();
-    
-    if (millis - edge_tmr > 250) {
+
+    // Deadman timer to detect when the engine stops turning
+    if (millis - edge_tmr > 75) { // (360/38) * 100 rpm
       eng_rpm = 0.0;
       if (sync) {
         ++stops;
@@ -232,20 +223,23 @@ ic1_inthnd(void)
   crank_samp[edge] = val;
   crank_delta[edge] = (val - crank_samp[prev]);
   register uint32_t delta = crank_delta[edge];
-  
-  edge_tmr = millis; // For deadman timer
 
-  // For gap verification, we use integer division with a max divisor of 8. We are
-  // only interested in the ratio of the new gap to previous, so we can multiply
-  // each by 8 to ensure we don't lose any resolution from int division truncating.
-  register uint32_t gap = delta * 8;
-  register uint32_t prevGap = crank_delta[prev] * 8;
+  // Ideally (38/7=~5.5) times prev gap
+  register uint8_t long_gap = (delta > crank_delta[prev] * 3 && delta < crank_delta[prev] * 8);
+
+  edge_tmr = millis;
 
   // To calculate instantaneous RPM (between the last edge and this edge), we
-  // need to know degrees travelled and the time elapsed. Either 7.5 or 37.5 deg.
+  // need to know degrees travelled and the time elapsed. Either 7, 8, or 38 deg.
   // Timer45 operates at a 1:1 ratio to PBCLK3 at 50MHz. So each cycle is 20ns.
   // RPM = (DEG * 60e9 [ns/min] / (DEL * 20 [ns])) / 360 [deg/rev]
-  eng_rpm = ((edge == ref_edge ? 37.5 : 7.5) * 8.33333333333e6 / delta);
+  // Note: This is slightly inaccurate before sync, due to med_gap being unknown
+  if (edge == ref_edge || (ref_edge == INVALID_EDGE && long_gap))
+    eng_rpm = (38.0 * 8.33333333333e6 / delta);
+  else if (!med_gap)
+    eng_rpm = (7.0 * 8.33333333333e6 / delta);
+  else
+    eng_rpm = (8.0 * 8.33333333333e6 / delta);
   rpm_samp[edge] = eng_rpm;
 
   /**
@@ -262,13 +256,13 @@ ic1_inthnd(void)
    * Not synced: Detect ref edges
    */
   else if (!sync) {
-    if ((total_edges > 2 * CRANK_PERIODS) &&
-        ((gap > (prevGap * 9 / 2)) && (gap < (prevGap * 11 / 2))) &&
+    if ((total_edges > 2 * CRANK_PERIODS) && long_gap &&
         (total_edges > sync_edge && total_edges - sync_edge <= 10)) {
       // Found long gap after SYNC pulse, we are SYNC'd!
       sync = 1;
       ref_edge = edge;
       deg = (CRIP * 2);
+      med_gap = 0; // Gap after long gap is short, not med
       ++starts;
 
       // Disable further SYNC change notification interrupts
@@ -276,34 +270,26 @@ ic1_inthnd(void)
       IEC3CLR = _IEC3_CNCIE_MASK;
       IFS3CLR = _IFS3_CNCIF_MASK;
 
-      // We expect a normal gap (7.5 degrees) after the long ref gap. We
-      // aren't going to generate udeg interrupts until the next edge, so we
-      // need to fake 14 udeg interrupts worth of deg advancement. In reality,
-      // deg is currently equal to CRIP here.
-      ADD_DEG(deg, 14);
+      // We expect a short 7 degree gap after the long ref gap. We aren't going
+      // to generate udeg interrupts until the next edge, so we need to fake 13
+      // udeg interrupts worth of deg advancement. In reality, deg is currently
+      // equal to CRIP here.
+      ADD_DEG(deg, 13);
     }
   }
 
   /**
-   * Synced: Verify gaps and set udeg interrupts
+   * Synced: Set udeg interrupts
    */
   else {
-    // Gap verification
-    if (edge == ref_edge) {
-      if (!((gap > (prevGap * 5 / 2)) && (gap < (prevGap * 20 / 2)))) // 2.5,10
-        kill_engine(0); // Error, invalid gap
-    } else if (prev == ref_edge) {
-      if (!((prevGap > (gap * 8 / 2)) && (prevGap < (gap * 12 / 2))))
-        kill_engine(1); // Error, invalid gap
-    } else {
-      if (!((gap > (prevGap * 1 / 4)) && (gap < (prevGap * 8 / 4)))) // 0.25,2
-        kill_engine(2); // Error, invalid gap
-    }
+    // Verify reference gap each rotation
+    if (edge == ref_edge && ! long_gap)
+      kill_engine(1);
 
     // Catch up if we skipped udeg interrupts
     while (udeg_rem != 0) {
       if (udeg_rem > 5)
-        kill_engine(3);
+        kill_engine(2);
       --udeg_rem;
       ADD_DEG(deg, 1);
       check_event_mask();
@@ -317,7 +303,7 @@ ic1_inthnd(void)
     // TODO: If ref_edge == 1, then this check always fails. deg short by 15. WTF?
     if (edge == ref_edge && !
         (deg == (CRIP * 2) || deg == (deg_mod(CRIP, 360) * 2)))
-      kill_engine(4);
+      kill_engine(3);
 
     // Calculate udeg interrupts (one for each half degree). We should fire all
     // before another IC1 interrupt fires. If not, the engine may have accelerated.
@@ -325,17 +311,25 @@ ic1_inthnd(void)
     // to just a few missed interrupts.
 
     if (edge == ref_edge) {
-      // Expecting normal gap after long gap
-      udeg_rem = 14;
-      udeg_period = delta / 75;
+      // Expecting 7 deg gap after 38 deg gap
+      udeg_rem = 13;
+      udeg_period = delta / 76;
+      med_gap = 0;
     } else if (edge == ref_edge - 1) {
-      // Expecting long gap after normal gap
-      udeg_rem = 74;
-      udeg_period = delta / 15;
+      // Expecting 38 deg gap after 7 deg gap
+      udeg_rem = 75;
+      udeg_period = delta / 14;
+      med_gap = 0;
+    } else if (!med_gap) {
+      // Expecting 8 deg gap after 7 deg gap
+      udeg_rem = 15;
+      udeg_period = delta / 14;
+      med_gap = 1;
     } else {
-      // Expecting normal gap after normal gap
-      udeg_rem = 14;
-      udeg_period = delta / 15;
+      // Expecting 7 deg gap after 8 deg gap
+      udeg_rem = 13;
+      udeg_period = delta / 16;
+      med_gap = 0;
     }
 
     // Skip a few udeg interrupts if this interrupt took a long time
@@ -519,14 +513,14 @@ void sample_adj() {
 
     CLI(); // Begin critical section
 
-    eventMask[old1] &= ~INJ1_EN_MASK;
-    eventMask[old2] &= ~INJ2_EN_MASK;
-    eventMask[old3] &= ~INJ3_EN_MASK;
-    eventMask[old4] &= ~INJ4_EN_MASK;
-    eventMask[new1] |= INJ1_EN_MASK;
-    eventMask[new2] |= INJ2_EN_MASK;
-    eventMask[new3] |= INJ3_EN_MASK;
-    eventMask[new4] |= INJ4_EN_MASK;
+    event_mask[old1] &= ~INJ1_EN_MASK;
+    event_mask[old2] &= ~INJ2_EN_MASK;
+    event_mask[old3] &= ~INJ3_EN_MASK;
+    event_mask[old4] &= ~INJ4_EN_MASK;
+    event_mask[new1] |= INJ1_EN_MASK;
+    event_mask[new2] |= INJ2_EN_MASK;
+    event_mask[new3] |= INJ3_EN_MASK;
+    event_mask[new4] |= INJ4_EN_MASK;
 
     /**
      * We need to enable INJ signals if we "skipped" them.
@@ -564,7 +558,7 @@ void sample_adj() {
 
     adj_samp_tmr = millis;
 
-    STI();
+    STI(); // End critical section
   }
 }
 
@@ -735,7 +729,7 @@ void
 //__attribute__((always_inline))
 check_event_mask()
 {
-  register uint32_t mask = eventMask[deg];
+  register uint32_t mask = event_mask[deg];
   if (mask != 0) {
     // Toggle INJ outputs
     if (mask & INJ1_EN_MASK)
@@ -788,11 +782,13 @@ reset_state()
   sync_edge = 0;
   init_sync_int(); // Enable SYNC interrupts again
 
-  ref_edge = 0;
+  ref_edge = INVALID_EDGE;
   edge = CRANK_PERIODS - 1;
   total_edges = 0;
+  med_gap = 0;
 
   deg = 0;
+  eng_rpm = 0.0;
 
   uint8_t i;
   for (i = 0; i < CRANK_PERIODS; ++i) {
