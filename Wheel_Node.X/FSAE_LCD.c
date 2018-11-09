@@ -32,7 +32,17 @@ void initDataItems(void){
   for(i=0;i<MOTEC_DATAITEM_SIZE;i++) {
     initDataItem(&motecDataItems[i],0,0,2,1);
   }
-
+  //Set default initializations for new data items
+  for(i=0; i<4;i++) {
+    initDataItem(&newDataItems[i],0,0,1,2); //special initialization for imu data items
+  }
+  for(i=4; i<NEW_DATAITEM_SIZE; i++) {
+      initDataItem(&newDataItems[i],0,0,2,1);
+  }
+  //Set default initialization for strain data items
+  for(i=0; i<STRAIN_DATAITEM_SIZE;i++) {
+    initDataItem(&strainDataItems[i],0,0,2,1);
+  }
   // Customized Motec dataitem initialization
   setDataItemDigits(&motecDataItems[ENG_RPM_IDX], 5, 0);
   setDataItemDigits(&motecDataItems[THROTTLE_POS_IDX], 3, 0);
@@ -113,6 +123,28 @@ void initAllScreens(void){
   initScreenItem(&testScreenItems[2], 20, 210, 30, redrawDigit, &pdmDataItems[INJ_DRW_IDX], MIN_REFRESH);
   initScreenItem(&testScreenItems[3], 335, 210, 30, redrawDigit, &pdmDataItems[FAN_DRW_IDX], MIN_REFRESH);
   initScreenItem(&testScreenItems[4], 200, 20, 80, redrawDigit, &pdmDataItems[FUEL_OCC_IDX], MIN_REFRESH);
+  //Data screen stuff
+  allScreens[DATA_SCREEN] = &dataScreen;
+  dataScreen.items = newScreenItems;
+  dataScreen.len = 8;
+  initScreenItem(&newScreenItems[0], 1, 55, 25, redrawDigit, &newDataItems[YAW_RATE_IDX], MIN_REFRESH);
+  initScreenItem(&newScreenItems[1], 265, 55, 25, redrawDigit, &newDataItems[YAW_ANGL_IDX], MIN_REFRESH);
+  initScreenItem(&newScreenItems[2], 1, 107, 25, redrawDigit, &newDataItems[LAT_ACCEL_IDX], MIN_REFRESH);
+  initScreenItem(&newScreenItems[3], 265, 107, 25, redrawDigit, &newDataItems[LONG_ACCEL_IDX], MIN_REFRESH);
+  initScreenItem(&newScreenItems[4], 1, 160, 25, redrawDigit, &newDataItems[BRAKE_PRESS_IDX], MIN_REFRESH);
+  initScreenItem(&newScreenItems[5], 265, 160, 25, redrawDigit, &newDataItems[STEER_IDX], MIN_REFRESH); //Steering Angle
+  initScreenItem(&newScreenItems[6], 1, 210, 20, redrawDigit, &motecDataItems[ENG_RPM_IDX], MIN_REFRESH);
+  initScreenItem(&newScreenItems[7], 265, 210, 20, redrawDigit, &motecDataItems[THROTTLE_POS_IDX], MIN_REFRESH); 
+  //Max Strain screen stuff
+  allScreens[STRAIN_SCREEN] = &strainScreen;
+  strainScreen.items = strainItems;
+  strainScreen.len = STRAIN_DATAITEM_SIZE;
+  initScreenItem(&strainItems[0], 1, 40, 30, redrawDigit, &strainDataItems[STRAIN0_IDX], MIN_REFRESH); //Strain 0 and 1 work. Haven't tested the rest.
+  initScreenItem(&strainItems[1], 200, 40, 30, redrawDigit, &strainDataItems[STRAIN1_IDX], MIN_REFRESH);
+  initScreenItem(&strainItems[2], 1, 95, 30, redrawDigit, &strainDataItems[STRAIN2_IDX], MIN_REFRESH);
+  initScreenItem(&strainItems[3], 200, 95, 30, redrawDigit, &strainDataItems[STRAIN3_IDX], MIN_REFRESH);
+  initScreenItem(&strainItems[4], 1, 145, 30, redrawDigit, &strainDataItems[STRAIN4_IDX], MIN_REFRESH);
+  initScreenItem(&strainItems[5], 200, 145, 30, redrawDigit, &strainDataItems[STRAIN5_IDX], MIN_REFRESH);
 }
 
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, double (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data, uint32_t interval){
@@ -163,6 +195,42 @@ void initScreen(uint8_t num){
       textEnlarge(0);
       graphicsMode();
       break;
+    case DATA_SCREEN:
+      textMode();
+      textEnlarge(1);
+      textTransparent(foregroundColor);
+      textSetCursor(115,55);
+      textWrite("YAW RATE");
+      textSetCursor(370,55);
+      textWrite("YAW AG");
+      textSetCursor(115,107);
+      textWrite("LAT AC");
+      textSetCursor(370,107);
+      textWrite("LNG ACC");
+      textSetCursor(115,160);
+      textWrite("MX BRK");  //Max brake pressure
+      textSetCursor(370,160);
+      textWrite("STEER");
+      textSetCursor(125,210);
+      textWrite("ENG RPM");
+      textSetCursor(370,210);
+      textWrite("THRTL");
+      textEnlarge(0);
+      graphicsMode();
+      break;
+    case STRAIN_SCREEN:
+      textMode();
+      textEnlarge(1);
+      textTransparent(foregroundColor);
+      textSetCursor(8,1);
+      textWrite("MAX STRN");
+      textSetCursor(115, 40);
+      textWrite("STRN 1");
+      textSetCursor(315,40);
+      textWrite("STRN 2");  //TODO: Add text for other strain gauges
+      textEnlarge(0);
+      graphicsMode();
+      break; 
   }
 }
 
@@ -195,12 +263,11 @@ void refreshScreenItems(void){
         data->warningState = 0;
         warnCount--;
       }
-      currItem->currentValue = currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue);
+      currItem->currentValue = currItem->redrawItem(&currItem->info, currItem->data, currItem->currentValue); 
       currItem->refreshTime = millis;
     }
   }
 }
-
 // Redraw General Data
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;

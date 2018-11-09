@@ -77,6 +77,10 @@
 #define CAN_SW_ADL_FREQ   500
 #define CAN_DIAG_FREQ     1000
 #define TEMP_SAMP_INTV    333
+#define ABS_ID                  0x5C0
+#define STEER_ID                0x62    //May be depracated
+#define SGH_ID2                 0x204
+#define STRAIN_SCL        .000001
 
 const uint16_t shiftRPM[7] = {
   13000,
@@ -104,5 +108,6 @@ uint8_t getRotaryPosition(uint32_t adcValue);
 void checkChangeScreen(void);
 void sample_temp(void);
 void updateDataItem(volatile dataItem * data, double value);
+void updateDataItem2(volatile dataItem * data, double value);
 
 #endif /* WHEEL_H */

@@ -1107,15 +1107,17 @@ uint8_t load_enabled(uint8_t load_idx) {
  * @param load_state- The new state
  */
 void set_en_load(uint8_t load_idx, uint8_t load_state) {
+    //for each state, replace load_state with some pointer to a volatile PWM signal???
+    // = pwm_load(load_state)
   switch (load_idx) {
-    case FUEL_IDX: EN_FUEL_LAT = load_state; break;
+    case FUEL_IDX: EN_FUEL_LAT = load_state; break;   // 200hz 
     case IGN_IDX: EN_IGN_LAT = load_state; break;
     case INJ_IDX: EN_INJ_LAT = load_state; break;
     case ABS_IDX: EN_ABS_LAT = load_state; break;
     case PDLU_IDX: EN_PDLU_LAT = load_state; break;
     case PDLD_IDX: EN_PDLD_LAT = load_state; break;
-    case FAN_IDX: EN_FAN_LAT = load_state; break;
-    case WTR_IDX: EN_WTR_LAT = load_state; break;
+    case FAN_IDX: EN_FAN_LAT = load_state; break;   //
+    case WTR_IDX: EN_WTR_LAT = load_state; break;  //
     case ECU_IDX: EN_ECU_LAT = load_state; break;
     case AUX_IDX: EN_AUX_LAT = load_state; break;
     case BVBAT_IDX: EN_BVBAT_LAT = load_state; break;

@@ -428,3 +428,9 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;    
     }
 }
+
+//Create function to return PWM signal??
+uint8_t pwm_load(uint8_t load) 
+{
+    return load;
+}

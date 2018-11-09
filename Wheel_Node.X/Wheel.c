@@ -46,8 +46,9 @@ void main(void) {
   initAllScreens();
   nightModeState = wheelDataItems[SW_ND_IDX].value;
   initNightMode(nightModeState);
-  screenNumber = RACE_SCREEN;
-  changeScreen(screenNumber);
+//  screenNumber = RACE_SCREEN;
+  checkChangeScreen();              //Check rotary value instead
+//  changeScreen(screenNumber);     //Causes startup crash on certain rotary positions.
 
   tlc5955_startup();
 
@@ -160,6 +161,9 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
 
 void process_CAN_msg(CAN_message msg){
   uint16_t * lsbArray = (uint16_t *) msg.data;
+// uint16_t top0 = (uint16_t)(lsbArray[0/2]) & 0x0F;    //TODO: use brk value if brake pressure value is incorrect
+// uint16_t bot1 = (uint16_t)(lsbArray[2/2]) & 0xF0;
+//  uint16_t brk = top0 | bot1;                         //might need to bitwise shift by 8
   switch (msg.id) {
 
     /*Motec*/
@@ -196,12 +200,45 @@ void process_CAN_msg(CAN_message msg){
     case PDM_ID + 2:
       updateDataItem(&pdmDataItems[VBAT_RAIL_IDX], (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2]) * VBAT_RAIL_SCL);
       break;
+    case IMU_FIRST_ID:
+      updateDataItem(&newDataItems[YAW_RATE_IDX],(uint16_t)((lsbArray[YAW_RATE_BYTE/2] * YAW_RATE_SCL)+YAW_RATE_OFFSET)); //yaw rate, same byte type as in motec
+      updateDataItem(&newDataItems[LAT_ACCEL_IDX],(uint16_t)((lsbArray[LATERAL_G_BYTE/2] * LATERAL_G_SCL)+LATERAL_G_OFFSET)); //lat accel
+      break;
+    case IMU_SECOND_ID:
+      updateDataItem(&newDataItems[YAW_ANGL_IDX],(uint16_t)((lsbArray[YAW_ACCEL_BYTE/2] * YAW_ACCEL_SCL)+YAW_ACCEL_OFFSET)); //yaw angel (uint16_t) (lsbArray[VBAT_RAIL_BYTE/2])
+      updateDataItem(&newDataItems[LONG_ACCEL_IDX],(uint16_t)((lsbArray[LONGITUDINAL_G_BYTE/2] * LONGITUDINAL_G_SCL)+LONGITUDINAL_G_OFFSET)); //long accel
+      break;
+    case ABS_ID:
+      updateDataItem(&newDataItems[BRAKE_PRESS_IDX],(uint16_t)(lsbArray[1/2]));//Try scaling by 0.0153 if value is incorrect
+      break;
+    case 0x62:  //Steering wheel sensor is botched I heard, so this wont be of much use
+      updateDataItem(&newDataItems[STEER_IDX], (uint16_t)(lsbArray[4/2]));   
+      break;
+    case SGH_ID2:
+      updateDataItem2(&strainDataItems[STRAIN0_IDX],(uint16_t)(lsbArray[2/2]));
+      updateDataItem2(&strainDataItems[STRAIN1_IDX],(uint16_t)(lsbArray[6/2])); 
+      break;
+    case SGH_ID2 + 1:
+      updateDataItem(&strainDataItems[STRAIN2_IDX],(uint16_t)(lsbArray[2/2]));
+      updateDataItem(&strainDataItems[STRAIN3_IDX],(uint16_t)(lsbArray[6/2])); 
+      break;
+    case SGH_ID2 + 2:
+      updateDataItem(&strainDataItems[STRAIN4_IDX],(uint16_t)(lsbArray[2/2]));
+      updateDataItem(&strainDataItems[STRAIN5_IDX],(uint16_t)(lsbArray[6/2])); 
+      break;
   }
 }
 
 void updateDataItem(volatile dataItem * data, double value) {
   data->value = value;
   data->refreshTime = millis;
+}
+//updateDataItem was so great we made another one
+//For real though this just takes the maximum value
+void updateDataItem2(volatile dataItem * data, double value) {
+    if(value > data->value)
+        data->value = value;
+  data->refreshTime = millis;   //leave this lmao
 }
 
 //TODO: Use more of the MASK/BITPOS definitions from CAN.h
@@ -242,7 +279,7 @@ void CANdiag(void){
   data.halfword2 = junc_temp;
   CAN_send_message(WHEEL_ID + 0, 6, data);
 }
-
+//only useful for MSB ordering
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl){
   return ((double) ((msg->data[byte] << 8) | msg->data[byte + 1])) * scl;
 }
@@ -285,6 +322,12 @@ void checkChangeScreen(void) {
     case 1:
       screenIdx = TEST_SCREEN;
       break;
+   case 2:
+        screenIdx = DATA_SCREEN;
+        break;
+   case 3:
+        screenIdx = STRAIN_SCREEN;
+        break;
     default:
       screenIdx = RACE_SCREEN;
       break;
@@ -292,7 +335,7 @@ void checkChangeScreen(void) {
 
   if(screenIdx != screenNumber) {
     changeScreen(screenIdx);
-    screenNumber = screenIdx;
+//    screenNumber = screenIdx; //redundant
   }
 }
 

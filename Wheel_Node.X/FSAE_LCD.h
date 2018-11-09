@@ -15,9 +15,11 @@
 #include "RA8875_driver.h"
 
 // Define race screen constants
-#define NUM_SCREENS           2
+#define NUM_SCREENS           4
 #define RACE_SCREEN           0
 #define TEST_SCREEN           1
+#define DATA_SCREEN           2
+#define STRAIN_SCREEN         3
 
 #define MIN_REFRESH           350
 #define CAN_TIMEOUT           1000
@@ -67,6 +69,20 @@
 #define SW_FAN_IDX              10
 #define SW_WTR_IDX              11
 #define SW_FUEL_IDX             12
+#define NEW_DATAITEM_SIZE       6
+#define YAW_RATE_IDX            0    //please refer to CAN spec for more info
+#define YAW_ANGL_IDX            1
+#define LAT_ACCEL_IDX           2
+#define LONG_ACCEL_IDX          3
+#define BRAKE_PRESS_IDX         4
+#define STEER_IDX               5
+#define STRAIN_DATAITEM_SIZE    6
+#define STRAIN0_IDX             0
+#define STRAIN1_IDX             1
+#define STRAIN2_IDX             2
+#define STRAIN3_IDX             3
+#define STRAIN4_IDX             4
+#define STRAIN5_IDX             5
 
 /*
  * Defines a data stream that is relevant to one or more screens
@@ -150,10 +166,10 @@ const uint16_t shiftLightSub[10] = {
 };
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[8], testScreenItems[5];
-
+screenItem raceScreenItems[8], testScreenItems[5], newScreenItems[8], strainItems[STRAIN_DATAITEM_SIZE];
+//new screen is newdataitem +2
 // Define all screen structs
-screen raceScreen, testScreen;
+screen raceScreen, testScreen, dataScreen, strainScreen;
 
 // Define master array of all screen structs
 screen* allScreens[NUM_SCREENS];
@@ -162,7 +178,8 @@ uint8_t screenNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, foregroundColor2, warningColor, errorColor;
 
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE];
+volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE], 
+        newDataItems[NEW_DATAITEM_SIZE], strainDataItems[STRAIN_DATAITEM_SIZE];
 
 void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem
@@ -190,5 +207,4 @@ double redrawDigit(screenItemInfo * item, volatile dataItem * data, double curre
 double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
 double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue);
-
 #endif /* _FSAE_LCD_H */

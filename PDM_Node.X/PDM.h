@@ -19,6 +19,7 @@
 #include "../FSAE.X/FSAE_rheo.h"
 #include "../FSAE.X/CAN.h"
 #include "../FSAE.X/errno.h"
+#include "../FSAE.X/FSAE_pwm.h"
 
 // Definitions for MOSFET control
 #define PWR_ON  1
