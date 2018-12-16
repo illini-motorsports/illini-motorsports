@@ -95,4 +95,4 @@ void checkChangeScreen(void);
 void sample_temp(void);
 void updateDataItem(volatile dataItem * data, double value);
 
-#endif /* WHEEL_H */
+#endif /* WHEEL_H */ 

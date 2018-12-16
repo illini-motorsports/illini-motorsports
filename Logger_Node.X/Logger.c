@@ -13,7 +13,8 @@ volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
 // State/status variables determined by various sources
-volatile double eng_rpm = 0; // From ECU
+volatile double eng_rpm, throttle_pos, lambda, bat_volt_ecu; // From ECU
+
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 double rail_vbat, rail_vbak, rail_vsup, rail_5v, rail_3v3 = 0.0;
@@ -22,9 +23,16 @@ double rail_vbat, rail_vbak, rail_vsup, rail_5v, rail_3v3 = 0.0;
 volatile uint32_t CAN_recv_tmr = 0;
 uint32_t diag_send_tmr, rail_send_tmr = 0;
 uint32_t temp_samp_tmr, rail_samp_tmr = 0;
+uint64_t stuff[64];
+  uint64_t wow;
 
 // SPI Connections
-SPIConn* spi_nvm = NULL;
+//SPIConn* spi_nvm = NULL;
+
+int init = 0;
+SPIConn random;
+SPIConn *sd_connection;
+
 
 /**
  * Main function
@@ -35,15 +43,16 @@ void main(void) {
   //init_peripheral_modules(); // Disable unused peripheral modules
   init_oscillator(0); // Initialize oscillator configuration bits
   init_timer2(); // Initialize timer2 (millis)
-  init_adc(init_adc_logger); // Initialize ADC module
-  init_termination(TERMINATING); // Initialize programmable CAN termination
+  //init_adc(init_adc_logger); // Initialize ADC module
+  //init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
+  
 
-  spi_nvm = init_nvm_std(); // Initialize NVM module
+  //spi_nvm = init_nvm_std(); // Initialize NVM module
   //TODO: USB
 
-  //init_ltc3350(); // Initialize supercapacitor charger IC
-
+   // Initialize supercapacitor charger IC
+  //uint16_t dawg;
 
   //TODO: RTC
   //TODO: SD
@@ -51,30 +60,79 @@ void main(void) {
 
   // Initialize pins
   SHDN_TRIS = OUTPUT;
-  SHDN_LAT = 0; // Default to immediate shutdown
+  SHDN_LAT = 1; // Default to immediate shutdown
 
   // Trigger initial ADC conversion
-  ADCCON3bits.GSWTRG = 1;
+  //ADCCON3bits.GSWTRG = 1;
+  SD_CS_TRIS = OUTPUT;
+  SD_CS_LAT = 1;
+  sd_connection = init_sd(1,SD_CS_LATBITS,SD_CS_LATNUM);
+  
+  sd_write(sd_connection,0x40,0x95,0x00000000);
+      sd_write(sd_connection,0x48,0x87,0x000001AA);
+      int i;
+      for(i = 0;i < 3;i++){
+      sd_write(sd_connection,0x41,0xF9,0x00000000);
+      }
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      //sd_write(sd_connection,0x50,0xFF,0x00000008);
+      
 
   STI(); // Enable interrupts
-
+  //start_i2c();
   // Main loop
   while (1) {
-    STI(); // Enable interrupts (in case anything disabled without re-enabling)
+    //STI(); // Enable interrupts (in case anything disabled without re-enabling)
+      
+      for(i = 0; i < 2000000; i++);
 
-    /**
-     * Call helper functions
-     */
-
+      sd_write(sd_connection,0x40,0x95,0x00000000);
+      sd_write(sd_connection,0x48,0x87,0x000001AA);
+      for(i = 0;i < 3;i++){
+      sd_write(sd_connection,0x41,0xF9,0x00000000);
+      }
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      //sd_write(sd_connection,0x50,0xFF,0x00000008);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0x58,0xFF,0x00000000);
+      sd_write(sd_connection,0xFF,0xFE,0xFFFFFFFF);
+      uint64_t thing[64];
+      for(i = 0;i<64;i++){
+          stuff[i] = wow;
+      }
+       
+      sd_write_CAN(sd_connection,thing);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0x4C,0xFF,0x40000000);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      
+      
+      
+      
+    //delay();
+    
+    //ack = send_data_i2c((LTC3350_DEV_ADDR << 1) & 0xFE);
+    //delay();
+    //DATA_LINE_TRIS = OUTPUT;
+    //DATA_LINE_LAT = 1;
+    //stop_i2c();
+      
     // Separate logic functions
 
     // Analog sampling functions
-    sample_temp();
-    sample_rail();
+    //sample_temp();
+    //sample_rail();
 
     // CAN message sending functions
-    send_diag_can();
-    send_rail_can();
+    //send_diag_can();
+    //send_rail_can();
   }
 }
 
@@ -111,6 +169,12 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
 
+void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
+  micros++; // Increment micros
+
+  IFS0CLR = _IFS0_T6IF_MASK; // Clear TMR6 Interrupt Flag
+}
+
 /**
  * NMI Handler
  *
@@ -134,13 +198,26 @@ void _nmi_handler(void) {
  */
 void process_CAN_msg(CAN_message msg) {
   CAN_recv_tmr = millis; // Record time of latest received CAN message
+  
+  int i;
 
   switch (msg.id) {
-    case MOTEC_ID + 0:
+    case SGH_ID + 1:
       eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
-          msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
+          msg.data[ENG_RPM_BYTE + 1]));
+      throttle_pos = ((double) ((msg.data[THROTTLE_POS_BYTE] << 8) |
+          msg.data[THROTTLE_POS_BYTE + 1]));
+      lambda = ((double) ((msg.data[LAMBDA_BYTE] << 8) |
+          msg.data[LAMBDA_BYTE + 1]));
+      bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
+            msg.data[VOLT_ECU_BYTE + 1]));
       break;
   }
+      
+      wow = ((uint16_t)throttle_pos << 32) | ((uint16_t)lambda << 16) | (uint16_t)bat_volt_ecu;
+      for(i = 0; i < 64;i++){
+          stuff[i] = wow;
+      }
 }
 
 //============================= ADC FUNCTIONS ==================================
@@ -288,4 +365,44 @@ void init_adc_logger(void) {
   ADCANCONbits.ANEN2 = 1;      // ADC2 Analog and Bias Circuitry Enable (Enabled)
   while(!ADCANCONbits.WKRDY2); // Wait until ADC2 is ready
   ADCCON3bits.DIGEN2 = 1;      // ADC2 Digital Enable (Enabled)
+}
+
+SPIConn *init_sd(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
+
+  if(!init) {
+    init_spi(bus, 0.2, 16, 0);
+  }
+
+  SPIConn * currConn = &random;
+  currConn->send_fp = get_send_spi(bus);
+  currConn->cs_lat = cs_lat;
+  currConn->cs_num = cs_num;
+
+  init++;
+
+  // Send two dummy cycles to reset the chip
+  SDControlReg dummy = {.reg = 0xFFFF};
+  send_spi(dummy.reg, currConn);
+  send_spi(dummy.reg, currConn);
+
+  return currConn;
+}
+
+void sd_write(SPIConn *currConn, uint8_t cmd, uint8_t crc, uint32_t input) {
+
+  uint64_t raw_data = (((uint64_t) cmd) << 32) | input;;
+  uint64_t to_send = (raw_data << 8) | crc;
+  uint64_t receive = send_spi_triple(to_send, currConn);
+  
+  SDControlReg dummy = {.reg = 0xFFFF};
+  send_spi(dummy.reg, currConn);
+  send_spi(dummy.reg, currConn);
+
+}
+
+void sd_write_CAN(SPIConn * currConn, uint64_t message[]){
+    uint64_t * receive = send_spi_CAN(message,currConn);
+    SDControlReg dummy = {.reg = 0xFFFF};
+  send_spi(dummy.reg, currConn);
+  send_spi(dummy.reg, currConn);
 }

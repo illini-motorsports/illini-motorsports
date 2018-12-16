@@ -185,14 +185,33 @@ void main(void) {
 
   // Turn on state-independent loads
 //  enable_load(AUX_IDX);
+<<<<<<< Updated upstream
   enable_load(BVBAT_IDX);
   enable_load(ECU_IDX);
+=======
+  //enable_load(BVBAT_IDX);
+  //enable_load(ECU_IDX);
+>>>>>>> Stashed changes
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
 
   STI(); // Enable interrupts
+  
+    enable_load(0);
+    enable_load(1);
+    enable_load(2);
+    enable_load(3);
+    enable_load(4);
+    enable_load(5);
+    enable_load(6);
+    enable_load(7);
+    enable_load(8);
+    enable_load(9);
+    enable_load(10);
+    enable_load(11);
 
+<<<<<<< Updated upstream
   // Main loop
   while (1) {
     load_state_changed = 0;
@@ -365,6 +384,8 @@ void main(void) {
     send_cutoff_values_can(NO_OVERRIDE);
     send_overcrt_count_can(NO_OVERRIDE);
   }
+=======
+>>>>>>> Stashed changes
 }
 
 //=============================== INTERRUPTS ===================================

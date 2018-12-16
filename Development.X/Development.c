@@ -6,6 +6,9 @@ int main(void){
   init_gpio_pins();// Set all I/O pins to low outputs
   init_oscillator(0);// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
+  init_timer4(0x4E1F);
+  init_pwm(0x0100,3); //Initialize pwm signal with given period
+  pwm_set(0x0050,3);
   init_spi();
 
   PIC_LED_TRIS = OUTPUT;
@@ -31,6 +34,11 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
   //    PIC_LED_LAT = !PIC_LED_LAT;
   //}
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
+}
+
+void __attribute__((vector(_TIMER_4_VECTOR), interrupt(IPL6SRS))) timer4_inthnd(void) {
+    
+  IFS0CLR = _IFS0_T4IF_MASK;// Clear TMR4 Interrupt Flag
 }
 
 void get_temp(kTemp *kt){

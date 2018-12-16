@@ -138,7 +138,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
     
     switch(OC){
         case 1:
-            init_timer4(period);
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -169,7 +168,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             lock_config();
             break;
         case 2:
-            init_timer4(period);
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -201,7 +199,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;
             
         case 3:
-            init_timer4(period);
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -233,7 +230,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;
             
         case 4:
-            init_timer2();
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -266,7 +262,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;
             
         case 5:
-            init_timer2();
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -299,7 +294,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;
             
         case 6:
-            init_timer2();
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -332,7 +326,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;
         
         case 7:
-            init_timer6(period);
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -364,7 +357,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;
             
         case 8:
-            init_timer6(period);
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 
@@ -396,7 +388,6 @@ void init_pwm(uint16_t period, uint8_t OC) {
             break;
             
         case 9:
-            init_timer6(period);
             unlock_config();
     
             CFGCONbits.IOLOCK = 0; 

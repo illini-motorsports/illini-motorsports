@@ -61,7 +61,7 @@
 #define CRIT_ENGTEMP     110.0 // C
 
 // Timing constants (ms)
-#define FUEL_PRIME_DUR     1000
+#define FUEL_PRIME_DUR     3000
 #define STR_MAX_DUR        4000
 #define PDL_MAX_DUR        500
 #define OVERRIDE_SW_WAIT   5000
@@ -266,7 +266,11 @@
 #define EXT_ADC_NUM_STEPS   4095.0
 #define EXT_ADC_VOLT_RANGE  5.0
 #define VFB_CUTOFF          4.7
+<<<<<<< Updated upstream
 #define BRK_SWITCH          0x350
+=======
+#define BRK_SWITCH          0x500
+>>>>>>> Stashed changes
 
 // Initial overcurrent thresholds to use for all the loads
 const double load_cutoff[NUM_CTL] = {

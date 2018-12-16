@@ -22,13 +22,13 @@
 // GPIO Defs
 // ***************************
 // Pin numbers are created by: 16*CHIP_NUM + 8*(BANK=='B') + PIN_NUM
-#define ADC_0_CS_TRIS           TRISAbits.TRISA9
+#define ADC_0_CS_TRIS           TRISBbits.TRISB8 //A9
 #define ADC_1_CS_TRIS           TRISAbits.TRISA10
-#define ADC_0_CS_LAT            LATAbits.LATA9
+#define ADC_0_CS_LAT            LATBbits.LATB8  //A9
 #define ADC_1_CS_LAT            LATAbits.LATA10
-#define ADC_0_CS_LATBITS        (uint32_t*) (&LATAbits)
+#define ADC_0_CS_LATBITS        (uint32_t*) (&LATBbits) //A
 #define ADC_1_CS_LATBITS        (uint32_t*) (&LATAbits)
-#define ADC_0_CS_LATNUM         9
+#define ADC_0_CS_LATNUM         8   //9
 #define ADC_1_CS_LATNUM         10
 
 #define ANALOG_CAN_SCL          1000

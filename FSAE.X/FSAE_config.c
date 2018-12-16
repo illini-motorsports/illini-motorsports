@@ -825,7 +825,7 @@ void init_timer6(uint16_t period2) {
   T6CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
   T6CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
   T6CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
-  T6CONbits.TCKPS = 0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
+  T6CONbits.TCKPS = 0b001; // Timer Input Clock Prescale Select (1:4 prescale value)
 
   // TMR6
   TMR6 = 0; // TMR6 Count Register (0)

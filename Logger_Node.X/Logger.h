@@ -57,6 +57,12 @@
 #define ADC_3V3_CSS    ADCCSS1bits.CSS30
 #define ADC_3V3_CHN    30
 
+#define SD_CS_TRIS           TRISGbits.TRISG9
+#define SD_CS_LAT            LATGbits.LATG9
+#define SD_CS_LATBITS        (uint32_t*) (&LATGbits)
+#define SD_CS_LATNUM         9 
+
+
 /**
  * Function definitions
  */
@@ -76,5 +82,18 @@ void send_rail_can(void);
 
 // Utility functions
 void init_adc_logger(void);
+
+typedef union sdControlReg {
+  struct {
+    unsigned THING1:8;
+    unsigned THING2:8;
+  };
+  uint16_t reg;
+} SDControlReg;
+
+SPIConn* init_sd(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
+void sd_write(SPIConn *conn,uint8_t cmd,uint8_t crc, uint32_t input);
+void sd_write_CAN(SPIConn *conn,uint64_t message[]);
+
 
 #endif /* LOGGER_H */
