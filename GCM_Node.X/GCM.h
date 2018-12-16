@@ -41,7 +41,6 @@
 
 #define DIAG_MSG_SEND    500
 #define STATE_MSG_SEND   250
-#define SENSOR_MSG_SEND  250
 
 #define LOCKOUT_DUR    50
 #define MAX_SHIFT_DUR  150
@@ -50,6 +49,7 @@
 #define UP_SHIFT_DUR   150 //TODO: Tune this value
 #define DN_SHIFT_DUR   125 //TODO: Tune this value
 #define NT_SHIFT_DUR   50  //TODO: Tune this value
+#define ABS_WS_ID      0x24A
 
 #define CAN_STATE_WAIT 1000
 #define CUT_RETRY_WAIT 2
@@ -62,7 +62,7 @@
 // Debounced switch state definitions (use these for everything)
 #define SHIFT_UP_SW (((switch_debounced >> 2) & 0x1))
 #define SHIFT_DN_SW (((switch_debounced >> 1) & 0x1))
-#define SHIFT_NT_SW (((switch_debounced >> 0) & 0x1))
+#define SHIFT_NT_SW 0
 
 // Definitions for gear position variable
 #define GEAR_NEUT 0
@@ -75,10 +75,6 @@
 
 // Miscellaneous definitions
 #define PWR_CUT_SPOOF 		0xE803 // Value for "spoofed" gear shift force sensor
-#define MOTEC_CUT_ON      1
-#define MOTEC_CUT_OFF     0
-// 1 if CAN should be used in conjunction with the hardwired motec connection
-#define MOTEC_CAN_BUS     1
 #define ACT_ON  				  0
 #define ACT_OFF 				  1
 #define NOT_SHIFTING 			0
@@ -86,8 +82,8 @@
 #define CUT_END    				0
 #define CUT_START  				1
 #define CUT_RESEND 				2
-#define MAX_AUTO_UPSHIFT_GEAR 	6
-#define LAUNCH_WHEEL_SPEED_DIFF 1.5
+#define MAX_AUTO_GEAR 	  6
+#define LAUNCH_WS_DIFF    1.5
 #define LAUNCH_FRONT_WS		10
 
 // Gear ratio of standard Yamaha R6 YZF 08 transmission
@@ -103,56 +99,45 @@ const double gear_ratio[7] = {
 
 // Optiomal Shift RPM's for Yamaha R6 transmission
 const uint16_t shift_rpm[6] = {
-  12444,
-  11950,
-  12155,
-  12100,
-  11150,
-  20000
-};
-
-const double gear_voltages[7] = {
-  0.747,   // 1
-  1.096,   // Neutral
-  1.448,   // 2
-  2.154,   // 3
-  2.862,   // 4
-  3.574,   // 5
-  4.282    // 6
+	12444,
+	11950,
+	12155,
+	12100,
+	11150,
+	20000
 };
 
 // Pin definitions
-#define SHIFT_UP_TRIS     TRISGbits.TRISG15
-#define SHIFT_UP_ANSEL    ANSELGbits.ANSG15
-#define SHIFT_UP_PORT     PORTGbits.RG15
-#define SHIFT_DN_TRIS     TRISAbits.TRISA5
-#define SHIFT_DN_ANSEL    ANSELAbits.ANSA5
-#define SHIFT_DN_PORT     PORTAbits.RA5
-#define SHIFT_NT_TRIS     TRISEbits.TRISE5
-#define SHIFT_NT_ANSEL    ANSELEbits.ANSE5
-#define SHIFT_NT_PORT     PORTEbits.RE5
+// neut = a5
+// up = e5
+// down = g15
+#define SHIFT_UP_TRIS  TRISEbits.TRISE5
+#define SHIFT_UP_ANSEL ANSELEbits.ANSE5
+#define SHIFT_UP_PORT  PORTEbits.RE5
+#define SHIFT_DN_TRIS  TRISGbits.TRISG15
+#define SHIFT_DN_ANSEL ANSELGbits.ANSG15
+#define SHIFT_DN_PORT  PORTGbits.RG15
+#define SHIFT_NT_TRIS  TRISAbits.TRISA5
+#define SHIFT_NT_ANSEL ANSELAbits.ANSA5
+#define SHIFT_NT_PORT  PORTAbits.RA5
 
-#define ACT_UP_TRIS       TRISEbits.TRISE7
-#define ACT_UP_LAT        LATEbits.LATE7
-#define ACT_DN_TRIS       TRISCbits.TRISC1
-#define ACT_DN_LAT        LATCbits.LATC1
+#define ACT_UP_TRIS TRISEbits.TRISE7
+#define ACT_UP_LAT  LATEbits.LATE7
+#define ACT_DN_TRIS TRISCbits.TRISC1
+#define ACT_DN_LAT  LATCbits.LATC1
 
-#define ADC_GEAR_TRIS     TRISGbits.TRISG6
-#define ADC_GEAR_ANSEL    ANSELGbits.ANSG6
-#define ADC_GEAR_CSS      ADCCSS1bits.CSS14
-#define ADC_GEAR_CHN      14
+#define ADC_GEAR_TRIS  TRISGbits.TRISG6
+#define ADC_GEAR_ANSEL ANSELGbits.ANSG6
+#define ADC_GEAR_CSS   ADCCSS1bits.CSS14
+#define ADC_GEAR_CHN   14
 
-#define ADC_FORCE_TRIS    TRISEbits.TRISE8
-#define ADC_FORCE_ANSEL   ANSELEbits.ANSE8
-#define ADC_FORCE_CSS     ADCCSS1bits.CSS25
-#define ADC_FORCE_CHN     25
-
-// Mapped to GPIO pin, logic translated to 5V for motec
-#define MOTEC_CUT_TRIS    TRISEbits.TRISE4
-#define MOTEC_CUT_LAT     LATEbits.LATE4
+#define ADC_FORCE_TRIS  TRISEbits.TRISE8
+#define ADC_FORCE_ANSEL ANSELEbits.ANSE8
+#define ADC_FORCE_CSS   ADCCSS1bits.CSS25
+#define ADC_FORCE_CHN   25
 
 // Enum for current GCM mode
-typedef enum _gcm_mode {MANUAL_MODE, AUTO_UPSHIFT_MODE} gcm_mode;
+typedef enum _gcm_mode {NORMAL_MODE, AUTO_UPSHIFT_MODE} gcm_mode;
 
 /**
  * Function definitions
@@ -168,7 +153,6 @@ void sample_sensors(uint8_t is_shifting);
 void process_CAN_msg(CAN_message msg);
 void send_diag_can(void);
 void send_state_can(uint8_t override);
-void send_sensor_can(void);
 
 // Logic functions
 void process_auto_upshift(void);

@@ -501,6 +501,53 @@ void process_CAN_msg(CAN_message msg){
       updateDataItem(&imuDataItems[YAW_ACCEL_IDX],      (double) ((lsbArray[YAW_ACCEL_BYTE/2]      * YAW_ACCEL_SCL)  + YAW_ACCEL_OFFSET));
       updateDataItem(&imuDataItems[LONGITUDINAL_G_IDX], (double) ((lsbArray[LONGITUDINAL_G_BYTE/2] * LONGITUDINAL_G_SCL) + LONGITUDINAL_G_OFFSET));
       break;
+    case PDM_ID + 3:
+      updateDataItem(&pdmDataItems[FUEL_DRAW_IDX], (uint16_t) (lsbArray[FUEL_DRAW_BYTE/2]) * FUEL_DRAW_SCL);
+      updateDataItem(&pdmDataItems[IGN_DRAW_IDX], (uint16_t) (lsbArray[IGN_DRAW_BYTE/2]) * IGN_DRAW_SCL);
+      updateDataItem(&pdmDataItems[INJ_DRAW_IDX], (uint16_t) (lsbArray[INJ_DRAW_BYTE/2]) * INJ_DRAW_SCL);
+      updateDataItem(&pdmDataItems[ABS_DRAW_IDX], (uint16_t) (lsbArray[ABS_DRAW_BYTE/2]) * ABS_DRAW_SCL);
+      break;
+    case PDM_ID + 4:
+      updateDataItem(&pdmDataItems[PDLU_DRAW_IDX], (uint16_t) (lsbArray[PDLU_DRAW_BYTE/2]) * PDLU_DRAW_SCL);
+      updateDataItem(&pdmDataItems[PDLD_DRAW_IDX], (uint16_t) (lsbArray[PDLD_DRAW_BYTE/2]) * PDLD_DRAW_SCL);
+      updateDataItem(&pdmDataItems[FAN_DRAW_IDX], (uint16_t) (lsbArray[FAN_DRAW_BYTE/2]) * FAN_DRAW_SCL);
+      updateDataItem(&pdmDataItems[WTR_DRAW_IDX], (uint16_t) (lsbArray[WTR_DRAW_BYTE/2]) * WTR_DRAW_SCL);
+      break;
+    case PDM_ID + 5:
+      updateDataItem(&pdmDataItems[ECU_DRAW_IDX], (uint16_t) (lsbArray[ECU_DRAW_BYTE/2]) * ECU_DRAW_SCL);
+      updateDataItem(&pdmDataItems[AUX_DRAW_IDX], (uint16_t) (lsbArray[AUX_DRAW_BYTE/2]) * AUX_DRAW_SCL);
+      updateDataItem(&pdmDataItems[BVBAT_DRAW_IDX], (uint16_t) (lsbArray[BVBAT_DRAW_BYTE/2]) * BVBAT_DRAW_SCL);
+      updateDataItem(&pdmDataItems[STR_DRAW_IDX], (uint16_t) (lsbArray[STR_DRAW_BYTE/2]) * STR_DRAW_SCL);
+      break;
+    case PDM_ID + 6:
+      updateDataItem(&pdmDataItems[FUEL_CUT_IDX], (uint16_t) (lsbArray[FUEL_CUT_BYTE/2]) * FUEL_CUT_SCL);
+      updateDataItem(&pdmDataItems[IGN_CUT_IDX], (uint16_t) (lsbArray[IGN_CUT_BYTE/2]) * IGN_CUT_SCL);
+      updateDataItem(&pdmDataItems[INJ_CUT_IDX], (uint16_t) (lsbArray[INJ_CUT_BYTE/2]) * INJ_CUT_SCL);
+      updateDataItem(&pdmDataItems[ABS_CUT_IDX], (uint16_t) (lsbArray[ABS_CUT_BYTE/2]) * ABS_CUT_SCL);
+      break;
+    case PDM_ID + 7:
+      updateDataItem(&pdmDataItems[PDLU_CUT_IDX], (uint16_t) (lsbArray[PDLU_CUT_BYTE/2]) * PDLU_CUT_SCL);
+      updateDataItem(&pdmDataItems[PDLD_CUT_IDX], (uint16_t) (lsbArray[PDLD_CUT_BYTE/2]) * PDLD_CUT_SCL);
+      updateDataItem(&pdmDataItems[FAN_CUT_IDX], (uint16_t) (lsbArray[FAN_CUT_BYTE/2]) * FAN_CUT_SCL);
+      updateDataItem(&pdmDataItems[WTR_CUT_IDX], (uint16_t) (lsbArray[WTR_CUT_BYTE/2]) * WTR_CUT_SCL);
+      break;
+    case PDM_ID + 8:
+      updateDataItem(&pdmDataItems[ECU_CUT_IDX], (uint16_t) (lsbArray[ECU_CUT_BYTE/2]) * ECU_CUT_SCL);
+      updateDataItem(&pdmDataItems[AUX_CUT_IDX], (uint16_t) (lsbArray[AUX_CUT_BYTE/2]) * AUX_CUT_SCL);
+      updateDataItem(&pdmDataItems[BVBAT_CUT_IDX], (uint16_t) (lsbArray[BVBAT_CUT_BYTE/2]) * BVBAT_CUT_SCL);
+      break;
+    case PDM_ID + 9:
+      updateDataItem(&pdmDataItems[FUEL_CUT_P_IDX], (uint16_t) (lsbArray[FUEL_CUT_P_BYTE/2]) * FUEL_CUT_P_SCL);
+      updateDataItem(&pdmDataItems[FAN_CUT_P_IDX], (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL);
+      updateDataItem(&pdmDataItems[WTR_CUT_P_IDX], (uint16_t) (lsbArray[WTR_CUT_P_BYTE/2]) * WTR_CUT_P_SCL);
+      updateDataItem(&pdmDataItems[ECU_CUT_P_IDX], (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL);
+      break;
+    case SGH_ID + 1:
+      updateDataItem(&sghDataItems[RAW_VOLTAGE1_IDX], (uint16_t) (lsbArray[ANALOG_SGH1_RAW_BYTE/2]) * ANALOG_SGH_RAW_SCL);
+      updateDataItem(&sghDataItems[RAW_VOLTAGE2_IDX], (uint16_t) (lsbArray[ANALOG_SGH2_RAW_BYTE/2]) * ANALOG_SGH_RAW_SCL);
+      updateDataItem(&sghDataItems[STRAIN1_IDX], (uint16_t) (lsbArray[STRAIN1_CALC_BYTE/2]));
+      updateDataItem(&sghDataItems[STRAIN2_IDX], (uint16_t) (lsbArray[STRAIN2_CALC_BYTE/2]));
+      break;
   }
 }
 
@@ -575,6 +622,8 @@ uint8_t getRotaryPosition(uint32_t adcValue){
   return 9 - (uint8_t) (adcValue / 409.6);
 }
 
+
+
 void checkChangeScreen(void) {
   uint8_t rotVal = wheelDataItems[TROTARY_1_IDX].value;
   uint8_t screenIdx;
@@ -583,11 +632,16 @@ void checkChangeScreen(void) {
     nightModeState = wheelDataItems[SW_ND_IDX].value;
     nightMode(nightModeState);
   }
+<<<<<<< Updated upstream
+=======
+  
+>>>>>>> Stashed changes
   switch (rotVal) {
     case 0:
       screenIdx = RACE_SCREEN;
       break;
     case 1:
+<<<<<<< Updated upstream
       screenIdx = PDM_DRAW_SCREEN;
       break;
     case 2:
@@ -601,16 +655,30 @@ void checkChangeScreen(void) {
       break;
     case 5:
       screenIdx = IMU_SCREEN;
+=======
+      screenIdx = TEST_SCREEN1;
+      break;
+    case 2:
+      screenIdx = TEST_SCREEN2;
+>>>>>>> Stashed changes
       break;
     default:
       screenIdx = RACE_SCREEN;
       break;
   }
+<<<<<<< Updated upstream
 
   if(screenIdx != screenNumber) {
     changeScreen(screenIdx);
     screenNumber = screenIdx;
   }
+=======
+   if(screenIdx != screenNumber) {
+    changeScreen(screenIdx);
+    screenNumber = screenIdx;
+  }
+  
+>>>>>>> Stashed changes
 }
 
 /**

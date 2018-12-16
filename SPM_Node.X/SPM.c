@@ -20,7 +20,11 @@ void main(void){
   init_adc(NULL); // Initialize ADC module
   init_termination(NOT_TERMINATING);
   init_gpio(); // Initialize external digital GPIO
+<<<<<<< Updated upstream
   init_can(); // Initialize CAN
+=======
+  init_termination(TERMINATING); // Initialize programmable CAN termination
+>>>>>>> Stashed changes
 
   ADCCON3bits.GSWTRG = 1; // Initial ADC Conversion
   STI();// Enable interrupts
@@ -28,8 +32,14 @@ void main(void){
   init_adcs();// Initialize all of the ADC's
   while(1){
     update_analog_channels();
+<<<<<<< Updated upstream
 
     if(millis - canAnalogMillis > CAN_ANALOG_INTV){
+=======
+    update_digital_channels();
+
+    if(millis - canAnalogMillis > 50){
+>>>>>>> Stashed changes
       CANAnalogChannels();
       canAnalogMillis = millis;
     }

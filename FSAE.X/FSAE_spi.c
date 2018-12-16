@@ -314,6 +314,7 @@ uint64_t send_spi_double(uint32_t value1, uint32_t value2, SPIConn *conn) {
   return buff;
 }
 
+<<<<<<< Updated upstream
 /*
  * Endianness of the return value will be opposite the input value
  */
@@ -322,11 +323,19 @@ uint64_t send_spi_triple_16(uint64_t value, SPIConn *conn) {
   uint64_t buff1 = conn->send_fp(value & 0xFFFF); // first send
   uint64_t buff2 = conn->send_fp((value >> 16) & 0xFFFF); // second send
   uint64_t buff3 = conn->send_fp((value >> 32) & 0xFFFF); // third send
+=======
+uint64_t send_spi_triple(uint64_t value, SPIConn *conn) {
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
+  uint64_t buff1 = conn->send_fp((value >> 32)& 0xFFFF); // first send
+  uint64_t buff2 = conn->send_fp((value >> 16) & 0xFFFF); // second send
+  uint64_t buff3 = conn->send_fp((value) & 0xFFFF); // third send
+>>>>>>> Stashed changes
   uint64_t buff = (buff1 << 32) | (buff2 << 16) | buff3;  // combine the return values
   *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
   return buff;
 }
 
+<<<<<<< Updated upstream
 /*
  * return value array must be properly allocated
  * value and return indicies will correspond
@@ -339,3 +348,19 @@ void send_spi_many_16(uint16_t* value, uint16_t* ret, uint8_t n, SPIConn *conn) 
   }
   *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
 }
+=======
+uint64_t * send_spi_CAN(uint64_t value[], SPIConn *conn) {
+  *(conn->cs_lat) &= ~(1 << (conn->cs_num)); // Set CS Low
+  int i;
+  static uint64_t buff[64];
+  for(i = 0; i < 64; i++){
+  uint64_t buff1 = conn->send_fp((value[i] >> 48)& 0xFFFF); // first send
+  uint64_t buff2 = conn->send_fp((value[i] >> 32) & 0xFFFF); // second send
+  uint64_t buff3 = conn->send_fp((value[i] >> 16) & 0xFFFF); // third send
+  uint64_t buff4 = conn->send_fp((value[i]) & 0xFFFF); // third send
+  buff[i] = (buff1 << 48) | (buff2 << 32) | (buff3 << 16) | buff4;  // combine the return values
+  }
+  *(conn->cs_lat) |= 1 << conn->cs_num; // Set CS High
+  return buff;
+}
+>>>>>>> Stashed changes

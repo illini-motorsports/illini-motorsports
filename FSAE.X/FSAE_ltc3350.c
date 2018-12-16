@@ -3,8 +3,8 @@
  *
  * Processor: PIC32MZ2048EFM100
  * Compiler:  Microchip XC32
- * Author:    Andrew Mass
- * Created:   2016-2017
+ * Author:    Jacob Drewniak
+ * Created:   2018-2019
  */
 #include "FSAE_ltc3350.h"
 
@@ -12,17 +12,10 @@
  */
 void init_ltc3350(void) {
   // Initialize pins
-  CHG_PFO_TRIS = INPUT;
-  CHG_PFO_ANSEL = DIG_INPUT;
-  CHG_ALM_TRIS = INPUT;
-  CHG_ALM_ANSEL = DIG_INPUT;
 
   // Initialize I2C bus
   _ltc3350_init_i2c();
 
-  uint8_t count = 0;
-  count = _ltc3350_read(0x1A);
-  count = 1;
 }
 
 /**
@@ -31,137 +24,122 @@ void init_ltc3350(void) {
 inline void _ltc3350_wait_idle(void) {
   while (I2C4CON & 0x1F || 
          I2C4STATbits.TRSTAT || 
-         I2C4STATbits.S || 
-         I2C4STATbits.P);
+         I2C4STATbits.S);
 }
 
 /**
  * 
  * S, Slave addr/wr, command, RS, Slave addr/rd, data low, data high, P
  */
-uint16_t _ltc3350_read(uint8_t addr) {
-  uint8_t retry_cnt = 0;
-  uint8_t data_low, data_high;
-
-  while (retry_cnt <= 10) {
-    retry_cnt++;
-
-    // Generate start bus event
-    I2C4STATCLR = _I2C4STAT_BCL_MASK;
-    _ltc3350_wait_idle();
-    I2C4CONbits.SEN = 1;
-    while (I2C4CONbits.SEN);
-    //I2C4STATCLR = _I2C4STAT_BCL_MASK;
-
-    if (I2C4STATbits.BCL) {
-      _ltc3350_wait_idle();
-      I2C4STATCLR = _I2C4STAT_BCL_MASK;
-      IFS5CLR = _IFS5_I2C4BIF_MASK;
-      continue;
+uint16_t ltc3350_read(uint8_t addr) {
+    start_i2c();
+    delay();
+    
+    ack = send_data_i2c((LTC3350_DEV_ADDR << 1) & 0xFE);
+    if (ack){
+        return -1;
     }
     
-    while (I2C4STATbits.BCL);
+    ack = send_data_i2c(addr);
+     if (ack){
+        return -2;
+    }
     
-    // Send device address byte (write)
-    I2C4TRN = (LTC3350_DEV_ADDR << 1) & 0xFE;
-    while (I2C4STATbits.TBF); // Wait for empty buffer
-    while (I2C4STATbits.ACKSTAT); // Wait for ACK
+    ack = send_data_i2c((LTC3350_DEV_ADDR << 1) & 0xFF);
+    if (ack){
+        return -3;
+    }
     
-    // Send register address byte
-    I2C4TRN = addr;
-    while (I2C4STATbits.TBF); // Wait for empty buffer
-    while (I2C4STATbits.ACKSTAT); // Wait for ACK
+    data = read_data_i2c();
+    acknowledge();
     
-    // Repeated start
-    while (I2C4CON & 0x1F); // Wait for master logic inactive
-    I2C4CONbits.RSEN = 1; // Generate repeated start event
-    while (I2C4CONbits.RSEN);
-    
-    // Send device address byte (read)
-    I2C4TRN = (LTC3350_DEV_ADDR << 1) | 0b1;
-    while (I2C4STATbits.TBF); // Wait for empty buffer
-    while (I2C4STATbits.ACKSTAT); // Wait for ACK
-    
-    // Enable reception
-    while (I2C4CON & 0x1F); // Wait for master logic inactive
-    I2C4CONbits.RCEN = 1; // Begin receive sequence
-    while (I2C4CONbits.RCEN);
-    while (!I2C4STATbits.RBF); // Wait for buffer to fill
-    data_low = I2C4RCV;
-    
-    // Generate ACK/NACK
-    while (I2C4CON & 0x1F); // Wait for master logic inactive
-    I2C4CONbits.ACKDT = 0; // ACK
-    I2C4CONbits.ACKEN = 1; // Generate ACK event
-    while (I2C4CONbits.ACKEN);
-    
-    // Enable reception
-    while (I2C4CON & 0x1F); // Wait for master logic inactive
-    I2C4CONbits.RCEN = 1; // Begin receive sequence
-    while (I2C4CONbits.RCEN);
-    while (!I2C4STATbits.RBF); // Wait for buffer to fill
-    data_high = I2C4RCV;
-    
-    // Generate ACK/NACK
-    while (I2C4CON & 0x1F); // Wait for master logic inactive
-    I2C4CONbits.ACKDT = 0; // ACK
-    I2C4CONbits.ACKEN = 1; // Generate ACK event
-    while (I2C4CONbits.ACKEN);
-    
-    // Stop
-    while (I2C4CON & 0x1F); // Wait for master logic inactive
-    I2C4CONbits.PEN = 1; // Generate stop event
-    while (I2C4CONbits.PEN);
-
-    break;
-  }
-
-  if (retry_cnt == 11) {
-    return 0x0;
-  }
-
-  return (uint16_t) ((data_high << 8) | data_low);
+  return data;
 }
 
 /**
  * 
  * S, Slave addr/wr, command, data low, data high, P 
  */
-void _ltc3350_write(uint8_t addr, uint16_t data) {
+void ltc3350_write(uint8_t addr, uint16_t data) {
+  _ltc3350_wait_idle();
+
+// Generate Start Condition
+  I2C4CONbits.SEN = 1;
+  while(I2C4CONbits.SEN);
+
+  //Send slave address
+  I2C4TRN = (LTC3350_DEV_ADDR << 1) | 0xFE;
+  while (I2C4STATbits.TBF); // Wait for empty buffer
+  while (I2C4STATbits.ACKSTAT); // Wait for ACK
+  while(I2C4CON & 0x001F);
+
+  //Send address of register
+  I2C4TRN = addr;
+  while (I2C4STATbits.TBF); // Wait for empty buffer
+  while (I2C4STATbits.ACKSTAT); // Wait for ACK
+  while(I2C4CON & 0x001F);
+
+  //Generate Repeat Start condition
+  I2C4CONbits.RSEN = 1;
+  while(I2C4CONbits.RSEN);
+
+  //Send slave address
+  I2C4TRN = (LTC3350_DEV_ADDR << 1) | 0xFF;
+  while (I2C4STATbits.TBF); // Wait for empty buffer
+  while (I2C4STATbits.ACKSTAT); // Wait for ACK
+  while(I2C4CON & 0x001F);
+
+  //Send data
+  I2C4TRN = data & 0xFF00;
+  while (I2C4STATbits.TBF); // Wait for empty buffer
+  while (I2C4STATbits.ACKSTAT); // Wait for ACK
+  while(I2C4CON & 0x001F);
+
+  //Send data
+  I2C4TRN = data & 0x00FF;
+  while (I2C4STATbits.TBF); // Wait for empty buffer
+  while (I2C4STATbits.ACKSTAT); // Wait for ACK
+  while(I2C4CON & 0x001F);
+
+  //Generate Stop condition
+  while (I2C4CON & 0x1F); // Wait for master logic inactive
+  I2C4CONbits.PEN = 1; // Generate stop event
+  while (I2C4CONbits.PEN);
 
 }
 
 /**
  */
 void _ltc3350_init_i2c(void) {
-  unlock_config();
+  //unlock_config();
 
   // Disable I2C4 Module
-  I2C4CONbits.ON = 0;
-
-  // SDA4
-  TRISGbits.TRISG7 = OUTPUT;
-  LATGbits.LATG7 = 0;
-  TRISGbits.TRISG7 = INPUT;
-
-  TRISGbits.TRISG8 = OUTPUT;
-  LATGbits.LATG8 = 0;
-  TRISGbits.TRISG8 = INPUT;
+    I2C4CON = 0x00000000;
 
   //ANSELGbits.ANSG7 = DIG_INPUT;
-  CNPUGbits.CNPUG7 = 1;
+  
 
   // SCL4
   //TRISGbits.TRISG8 = OUTPUT;
-  CNPUGbits.CNPUG8 = 1;
-
-  // Disable interrupts
-  IEC5CLR = _IEC5_I2C4MIE_MASK;
-  IEC5CLR = _IEC5_I2C4SIE_MASK;
-  IEC5CLR = _IEC5_I2C4BIE_MASK;
-  IFS5CLR = _IFS5_I2C4MIF_MASK;
-  IFS5CLR = _IFS5_I2C4SIF_MASK;
-  IFS5CLR = _IFS5_I2C4BIF_MASK;
+  
+  
+  CHG_PFO_TRIS = INPUT;
+  CHG_PFO_ANSEL = DIG_INPUT;
+  CHG_ALM_TRIS = INPUT;
+  CHG_ALM_ANSEL = DIG_INPUT;
+  CHG_CPGD_TRIS = INPUT;
+  CHG_CPGD_ANSEL = DIG_INPUT;
+  DATA_LINE_ANSEL = DIG_INPUT;
+  CLK_LINE_ANSEL = DIG_INPUT;
+  DATA_LINE_TRIS = OUTPUT;
+  CLK_LINE_TRIS = INPUT;
+  //CNPUGbits.CNPUG7 = 1;
+  //CNPUGbits.CNPUG8 = 1;
+  
+  //Enable Interrupts
+  IEC5bits.I2C4MIE = 0;
+  IFS5bits.I2C4MIF = 0;
+  IPC43bits.I2C4MIP = 7;
 
   /**
    * Baud rate (400kHz desired)
@@ -170,18 +148,114 @@ void _ltc3350_init_i2c(void) {
    * I2CxBRG = (100Mhz * ((1.25 uS - 104nS)) - 2
    * I2CxBRG = 112
    */
-  //I2C4BRG = 0x70; 400
-  //I2C4BRG = 0x1E8; 100
-  I2C4BRG = 0x9B8; // 20
+  //I2C4BRG = 0x70; //400
+  I2C4BRG = 0x1E8; //100 kHz
+  //I2C4BRG = 0x9B8; // 20
 
-  I2C4ADD = PIC_DEV_ADDR;
+  //I2C4ADD = LTC3350_DEV_ADDR;
 
   // I2C4CON
-  I2C4CONbits.A10M = 0; // 7-bit Slave Address
-  I2C4CONbits.SMEN = 1; // Compliant with SMBus Spec
+  //I2C4CONbits.A10M = 0; // 7-bit Slave Address
+  //I2C4CONbits.SMEN = 1; // Compliant with SMBus Spec
+  //I2C4CONbits.DISSLW = 1; //100kHz slew rate mode
+  I2C4CONbits.SDAHT = 1;
+  I2C4CON = 0x00008200;
+
 
   // Enable I2C4 Module
-  I2C4CONbits.ON = 1;
+  //I2C4CONbits.ON = 1;
+  //I2C4CONbits.SCLREL = 0;
 
-  lock_config();
+}
+
+uint16_t send_data_i2c(uint8_t blah){
+    int i;
+    for(i = 7; i >= 0; i--){
+        DATA_LINE_LAT = (blah >> i) & 0x01;
+        setup_time();
+        CLK_LINE_LAT = 1;
+        hold_time();
+        CLK_LINE_LAT = 0;
+        if (i > 0){
+        setup_time();
+        }
+    }
+    DATA_LINE_TRIS = INPUT;
+    DATA_LINE_ANSEL = DIG_INPUT;
+    setup_time();
+    setup_time();
+    CLK_LINE_LAT = 1;
+    ack = 1;
+    current_time = micros;
+    while(micros - current_time < 20){
+        if(!DATA_LINE_PORT){
+            ack = 0;
+            break;
+        }
+    }
+    CLK_LINE_LAT = 0;
+    return ack;
+}
+
+uint16_t read_data_i2c(){
+    DATA_LINE_TRIS = INPUT;
+    DATA_LINE_ANSEL = DIG_INPUT;
+    
+    uint16_t stuff = 0;
+    int i;
+    for(i = 0; i < 8; i++){
+        CLK_LINE_LAT = 1;
+        setup_time();
+        stuff = ((stuff << i) | DATA_LINE_PORT);
+        setup_time();
+        CLK_LINE_LAT = 0;
+        hold_time();
+    }
+    return stuff;
+}
+
+void acknowledge(){
+    DATA_LINE_TRIS = OUTPUT;
+    DATA_LINE_LAT = 0;
+    setup_time();
+    CLK_LINE_LAT = 1;
+    hold_time();
+    CLK_LINE_LAT = 0;
+    setup_time();
+    DATA_LINE_TRIS = INPUT;
+    DATA_LINE_ANSEL = DIG_INPUT;
+    setup_time();
+}
+
+void start_i2c(){
+    micros = 0;
+    init_timer6(1);
+    DATA_LINE_TRIS = OUTPUT;
+    DATA_LINE_LAT = 0;
+    setup_time();
+    CLK_LINE_TRIS = OUTPUT;
+    CLK_LINE_LAT = 0;
+}
+
+void stop_i2c(){
+    DATA_LINE_TRIS = INPUT;
+    CLK_LINE_TRIS = INPUT;
+    DATA_LINE_ANSEL = DIG_INPUT;
+    CLK_LINE_ANSEL = DIG_INPUT;
+    T6CONbits.ON = 0;
+}
+
+inline void hold_time(){
+    current_time = micros;
+    while(micros - current_time < HOLD_TIME);
+}
+
+inline void setup_time(){
+    current_time = micros;
+    while(micros - current_time < SETUP_TIME);
+}
+
+inline void delay(){
+    current_time = micros;
+    while(micros - current_time < 50000);
 }
