@@ -48,46 +48,96 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
 }
 
-//Timer6 interrupt for PDM soft starting. Uses timer6. Will send signal to all 3 OCs and pins
+
+//Interrupt timer for FUEL PWM
+//I am assuming that using the base period, or PERD correlates to a 100% duty cycle.
+//So after some time, we increase this duty cycle until 100%, starting at *= 0.02
+//Then, we set the final load by calling a new function in PDM.c
 void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
   periods++;// Increment periods count
-  //soft start multipliers start at .2 and end at 2.
-  if(periods >= 15 && periods <= 74) {
-      pwm_set(.2*PERD,7);
-      pwm_set(.2*PERD,8);
-      pwm_set(.2*PERD,9);
+  //very soft start USE TIMER 6666 RPB3
+  if(periods == 25) {
+      pwm_set(.02*PERD,9);
   }
-  else if(periods >= 75 && periods <= 99) {
-      pwm_set(.4*PERD,7);
-      pwm_set(.4*PERD,8);
-      pwm_set(.4*PERD,9);
+  if(periods == 50) {
+      pwm_set(.05*PERD,9);
   }
-  else if (periods >= 100 && periods <= 149){
-      pwm_set(1*PERD,7);    //TODO: Calculate hex values
-      pwm_set(1*PERD,8); 
-      pwm_set(1*PERD,9); 
+  if(periods == 75 ) {
+      pwm_set(.1*PERD,9);
   }
-  else if (periods >= 150 && periods <= 199) {
-      pwm_set(1.5*PERD,7);
-      pwm_set(1.5*PERD,8);
-      pwm_set(1.5*PERD,9);
+  if (periods == 100){
+      pwm_set(.2*PERD,9);    //TODO: Calculate correct hex values.
+  } 
+  if (periods == 150) {
+      pwm_set(.5*PERD,9);
   }
-  else if (periods >= 200){
-      pwm_set(2*PERD,7);
-      pwm_set(2*PERD,8);
-      pwm_set(2*PERD,9);
-      periods = 0;
-      set_load_pwm(FUEL_IDX,1);
+  else if (periods == 200){
+      pwm_set(PERD,9);    
+//      periods = 0;  
+      //Call function in PDM.c. Set final load.
+      set_load_pwm(FUEL_IDX,1);    //The 1 is Power On value
   }
+  IFS0CLR = _IFS0_T6IF_MASK;// Clear TMR6 Interrupt Flag
+}
+//Interrupt handler for FAN PWM
+void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
+  periods++;// Increment periods count
+  if(periods == 25) {
+      pwm_set(.02*PERD,8);
+  }
+  if(periods == 50) {
+      pwm_set(.05*PERD,8);
+  }
+  if(periods == 75 ) {
+      pwm_set(.1*PERD,8);
+  }
+  if (periods == 100){
+      pwm_set(.2*PERD,8);    //TODO: Calculate hex values
+  }
+  if (periods == 150) {
+      pwm_set(.5*PERD,8);
+  }
+  else if (periods == 200){
+      pwm_set(PERD,8);
+//      periods = 0;
+      set_load_pwm(FAN_IDX,1);
+  }
+  
+  IFS0CLR = _IFS0_T6IF_MASK;// Clear TMR6 Interrupt Flag
+}
+//Interrupt handler for WTR PWM
+void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
+  periods++;// Increment periods count
+  if(periods == 25) {
+      pwm_set(.02*PERD,7);
+  }
+  if(periods == 50) {
+      pwm_set(.05*PERD,7);
+  }
+  if(periods == 75 ) {
+      pwm_set(.1*PERD,7);
+  }
+  if (periods == 100){
+      pwm_set(.2*PERD,7);    //TODO: Calculate hex values
+  }
+  if (periods == 150) {
+      pwm_set(.5*PERD,7);
+  }
+  else if (periods == 200){
+      pwm_set( ,7);
+//      periods = 0;
+      set_load_pwm(WTR_IDX,1);
+  }
+  
   IFS0CLR = _IFS0_T6IF_MASK;// Clear TMR6 Interrupt Flag
 }
 
 void __attribute__((vector(_TIMER_4_VECTOR), interrupt(IPL7SRS))) timer4_inthnd(void) {
   periods++;// Increment periods count
   if (periods == 100){
-      pwm_set(0x03E8,1);    //base period
+      pwm_set(0x03E8,1);
   } else if (periods == 200){
-      pwm_set(0x07D0,1);    //2 * base period
+      pwm_set(0x07D0,1);
       periods = 0;
   }
   

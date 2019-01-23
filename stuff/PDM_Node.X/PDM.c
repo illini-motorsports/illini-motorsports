@@ -63,7 +63,6 @@ void main(void) {
   init_oscillator(0); // Initialize oscillator configuration bits
   init_timer1(); // Initialize timer1 (seconds)
   init_timer2(); // Initialize timer2 (millis)
-  init_timer6(2*PERD);
   init_adc(NULL); // Initialize ADC module
   init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
@@ -77,7 +76,6 @@ void main(void) {
 
   //TODO: USB
   //TODO: NVM
-  periods=0;    //initialize this
 
   // Set EN pins to outputs
   EN_FUEL_TRIS = OUTPUT;
@@ -196,8 +194,6 @@ void main(void) {
 
   STI(); // Enable interrupts
 
-  //Following line is for debugging purposes only
-  set_en_load(FUEL_IDX, 1);    //blessed pin B3
   // Main loop
   while (1) {
     load_state_changed = 0;
@@ -288,7 +284,6 @@ void main(void) {
 
         set_load(IGN_IDX, ON_SW && !KILL_SW);
         set_load(INJ_IDX, ON_SW && !KILL_SW);
-        //uncomment these when not debugging
         set_load(FUEL_IDX, (ON_SW && !KILL_SW) || fuel_override);
         set_load(WTR_IDX, (ON_SW && !KILL_SW && !STR_EN) || wtr_override);
         set_load(FAN_IDX, (ON_SW && !KILL_SW && !STR_EN) || fan_override);
@@ -308,8 +303,6 @@ void main(void) {
 
         set_load(IGN_IDX, ON_SW && !KILL_SW);
         set_load(INJ_IDX, ON_SW && !KILL_SW);
-        //re enable for using car switches
-        //consider adding more logic to prevent setting load twice.
         set_load(FUEL_IDX, ON_SW && !KILL_SW &&
             (ENG_ON || fuel_prime_flag || fuel_override || STR_EN));
         set_load(WTR_IDX, !STR_EN &&
@@ -325,7 +318,7 @@ void main(void) {
         }
       }
 
-      /**   
+      /**
        * Toggle loads that do not depend on CAN variables
        */
 
@@ -354,11 +347,7 @@ void main(void) {
     /**
      * Call helper functions
      */
-        //debugging load calling
-//    set_en_load(FUEL_IDX, 1);   //cursed pin B14
-   // set_en_load(FUEL_IDX, 1);    //blessed pin B3
-//    set_en_load(FAN_IDX, 1);    //pin ??
-    
+
     // Separate logic functions
     debounce_switches();
     check_peak_timer();
@@ -1119,27 +1108,34 @@ uint8_t load_enabled(uint8_t load_idx) {
  */
 void set_en_load(uint8_t load_idx, uint8_t load_state) {
     //add conditional for if load_state != PWR_OFF, and if load_idx if FAN, FUEL, or WTR. Use PWM if so.
-    if(load_state == 1 && (load_idx == FUEL_IDX || load_idx == FAN_IDX || load_idx == WTR_IDX)) {
+    if(load_state != PWR_OFF && (load_idx == FUEL_IDX || load_idx == FAN_IDX || load_idx == WTR_IDX)) {
         switch(load_idx) {
             case FUEL_IDX:  //LK1 pin?? OC9
-                init_pwm(2*PERD,7); //This function will call init_timer6(period)
+//              period = (PRx + 1)*(microcontroller base period)*(timer scaling) 
+                //base period is 0x3E8, so PRx=0 and timer scaling =1.0, period = 1000?
+                //PRx is a period register...
+                //just put in base period for now. Consider .1 * Base period too
+                init_pwm(PERD,9); //This function will call init_timer6(period)
                 break;
-            //set equal to load_state later, in interrupt handler
+            //set equal to load_state at some point, check OC2R?
             case FAN_IDX: 
-                init_pwm(0x5000,8);
+                init_pwm(PERD,8);
                 break; //L1  OC8   
             case WTR_IDX: 
-                init_pwm(.01*PERD,9);
+                init_pwm(PERD,7);
                 break; //L5  OC7   
         }
     }
     else    
         switch (load_idx) {
+//        case FUEL_IDX: EN_FUEL_LAT = load_state; break;   // 200hz  only use this on enabling, not disabling
         case IGN_IDX: EN_IGN_LAT = load_state; break;
         case INJ_IDX: EN_INJ_LAT = load_state; break;
         case ABS_IDX: EN_ABS_LAT = load_state; break;
         case PDLU_IDX: EN_PDLU_LAT = load_state; break;
         case PDLD_IDX: EN_PDLD_LAT = load_state; break;
+//        case FAN_IDX: EN_FAN_LAT = load_state; break;   //
+//        case WTR_IDX: EN_WTR_LAT = load_state; break;  //
         case ECU_IDX: EN_ECU_LAT = load_state; break;
         case AUX_IDX: EN_AUX_LAT = load_state; break;
         case BVBAT_IDX: EN_BVBAT_LAT = load_state; break;
@@ -1154,10 +1150,6 @@ void set_load_pwm(uint8_t load_idx, uint8_t load_state) {
         case FAN_IDX: EN_FAN_LAT = load_state; break;
         case WTR_IDX: EN_WTR_LAT = load_state; break;
     }
-    //Disable timer6
-    CFGCONbits.IOLOCK = 0;
-    T6CONbits.ON = 0;
-    CFGCONbits.IOLOCK = 1;
 }
 
 void init_rheostats(void) {
@@ -1173,39 +1165,3 @@ void init_rheostats(void) {
   rheo_connections[9] = init_rheo(1, CS_AUX_LATBITS, CS_AUX_LATNUM);
   rheo_connections[10] = init_rheo(1, CS_BVBAT_LATBITS, CS_BVBAT_LATNUM);
 }
-
-//Timer6 interrupt for PDM soft starting. Debug purposes only.
-/*
-void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
-  periods++;// Increment periods count
-  //soft start multipliers start at .2 and end at 2.
-  if(periods >= 15 && periods <= 74) {
-      pwm_set(.2*PERD,7);
-      pwm_set(.2*PERD,8);
-      pwm_set(.2*PERD,9);
-  }
-  else if(periods >= 75 && periods <= 99) {
-      pwm_set(.4*PERD,7);
-      pwm_set(.4*PERD,8);
-      pwm_set(.4*PERD,9);
-  }
-  else if (periods >= 100 && periods <= 149){
-      pwm_set(1*PERD,7);    //TODO: Calculate hex values
-      pwm_set(1*PERD,8); 
-      pwm_set(1*PERD,9); 
-  }
-  else if (periods >= 150 && periods <= 199) {
-      pwm_set(1.5*PERD,7);
-      pwm_set(1.5*PERD,8);
-      pwm_set(1.5*PERD,9);
-  }
-  else if (periods >= 200){
-      pwm_set(2*PERD,7);
-      pwm_set(2*PERD,8);
-      pwm_set(2*PERD,9);
-      periods = 0;
-      set_load_pwm(FUEL_IDX,1);
-  }
-  IFS0CLR = _IFS0_T6IF_MASK;// Clear TMR6 Interrupt Flag
-}
-*/

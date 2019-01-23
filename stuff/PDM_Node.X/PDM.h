@@ -15,11 +15,11 @@
 #include "../FSAE.X/FSAE_adc.h"
 #include "../FSAE.X/FSAE_spi.h"
 #include "../FSAE.X/FSAE_ad7490.h"
-#include "../FSAE.X/FSAE_pwm.h"
 #include "../FSAE.X/FSAE_mcp23s17.h"
 #include "../FSAE.X/FSAE_rheo.h"
 #include "../FSAE.X/CAN.h"
 #include "../FSAE.X/errno.h"
+#include "../FSAE.X/FSAE_pwm.h"
 
 // Definitions for MOSFET control
 #define PWR_ON  1
@@ -269,8 +269,7 @@
 #define VFB_CUTOFF          4.7
 
 //microcontroller base period
-#define PERD        0x2710
-int volatile periods;
+#define PERD        0x03E8
 // Initial overcurrent thresholds to use for all the loads
 const double load_cutoff[NUM_CTL] = {
   10.0,  // FUEL

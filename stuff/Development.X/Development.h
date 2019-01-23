@@ -16,7 +16,7 @@
 #define PWM_TRIS TRISBbits.TRISB2
 #define PWM_LAT LATBbits.LATB2
 
-#define PERD 0x2710     //0x03E8 * 7, for PR6 +1. Half of this is 0xDAC
+#define PERD 0x03E8
 volatile uint32_t millis;
 volatile uint32_t periods;
 
