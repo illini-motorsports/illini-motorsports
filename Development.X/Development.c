@@ -49,6 +49,7 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL6SRS))) timer2_inthnd(
 }
 
 //Timer6 interrupt for PDM soft starting. Uses timer6. Will send signal to all 3 OCs and pins
+//Hopefully switches will be turned on at some delay, maybe 2 seconds at most between flipping on WTR, FUEL, or FAN.
 void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
   periods++;// Increment periods count
   //soft start multipliers start at .2 and end at 2.
@@ -76,8 +77,8 @@ void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(
       pwm_set(2*PERD,7);
       pwm_set(2*PERD,8);
       pwm_set(2*PERD,9);
-      periods = 0;
-      set_load_pwm(FUEL_IDX,1);
+      periods = 0;              //reset periods
+      set_load_pwm(FUEL_IDX,1); //set final load state.
   }
   IFS0CLR = _IFS0_T6IF_MASK;// Clear TMR6 Interrupt Flag
 }
