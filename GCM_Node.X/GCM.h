@@ -135,6 +135,11 @@ const uint16_t shift_rpm[6] = {
 #define ADC_FORCE_CSS   ADCCSS1bits.CSS25
 #define ADC_FORCE_CHN   25
 
+#define PWRCUT_TRIS TRISEbits.TRISE4
+#define PWRCUT_LAT LATEbits.LATE4
+#define PWRCUT_ANSEL ANSELEbits.ANSE4
+#define PWRCUT_PORT PORTEbits.RE4
+
 // Enum for current GCM mode
 typedef enum _gcm_mode {NORMAL_MODE, AUTO_UPSHIFT_MODE} gcm_mode;
 

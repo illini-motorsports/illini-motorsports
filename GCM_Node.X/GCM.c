@@ -102,6 +102,7 @@ void main(void) {
   ADC_FORCE_TRIS = INPUT;
   ADC_FORCE_ANSEL = AN_INPUT;
   ADC_FORCE_CSS = 1;
+  PWRCUT_LAT = OUTPUT;
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
@@ -1055,8 +1056,11 @@ void debounce_switches(void) {
 void send_power_cut(uint8_t is_start) {
   if (is_start == CUT_START) {
     shift_force_spoof = PWR_CUT_SPOOF;
+    PWRCUT_LAT = 1;
+    
   } else if (is_start == CUT_END) {
     shift_force_spoof = 0;
+    PWRCUT_LAT = 0;
   }
 
   CAN_data data = {0};
