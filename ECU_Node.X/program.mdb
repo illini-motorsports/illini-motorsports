@@ -1,0 +1,12 @@
+device PIC32MZ2048EFM100
+hwtool PICkit3 -p
+
+set memories.eeprom true
+set programoptions.eraseb4program true
+
+program /home/mass/development/illini-motorsports/ECU_Node.X/dist/default/production/ECU_Node.X.production.hex
+sleep 1500
+
+Reset MCLR
+sleep 1500
+quit

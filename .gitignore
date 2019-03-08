@@ -1,0 +1,51 @@
+# Generated QT Files
+can-translator/Makefile
+can-translator/can-translator
+can-translator/*moc*
+telemetry-monitor/Makefile
+telemetry-monitor/telemetry-monitor
+telemetry-monitor/*moc*
+*.sublime-workspace
+can-translator/out.txt
+*.pro.user
+
+# Unwanted MPLAB Files
+*.err
+*/nbproject/private/
+*/debug
+*/build
+*/dist
+*.i
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.lst
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.mk
+*.bash
+*.properties
+*.d
+*.hex
+*.map
+*.cof
+
+# Misc
+can-translator/config.dbc
