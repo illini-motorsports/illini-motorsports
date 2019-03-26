@@ -23,7 +23,7 @@
 #define CAN_TIMEOUT           1000
 
 // PDM Dataitem Constants
-#define PDM_DATAITEM_SIZE     7
+#define PDM_DATAITEM_SIZE     2
 
 #define VBAT_RAIL_IDX         0
 #define KILL_SWITCH_IDX       1
@@ -40,7 +40,7 @@
 #define MODE_IDX              1
 
 //MOTEC DataItem Constants
-#define MOTEC_DATAITEM_SIZE   9
+#define MOTEC_DATAITEM_SIZE   6
 
 #define ENG_RPM_IDX           0
 #define THROTTLE_POS_IDX      1
@@ -150,7 +150,7 @@ const uint16_t shiftLightSub[10] = {
 };
 
 // Define all screen item arrays for each screen
-screenItem raceScreenItems[8], testScreenItems[5];
+screenItem raceScreenItems[7], testScreenItems[3];
 
 // Define all screen structs
 screen raceScreen, testScreen;

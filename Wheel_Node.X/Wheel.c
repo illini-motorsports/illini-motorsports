@@ -174,13 +174,6 @@ void process_CAN_msg(CAN_message msg){
       break;
     case MOTEC_ID + 2:
       updateDataItem(&motecDataItems[OIL_PRES_IDX], parseMsgMotec(&msg, OIL_PRES_BYTE, OIL_PRES_SCL));
-      updateDataItem(&motecDataItems[MANIFOLD_PRES_IDX], parseMsgMotec(&msg, MANIFOLD_PRES_BYTE, MANIFOLD_PRES_SCL));
-      break;
-    case MOTEC_ID + 4:
-      //TODO: verify the sclalar is correct
-      updateDataItem(&motecDataItems[FUEL_PRES_RAW_IDX], parseMsgMotec(&msg, GPS_SPEED_BYTE, GPS_SPEED_SCL));
-      //TODO: make sure my math is right
-      updateDataItem(&motecDataItems[FUEL_PRES_CALC_IDX], motecDataItems[FUEL_PRES_RAW_IDX].value - (14.5*motecDataItems[MANIFOLD_PRES_IDX].value));
       break;
 
       /*GCM*/
