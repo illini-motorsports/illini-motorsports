@@ -45,7 +45,7 @@
 #define REV_SUB_6           	2000
 #define REV_SUB_7           	1500
 #define REV_SUB_8           	1000
-#define REV_SUB_9           	500
+#define REV_SUB_9           	200
 
 // PDM Dataitem Constants
 #define PDM_DATAITEM_SIZE     93

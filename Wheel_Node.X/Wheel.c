@@ -12,14 +12,21 @@
 volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis, checkDisplayMillis;
 volatile uint8_t nightModeState;
 volatile uint8_t auxState;
-void throttle_led(void);    //prototype
+volatile uint8_t ledState;  //0-9 will tell num of leds on
+//void on_led(void);    //prototype
 uint32_t temp_samp_tmr = 0;
 
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 
+uint32_t prev_throt;
+int16_t blink;
+
 void main(void) {
-    throt=0;
+  throt=0; //despite its name, throt can hold throttle position OR rpm.
+  prev_throt=0; 
+  blink = 0;
+  ledState = 0;
 //    throt_counter=0;
   init_general();// Set general runtime configuration bits
   init_gpio_pins();// Set all I/O pins to low outputs
@@ -95,26 +102,25 @@ void main(void) {
   changeScreen(screenNumber);
 
   tlc5955_startup();
-  volatile uint8_t flag = 0;
   uint32_t throt_counter=0;
+  uint8_t num_leds=0;
   while(1) {
-    //Need a software delay when setting leds. tlc5955 might not be working, so directly set leds.
-      //Essentially this samples the throttle
-      throt_counter++;
-      if(throt_counter>=90000 && flag==0)
-      {
-          throt_counter=0;
-          flag=1;
-//          tlc5955_set_leds(OFF, 0b111111111110000, OVR);
-          throttle_led();
-//          tlc5955_set_leds(RED, 0b111111111110000, OVR);
-      }
-      if(throt_counter>=90000 && flag == 1) {
-          throt_counter=0;
-          flag=0;
-//          throttle_led();
-          tlc5955_set_leds(OFF, 0b111111111111111, OVR);
-      }
+    //Need a software delay when setting leds or crash
+    throt_counter++;
+    if(throt_counter>=51000)
+    {
+        throt_counter=0;
+        //get number of leds that should be on
+        num_leds = _getShiftLightsRevRange(throt, curr_gear);   
+        if(throt >= prev_throt) //decide whether to enable or disable leds
+            on_led(num_leds);
+        else
+            off_led(num_leds);
+
+        prev_throt = throt;   //store current throt value for comparison
+    }
+
+      
       // Send CAN messages with the correct frequency
     if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
       CANswitchStates();
@@ -146,42 +152,270 @@ void main(void) {
   }
 }
 
-/* throttle_led
- returns a number of leds depending on throttle position
+/* on_led
+ * Shift lights can be turned on, off, and blink, decided by this state machine.
+ * This function turns on leds, when RPM or throt increases. At some threshold, 
+ * the blinking function will be called (ie. at optimal shift rpm)
+ * Keep track of the state of the leds to minimize sending data to the tlc5955.
  */
-void throttle_led(void)
+void on_led(uint8_t num_leds)
 {
-    if(throt <= 5) {
-        tlc5955_set_leds(RED, 0b000000000001000, OVR);
+    //switch case for using RPM
+    switch(num_leds){
+        case 0:
+            if(ledState == 0) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+        break;
+        case 1:
+            if(ledState == 1) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(GRN, 0b000000000001000, OVR);
+            ledState = 1;
+        break;
+        case 2:
+            if(ledState == 2) return;
+            tlc5955_set_leds(GRN, 0b000000000011000, OVR);
+            ledState = 2;    
+        break;
+        case 3:
+            if(ledState == 3) return;
+            tlc5955_set_leds(GRN, 0b000000000111000, OVR);
+            ledState = 3;    
+        break;
+        case 4:
+            if(ledState == 4) return;
+            tlc5955_set_leds(GRN, 0b000000001111000, OVR);
+            ledState = 4;    
+        break;
+        case 5:
+            if(ledState == 5) return;
+            tlc5955_set_leds(GRN, 0b000000011111000, OVR);
+            ledState = 5;    
+        break;
+        case 6:
+            if(ledState == 6) return;
+            tlc5955_set_leds(GRN, 0b000000111111000, OVR);
+            ledState = 6;    
+        break;
+        case 7:
+            if(ledState == 7) return;
+            tlc5955_set_leds(GRN, 0b000001111111000, OVR);
+            ledState = 7;    
+        break;
+        case 8:
+            if(ledState == 8) return;
+            tlc5955_set_leds(GRN, 0b000011111111000, OVR);
+            ledState = 8;    
+        break;
+        case 9:
+            if(ledState == 9) return;
+            tlc5955_set_leds(RED, 0b000111111111000, OVR);
+            ledState = 9;    
+        break;
+        case 10:
+            if(ledState == 10) return;
+            tlc5955_set_leds(RED, 0b000111111111000, OVR);    //consider using the leftmost (rightmost in the mask) 3 leds to signify a 10th state
+            ledState = 10;    
+        break;
+        default:
+            if(ledState == 0) return;
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+        break;
+    }
+//    Debugging led code, use for when shift lights are on throttle position. Does not depend on num_leds
+   /* if(throt <= 5 || throt == NULL) {
+        if(ledState == 1) return;   //avoid continuous identical writes. 
+        tlc5955_set_leds(GRN, 0b000000000001000, OVR);
+        ledState = 1;
     }
     else if(throt > 5 && throt <= 10) {
-        tlc5955_set_leds(RED, 0b000000000011000, OVR);
+        if(ledState == 2) return;
+        tlc5955_set_leds(GRN, 0b000000000011000, OVR);
+        ledState = 2;
     }
     else if(throt > 10 && throt <= 20){
-        tlc5955_set_leds(RED, 0b000000000111000, OVR);
+        if(ledState == 3) return;
+        tlc5955_set_leds(GRN, 0b000000000111000, OVR);
+        ledState = 3;
     }
     else if(throt > 20 && throt <= 30){
-        tlc5955_set_leds(RED, 0b000000001111000, OVR);
+        if(ledState == 4) return;
+        tlc5955_set_leds(GRN, 0b000000001111000, OVR);
+        ledState = 4;
     }
     else if(throt > 30 && throt <= 40){
-        tlc5955_set_leds(RED, 0b000000011111000, OVR);
+        if(ledState == 5) return;
+        tlc5955_set_leds(GRN, 0b000000011111000, OVR);
+        ledState = 5;
     }
     else if(throt > 40 && throt <= 50){
-        tlc5955_set_leds(RED, 0b000000111111000, OVR);
+        if(ledState == 6) return;
+        tlc5955_set_leds(GRN, 0b000000111111000, OVR);
+        ledState = 6;
     }
     else if(throt > 50 && throt <=60){
-        tlc5955_set_leds(RED, 0b000001111111000, OVR);
+        if(ledState == 7) return;
+        tlc5955_set_leds(GRN, 0b000001111111000, OVR);
+        ledState = 7;
     }
     else if(throt > 60 && throt <=70){
-        tlc5955_set_leds(RED, 0b000011111111000, OVR);
+        if(ledState == 8) return;
+        tlc5955_set_leds(GRN, 0b000011111111000, OVR);
+        ledState = 8;
     }
-    else if(throt > 70 && throt <=80){
-        tlc5955_set_leds(RED, 0b000111111111000, OVR);
+    else if(throt > 70 && throt <= 80){
+        if(ledState == 9) return;
+        tlc5955_set_leds(RED, 0b000111111111000, OVR);  
+        ledState = 9;
     }
-    else{
-        tlc5955_set_leds(RED, 0b111111111111111, OVR);
+    else if(throt >80) {
+        if(ledState == 10) return;
+        tlc5955_set_leds(RED, 0b000111111111000, OVR);  
+        ledState = 10;
+    }*/
+}
+/* off led
+ * secondary behavior of shift lights.
+ * This function will only disable leds. Needed during deceleration, when RPMs fall. (or throttle position)
+ */
+void off_led(uint8_t num_leds) 
+{
+    switch(num_leds){
+        case 0:
+            if(ledState == 0) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+        break;
+        case 1:
+            if(ledState == 1) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(OFF, 0b000111111110000, OVR);
+            ledState = 1;
+        break;
+        case 2:
+            if(ledState == 2) return;
+            tlc5955_set_leds(OFF, 0b000111111100000, OVR);
+            ledState = 2;    
+        break;
+        case 3:
+            if(ledState == 3) return;
+            tlc5955_set_leds(OFF, 0b000111111000000, OVR);
+            ledState = 3;    
+        break;
+        case 4:
+            if(ledState == 4) return;
+            tlc5955_set_leds(OFF, 0b000111110000000, OVR);
+            ledState = 4;    
+        break;
+        case 5:
+            if(ledState == 5) return;
+            tlc5955_set_leds(OFF, 0b000111100000000, OVR);
+            ledState = 5;    
+        break;
+        case 6:
+            if(ledState == 6) return;
+            tlc5955_set_leds(OFF, 0b000111000000000, OVR);
+            ledState = 6;    
+        break;
+        case 7:
+            if(ledState == 7) return;
+            tlc5955_set_leds(OFF, 0b000110000000000, OVR);
+            ledState = 7;    
+        break;
+        case 8:
+            if(ledState == 8)
+                tlc5955_set_leds(GRN,0b000011111111000, OVR);
+            else {
+                tlc5955_set_leds(OFF, 0b000100000000000, OVR);
+                ledState = 8;    
+            }
+        break;
+        case 9:
+            if(ledState == 9) return;
+            tlc5955_set_leds(GRN, 0b000111111111000, OVR);  //write a green since 9 is max leds. Should prevent red led falloff
+            ledState = 9;    
+        break;
+        case 10:
+            if(ledState == 10) return;
+            tlc5955_set_leds(GRN, 0b000111111111000, OVR);    
+            ledState = 10;    
+        break;
+        default:
+            if(ledState == 0) return;
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+            break;
     }
-    
+    //Below is if shift leds mapped to throttle position only. Does not depend on num_leds
+    //when on throttle position, state 0 is not used.
+    /*if(throt <= 5) {
+        if(ledState == 1) return;
+        tlc5955_set_leds(OFF, 0b000111111110000, OVR);
+        ledState = 1;
+    }
+    else if(throt > 5 && throt <= 10) {
+        if(ledState == 2) return;
+        tlc5955_set_leds(OFF, 0b000111111100000, OVR);
+        ledState = 2;
+    }
+    else if(throt > 10 && throt <= 20){
+        if(ledState == 3) return;
+        tlc5955_set_leds(OFF, 0b000111111000000, OVR);
+        ledState = 3;
+    }
+    else if(throt > 20 && throt <= 30){
+        if(ledState == 4) return;
+        tlc5955_set_leds(OFF, 0b000111110000000, OVR);
+        ledState = 4;
+    }
+    else if(throt > 30 && throt <= 40){
+        if(ledState == 5) return;
+        tlc5955_set_leds(OFF, 0b000111100000000, OVR);
+        ledState = 5;
+    }
+    else if(throt > 40 && throt <= 50){
+        if(ledState == 6) return;
+        tlc5955_set_leds(OFF, 0b000111000000000, OVR);
+        ledState = 6;
+    }
+    else if(throt > 50 && throt <=60){
+        if(ledState == 7) return;
+        tlc5955_set_leds(OFF, 0b000110000000000, OVR);
+        ledState = 7;
+    }
+    else if(throt > 60 && throt <=70){
+        if(ledState == 8) return;
+        tlc5955_set_leds(OFF, 0b000100000000000, OVR);
+        ledState = 8;
+    }
+    else if(throt > 70 && throt <= 80){
+        if(ledState == 9) return;
+        tlc5955_set_leds(GRN, 0b000111111111000, OVR);
+        ledState = 9;
+    }
+    else {
+        if(ledState == 10) return;
+        tlc5955_set_leds(GRN, 0b000111111111000, OVR);
+        ledState = 10;
+    }*/
+}
+/* blink_led
+ * Will blink the shift light legs. Needed to signal optimal shift rpm
+ * Blink rate determined in overall led refresh rate in main loop above
+ * Check values in getShiftLightsRevRange of FSAE_LCD file if optimal shift range 
+ * changes by gear.
+ * DISABLED - im pretty sure blinking leds is whats causing crashes
+ */
+void blink_led(void)
+{
+//    if(blink==1) {
+//        tlc5955_set_leds(OFF, 0b000111111111000, OVR);  //on blink, then disable leds.
+//        blink = 0;
+//    }
+//    else {
+//        tlc5955_set_leds(RED,0b000111111111000, OVR);
+//        blink = 1;
+//    }
 }
 
 /**
@@ -229,8 +463,9 @@ void process_CAN_msg(CAN_message msg){
     /*Motec*/
     case MOTEC_ID + 0:
       updateDataItem(&motecDataItems[ENG_RPM_IDX], parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL));
+      throt = motecDataItems[ENG_RPM_IDX].value;  //grab RPM
       updateDataItem(&motecDataItems[THROTTLE_POS_IDX], parseMsgMotec(&msg, THROTTLE_POS_BYTE, THROTTLE_POS_SCL));
-      throt = motecDataItems[THROTTLE_POS_IDX].value;
+//      throt = motecDataItems[THROTTLE_POS_IDX].value;   //grab throttle position
       updateDataItem(&motecDataItems[LAMBDA_IDX], parseMsgMotec(&msg, LAMBDA_BYTE, LAMBDA_SCL));
       updateDataItem(&motecDataItems[VOLT_ECU_IDX], parseMsgMotec(&msg, VOLT_ECU_BYTE, VOLT_ECU_SCL));
       break;
@@ -282,6 +517,7 @@ void process_CAN_msg(CAN_message msg){
       break;
     case GCM_ID + 1:
       updateDataItem(&gcmDataItems[GEAR_IDX], (uint8_t) (msg.data[GEAR_BYTE]) * GEAR_SCL);
+      curr_gear = gcmDataItems[GEAR_IDX].value;   
       updateDataItem(&gcmDataItems[MODE_IDX], (uint8_t) (msg.data[MODE_BYTE]));
       updateDataItem(&gcmDataItems[GEAR_VOLT_IDX], (uint16_t) (lsbArray[GEAR_VOLT_BYTE/2]) * GEAR_VOLT_SCL);
       updateDataItem(&gcmDataItems[FORCE_IDX], (int16_t) (lsbArray[FORCE_BYTE/2]) * FORCE_SCL);

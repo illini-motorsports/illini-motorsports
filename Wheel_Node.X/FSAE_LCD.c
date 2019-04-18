@@ -10,7 +10,7 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 
-uint16_t shiftRPM[7] = {13000,13000,13000,13000,13000,13000,13000};
+uint16_t shiftRPM[7] = {12444,11959,12155,12100,11150,13000,13000}; //theres only gears 1-5
 
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
