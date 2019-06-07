@@ -12,12 +12,22 @@
 volatile uint32_t CANswStateMillis, CANswADLMillis, CANdiagMillis, checkDisplayMillis;
 volatile uint8_t nightModeState;
 volatile uint8_t auxState;
+volatile uint8_t ledState;  //0-9 will tell num of leds on
+//void on_led(void);    //prototype
 uint32_t temp_samp_tmr = 0;
 
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 
+uint32_t prev_throt;
+int16_t blink;
+
 void main(void) {
+  throt=0; //despite its name, throt can hold throttle position OR rpm.
+  prev_throt=0; 
+  blink = 0;
+  ledState = 0;
+//    throt_counter=0;
   init_general();// Set general runtime configuration bits
   init_gpio_pins();// Set all I/O pins to low outputs
   init_oscillator(1);// Initialize oscillator configuration bits
@@ -92,9 +102,26 @@ void main(void) {
   changeScreen(screenNumber);
 
   tlc5955_startup();
-
+  uint32_t throt_counter=0;
+  uint8_t num_leds=0;
   while(1) {
-    // Send CAN messages with the correct frequency
+    //Need a software delay when setting leds or crash
+    throt_counter++;
+    if(throt_counter>=51000)
+    {
+        throt_counter=0;
+        //get number of leds that should be on
+        num_leds = _getShiftLightsRevRange(throt, curr_gear);   
+        if(throt >= prev_throt) //decide whether to enable or disable leds
+            on_led(num_leds);
+        else
+            off_led(num_leds);
+
+        prev_throt = throt;   //store current throt value for comparison
+    }
+
+      
+      // Send CAN messages with the correct frequency
     if(millis - CANswStateMillis >= CAN_SW_STATE_FREQ){
       CANswitchStates();
       CANswStateMillis = millis;
@@ -123,6 +150,272 @@ void main(void) {
 
     refreshScreenItems(); // Refresh items on screen
   }
+}
+
+/* on_led
+ * Shift lights can be turned on, off, and blink, decided by this state machine.
+ * This function turns on leds, when RPM or throt increases. At some threshold, 
+ * the blinking function will be called (ie. at optimal shift rpm)
+ * Keep track of the state of the leds to minimize sending data to the tlc5955.
+ */
+void on_led(uint8_t num_leds)
+{
+    //switch case for using RPM
+    switch(num_leds){
+        case 0:
+            if(ledState == 0) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+        break;
+        case 1:
+            if(ledState == 1) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(GRN, 0b000000000001000, OVR);
+            ledState = 1;
+        break;
+        case 2:
+            if(ledState == 2) return;
+            tlc5955_set_leds(GRN, 0b000000000011000, OVR);
+            ledState = 2;    
+        break;
+        case 3:
+            if(ledState == 3) return;
+            tlc5955_set_leds(GRN, 0b000000000111000, OVR);
+            ledState = 3;    
+        break;
+        case 4:
+            if(ledState == 4) return;
+            tlc5955_set_leds(GRN, 0b000000001111000, OVR);
+            ledState = 4;    
+        break;
+        case 5:
+            if(ledState == 5) return;
+            tlc5955_set_leds(GRN, 0b000000011111000, OVR);
+            ledState = 5;    
+        break;
+        case 6:
+            if(ledState == 6) return;
+            tlc5955_set_leds(GRN, 0b000000111111000, OVR);
+            ledState = 6;    
+        break;
+        case 7:
+            if(ledState == 7) return;
+            tlc5955_set_leds(GRN, 0b000001111111000, OVR);
+            ledState = 7;    
+        break;
+        case 8:
+            if(ledState == 8) return;
+            tlc5955_set_leds(GRN, 0b000011111111000, OVR);
+            ledState = 8;    
+        break;
+        case 9:
+            if(ledState == 9) return;
+            tlc5955_set_leds(RED, 0b000111111111000, OVR);
+            ledState = 9;    
+        break;
+        case 10:
+            if(ledState == 10) return;
+            tlc5955_set_leds(RED, 0b000111111111000, OVR);    //consider using the leftmost (rightmost in the mask) 3 leds to signify a 10th state
+            ledState = 10;    
+        break;
+        default:
+            if(ledState == 0) return;
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+        break;
+    }
+//    Debugging led code, use for when shift lights are on throttle position. Does not depend on num_leds
+   /* if(throt <= 5 || throt == NULL) {
+        if(ledState == 1) return;   //avoid continuous identical writes. 
+        tlc5955_set_leds(GRN, 0b000000000001000, OVR);
+        ledState = 1;
+    }
+    else if(throt > 5 && throt <= 10) {
+        if(ledState == 2) return;
+        tlc5955_set_leds(GRN, 0b000000000011000, OVR);
+        ledState = 2;
+    }
+    else if(throt > 10 && throt <= 20){
+        if(ledState == 3) return;
+        tlc5955_set_leds(GRN, 0b000000000111000, OVR);
+        ledState = 3;
+    }
+    else if(throt > 20 && throt <= 30){
+        if(ledState == 4) return;
+        tlc5955_set_leds(GRN, 0b000000001111000, OVR);
+        ledState = 4;
+    }
+    else if(throt > 30 && throt <= 40){
+        if(ledState == 5) return;
+        tlc5955_set_leds(GRN, 0b000000011111000, OVR);
+        ledState = 5;
+    }
+    else if(throt > 40 && throt <= 50){
+        if(ledState == 6) return;
+        tlc5955_set_leds(GRN, 0b000000111111000, OVR);
+        ledState = 6;
+    }
+    else if(throt > 50 && throt <=60){
+        if(ledState == 7) return;
+        tlc5955_set_leds(GRN, 0b000001111111000, OVR);
+        ledState = 7;
+    }
+    else if(throt > 60 && throt <=70){
+        if(ledState == 8) return;
+        tlc5955_set_leds(GRN, 0b000011111111000, OVR);
+        ledState = 8;
+    }
+    else if(throt > 70 && throt <= 80){
+        if(ledState == 9) return;
+        tlc5955_set_leds(RED, 0b000111111111000, OVR);  
+        ledState = 9;
+    }
+    else if(throt >80) {
+        if(ledState == 10) return;
+        tlc5955_set_leds(RED, 0b000111111111000, OVR);  
+        ledState = 10;
+    }*/
+}
+/* off led
+ * secondary behavior of shift lights.
+ * This function will only disable leds. Needed during deceleration, when RPMs fall. (or throttle position)
+ */
+void off_led(uint8_t num_leds) 
+{
+    switch(num_leds){
+        case 0:
+            if(ledState == 0) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+        break;
+        case 1:
+            if(ledState == 1) return;   //avoid continuous identical writes. 
+            tlc5955_set_leds(OFF, 0b000111111110000, OVR);
+            ledState = 1;
+        break;
+        case 2:
+            if(ledState == 2) return;
+            tlc5955_set_leds(OFF, 0b000111111100000, OVR);
+            ledState = 2;    
+        break;
+        case 3:
+            if(ledState == 3) return;
+            tlc5955_set_leds(OFF, 0b000111111000000, OVR);
+            ledState = 3;    
+        break;
+        case 4:
+            if(ledState == 4) return;
+            tlc5955_set_leds(OFF, 0b000111110000000, OVR);
+            ledState = 4;    
+        break;
+        case 5:
+            if(ledState == 5) return;
+            tlc5955_set_leds(OFF, 0b000111100000000, OVR);
+            ledState = 5;    
+        break;
+        case 6:
+            if(ledState == 6) return;
+            tlc5955_set_leds(OFF, 0b000111000000000, OVR);
+            ledState = 6;    
+        break;
+        case 7:
+            if(ledState == 7) return;
+            tlc5955_set_leds(OFF, 0b000110000000000, OVR);
+            ledState = 7;    
+        break;
+        case 8:
+            if(ledState == 8)
+                tlc5955_set_leds(GRN,0b000011111111000, OVR);
+            else {
+                tlc5955_set_leds(OFF, 0b000100000000000, OVR);
+                ledState = 8;    
+            }
+        break;
+        case 9:
+            if(ledState == 9) return;
+            tlc5955_set_leds(GRN, 0b000111111111000, OVR);  //write a green since 9 is max leds. Should prevent red led falloff
+            ledState = 9;    
+        break;
+        case 10:
+            if(ledState == 10) return;
+            tlc5955_set_leds(GRN, 0b000111111111000, OVR);    
+            ledState = 10;    
+        break;
+        default:
+            if(ledState == 0) return;
+            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            ledState = 0;    
+            break;
+    }
+    //Below is if shift leds mapped to throttle position only. Does not depend on num_leds
+    //when on throttle position, state 0 is not used.
+    /*if(throt <= 5) {
+        if(ledState == 1) return;
+        tlc5955_set_leds(OFF, 0b000111111110000, OVR);
+        ledState = 1;
+    }
+    else if(throt > 5 && throt <= 10) {
+        if(ledState == 2) return;
+        tlc5955_set_leds(OFF, 0b000111111100000, OVR);
+        ledState = 2;
+    }
+    else if(throt > 10 && throt <= 20){
+        if(ledState == 3) return;
+        tlc5955_set_leds(OFF, 0b000111111000000, OVR);
+        ledState = 3;
+    }
+    else if(throt > 20 && throt <= 30){
+        if(ledState == 4) return;
+        tlc5955_set_leds(OFF, 0b000111110000000, OVR);
+        ledState = 4;
+    }
+    else if(throt > 30 && throt <= 40){
+        if(ledState == 5) return;
+        tlc5955_set_leds(OFF, 0b000111100000000, OVR);
+        ledState = 5;
+    }
+    else if(throt > 40 && throt <= 50){
+        if(ledState == 6) return;
+        tlc5955_set_leds(OFF, 0b000111000000000, OVR);
+        ledState = 6;
+    }
+    else if(throt > 50 && throt <=60){
+        if(ledState == 7) return;
+        tlc5955_set_leds(OFF, 0b000110000000000, OVR);
+        ledState = 7;
+    }
+    else if(throt > 60 && throt <=70){
+        if(ledState == 8) return;
+        tlc5955_set_leds(OFF, 0b000100000000000, OVR);
+        ledState = 8;
+    }
+    else if(throt > 70 && throt <= 80){
+        if(ledState == 9) return;
+        tlc5955_set_leds(GRN, 0b000111111111000, OVR);
+        ledState = 9;
+    }
+    else {
+        if(ledState == 10) return;
+        tlc5955_set_leds(GRN, 0b000111111111000, OVR);
+        ledState = 10;
+    }*/
+}
+/* blink_led
+ * Will blink the shift light legs. Needed to signal optimal shift rpm
+ * Blink rate determined in overall led refresh rate in main loop above
+ * Check values in getShiftLightsRevRange of FSAE_LCD file if optimal shift range 
+ * changes by gear.
+ * DISABLED - im pretty sure blinking leds is whats causing crashes
+ */
+void blink_led(void)
+{
+//    if(blink==1) {
+//        tlc5955_set_leds(OFF, 0b000111111111000, OVR);  //on blink, then disable leds.
+//        blink = 0;
+//    }
+//    else {
+//        tlc5955_set_leds(RED,0b000111111111000, OVR);
+//        blink = 1;
+//    }
 }
 
 /**
@@ -165,12 +458,16 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
 
 void process_CAN_msg(CAN_message msg){
   uint16_t * lsbArray = (uint16_t *) msg.data;
+  volatile uint8_t data0, data1, data2;
+  
   switch (msg.id) {
 
     /*Motec*/
     case MOTEC_ID + 0:
       updateDataItem(&motecDataItems[ENG_RPM_IDX], parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL));
+      throt = motecDataItems[ENG_RPM_IDX].value;  //grab RPM
       updateDataItem(&motecDataItems[THROTTLE_POS_IDX], parseMsgMotec(&msg, THROTTLE_POS_BYTE, THROTTLE_POS_SCL));
+//      throt = motecDataItems[THROTTLE_POS_IDX].value;   //grab throttle position
       updateDataItem(&motecDataItems[LAMBDA_IDX], parseMsgMotec(&msg, LAMBDA_BYTE, LAMBDA_SCL));
       updateDataItem(&motecDataItems[VOLT_ECU_IDX], parseMsgMotec(&msg, VOLT_ECU_BYTE, VOLT_ECU_SCL));
       break;
@@ -216,12 +513,17 @@ void process_CAN_msg(CAN_message msg){
 
       /*GCM*/
     case GCM_ID:
+      data0 = msg.data[0];
+       data1 = msg.data[1];
+      data2 = data0 << 8 | data1;
+        
       updateDataItem(&gcmDataItems[UPTIME_IDX], (uint16_t) (lsbArray[UPTIME_BYTE/2]) * UPTIME_SCL);
       updateDataItem(&gcmDataItems[PCB_TEMP_IDX], (int16_t) (lsbArray[PCB_TEMP_BYTE/2]) * PCB_TEMP_SCL);
       updateDataItem(&gcmDataItems[IC_TEMP_IDX], (int16_t) (lsbArray[IC_TEMP_BYTE/2]) * IC_TEMP_SCL);
       break;
     case GCM_ID + 1:
       updateDataItem(&gcmDataItems[GEAR_IDX], (uint8_t) (msg.data[GEAR_BYTE]) * GEAR_SCL);
+      curr_gear = gcmDataItems[GEAR_IDX].value;   
       updateDataItem(&gcmDataItems[MODE_IDX], (uint8_t) (msg.data[MODE_BYTE]));
       updateDataItem(&gcmDataItems[GEAR_VOLT_IDX], (uint16_t) (lsbArray[GEAR_VOLT_BYTE/2]) * GEAR_VOLT_SCL);
       updateDataItem(&gcmDataItems[FORCE_IDX], (int16_t) (lsbArray[FORCE_BYTE/2]) * FORCE_SCL);
@@ -501,53 +803,6 @@ void process_CAN_msg(CAN_message msg){
       updateDataItem(&imuDataItems[YAW_ACCEL_IDX],      (double) ((lsbArray[YAW_ACCEL_BYTE/2]      * YAW_ACCEL_SCL)  + YAW_ACCEL_OFFSET));
       updateDataItem(&imuDataItems[LONGITUDINAL_G_IDX], (double) ((lsbArray[LONGITUDINAL_G_BYTE/2] * LONGITUDINAL_G_SCL) + LONGITUDINAL_G_OFFSET));
       break;
-    case PDM_ID + 3:
-      updateDataItem(&pdmDataItems[FUEL_DRAW_IDX], (uint16_t) (lsbArray[FUEL_DRAW_BYTE/2]) * FUEL_DRAW_SCL);
-      updateDataItem(&pdmDataItems[IGN_DRAW_IDX], (uint16_t) (lsbArray[IGN_DRAW_BYTE/2]) * IGN_DRAW_SCL);
-      updateDataItem(&pdmDataItems[INJ_DRAW_IDX], (uint16_t) (lsbArray[INJ_DRAW_BYTE/2]) * INJ_DRAW_SCL);
-      updateDataItem(&pdmDataItems[ABS_DRAW_IDX], (uint16_t) (lsbArray[ABS_DRAW_BYTE/2]) * ABS_DRAW_SCL);
-      break;
-    case PDM_ID + 4:
-      updateDataItem(&pdmDataItems[PDLU_DRAW_IDX], (uint16_t) (lsbArray[PDLU_DRAW_BYTE/2]) * PDLU_DRAW_SCL);
-      updateDataItem(&pdmDataItems[PDLD_DRAW_IDX], (uint16_t) (lsbArray[PDLD_DRAW_BYTE/2]) * PDLD_DRAW_SCL);
-      updateDataItem(&pdmDataItems[FAN_DRAW_IDX], (uint16_t) (lsbArray[FAN_DRAW_BYTE/2]) * FAN_DRAW_SCL);
-      updateDataItem(&pdmDataItems[WTR_DRAW_IDX], (uint16_t) (lsbArray[WTR_DRAW_BYTE/2]) * WTR_DRAW_SCL);
-      break;
-    case PDM_ID + 5:
-      updateDataItem(&pdmDataItems[ECU_DRAW_IDX], (uint16_t) (lsbArray[ECU_DRAW_BYTE/2]) * ECU_DRAW_SCL);
-      updateDataItem(&pdmDataItems[AUX_DRAW_IDX], (uint16_t) (lsbArray[AUX_DRAW_BYTE/2]) * AUX_DRAW_SCL);
-      updateDataItem(&pdmDataItems[BVBAT_DRAW_IDX], (uint16_t) (lsbArray[BVBAT_DRAW_BYTE/2]) * BVBAT_DRAW_SCL);
-      updateDataItem(&pdmDataItems[STR_DRAW_IDX], (uint16_t) (lsbArray[STR_DRAW_BYTE/2]) * STR_DRAW_SCL);
-      break;
-    case PDM_ID + 6:
-      updateDataItem(&pdmDataItems[FUEL_CUT_IDX], (uint16_t) (lsbArray[FUEL_CUT_BYTE/2]) * FUEL_CUT_SCL);
-      updateDataItem(&pdmDataItems[IGN_CUT_IDX], (uint16_t) (lsbArray[IGN_CUT_BYTE/2]) * IGN_CUT_SCL);
-      updateDataItem(&pdmDataItems[INJ_CUT_IDX], (uint16_t) (lsbArray[INJ_CUT_BYTE/2]) * INJ_CUT_SCL);
-      updateDataItem(&pdmDataItems[ABS_CUT_IDX], (uint16_t) (lsbArray[ABS_CUT_BYTE/2]) * ABS_CUT_SCL);
-      break;
-    case PDM_ID + 7:
-      updateDataItem(&pdmDataItems[PDLU_CUT_IDX], (uint16_t) (lsbArray[PDLU_CUT_BYTE/2]) * PDLU_CUT_SCL);
-      updateDataItem(&pdmDataItems[PDLD_CUT_IDX], (uint16_t) (lsbArray[PDLD_CUT_BYTE/2]) * PDLD_CUT_SCL);
-      updateDataItem(&pdmDataItems[FAN_CUT_IDX], (uint16_t) (lsbArray[FAN_CUT_BYTE/2]) * FAN_CUT_SCL);
-      updateDataItem(&pdmDataItems[WTR_CUT_IDX], (uint16_t) (lsbArray[WTR_CUT_BYTE/2]) * WTR_CUT_SCL);
-      break;
-    case PDM_ID + 8:
-      updateDataItem(&pdmDataItems[ECU_CUT_IDX], (uint16_t) (lsbArray[ECU_CUT_BYTE/2]) * ECU_CUT_SCL);
-      updateDataItem(&pdmDataItems[AUX_CUT_IDX], (uint16_t) (lsbArray[AUX_CUT_BYTE/2]) * AUX_CUT_SCL);
-      updateDataItem(&pdmDataItems[BVBAT_CUT_IDX], (uint16_t) (lsbArray[BVBAT_CUT_BYTE/2]) * BVBAT_CUT_SCL);
-      break;
-    case PDM_ID + 9:
-      updateDataItem(&pdmDataItems[FUEL_CUT_P_IDX], (uint16_t) (lsbArray[FUEL_CUT_P_BYTE/2]) * FUEL_CUT_P_SCL);
-      updateDataItem(&pdmDataItems[FAN_CUT_P_IDX], (uint16_t) (lsbArray[FAN_CUT_P_BYTE/2]) * FAN_CUT_P_SCL);
-      updateDataItem(&pdmDataItems[WTR_CUT_P_IDX], (uint16_t) (lsbArray[WTR_CUT_P_BYTE/2]) * WTR_CUT_P_SCL);
-      updateDataItem(&pdmDataItems[ECU_CUT_P_IDX], (uint16_t) (lsbArray[ECU_CUT_P_BYTE/2]) * ECU_CUT_P_SCL);
-      break;
-    case SGH_ID + 1:
-      updateDataItem(&sghDataItems[RAW_VOLTAGE1_IDX], (uint16_t) (lsbArray[ANALOG_SGH1_RAW_BYTE/2]) * ANALOG_SGH_RAW_SCL);
-      updateDataItem(&sghDataItems[RAW_VOLTAGE2_IDX], (uint16_t) (lsbArray[ANALOG_SGH2_RAW_BYTE/2]) * ANALOG_SGH_RAW_SCL);
-      updateDataItem(&sghDataItems[STRAIN1_IDX], (uint16_t) (lsbArray[STRAIN1_CALC_BYTE/2]));
-      updateDataItem(&sghDataItems[STRAIN2_IDX], (uint16_t) (lsbArray[STRAIN2_CALC_BYTE/2]));
-      break;
   }
 }
 
@@ -580,11 +835,13 @@ void CANswitchStates(void){
 
 void CANswitchADL(void){
   CAN_data rotaries = {0};
-  rotaries.halfword0 = ADL_IDX_1_3;
-  rotaries.halfword1 = (uint16_t) wheelDataItems[ROTARY_0_IDX].value;
-  rotaries.halfword2 = (uint16_t) wheelDataItems[ROTARY_1_IDX].value;
-  rotaries.halfword3 = (uint16_t) wheelDataItems[ROTARY_2_IDX].value;
-  CAN_send_message(ADL_ID, 8, rotaries);
+  rotaries.halfword0 = ADL_IDX_4_6;
+  //rotaries.halfword1 = (uint16_t) wheelDataItems[ROTARY_0_IDX].value;
+  //rotaries.halfword2 = (uint16_t) wheelDataItems[ROTARY_1_IDX].value;
+  //rotaries.halfword3 = (uint16_t) wheelDataItems[ROTARY_2_IDX].value;
+  rotaries.byte2 = (uint8_t)wheelDataItems[TROTARY_0_IDX].value;
+  rotaries.byte3 = (uint8_t)wheelDataItems[TROTARY_1_IDX].value;
+  CAN_send_message(ADL_ID, 4, rotaries);
 }
 
 void CANdiag(void){
@@ -622,8 +879,6 @@ uint8_t getRotaryPosition(uint32_t adcValue){
   return 9 - (uint8_t) (adcValue / 409.6);
 }
 
-
-
 void checkChangeScreen(void) {
   uint8_t rotVal = wheelDataItems[TROTARY_1_IDX].value;
   uint8_t screenIdx;
@@ -631,17 +886,13 @@ void checkChangeScreen(void) {
   if(nightModeState != wheelDataItems[SW_ND_IDX].value) {
     nightModeState = wheelDataItems[SW_ND_IDX].value;
     nightMode(nightModeState);
+    tlc5955_set_leds(RED, 0b111000000000111, OVR);
   }
-<<<<<<< Updated upstream
-=======
-  
->>>>>>> Stashed changes
   switch (rotVal) {
     case 0:
       screenIdx = RACE_SCREEN;
       break;
     case 1:
-<<<<<<< Updated upstream
       screenIdx = PDM_DRAW_SCREEN;
       break;
     case 2:
@@ -655,30 +906,16 @@ void checkChangeScreen(void) {
       break;
     case 5:
       screenIdx = IMU_SCREEN;
-=======
-      screenIdx = TEST_SCREEN1;
-      break;
-    case 2:
-      screenIdx = TEST_SCREEN2;
->>>>>>> Stashed changes
       break;
     default:
       screenIdx = RACE_SCREEN;
       break;
   }
-<<<<<<< Updated upstream
 
   if(screenIdx != screenNumber) {
     changeScreen(screenIdx);
     screenNumber = screenIdx;
   }
-=======
-   if(screenIdx != screenNumber) {
-    changeScreen(screenIdx);
-    screenNumber = screenIdx;
-  }
-  
->>>>>>> Stashed changes
 }
 
 /**

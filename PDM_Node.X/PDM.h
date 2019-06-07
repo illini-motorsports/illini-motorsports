@@ -93,19 +93,23 @@
 #define ACT_UP_SW_RAW (!SW3_PORT)
 #define ACT_DN_SW_RAW (!SW4_PORT)
 #define ABS_SW_RAW    (SW5_PORT)
-#define AUX1_SW_RAW   (SW6_PORT)
-#define AUX2_SW_RAW   (!SW7_PORT)
+#define FUEL_SW_RAW   (!SW6_PORT)
+#define WATER_SW_RAW   (!SW7_PORT)
+#define FAN_SW_RAW   (!SW8_PORT)
+#define AUX_SW_RAW   (!SW9_PORT)
 #define KILL_SW_RAW   (KILL_PORT)
 
 // Debounced switch state definitions (use these for everything)
-#define STR_SW (((switch_debounced >> 7) & 0x1))
-#define ON_SW (((switch_debounced >> 6) & 0x1))
-#define ACT_UP_SW (((switch_debounced >> 5) & 0x1))
-#define ACT_DN_SW (((switch_debounced >> 4) & 0x1))
-#define KILL_SW (((switch_debounced >> 3) & 0x1))
-#define ABS_SW (((switch_debounced >> 2) & 0x1))
-#define AUX1_SW (((switch_debounced >> 1) & 0x1))
-#define AUX2_SW (((switch_debounced >> 0) & 0x1))
+#define STR_SW (((switch_debounced >> 9) & 0x1))
+#define ON_SW (((switch_debounced >> 8) & 0x1))
+#define ACT_UP_SW (((switch_debounced >> 7) & 0x1))
+#define ACT_DN_SW (((switch_debounced >> 6) & 0x1))
+#define KILL_SW (((switch_debounced >> 5) & 0x1))
+#define ABS_SW (((switch_debounced >> 4) & 0x1))
+#define FUEL_SW (((switch_debounced >> 3) & 0x1))
+#define WATER_SW (((switch_debounced >> 2) & 0x1))
+#define FAN_SW (((switch_debounced >> 1) & 0x1))
+#define AUX_SW (((switch_debounced >> 0) & 0x1))
 
 // Misc state definitions
 #define ENG_ON (eng_rpm > RPM_ON_THRESHOLD)
@@ -266,11 +270,7 @@
 #define EXT_ADC_NUM_STEPS   4095.0
 #define EXT_ADC_VOLT_RANGE  5.0
 #define VFB_CUTOFF          4.7
-<<<<<<< Updated upstream
-#define BRK_SWITCH          0x350
-=======
 #define BRK_SWITCH          0x500
->>>>>>> Stashed changes
 
 // Initial overcurrent thresholds to use for all the loads
 const double load_cutoff[NUM_CTL] = {

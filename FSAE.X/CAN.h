@@ -232,15 +232,11 @@
 #define ANALOG_CHAN_33_BYTE   2
 #define ANALOG_CHAN_34_BYTE   4
 #define ANALOG_CHAN_35_BYTE   6
-<<<<<<< Updated upstream
-#define ANALOG_SGH_RAW_BYTE   0
-#define STRAIN_CALC_SCL_BYTE  2
-=======
+
 #define ANALOG_SGH1_RAW_BYTE  0
 #define STRAIN1_CALC_BYTE     2
 #define ANALOG_SGH2_RAW_BYTE  4
 #define STRAIN2_CALC_BYTE     6
->>>>>>> Stashed changes
 
 #define TCOUPLE_0_BYTE        0
 #define TCOUPLE_1_BYTE        2
@@ -326,7 +322,7 @@
 // From GCM
 #define GEAR_SCL           1
 #define GEAR_VOLT_SCL      0.0001
-#define FORCE_SCL          0.05
+#define FORCE_SCL          0.01
 
 #define QUEUE_UP_SCL       1
 #define QUEUE_DN_SCL       1

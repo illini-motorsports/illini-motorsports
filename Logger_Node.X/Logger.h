@@ -93,7 +93,7 @@ typedef union sdControlReg {
 
 SPIConn* init_sd(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
 void sd_write(SPIConn *conn,uint8_t cmd,uint8_t crc, uint32_t input);
-void sd_write_CAN(SPIConn *conn,uint64_t message[]);
+void sd_write_CAN(SPIConn *conn,uint64_t message[], uint64_t rec[]);
 
 
 #endif /* LOGGER_H */

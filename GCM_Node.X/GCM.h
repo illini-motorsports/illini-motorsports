@@ -24,7 +24,7 @@
 // Thresholds
 #define RPM_ON_THRESHOLD 600.0 // rpm
 #define MAX_RETRY        2
-#define GEAR_VOLT_RIPPLE 0.1   // V
+#define GEAR_VOLT_RIPPLE 0.2   // V
 
 // Definitions for error conditions
 //TODO: Decide on these values
@@ -83,8 +83,8 @@
 #define CUT_START  				1
 #define CUT_RESEND 				2
 #define MAX_AUTO_GEAR 	  6
-#define LAUNCH_WS_DIFF    1.5
-#define LAUNCH_FRONT_WS		10
+#define LAUNCH_WS_DIFF    1.2
+#define LAUNCH_FRONT_WS		15
 
 // Gear ratio of standard Yamaha R6 YZF 08 transmission
 const double gear_ratio[7] = {
@@ -97,13 +97,13 @@ const double gear_ratio[7] = {
   1.150
 };
 
-// Optiomal Shift RPM's for Yamaha R6 transmission
+ //Optiomal Shift RPM's for Yamaha R6 transmission
 const uint16_t shift_rpm[6] = {
-	12444,
-	11950,
-	12155,
-	12100,
-	11150,
+	13040,
+	12649,
+	11961,
+	11767,
+	11736,
 	20000
 };
 
@@ -111,15 +111,15 @@ const uint16_t shift_rpm[6] = {
 // neut = a5
 // up = e5
 // down = g15
-#define SHIFT_UP_TRIS  TRISEbits.TRISE5
-#define SHIFT_UP_ANSEL ANSELEbits.ANSE5
-#define SHIFT_UP_PORT  PORTEbits.RE5
+#define SHIFT_NT_TRIS  TRISEbits.TRISE5
+#define SHIFT_NT_ANSEL ANSELEbits.ANSE5
+#define SHIFT_NT_PORT  PORTEbits.RE5
 #define SHIFT_DN_TRIS  TRISGbits.TRISG15
 #define SHIFT_DN_ANSEL ANSELGbits.ANSG15
 #define SHIFT_DN_PORT  PORTGbits.RG15
-#define SHIFT_NT_TRIS  TRISAbits.TRISA5
-#define SHIFT_NT_ANSEL ANSELAbits.ANSA5
-#define SHIFT_NT_PORT  PORTAbits.RA5
+#define SHIFT_UP_TRIS  TRISAbits.TRISA5
+#define SHIFT_UP_ANSEL ANSELAbits.ANSA5
+#define SHIFT_UP_PORT  PORTAbits.RA5
 
 #define ACT_UP_TRIS TRISEbits.TRISE7
 #define ACT_UP_LAT  LATEbits.LATE7
@@ -152,6 +152,7 @@ void sample_sensors(uint8_t is_shifting);
 // CAN functions
 void process_CAN_msg(CAN_message msg);
 void send_diag_can(void);
+void send_lat_accel(void);
 void send_state_can(uint8_t override);
 
 // Logic functions

@@ -10,7 +10,7 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 
-uint16_t shiftRPM[7] = {13000,13000,13000,13000,13000,13000,13000};
+uint16_t shiftRPM[7] = {12444,11959,12155,12100,11150,13000,13000}; //theres only gears 1-5
 
 // Initialize all the data streams
 // This fn must be run before CAN is initialized
@@ -48,11 +48,6 @@ void initDataItems(void){
   for(i=0;i<MOTEC_DATAITEM_SIZE;i++) {
     initDataItem(&motecDataItems[i],0,0,2,1);
   }
-  
-  // Set default initialization for PDM data items
-  for(i=0;i<SGH_DATAITEM_SIZE;i++){
-    initDataItem(&sghDataItems[i],0,0,3,0);
-  }
 
   // Customized Motec dataitem initialization
   setDataItemDigits(&motecDataItems[ENG_RPM_IDX], 5, 0);
@@ -63,7 +58,6 @@ void initDataItems(void){
   setDataItemDigits(&motecDataItems[MANIFOLD_PRES_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[MANIFOLD_TEMP_IDX], 3, 0);
   setDataItemDigits(&motecDataItems[ENG_TEMP_IDX], 3, 0);
-<<<<<<< Updated upstream
   setDataItemDigits(&motecDataItems[VOLT_ECU_IDX], 2, 2);
   setDataItemDigits(&motecDataItems[AMBIENT_PRES_IDX], 1, 2);
   setDataItemDigits(&motecDataItems[FUEL_PRES_IDX], 1, 2);
@@ -71,10 +65,6 @@ void initDataItems(void){
   setDataItemDigits(&motecDataItems[RUN_TIME_IDX], 4, 0);
   setDataItemDigits(&motecDataItems[FUEL_INJ_DUTY_IDX], 3, 1);
   setDataItemDigits(&motecDataItems[FUEL_TRIM_IDX], 3, 1);
-=======
-  setDataItemDigits(&sghDataItems[RAW_VOLTAGE1_IDX], 1, 3);
-  setDataItemDigits(&sghDataItems[RAW_VOLTAGE2_IDX], 1, 3);
->>>>>>> Stashed changes
   motecDataItems[LAMBDA_IDX].warnThreshold = 1.1;
   motecDataItems[LAMBDA_IDX].errThreshold = 1.3;
   motecDataItems[LAMBDA_IDX].thresholdDir = 1;
@@ -156,7 +146,6 @@ void initAllScreens(void){
   // Race Screen Stuff
   allScreens[RACE_SCREEN] = &raceScreen;
   raceScreen.items = raceScreenItems;
-<<<<<<< Updated upstream
   raceScreen.len = 11;
   //initScreenItem(&raceScreenItems[0], 120, 20, 15, redrawFanSw, *fanSw);
   //initScreenItem(&raceScreenItems[1], 240, 20, 15, redrawFUELPumpSw,*fuelSw);
@@ -169,6 +158,7 @@ void initAllScreens(void){
   //initScreenItem(&raceScreenItems[8], 20, 30, 15, redrawShiftLightsRPM,*shiftLights);
   initScreenItem(&raceScreenItems[9], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
   initScreenItem(&raceScreenItems[10], 180, 210, 30, redrawDigit, &motecDataItems[LAMBDA_IDX], MIN_REFRESH);
+//  initScreenItem(&raceScreenItems[10], 180, 210, 30, redrawDigit, &motecDataItems[THROTTLE_POS_IDX], MIN_REFRESH); //debug throttle instead of lambda
 
   // PDM stuff
   allScreens[PDM_DRAW_SCREEN] = &pdmDrawScreen;
@@ -273,58 +263,6 @@ void initAllScreens(void){
   initScreenItem(&brakeItems[6], 190, 40, 20, redrawBrakeBar, &brakePressFront);
   initScreenItem(&brakeItems[7], 250, 40, 20, redrawBrakeBar, &brakePressRear);
   */
-=======
-  raceScreen.len = 7;
-  initScreenItem(&raceScreenItems[0], 20, 90, 30, redrawDigit, &motecDataItems[OIL_TEMP_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[1], 360, 90, 30, redrawDigit, &motecDataItems[ENG_TEMP_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[2], 20, 210, 30, redrawDigit, &motecDataItems[OIL_PRES_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[3], 335, 210, 30, redrawDigit, &pdmDataItems[VBAT_RAIL_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[4], 200, 20, 100, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[5], 200, 220, 15, redrawGCMMode, &gcmDataItems[MODE_IDX], MIN_REFRESH);
-  initScreenItem(&raceScreenItems[6], 20, 30, 15, redrawKILLCluster, &pdmDataItems[KILL_SWITCH_IDX], MIN_REFRESH);
-  
-  // Test1 Screen Stuff
-  allScreens[TEST_SCREEN1] = &testScreen1;
-  testScreen1.items = testScreen1Items;
-  testScreen1.len = 30;
-  initScreenItem(&testScreen1Items[1], 10, 30, 15, redrawDigit, &pdmDataItems[IGN_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[2], 85, 30, 15, redrawDigit, &pdmDataItems[INJ_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[3], 160, 30, 15, redrawDigit, &pdmDataItems[FUEL_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[4], 235, 30, 15, redrawDigit, &pdmDataItems[ECU_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[5], 310, 30, 15, redrawDigit, &pdmDataItems[WTR_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[6], 385, 30, 15, redrawDigit, &pdmDataItems[FAN_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[7], 10, 80, 15, redrawDigit, &pdmDataItems[AUX_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[8], 85, 80, 15, redrawDigit, &pdmDataItems[PDLU_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[9], 160, 80, 15, redrawDigit, &pdmDataItems[PDLD_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[10], 235, 80, 15, redrawDigit, &pdmDataItems[ABS_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[11], 310, 80, 15, redrawDigit, &pdmDataItems[BVBAT_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[12], 385, 80, 15, redrawDigit, &pdmDataItems[STR_DRAW_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[13], 10, 130, 15, redrawDigit, &pdmDataItems[IGN_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[14], 85, 130, 15, redrawDigit, &pdmDataItems[INJ_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[15], 160, 130, 15, redrawDigit, &pdmDataItems[FUEL_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[16], 235, 130, 15, redrawDigit, &pdmDataItems[ECU_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[17], 310, 130, 15, redrawDigit, &pdmDataItems[WTR_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[18], 385, 130, 15, redrawDigit, &pdmDataItems[FAN_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[19], 10, 180, 15, redrawDigit, &pdmDataItems[AUX_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[20], 85, 180, 15, redrawDigit, &pdmDataItems[PDLU_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[21], 160, 180, 15, redrawDigit, &pdmDataItems[PDLD_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[22], 235, 180, 15, redrawDigit, &pdmDataItems[ABS_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[23], 310, 180, 15, redrawDigit, &pdmDataItems[BVBAT_CUT_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[24], 160, 230, 15, redrawDigit, &pdmDataItems[FUEL_CUT_P_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[25], 235, 230, 15, redrawDigit, &pdmDataItems[FAN_CUT_P_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[26], 310, 230, 15, redrawDigit, &pdmDataItems[WTR_CUT_P_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen1Items[27], 385, 230, 15, redrawDigit, &pdmDataItems[ECU_CUT_P_IDX], MIN_REFRESH);
-  
-  // Race Screen Stuff
-  allScreens[TEST_SCREEN2] = &testScreen2;
-  testScreen2.items = testScreen2Items;
-  testScreen2.len = 5;
-  initScreenItem(&testScreen2Items[0], 20, 90, 30, redrawDigit, &sghDataItems[RAW_VOLTAGE1_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen2Items[1], 320, 90, 30, redrawDigit, &sghDataItems[RAW_VOLTAGE2_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen2Items[2], 20, 210, 30, redrawDigit, &sghDataItems[STRAIN1_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen2Items[3], 335, 210, 30, redrawDigit, &sghDataItems[STRAIN2_IDX], MIN_REFRESH);
-  initScreenItem(&testScreen2Items[4], 200, 20, 100, redrawGearPos, &gcmDataItems[GEAR_IDX], MIN_REFRESH);
->>>>>>> Stashed changes
 }
 
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size, double (*redrawItem)(screenItemInfo *, volatile dataItem *, double), volatile dataItem* data, uint32_t interval){
@@ -358,13 +296,8 @@ void initScreen(uint8_t num){
       textEnlarge(0);
       graphicsMode();
       break;
-<<<<<<< Updated upstream
 
     case PDM_DRAW_SCREEN:
-=======
-      
-      case TEST_SCREEN1:
->>>>>>> Stashed changes
       textMode();
       textTransparent(foregroundColor);
       textSetCursor(10,10);
@@ -427,7 +360,6 @@ void initScreen(uint8_t num){
       textEnlarge(0);
       graphicsMode();
       break;
-<<<<<<< Updated upstream
 
     case LAMBDA_SCREEN:
       textMode();
@@ -603,24 +535,6 @@ void changeAUXType(uint8_t num){
     textEnlarge(0);
     graphicsMode();
     auxNumber = num;
-=======
-      
-      case TEST_SCREEN2:
-      textMode();
-      textEnlarge(1);
-      textTransparent(foregroundColor);
-      textSetCursor(10, 40);
-      textWrite("RAW VOLT 1");
-      textSetCursor(10, 160);
-      textWrite("STRAIN 1");
-      textSetCursor(320, 40);
-      textWrite("RAW VOLT 2");
-      textSetCursor(320,160);
-      textWrite("STRAIN 2");
-      textEnlarge(0);
-      graphicsMode();
-      break;
->>>>>>> Stashed changes
   }
 }
 

@@ -16,7 +16,7 @@ volatile uint8_t throttle_pos_passed_min_auto = 0;
 volatile uint8_t radio_button = 0;
 volatile uint8_t acknowledge_button = 0;
 volatile uint8_t auxiliary_button = 0;
-volatile uint8_t night_day_switch = 0;
+volatile uint8_t night_day_switch, auto_upshift_switch = 0;
 
 //TODO: Add more checks/handling for stale CAN data
 
@@ -50,6 +50,8 @@ volatile double wheel_fl_speed = 0;
 volatile double wheel_fr_speed = 0;
 volatile double wheel_rl_speed = 0;
 volatile double wheel_rr_speed = 0;
+volatile double lat_accel = 0;
+volatile uint16_t conv_lat_accel = 0;
 
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
@@ -273,7 +275,7 @@ void sample_sensors(uint8_t is_shifting) {
       gear = GEAR_NEUT;
     } else if (abs(gear_voltage - 1.448) <= GEAR_VOLT_RIPPLE) {
       gear = 2;
-    } else if (abs(gear_voltage - 2.154) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - 2.124) <= GEAR_VOLT_RIPPLE) {
       gear = 3;
     } else if (abs(gear_voltage - 2.862) <= GEAR_VOLT_RIPPLE) {
       gear = 4;
@@ -293,7 +295,7 @@ void sample_sensors(uint8_t is_shifting) {
     // Sample shift force sensor
     uint32_t force_samp = read_adc_chn(ADC_FORCE_CHN);
     double force_voltage =  ((((double) force_samp) / 4095.0) * 5.0);
-    shift_force = (428.571428571 * force_voltage) + 1071.42857143;
+    shift_force = (force_voltage-2.5)*96.347;
     int16_t shift_force_can = (int16_t) (shift_force / FORCE_SCL);
 
     CAN_data data = {0};
@@ -331,7 +333,16 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
       CAN_recv_tmr = millis;
       break;
 
-    case ABS_WS_ID:
+//    case ABS_WS_ID:
+//      wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE/2] * WHEELSPEED_FL_SCL;
+//      wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE/2] * WHEELSPEED_FR_SCL;
+//      wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE/2] * WHEELSPEED_RL_SCL;
+//      wheel_rr_speed = lsbArray[WHEELSPEED_RR_BYTE/2] * WHEELSPEED_RR_SCL;
+//
+//      CAN_recv_tmr = millis;
+//      break;
+      
+      case MOTEC_ID + 0x3:
       wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE/2] * WHEELSPEED_FL_SCL;
       wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE/2] * WHEELSPEED_FR_SCL;
       wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE/2] * WHEELSPEED_RL_SCL;
@@ -357,9 +368,18 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
       radio_button = button_bitmap & 0x01;
       acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
       auxiliary_button = ((uint8_t) (button_bitmap & 0x04) >> 2);
+      auto_upshift_switch = ((uint8_t)(button_bitmap &0x10) >> 4); 
       night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
       CAN_recv_tmr = millis;
       break;
+      
+      case IMU_FIRST_ID: // IMU to ADL for Motec Traction control
+        lat_accel = ((double) ((msg.data[LATERAL_G_BYTE+1] << 8) | msg.data[LATERAL_G_BYTE])) * LATERAL_G_SCL + LATERAL_G_OFFSET;
+        conv_lat_accel = (int) abs(lat_accel*1000); // scalar multiple for high motec accuracy
+        uint16_t byte1 = (conv_lat_accel & 0xFF00) >> 8;
+        uint16_t byte2 = (conv_lat_accel & 0xFF) << 8;
+        conv_lat_accel = byte1 | byte2;
+        send_lat_accel();
   }
 }
 
@@ -411,7 +431,7 @@ void send_state_can(uint8_t override) {
 * Check various CAN data to determine the correct GCM mode
 */
 void check_gcm_mode(void) {
-  if (night_day_switch == 1 && acknowledge_button == 1) { // if priming button and dead-man switch are pressed
+  if (auto_upshift_switch) { // if priming button and dead-man switch are pressed
 
     mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
 
@@ -1070,7 +1090,15 @@ uint16_t get_threshold_rpm(uint8_t gear) {
 * returns 1 if the car is currently in a launch, 0 otherwise
 */
 uint8_t is_in_launch(void) {
-  double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
-  double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
-  return front_ws < LAUNCH_FRONT_WS || front_ws < (LAUNCH_WS_DIFF * rear_ws);
+ // double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
+ // double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0; 
+ 
+  return wheel_fl_speed < LAUNCH_FRONT_WS || wheel_fl_speed < (LAUNCH_WS_DIFF * wheel_rr_speed);
+}
+
+void send_lat_accel(void){
+  CAN_data data = {0};
+  data.halfword0 = ADL_IDX_7_9;
+  data.halfword1 = conv_lat_accel;
+  CAN_send_message(ADL_ID, 4, data);
 }
