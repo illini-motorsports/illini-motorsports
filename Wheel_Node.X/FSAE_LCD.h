@@ -15,7 +15,6 @@
 #include "RA8875_driver.h"
 
 // Define race screen constants
-<<<<<<< Updated upstream
 #define NUM_SCREENS           12
 #define RACE_SCREEN           0
 #define PDM_DRAW_SCREEN       1
@@ -29,12 +28,6 @@
 #define LAMBDA_SCREEN         9
 #define THROTTLE_SCREEN       10
 #define IMU_SCREEN            11
-=======
-#define NUM_SCREENS           3
-#define RACE_SCREEN           0
-#define TEST_SCREEN1          1
-#define TEST_SCREEN2          2
->>>>>>> Stashed changes
 
 #define MIN_REFRESH           350
 
@@ -52,10 +45,9 @@
 #define REV_SUB_6           	2000
 #define REV_SUB_7           	1500
 #define REV_SUB_8           	1000
-#define REV_SUB_9           	500
+#define REV_SUB_9           	200
 
 // PDM Dataitem Constants
-<<<<<<< Updated upstream
 #define PDM_DATAITEM_SIZE     93
 
 #define UPTIME_IDX            0
@@ -141,39 +133,6 @@
 #define AUX_OC_COUNT_IDX      90
 #define BVBAT_OC_COUNT_IDX    91
 #define STR_OC_COUNT_IDX      92
-=======
-#define PDM_DATAITEM_SIZE     35
-
-#define VBAT_RAIL_IDX         0
-#define KILL_SWITCH_IDX       1
-#define FUEL_DRAW_IDX         2
-#define IGN_DRAW_IDX          3
-#define INJ_DRAW_IDX          4
-#define ABS_DRAW_IDX          5
-#define PDLU_DRAW_IDX         6
-#define PDLD_DRAW_IDX         7
-#define FAN_DRAW_IDX          8
-#define WTR_DRAW_IDX          9
-#define ECU_DRAW_IDX          10
-#define AUX_DRAW_IDX          11
-#define BVBAT_DRAW_IDX        12
-#define STR_DRAW_IDX          13
-#define FUEL_CUT_IDX          14
-#define IGN_CUT_IDX           15
-#define INJ_CUT_IDX           16
-#define ABS_CUT_IDX           17
-#define PDLU_CUT_IDX          18
-#define PDLD_CUT_IDX          19
-#define FAN_CUT_IDX           20
-#define WTR_CUT_IDX           21
-#define ECU_CUT_IDX           22
-#define AUX_CUT_IDX           23
-#define BVBAT_CUT_IDX         24
-#define FUEL_CUT_P_IDX        25
-#define FAN_CUT_P_IDX         26
-#define WTR_CUT_P_IDX         27
-#define ECU_CUT_P_IDX         28
->>>>>>> Stashed changes
 
 //GCM DataItem Constants
 #define GCM_DATAITEM_SIZE     13
@@ -347,13 +306,6 @@
 #define YAW_RATE_IDX            2
 #define YAW_ACCEL_IDX           3
 
-#define SGH_DATAITEM_SIZE       4
-
-#define RAW_VOLTAGE1_IDX        0
-#define RAW_VOLTAGE2_IDX        1
-#define STRAIN1_IDX             2
-#define STRAIN2_IDX             3
-
 /*
  * Defines a data stream that is relevant to one or more screens
  *
@@ -423,22 +375,10 @@ typedef struct {
 } screen;
 
 // Define all screen item arrays for each screen
-<<<<<<< Updated upstream
 screenItem raceScreenItems[10], pdmDrawItems[33], pdmGridItems[40], pdmCutItems[21], brakeItems[8], motecItems[30], endRaceItems[9], chassisItems[20], generalItems[7], wheelSpeedItems[2], autoUpItems[2], throttleItems[3], imuItems[3];
 
 // Define all screen structs
 screen raceScreen, pdmDrawScreen, pdmCutScreen, pdmGridScreen, brakeScreen, motecScreen, endRaceScreen, chassisScreen, generalScreen, wheelSpeedScreen, throttleScreen, imuScreen;
-=======
-screenItem raceScreenItems[7];
-screenItem testScreen1Items[30];
-screenItem testScreen2Items[5];
-
-
-// Define all screen structs
-screen raceScreen;
-screen testScreen1;
-screen testScreen2;
->>>>>>> Stashed changes
 
 // Define master array of all screen structs
 screen* allScreens[NUM_SCREENS];
@@ -447,13 +387,9 @@ uint8_t screenNumber, auxNumber;
 
 volatile uint16_t backgroundColor, foregroundColor, foregroundColor2, warningColor, errorColor;
 
-<<<<<<< Updated upstream
 volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], tireTempDataItems[TIRETEMP_DATAITEM_SIZE], spmDataItems[SPM_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE], imuDataItems[IMU_DATAITEM_SIZE];
 
 volatile dataItem *fanSw[2], *fuelSw[2], *wtrSw[2], *shiftLights[2], *gForce[2];
-=======
-volatile dataItem pdmDataItems[PDM_DATAITEM_SIZE], gcmDataItems[GCM_DATAITEM_SIZE], motecDataItems[MOTEC_DATAITEM_SIZE], wheelDataItems[WHEEL_DATAITEM_SIZE],sghDataItems[SGH_DATAITEM_SIZE];
->>>>>>> Stashed changes
 
 void initDataItems(void); // Writes default values to all data items
 // Initializes an individual dataItem

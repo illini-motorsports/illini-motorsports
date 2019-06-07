@@ -79,10 +79,18 @@
 #define TEMP_SAMP_INTV    333
 #define CHECK_DISPLAY_INTV 1000
 
+#define ORNG 0xFFFFFFFF0000
+
 volatile uint32_t millis;
 uint8_t warnCount;
+volatile uint32_t throt;
+volatile uint16_t curr_gear;
 
 void main(void);
+void on_led(uint8_t num_leds);
+void off_led(uint8_t num_leds);
+void blink_led(void);
+
 void delay(uint32_t num);
 void process_CAN_msg(CAN_message msg);
 double parseMsgMotec(CAN_message * msg, uint8_t byte, double scl);
@@ -94,5 +102,6 @@ uint8_t getRotaryPosition(uint32_t adcValue);
 void checkChangeScreen(void);
 void sample_temp(void);
 void updateDataItem(volatile dataItem * data, double value);
+//void set_leds(uint64_t color, uint16_t setMap, uint8_t ovr);
 
-#endif /* WHEEL_H */ 
+#endif /* WHEEL_H */

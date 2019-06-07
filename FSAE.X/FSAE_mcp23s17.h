@@ -31,6 +31,8 @@
 #define MCP23S17_READ     0b1    // Read Bit
 #define MCP23S17_WRITE    0b0    // Write Bit
 
+#define MCP23S17_INT_TRIS TRISFbits.TRISF5
+
 // Struct representing the chip's control register
 typedef union {
   struct {

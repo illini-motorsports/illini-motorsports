@@ -7,10 +7,10 @@ int main(void){
   init_gpio_pins();// Set all I/O pins to low outputs
   init_oscillator(0);// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
-  init_timer4(0x4E1F);
-  init_pwm(0x4E1F,1); //Initialize pwm signal with given period
-  init_pwm(0x4E1F,2); //Initialize pwm signal with given period
-  init_pwm(0x4E1F,3); //Initialize pwm signal with given period
+  init_timer6(0x30D4);
+  init_pwm(0x30D4,7); //Initialize pwm signal with given period
+  init_pwm(0x30D4,8); //Initialize pwm signal with given period
+  init_pwm(0x30D4,9); //Initialize pwm signal with given period
   init_can();
   
   millis = 0;
@@ -63,6 +63,27 @@ void __attribute__((vector(_TIMER_4_VECTOR), interrupt(IPL7SRS))) timer4_inthnd(
    */
   
   IFS0CLR = _IFS0_T4IF_MASK;// Clear TMR4 Interrupt Flag
+}
+
+void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
+  periods++;// Increment periods count
+  
+  
+  if (periods == 100){
+      pwm_set(0x186A,7);
+      pwm_set(0x186A,8);
+      pwm_set(0x186A,9);
+  }
+      /*
+   else if (periods == 200){
+      pwm_set(0x1562,7);
+      pwm_set(0x1562,8);
+      pwm_set(0x0,9);
+      periods = 0;
+  }
+        */
+  
+  IFS0CLR = _IFS0_T6IF_MASK;// Clear TMR4 Interrupt Flag
 }
 
 void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) {

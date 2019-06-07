@@ -43,8 +43,8 @@ void main(void) {
   //init_peripheral_modules(); // Disable unused peripheral modules
   init_oscillator(0); // Initialize oscillator configuration bits
   init_timer2(); // Initialize timer2 (millis)
-  //init_adc(init_adc_logger); // Initialize ADC module
-  //init_termination(TERMINATING); // Initialize programmable CAN termination
+  init_adc(init_adc_logger); // Initialize ADC module
+  init_termination(TERMINATING); // Initialize programmable CAN termination
   init_can(); // Initialize CAN
   
 
@@ -61,11 +61,12 @@ void main(void) {
   // Initialize pins
   SHDN_TRIS = OUTPUT;
   SHDN_LAT = 1; // Default to immediate shutdown
-
-  // Trigger initial ADC conversion
-  //ADCCON3bits.GSWTRG = 1;
   SD_CS_TRIS = OUTPUT;
   SD_CS_LAT = 1;
+
+   //Trigger initial ADC conversion
+  ADCCON3bits.GSWTRG = 1;
+  
   sd_connection = init_sd(1,SD_CS_LATBITS,SD_CS_LATNUM);
   
   sd_write(sd_connection,0x40,0x95,0x00000000);
@@ -82,7 +83,7 @@ void main(void) {
   //start_i2c();
   // Main loop
   while (1) {
-    //STI(); // Enable interrupts (in case anything disabled without re-enabling)
+    STI(); // Enable interrupts (in case anything disabled without re-enabling)
       
       for(i = 0; i < 2000000; i++);
 
@@ -94,26 +95,29 @@ void main(void) {
       sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
       //sd_write(sd_connection,0x50,0xFF,0x00000008);
       sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
-      sd_write(sd_connection,0x58,0xFF,0x00000000);
-      sd_write(sd_connection,0xFF,0xFE,0xFFFFFFFF);
-      uint64_t thing[64];
-      for(i = 0;i<64;i++){
-          stuff[i] = wow;
-      }
+      //sd_write(sd_connection,0x58,0xFF,0x00000000);
+     
+      //sd_write(sd_connection,0xFF,0xFE,0xFFFFFFFF);
+      //uint64_t thing[64];
+      
        
-      sd_write_CAN(sd_connection,thing);
-      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
-      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
-      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
-      sd_write(sd_connection,0x4C,0xFF,0x40000000);
-      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      //sd_write_CAN(sd_connection,stuff,thing);
+      /*
       sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
       sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
       sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
       sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
-      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
-      
-      
+      sd_write(sd_connection,0x51,0xFF,0x00000000);
+      for(i = 0;i<64;i++){
+          stuff[i] = 0xFFFFFFFFFFFFFFFF;
+      }
+      */
+      //sd_write_CAN(sd_connection,stuff,thing);
+      //sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      //sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      //sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      //uint64_t dawg = thing[20];
+      //sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
       
       
     //delay();
@@ -127,11 +131,11 @@ void main(void) {
     // Separate logic functions
 
     // Analog sampling functions
-    //sample_temp();
+    sample_temp();
     //sample_rail();
 
     // CAN message sending functions
-    //send_diag_can();
+    send_diag_can();
     //send_rail_can();
   }
 }
@@ -141,7 +145,7 @@ void main(void) {
 /**
  * CAN1 Interrupt Handler
  */
-void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) {
+void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL7SRS))) can_inthnd(void) {
   if (C1INTbits.RBIF) {
     CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
   }
@@ -169,7 +173,7 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
 
-void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL7SRS))) timer6_inthnd(void) {
+void __attribute__((vector(_TIMER_6_VECTOR), interrupt(IPL6SRS))) timer6_inthnd(void) {
   micros++; // Increment micros
 
   IFS0CLR = _IFS0_T6IF_MASK; // Clear TMR6 Interrupt Flag
@@ -202,7 +206,7 @@ void process_CAN_msg(CAN_message msg) {
   int i;
 
   switch (msg.id) {
-    case SGH_ID + 1:
+    case MOTEC_ID:
       eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
           msg.data[ENG_RPM_BYTE + 1]));
       throttle_pos = ((double) ((msg.data[THROTTLE_POS_BYTE] << 8) |
@@ -212,12 +216,36 @@ void process_CAN_msg(CAN_message msg) {
       bat_volt_ecu = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
             msg.data[VOLT_ECU_BYTE + 1]));
       break;
-  }
       
-      wow = ((uint16_t)throttle_pos << 32) | ((uint16_t)lambda << 16) | (uint16_t)bat_volt_ecu;
-      for(i = 0; i < 64;i++){
-          stuff[i] = wow;
+  }
+  uint64_t blah =  (uint64_t) eng_rpm << 48 | (uint64_t) throttle_pos << 32 | (uint64_t) lambda << 16 | (uint64_t) bat_volt_ecu;
+  
+  for(i = 0;i<64;i++){
+          stuff[i] = blah;
       }
+      
+      sd_write(sd_connection,0x58,0xFF,0x00000000);
+     
+      sd_write(sd_connection,0xFF,0xFE,0xFFFFFFFF);
+      uint64_t thing[64];
+      
+       
+      sd_write_CAN(sd_connection,stuff,thing);
+      
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+      sd_write(sd_connection,0x4C,0xFF,0x40000000);
+      sd_write(sd_connection,0xFF,0xFF,0xFFFFFFFF);
+   
+    CAN_data data = {0};
+    data.halfword0 = 12;
+    data.halfword1 = 12;
+    data.halfword2 = 12;
+    data.halfword3 = 12;
+
+    CAN_send_message(MOTEC_ID + 1, 8, data);
+      
 }
 
 //============================= ADC FUNCTIONS ==================================
@@ -292,13 +320,13 @@ void sample_rail(void) {
  * Sends the diagnostic CAN message if the interval has passed.
  */
 void send_diag_can(void) {
-  if (millis - diag_send_tmr >= DIAG_SEND) {
+  if (millis - diag_send_tmr >= 50) {
     CAN_data data = {0};
     data.halfword0 = (uint16_t) seconds;
     data.halfword1 = pcb_temp;
     data.halfword2 = junc_temp;
 
-    CAN_send_message(LOGGER_ID + 0, 6, data);
+    CAN_send_message(LOGGER_ID, 6, data);
     diag_send_tmr = millis;
   }
 }
@@ -400,8 +428,8 @@ void sd_write(SPIConn *currConn, uint8_t cmd, uint8_t crc, uint32_t input) {
 
 }
 
-void sd_write_CAN(SPIConn * currConn, uint64_t message[]){
-    uint64_t * receive = send_spi_CAN(message,currConn);
+void sd_write_CAN(SPIConn * currConn, uint64_t message[],uint64_t rec[]){
+    send_spi_CAN(message,rec,currConn);
     SDControlReg dummy = {.reg = 0xFFFF};
   send_spi(dummy.reg, currConn);
   send_spi(dummy.reg, currConn);

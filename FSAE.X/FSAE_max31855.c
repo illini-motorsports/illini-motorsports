@@ -5,7 +5,7 @@ uint8_t max31855ConnIdx = 0;
 
 SPIConn* init_max31855(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
   if(!max31855ConnIdx) {
-    init_spi(bus, 3, 32, 0);
+    init_spi(bus, 0.5, 32, 0);
   }
   SPIConn *currConn = &max31855Connections[max31855ConnIdx];
   currConn->send_fp = get_send_spi(bus);
@@ -51,7 +51,7 @@ max31855_data read_max31855_data(SPIConn *conn) {
   }
 
   max31855_data output_data;
-  output_data.thermocoupleTemp = thermocouple_temp/4.0;
+  output_data.thermocoupleTemp = thermocouple_temp;
   output_data.junctionTemp = junction_temp/16.0;
   output_data.fault = data & 0x07; // isolate fault data
 

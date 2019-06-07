@@ -21,8 +21,8 @@ uint8_t crit_volt_pending, crit_oilpres_pending, crit_oiltemp_pending,
         crit_engtemp_pending = 0;
 uint8_t wtr_override_sw, fan_override_sw, fuel_override_sw, ack_btn = 0;
 uint8_t wtr_override, fan_override, fuel_override, abs_override = 0;
-uint8_t switch_debounced = 0; // Debounced (safe) switch state
-uint8_t switch_prev = 0;      // Previous sampled value of switches
+uint16_t switch_debounced = 0; // Debounced (safe) switch state
+uint16_t switch_prev = 0;      // Previous sampled value of switches
 int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 uint16_t rail_vbat, rail_12v, rail_5v, rail_3v3 = 0; // Sampled rail voltages
@@ -185,33 +185,14 @@ void main(void) {
 
   // Turn on state-independent loads
 //  enable_load(AUX_IDX);
-<<<<<<< Updated upstream
   enable_load(BVBAT_IDX);
   enable_load(ECU_IDX);
-=======
-  //enable_load(BVBAT_IDX);
-  //enable_load(ECU_IDX);
->>>>>>> Stashed changes
 
   // Trigger initial ADC conversion
   ADCCON3bits.GSWTRG = 1;
 
   STI(); // Enable interrupts
-  
-    enable_load(0);
-    enable_load(1);
-    enable_load(2);
-    enable_load(3);
-    enable_load(4);
-    enable_load(5);
-    enable_load(6);
-    enable_load(7);
-    enable_load(8);
-    enable_load(9);
-    enable_load(10);
-    enable_load(11);
 
-<<<<<<< Updated upstream
   // Main loop
   while (1) {
     load_state_changed = 0;
@@ -239,7 +220,7 @@ void main(void) {
         over_temp_flag = 1;
       }
     }
-
+    
     /**
      * Reset override switches if the CAN variables are stale
      */
@@ -253,10 +234,10 @@ void main(void) {
      * Load override logic
      */
 
-    wtr_override = !AUX1_SW || wtr_override_sw;
-    fan_override = !AUX2_SW || fan_override_sw;
+    wtr_override = !WATER_SW || wtr_override_sw;
+    fan_override = !FAN_SW || fan_override_sw;
     abs_override = ABS_SW;
-    fuel_override = fuel_override_sw;
+    fuel_override = !FUEL_SW || fuel_override_sw;
 
     /**
      * Reset idle tmr if engine is on
@@ -326,7 +307,7 @@ void main(void) {
         set_load(WTR_IDX, !STR_EN &&
             (ENG_ON || over_temp_flag || wtr_override_sw || wtr_override));
         set_load(FAN_IDX, !STR_EN && (over_temp_flag || fan_override));
-        set_load(AUX_IDX, ack_btn || brk_press > BRK_SWITCH);
+        //set_load(AUX_IDX, ack_btn || brk_press > BRK_SWITCH);
 
         // STR
         if (STR_SW && (millis - load_tmr[STR_IDX] < STR_MAX_DUR)) {
@@ -360,7 +341,8 @@ void main(void) {
       }
 
       // ABS
-      set_load(ABS_IDX, abs_override && !KILL_SW);
+      //set_load(ABS_IDX, abs_override && !KILL_SW);
+      enable_load(ABS_IDX);
     }
 
     /**
@@ -384,8 +366,6 @@ void main(void) {
     send_cutoff_values_can(NO_OVERRIDE);
     send_overcrt_count_can(NO_OVERRIDE);
   }
-=======
->>>>>>> Stashed changes
 }
 
 //=============================== INTERRUPTS ===================================
@@ -479,7 +459,7 @@ void process_CAN_msg(CAN_message msg) {
 
     case WHEEL_ID + 0x1:
       switch_bitmap = msg.data[SWITCH_BITS_BYTE];
-      fan_override_sw = switch_bitmap & (1 << (FAN_OVR_BITPOS - 1));
+      //fan_override_sw = switch_bitmap & (1 << (FAN_OVR_BITPOS - 1));
       wtr_override_sw = switch_bitmap & (1 << (WTR_OVR_BITPOS - 1));
       fuel_override_sw = switch_bitmap & (1 << (FUEL_OVR_BITPOS - 1));
       ack_btn = switch_bitmap & (1 << ACK_BTN_BITPOS);
@@ -495,15 +475,17 @@ void process_CAN_msg(CAN_message msg) {
  * input separately.
  */
 void debounce_switches(void) {
-  uint8_t switch_raw = 0x0 |
-    STR_SW_RAW << 7 |
-    ON_SW_RAW << 6 |
-    ACT_UP_SW_RAW << 5 |
-    ACT_DN_SW_RAW << 4 |
-    KILL_SW_RAW << 3 |
-    ABS_SW_RAW << 2 |
-    AUX1_SW_RAW << 1 |
-    AUX2_SW_RAW << 0;
+  uint16_t switch_raw = 0x0 |
+    STR_SW_RAW << 9 |
+    ON_SW_RAW << 8 |
+    ACT_UP_SW_RAW << 7 |
+    ACT_DN_SW_RAW << 6 |
+    KILL_SW_RAW << 5 |
+    ABS_SW_RAW << 4 |
+    FUEL_SW_RAW << 3 |
+    WATER_SW_RAW << 2 |
+    FAN_SW_RAW << 1|
+    AUX_SW_RAW << 0;
 
   if (switch_raw != switch_prev) {
     switch_debounce_tmr = millis;
@@ -817,8 +799,8 @@ void send_diag_state_can(uint8_t override) {
       ACT_DN_SW << 4 |
       KILL_SW << 3 |
       ABS_SW << 2 |
-      AUX1_SW << 1 |
-      AUX2_SW << 0;
+      AUX_SW << 1 |
+      FAN_SW << 0;
 
     // Create flag bitmap
     data.byte7 = 0x0 |

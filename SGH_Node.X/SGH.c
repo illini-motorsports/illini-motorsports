@@ -19,7 +19,7 @@ void main(void){
   init_oscillator(0);// Initialize oscillator configuration bits
   init_timer2();// Initialize timer2 (millis)
   init_adc(NULL); // Initialize ADC module
-  init_termination(NOT_TERMINATING);
+  init_termination(TERMINATING);
   init_adcs();// Initialize all of the ADC's
   init_can(); // Initialize CAN
 

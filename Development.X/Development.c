@@ -10,6 +10,7 @@ int main(void){
   init_pwm(0x0100,3); //Initialize pwm signal with given period
   pwm_set(0x0050,3);
   init_spi();
+  init_termination(TERMINATING);
 
   PIC_LED_TRIS = OUTPUT;
   int i;
