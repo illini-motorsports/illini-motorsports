@@ -70,6 +70,9 @@ void CANAnalogChannels(void){
     CAN_data susRear = {0};
     CAN_data strain;
     CAN_data temps;
+    CAN_data radTemps;
+    double radIn = (analog_channels[7]) * ((10000) / (5 - analog_channels[7]));
+    double radOut = (analog_channels[8]) * ((10000) / (5 - analog_channels[8]));
     susRear.halfword0 = (uint16_t) (analog_channels[0]*ANALOG_CAN_SCL);
     susRear.halfword1 = (uint16_t) (analog_channels[1]*ANALOG_CAN_SCL);
     susRear.halfword2 = (uint16_t) (analog_channels[2]*ANALOG_CAN_SCL);
@@ -88,8 +91,12 @@ void CANAnalogChannels(void){
     temps.halfword0 = (uint16_t) thermocouple_channels[0].thermocoupleTemp;
     temps.halfword1 = (uint16_t) thermocouple_channels[1].thermocoupleTemp;
     temps.halfword2 = (uint16_t) thermocouple_channels[2].thermocoupleTemp;
-    temps.halfword3 = (uint16_t) thermocouple_channels[3].thermocoupleTempt6;
+    temps.halfword3 = (uint16_t) thermocouple_channels[3].thermocoupleTemp;
     CAN_send_message(0x5A,8,temps);
+    radTemps.halfword0 = (uint16_t) (radIn);
+    radTemps.halfword1 = (uint16_t) (radOut);
+    radTemps.halfword2 = (uint16_t) (69);
+    CAN_send_message(0x52,6,radTemps);
     
     
  }

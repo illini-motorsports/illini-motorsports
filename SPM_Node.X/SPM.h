@@ -73,8 +73,8 @@
 #define TIRE_DIAMETER_PER_TR    0.267035
 #define SPI_DIFF_TIME           0.0000836
 
-uint8_t analogMappings[32] = {27,26,0,28,7,6,4,7,1,0,12,13,14,15,5,4,7,6,23,22,21,20,19,18,17,16,11,10,30,31,9,8};
-
+uint8_t analogMappings[32] = {27,26,0,28,7,6,4,25,24,0,12,13,14,15,5,4,7,6,23,22,21,20,19,18,17,16,11,10,25,5,9,8};
+        
 void main(void);
 void update_analog_channels(void);
 void update_digital_channels(void);
