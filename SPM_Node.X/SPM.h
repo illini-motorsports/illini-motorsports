@@ -74,7 +74,10 @@
 #define SPI_DIFF_TIME           0.0000836
 
 uint8_t analogMappings[32] = {27,26,0,28,7,6,4,25,24,0,12,13,14,15,5,4,7,6,23,22,21,20,19,18,17,16,11,10,25,5,9,8};
-        
+
+double tempRange[20] = {-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150};
+double resRange[20] = {45313, 26114, 15462, 9397, 5896, 3792, 2500, 1707, 1175, 834, 596, 436, 323, 243, 187, 144, 113, 89, 71, 57};
+
 void main(void);
 void update_analog_channels(void);
 void update_digital_channels(void);
@@ -92,5 +95,6 @@ void sample_temp(void);
 void process_CAN_msg(CAN_message msg);
 
 void calc_wheel_speeds(void);
+int32_t linearizeThermistor(double inTherm);
 
 #endif /* SPM_H */

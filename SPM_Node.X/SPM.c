@@ -93,12 +93,9 @@ void CANAnalogChannels(void){
     temps.halfword2 = (uint16_t) thermocouple_channels[2].thermocoupleTemp;
     temps.halfword3 = (uint16_t) thermocouple_channels[3].thermocoupleTemp;
     CAN_send_message(0x5A,8,temps);
-    radTemps.halfword0 = (uint16_t) (radIn);
-    radTemps.halfword1 = (uint16_t) (radOut);
-    radTemps.halfword2 = (uint16_t) (69);
-    CAN_send_message(0x52,6,radTemps);
-    
-    
+    radTemps.word0 = (linearizeThermistor(radIn));
+    radTemps.word1 = (linearizeThermistor(radOut));
+    CAN_send_message(0x52,8,radTemps);
  }
 
 void CANDiag(void){
@@ -107,6 +104,25 @@ void CANDiag(void){
   data.halfword1 = pcb_temp;
   data.halfword2 = junc_temp;
   CAN_send_message(SPM_ID, 6, data);
+}
+
+int32_t linearizeThermistor(double inTherm)
+{
+    int i = 0;
+    double outTherm = 666;
+    if(inTherm >= 5896)
+    {
+        return (outTherm * (ANALOG_CAN_SCL / 10)); //Water is way too cold, send fault value
+    }
+    for(i = 0; i < 20; i++)
+    {
+        if((resRange[i] < inTherm) && (i != 19))
+        {
+            outTherm = tempRange[i-1] + ((tempRange[i] - tempRange[i-1])/(resRange[i] - resRange[i-1]))*(inTherm - resRange[i-1]);
+            break;
+        }
+    }
+    return (int32_t)(outTherm * (ANALOG_CAN_SCL / 10));
 }
 
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(void) {
