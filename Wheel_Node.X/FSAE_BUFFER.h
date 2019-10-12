@@ -14,6 +14,19 @@
 #include <sys/types.h>
 #include "RA8875_driver.h"
 
+#define RINGSIZE 128
+
+/*
+ * Struct that will define type of buf. This allows for better flexibility
+ * Buffer can be priority (=1) or not (=0). Buffer will have data, a read, and a write ptr.
+ * 
+ */
+typedef struct packed {
+  uint8_t data[SIZE];
+  uint8_t read_ptr;
+  uint8_t write_ptr;
+  uint8_t priority;
+} buffer;
 
 /*
  * Defines the command struct that will be used in and around the ring buffer
