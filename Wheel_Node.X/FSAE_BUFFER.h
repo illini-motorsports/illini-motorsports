@@ -52,8 +52,19 @@ typedef struct packed {
  *
  */
 typedef enum uint8_t {
-  // CMD1                     = 1,
-  // CMD2                     = 2
+  redrawDigit           = 0;
+  redrawGearPos         = 1;
+  redrawFanSw           = 2;
+  redrawFUELPumpSw      = 3;
+  redrawWTRPumpSw       = 4;
+  redrawGCMMode         = 5;
+  redrawTireTemp        = 6;
+  redrawSPBar           = 7;
+  redrawBrakeBar        = 8;
+  redrawRotary          = 9;
+  redrawShiftLightsRPM  = 10;
+  redrawKILLCluster     = 11;
+  redrawGforceGraph     = 12;
 } msg_type_enum;
 
 /*  Defines the specific command structs for use in the cmd_struct.

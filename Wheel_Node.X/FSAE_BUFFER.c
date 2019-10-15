@@ -18,8 +18,8 @@
  */
 void push(cmd_struct command, uint8_t * buf_ptr)
 {
-  buf_ptr.data[write_ptr] = command;
-  buf_ptr.write_ptr = (buf_ptr.write_ptr + 1) % RINGSIZE;
+  buf_ptr->data[write_ptr] = command;
+  buf_ptr->write_ptr = (buf_ptr->write_ptr + 1) % RINGSIZE;
 }
   
 /* pop
@@ -29,8 +29,8 @@ void push(cmd_struct command, uint8_t * buf_ptr)
  */
 cmd_struct pop(uint8_t * buf_ptr)
 {
-  cmd_struct ret_command = buf_ptr.data[buf_ptr.read_ptr];
-  buf_ptr.read_ptr = (buf_ptr.read_ptr+1) % SIZE;
+  cmd_struct ret_command = buf_ptr->data[buf_ptr->read_ptr];
+  buf_ptr->read_ptr = (buf_ptr->read_ptr+1) % SIZE;
   return ret_command;
 }
   
@@ -40,7 +40,7 @@ cmd_struct pop(uint8_t * buf_ptr)
  */
 bool empty(uint8_t * buf_ptr)
 {
-	return (buf_ptr.read_ptr == buf_ptr.write_ptr);
+	return (buf_ptr->read_ptr == buf_ptr->write_ptr);
 }
 
 /* full
@@ -50,7 +50,7 @@ bool empty(uint8_t * buf_ptr)
 bool full(uint8_t * buf_ptr)
 {
 	//i think this is incorrect, say we push 1 thing into an empty buffer. then full will be true.
-	return (buf_ptr.read_ptr == (buf_ptr.write_ptr - 1)); // might be off by 1, needs to account for rollover
+	return (buf_ptr->read_ptr == (buf_ptr->write_ptr - 1)); // might be off by 1, needs to account for rollover
 }
 
 //Mid level functions
