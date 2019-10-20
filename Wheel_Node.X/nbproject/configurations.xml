@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="62">
+<configurationDescriptor version="65">
   <logicalFolder name="root" displayName="root" projectFiles="true">
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -7,6 +7,7 @@
       <itemPath>Wheel.h</itemPath>
       <itemPath>RA8875_driver.h</itemPath>
       <itemPath>FSAE_LCD.h</itemPath>
+      <itemPath>FSAE_BUFFER.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -18,6 +19,7 @@
       <itemPath>Wheel.c</itemPath>
       <itemPath>RA8875_driver.c</itemPath>
       <itemPath>FSAE_LCD.c</itemPath>
+      <itemPath>FSAE_BUFFER.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -27,6 +29,7 @@
   </logicalFolder>
   <sourceRootList>
     <Elem>../FSAE_32</Elem>
+    <Elem>.</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -38,9 +41,12 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>1.44</languageToolchainVersion>
+        <languageToolchainVersion>2.10</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
+      <packs>
+        <pack name="PIC32MZ-EF_DFP" vendor="Microchip" version="1.0.17"/>
+      </packs>
       <compileType>
         <linkerTool>
           <linkerLibItems>

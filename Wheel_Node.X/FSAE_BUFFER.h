@@ -15,56 +15,28 @@
 #include "RA8875_driver.h"
 
 #define RINGSIZE 128
-
-/*
- * Struct that will define type of buf. This allows for better flexibility
- * Buffer can be priority (=1) or not (=0). Buffer will have data, a read, and a write ptr.
- * 
- */
-typedef struct packed {
-  uint8_t data[SIZE];
-  uint8_t read_ptr;
-  uint8_t write_ptr;
-  uint8_t priority;
-} buffer;
-
-/*
- * Defines the command struct that will be used in and around the ring buffer
- * msg_type - define what kind of message: e.g. drawLine, etc.
- * x -    X coordinate
- * y -    Y coordinate
- * size -   Size of item
- */
-typedef struct packed {
-  msg_type_enum msg_type;
-  union packed {
-    cmd1_struct cmd1;
-    cmd2_struct cmd2;
-  } msg;
-  uint16_t x;
-  uint16_t y;
-  uint16_t size;
-} cmd_struct;
+//This is max size for dataitem, which is from PDM dataitem.
+#define MAXDATASIZE 93
 
 /* Defines types of commands for use in the above struct
  *  Please add commands here and assign them to number values
  *  Also, depending on number of commands, change to uint16_t
  *
  */
-typedef enum uint8_t {
-  redrawDigit           = 0;
-  redrawGearPos         = 1;
-  redrawFanSw           = 2;
-  redrawFUELPumpSw      = 3;
-  redrawWTRPumpSw       = 4;
-  redrawGCMMode         = 5;
-  redrawTireTemp        = 6;
-  redrawSPBar           = 7;
-  redrawBrakeBar        = 8;
-  redrawRotary          = 9;
-  redrawShiftLightsRPM  = 10;
-  redrawKILLCluster     = 11;
-  redrawGforceGraph     = 12;
+typedef enum msg_type_enum {
+  dredrawDigit           ,
+  dredrawGearPos         ,
+  dredrawFanSw           ,
+  dredrawFUELPumpSw      ,
+  dredrawWTRPumpSw       ,
+  dredrawGCMMode         ,
+  dredrawTireTemp        ,
+  dredrawSPBar           ,
+  dredrawBrakeBar        ,
+  dredrawRotary          ,
+  dredrawShiftLightsRPM  ,
+  dredrawKILLCluster     ,
+  dredrawGforceGraph     
 } msg_type_enum;
 
 /*  Defines the specific command structs for use in the cmd_struct.
@@ -73,12 +45,47 @@ typedef enum uint8_t {
  *
  *  Padding might be implicit in C, so maybe its not needed. Double check that if the union fails
  */
-typedef struct packed {
+typedef struct __attribute__((packed)) cmd1_struct{
   // logic [38:0]             padding;
   // logic [7:0]              stuff;
   // logic [7:0]              things;
 } cmd1_struct;
 
+typedef struct __attribute__((packed)) cmd2_struct{
+  // logic [38:0]             padding;
+  // logic [7:0]              stuff;
+  // logic [7:0]              things;
+} cmd2_struct;
 
+
+/*
+ * Defines the command struct that will be used in and around the ring buffer
+ * msg_type - define what kind of message: e.g. drawLine, etc.
+ * x -    X coordinate
+ * y -    Y coordinate
+ * size -   Size of item
+ */
+typedef struct __attribute__((packed)) cmd_struct {
+  msg_type_enum msg_type;
+  union __attribute__((packed)) {
+    cmd1_struct cmd1;
+    cmd2_struct cmd2;
+  } msg;
+  uint16_t x;
+  uint16_t y;
+  uint16_t size;
+} cmd_struct;
+
+/*
+ * Struct that will define type of buf. This allows for better flexibility
+ * Buffer can be priority (=1) or not (=0). Buffer will have data, a read, and a write ptr.
+ * 
+ */
+typedef struct __attribute__((packed)) buffer {
+  cmd_struct data[RINGSIZE];
+  uint8_t read_ptr;
+  uint8_t write_ptr;
+  uint8_t priority;
+} buffer;
 
 #endif /* _FSAE_BUFFER_H */

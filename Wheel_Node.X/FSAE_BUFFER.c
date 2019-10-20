@@ -16,9 +16,9 @@
  * will push some cmd_struct into the Ring buffer
  * and then adjust write_ptr
  */
-void push(cmd_struct command, uint8_t * buf_ptr)
+void push(cmd_struct command, buffer * buf_ptr)
 {
-  buf_ptr->data[write_ptr] = command;
+  buf_ptr->data[buf_ptr->write_ptr] = command;
   buf_ptr->write_ptr = (buf_ptr->write_ptr + 1) % RINGSIZE;
 }
   
@@ -27,10 +27,11 @@ void push(cmd_struct command, uint8_t * buf_ptr)
  * then adjust read_ptr,
  * and also return whatever was popped
  */
-cmd_struct pop(uint8_t * buf_ptr)
+cmd_struct pop(buffer * buf_ptr)
 {
-  cmd_struct ret_command = buf_ptr->data[buf_ptr->read_ptr];
-  buf_ptr->read_ptr = (buf_ptr->read_ptr+1) % SIZE;
+  cmd_struct ret_command;
+  ret_command = buf_ptr->data[buf_ptr->read_ptr];
+  buf_ptr->read_ptr = (buf_ptr->read_ptr+1) % MAXDATASIZE;
   return ret_command;
 }
   
@@ -38,19 +39,25 @@ cmd_struct pop(uint8_t * buf_ptr)
  * check if the ring buffer is empty.
  * return bool
  */
-bool empty(uint8_t * buf_ptr)
+uint8_t empty(buffer * buf_ptr)
 {
-	return (buf_ptr->read_ptr == buf_ptr->write_ptr);
+	if(buf_ptr->read_ptr == buf_ptr->write_ptr)
+        return 1;
+    else
+        return 0;
 }
 
 /* full
  * check if the ring buffer is full.
  * return bool
  */
-bool full(uint8_t * buf_ptr)
+uint8_t full(buffer * buf_ptr)
 {
 	//i think this is incorrect, say we push 1 thing into an empty buffer. then full will be true.
-	return (buf_ptr->read_ptr == (buf_ptr->write_ptr - 1)); // might be off by 1, needs to account for rollover
+	if(buf_ptr->read_ptr == (buf_ptr->write_ptr - 1)) // might be off by 1, needs to account for rollover
+        return 1;
+    else
+        return 0;
 }
 
 //Mid level functions
@@ -59,7 +66,7 @@ bool full(uint8_t * buf_ptr)
  * Will attempt to push a cmd_struct
  * Will not push if it is full. If full, then wait until empty. This is a blocking funciton.
  */
-void blocking_push(cmd_struct command, uint8_t * buf_ptr)
+void blocking_push(cmd_struct command, buffer * buf_ptr)
 {
   while(1)  {
   	if(!full(buf_ptr)) {
@@ -73,12 +80,12 @@ void blocking_push(cmd_struct command, uint8_t * buf_ptr)
  * Will attempt to pop a cmd_struct
  * Will not pop if it is empty. If empty, then wait until somthing put in. returns popped item, also blocking
  */
-uint8_t blocking_pop(uint8_t * buf_ptr)
+cmd_struct blocking_pop(buffer * buf_ptr)
 {
   while(1)  {
   	if(!empty(buf_ptr)) {
     	return pop(buf_ptr);
-	}
+	 }
   }
 }
 
