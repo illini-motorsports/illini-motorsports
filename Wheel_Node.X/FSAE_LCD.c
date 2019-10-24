@@ -629,7 +629,7 @@ double redrawDigit(screenItemInfo * item, volatile dataItem * data, double curre
   };
 
   //Pass this struct into buffer, choose priority or not
-
+  blocking_push(rDigit, 0); //not priority for now
 
 }
 

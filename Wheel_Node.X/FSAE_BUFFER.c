@@ -11,6 +11,29 @@
 #include "FSAE_BUFFER.h"
 
 //Lower level functions
+
+/* init
+ * initialize the buffer. allocate memory as necessary
+ * For now, input is only priority. consider using custom buffer sizes
+ */
+void init_buffer(buffer * initBuf, uint8_t pri) {
+	if(initBuf == NULL) {
+		printf("NULL in init_buffer");
+		return;
+	}
+	initBuf->data = malloc(RINGSIZE * sizeof(cmd_struct)); //verify the sizeof
+	initBuf->priority = pri;
+	initBuf->read_ptr = 0;
+	initBuf->write_ptr = 0;
+}
+
+/* free
+ * free the buffer. might not ever get used since car is shutdown often
+ * 
+ */
+void free_buffer(buffer * killBuf) {
+	free(killBuf->data);
+}
   
 /* push
  * will push some cmd_struct into the Ring buffer
@@ -29,7 +52,7 @@ void push(cmd_struct command, buffer * buf_ptr)
  */
 cmd_struct pop(buffer * buf_ptr)
 {
-  cmd_struct ret_command;
+  cmd_struct * ret_command;
   ret_command = buf_ptr->data[buf_ptr->read_ptr];
   buf_ptr->read_ptr = (buf_ptr->read_ptr+1) % MAXDATASIZE;
   return ret_command;
@@ -66,7 +89,7 @@ uint8_t full(buffer * buf_ptr)
  * Will attempt to push a cmd_struct
  * Will not push if it is full. If full, then wait until empty. This is a blocking funciton.
  */
-void blocking_push(cmd_struct command, buffer * buf_ptr)
+void blocking_push(cmd_struct *command, buffer * buf_ptr)
 {
   while(1)  {
   	if(!full(buf_ptr)) {
@@ -80,7 +103,7 @@ void blocking_push(cmd_struct command, buffer * buf_ptr)
  * Will attempt to pop a cmd_struct
  * Will not pop if it is empty. If empty, then wait until somthing put in. returns popped item, also blocking
  */
-cmd_struct blocking_pop(buffer * buf_ptr)
+cmd_struct * blocking_pop(buffer * buf_ptr)
 {
   while(1)  {
   	if(!empty(buf_ptr)) {

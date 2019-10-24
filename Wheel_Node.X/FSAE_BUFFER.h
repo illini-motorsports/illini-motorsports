@@ -64,13 +64,16 @@ typedef struct __attribute__((packed)) cmd2_struct{
  * x -    X coordinate
  * y -    Y coordinate
  * size -   Size of item
+ * using an anonymous union with no name, which allows access as if they are normal struct members
+ * Union allows different types of data to be store here, since each redraw funciton 
+ * is different aside from the basic x,y,size
  */
 typedef struct __attribute__((packed)) cmd_struct {
   msg_type_enum msg_type;
   union __attribute__((packed)) {
     cmd1_struct cmd1;
     cmd2_struct cmd2;
-  } msg;
+  };
   uint16_t x;
   uint16_t y;
   uint16_t size;
@@ -82,7 +85,7 @@ typedef struct __attribute__((packed)) cmd_struct {
  * 
  */
 typedef struct __attribute__((packed)) buffer {
-  cmd_struct data[RINGSIZE];
+  cmd_struct * data;
   uint8_t read_ptr;
   uint8_t write_ptr;
   uint8_t priority;
