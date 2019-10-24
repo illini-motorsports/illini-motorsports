@@ -573,8 +573,9 @@ void refreshScreenItems(void){
   }
 }
 
-// Redraw General Data
+// Redraw General Data, currentValue is MINREFRESH
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
+  /*
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
   uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
   uint8_t stale = millis - data->refreshTime > 1000;
@@ -616,6 +617,20 @@ double redrawDigit(screenItemInfo * item, volatile dataItem * data, double curre
     sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,numColor,data->value);
   }
   return data->value;
+  */
+
+  //Create cmd struct using function inputs, allocate memory for it?
+  cmd_struct rDigit = {
+    dredrawDigit,
+    /* union args */
+    item->x,
+    item->y,
+    item->size
+  };
+
+  //Pass this struct into buffer, choose priority or not
+
+
 }
 
 // For Single Digits with Error and Neutral Displays
