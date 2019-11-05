@@ -18,7 +18,7 @@
  */
 void init_buffer(buffer * initBuf, uint8_t pri) {
 	if(initBuf == NULL) {
-		printf("NULL in init_buffer");
+//		printf("NULL in init_buffer"); //print error msg
 		return;
 	}
 	initBuf->data = malloc(RINGSIZE * sizeof(cmd_struct)); //verify the sizeof
@@ -52,9 +52,9 @@ void push(cmd_struct command, buffer * buf_ptr)
  */
 cmd_struct pop(buffer * buf_ptr)
 {
-  cmd_struct * ret_command;
+  cmd_struct ret_command;
   ret_command = buf_ptr->data[buf_ptr->read_ptr];
-  buf_ptr->read_ptr = (buf_ptr->read_ptr+1) % MAXDATASIZE;
+  buf_ptr->read_ptr = (buf_ptr->read_ptr+1) % RINGSIZE; //TODO was previously MAXDATASIZE
   return ret_command;
 }
   
@@ -103,8 +103,9 @@ void blocking_push(cmd_struct command, buffer * buf_ptr)
 /* blocking pop
  * Will attempt to pop a cmd_struct
  * Will not pop if it is empty. If empty, then wait until somthing put in. returns popped item, also blocking
+ * TODO consider having a timeout or force exit
  */
-cmd_struct * blocking_pop(buffer * buf_ptr)
+cmd_struct blocking_pop(buffer * buf_ptr)
 {
   while(1)  {
   	if(!empty(buf_ptr)) {

@@ -9,6 +9,7 @@
 #include "RA8875_driver.h"
 #include "Wheel.h"
 #include "FSAE_LCD.h"
+#include "FSAE_BUFFER.h"
 
 uint16_t shiftRPM[7] = {12444,11959,12155,12100,11150,13000,13000}; //theres only gears 1-5
 
@@ -574,6 +575,9 @@ void refreshScreenItems(void){
 }
 
 // Redraw General Data, currentValue is MINREFRESH
+/*  fillRect: 1
+ *  digit: 1
+ */
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
@@ -619,18 +623,19 @@ double redrawDigit(screenItemInfo * item, volatile dataItem * data, double curre
   return data->value;
   */
 
-  //Create union for the cmd struct?
+  cmd_struct_digit cmd_data;
+  /* cmd_data populated here */
 
-  //Create cmd struct using function inputs, allocate memory for it?
-  //If we allocate memory on the heap for this, then diablo will have to free structs
-  //after reading from the buff. So, for now declare on stack and simply set equal when pushing.
-  cmd_struct rDigit = {
-    dredrawDigit,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  /*Create cmd struct using function inputs, allocate memory for it?
+    If we allocate memory on the heap for this, then diablo will have to free structs
+    after reading from the buff. So, for now declare on stack and simply set equal when pushing. 
+  */
+  cmd_struct rDigit;
+  rDigit.msg_type = dredrawDigit;
+  // rDigit.cmd_digit = ; //TODO find useful information and put it here, in form of a struct
+  rDigit.x = item->x;
+  rDigit.y = item->y;
+  rDigit.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
   blocking_push(rDigit, 0); //not priority for now
@@ -638,6 +643,9 @@ double redrawDigit(screenItemInfo * item, volatile dataItem * data, double curre
 }
 
 // For Single Digits with Error and Neutral Displays
+/* fill rectangle: 1
+ * digit: 1 (supports N, E as well)
+ */
 double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*if(data->value == currentValue){
     return data->value;
@@ -654,21 +662,26 @@ double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double cur
   }
   return data->value;
   */
+  cmd_struct_gear cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawGearPos,
+  cmd_struct rGear;
+  rGear.msg_type = dredrawGearPos,
     /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  // rGear.cmd_gear = 
+  rGear.x = item->x;
+  rGear.y = item->y;
+  rGear.size = item->size;
+
+  
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rGear, 0); //not priority for now
 
 }
 
 // For Fan Override Indicator
+/* fill circle: 1
+ */
 double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
@@ -684,20 +697,24 @@ double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double curre
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
   }
   return data->value;*/
+
+  cmd_struct_fan cmd_data;
   //Create cmd struct using function inputs, allocate memory for it?
-  cmd_struct rDigit = {
-    dredrawFanSw,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rFan;
+  rFan.msg_type = dredrawFanSw;
+
+  rFan.x = item->x;
+  rFan.y = item->y;
+  rFan.size = item->size;
+
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rFan, 0); //not priority for now
 }
 
 // For GCM Mode Indicator
+/* fill Cirlce: 1
+ */
 double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue){
   // Auto-Upshifting Engaged
   /*if(data->value == 1){
@@ -710,19 +727,21 @@ double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double cur
   return data->value;
   */
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawGCMMode,
+  cmd_struct rGCM;
+  rGCM.msg_type = dredrawGCMMode;
     /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  rGCM.x = item->x;
+  rGCM.y = item->y;
+  rGCM.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rGCM, 0); //not priority for now
 }
 
 // For Water Pump Override Indicator
+/* fill Circle: 1
+ *
+*/
 double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
@@ -739,20 +758,23 @@ double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double c
   }
   return data->value;
   */
+
+  cmd_struct_wtr cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawWTRPumpSw,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rWTR;
+  rWTR.msg_type = dredrawWTRPumpSw;
+  rWTR.cmd_wtr = cmd_data;
+  rWTR.x = item->x;
+  rWTR.y = item->y;
+  rWTR.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rWTR, 0); //not priority for now
 }
 
 // For Launch Control Override Indicator
+/* fill Circle: 1
+ */
 double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
@@ -769,21 +791,23 @@ double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double 
   }
   return data->value;
   */
-
+  cmd_struct_fuel cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawDigit,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rFUEL;
+  rFUEL.msg_type = dredrawFUELPumpSw;
+  rFUEL.cmd_fuel = cmd_data;
+  rFUEL.x = item->x;
+  rFUEL.y = item->y;
+  rFUEL.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rFUEL, 0); //not priority for now
 }
 
 // Uses the 4 Tire Temp sensors to draw a color gradient tire
+/* fill circle square (?): 2
+ * fill rect: 2
+ */
 double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*volatile dataItem** dataArray = (volatile dataItem**) data;
   uint16_t fillColor = tempColor(data->value);
@@ -797,20 +821,22 @@ double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double cu
   fillRect(x+(2*width),y,width,height,tempColor(dataArray[2]->value));
   return dataArray[0]->value;
   */
+  cmd_struct_tire cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawTireTemp,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rTire;
+  rTire.msg_type = dredrawTireTemp;
+  rTire.cmd_tire = cmd_data;
+  rTire.x = item->x;
+  rTire.y = item->y;
+  rTire.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rTire, 0); //not priority for now
 }
 
 // Draws a bar with a height proportional to the suspension position
+/* fillRect: 2
+ */
 double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*if(data->value == currentValue){
     return data->value;
@@ -825,20 +851,22 @@ double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double curre
   }
   return data->value;
   */
+  cmd_struct_sp cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawSPBar,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rSP;
+  rSP.msg_type = dredrawSPBar;
+  rSP.cmd_sp = cmd_data;
+  rSP.x = item->x;
+  rSP.y = item->y;
+  rSP.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rSP, 0); //not priority for now
 }
 
 //Draw a bar with height proportional to the brake pressure
+/* fillRect: 2
+ */
 double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*if(data->value == currentValue){
     return data->value;
@@ -853,19 +881,22 @@ double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double cu
   }
   return data->value;
   */
+  cmd_struct_brake cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawBrakeBar,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rBrake;
+  rBrake.msg_type = dredrawBrakeBar;
+  rBrake.cmd_brake = cmd_data;
+  rBrake.x = item->x;
+  rBrake.y = item->y;
+  rBrake.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rBrake, 0); //not priority for now
 }
 
+/* fill circle: 1
+ * digit: 1
+ */
 double redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue){
   /*fillCircle(item->x, item->y, item->size, RA8875_RED);
   if(data->value == currentValue){
@@ -874,17 +905,17 @@ double redrawRotary(screenItemInfo * item, volatile dataItem * data, double curr
   sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
   return data->value;
   */
+  cmd_struct_rotary cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawRotary,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rRotary;
+  rRotary.msg_type = dredrawRotary;
+  rRotary.cmd_rotary = cmd_data;
+  rRotary.x = item->x;
+  rRotary.y = item->y;
+  rRotary.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rRotary, 0); //not priority for now
 }
 
 uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
@@ -914,6 +945,8 @@ uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
   }
 }
 
+/* does not seem to draw to screen, uses blinks on leds
+ */
 double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
   /*volatile dataItem** dataArray = (volatile dataItem**) data;
   uint16_t rpm = (uint16_t) dataArray[0]->value;
@@ -934,19 +967,21 @@ double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, dou
   }
   return data->value;
   */
+  cmd_struct_shift cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawShiftLightsRPM,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rShift;
+  rShift.msg_type = dredrawShiftLightsRPM;
+  rShift.cmd_shift = cmd_data;
+  rShift.x = item->x;
+  rShift.y = item->y;
+  rShift.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rShift, 0); //not priority for now
 }
 
+/* again, tlc5955 is leds only
+ */
 double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue) {
   /*uint8_t kill = data->value ? 1 : 0;
   if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
@@ -957,20 +992,24 @@ double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double
   }
   return data->value;
   */
+  cmd_struct_kill cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawKILLCluster,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rKILL;
+  rKILL.msg_type = dredrawKILLCluster;
+  rKILL.cmd_kill = cmd_data;
+  rKILL.x = item->x;
+  rKILL.y = item->y;
+  rKILL.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rKILL, 0); //not priority for now
 }
 
 //For drawing a visual representation of g-forces
+/* fill circle: (erases 1) 1
+ * draw circle: 4
+ * fill rect: 2
+ */
 double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue)
 {
     /*int i = 0;
@@ -1057,17 +1096,17 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
     //setting the "currentValue" to allow the function to erase a localized area in the future
     return longitSnap + lateralSnap;
     */
+  cmd_struct_gforce cmd_data;
   //Create cmd struct using function inputs
-  cmd_struct rDigit = {
-    dredrawGforceGraph,
-    /* union args */
-    item->x,
-    item->y,
-    item->size
-  };
+  cmd_struct rGforce;
+  rGforce.msg_type = dredrawGforceGraph;
+  rGforce.cmd_gforce = cmd_data;
+  rGforce.x = item->x;
+  rGforce.y = item->y;
+  rGforce.size = item->size;
 
   //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
+  blocking_push(rGforce, 0); //not priority for now
 }
 
 void clearScreen(void){
