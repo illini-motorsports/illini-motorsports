@@ -575,11 +575,10 @@ void refreshScreenItems(void){
 }
 
 // Redraw General Data, currentValue is MINREFRESH
-/*  fillRect: 1
- *  digit: 1
+/*  fillRect: 1 digit: 1
+ *  TODO will need to find way to give this context awareness of a buffer, probably just add another input
  */
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*
   uint8_t warning = data->thresholdDir ? data->value >= data->warnThreshold: data->value <= data->warnThreshold;
   uint8_t error = data->thresholdDir ? data->value >= data->errThreshold: data->value <= data->errThreshold;
   uint8_t stale = millis - data->refreshTime > 1000;
@@ -616,41 +615,48 @@ double redrawDigit(screenItemInfo * item, volatile dataItem * data, double curre
   if(decNums){
     fillWidth += (item->size)/5;
   }
+  cmd_struct_digit cmd_data;
   fillRect(item->x, item->y, fillWidth, (item->size)*1.75, fillColor);
+  cmd_data.fillW       = fillWidth;         //size of rectangle
+  cmd_data.colorFill   = fillColor;
+  cmd_data.colorNumber = numColor;   //color values, TODO map these out sometime Diablo side
+  cmd_data.numActual   = data->value;    //Value to be printed
+  cmd_data.numWhole    = wholeNums;    //Whole digits before decimal point
+  cmd_data.numDecimal  = decNums;  //digits after decimal point
+  cmd_data.drawNumber  = 0;
   if(!stale && (!error || millis%500 > 200)) { // draw number if normal, or blink at 1hz
     sevenSegmentDecimal(item->x,item->y,item->size,wholeNums+decNums,decNums,numColor,data->value);
+    cmd_data.drawNumber  = 1;
   }
-  return data->value;
-  */
-
-  cmd_struct_digit cmd_data;
-  /* cmd_data populated here */
-
   /*Create cmd struct using function inputs, allocate memory for it?
     If we allocate memory on the heap for this, then diablo will have to free structs
     after reading from the buff. So, for now declare on stack and simply set equal when pushing. 
   */
-  cmd_struct rDigit;
+  cmd_struct rDigit; /* This all should occur before returning*/ 
   rDigit.msg_type = dredrawDigit;
   // rDigit.cmd_digit = ; //TODO find useful information and put it here, in form of a struct
   rDigit.x = item->x;
   rDigit.y = item->y;
   rDigit.size = item->size;
 
-  //Pass this struct into buffer, choose priority or not
-  blocking_push(rDigit, 0); //not priority for now
-
+  //Pass this struct into buffer 
+  blocking_push(rDigit, /* buffer pointer here */);
+  return data->value;
 }
 
 // For Single Digits with Error and Neutral Displays
 /* fill rectangle: 1
- * digit: 1 (supports N, E as well)
+ * digit: 1 (supports N, E as well) 
+ * On Diablo side, keep the gear checking for N or Error
  */
 double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*if(data->value == currentValue){
+  if(data->value == currentValue){
     return data->value;
   }
-  fillRect(item->x, item->y, item->size, item->size * 1.75, backgroundColor);
+  cmd_struct_gear cmd_data;
+  cmd_data.colorBG = backgroundColor;
+  fillRect(item->x, item->y, item->size, item->size * 1.75, backgroundColor); //erases a rect at this location
+  cmd_data.gear = data->value; //might be casting issue here, but Diablo side will decide this drawing.
   if(data->value == 0){
     sevenSegment(item->x, item->y, item->size, foregroundColor, SEVEN_SEG_N);
   }
@@ -660,10 +666,6 @@ double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double cur
   else{
     sevenSegmentDigit(item->x, item->y, item->size, foregroundColor, data->value);
   }
-  return data->value;
-  */
-  cmd_struct_gear cmd_data;
-  //Create cmd struct using function inputs
   cmd_struct rGear;
   rGear.msg_type = dredrawGearPos,
     /* union args */
@@ -672,44 +674,41 @@ double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double cur
   rGear.y = item->y;
   rGear.size = item->size;
 
-  
-
-  //Pass this struct into buffer, choose priority or not
-  blocking_push(rGear, 0); //not priority for now
-
+  blocking_push(rGear, /* buffer ptr here */);
+  return data->value;
 }
 
 // For Fan Override Indicator
 /* fill circle: 1
  */
 double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*volatile dataItem** dataArray = (volatile dataItem**) data;
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
+  cmd_struct_fan cmd_data;
   if(dataArray[0]->value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+    cmd_data.colorC = RA8875_GREEN;
   }
   // Fan On, Switch Not toggled
   else if(dataArray[1]->value){
     fillCircle(item->x, item->y, item->size, RA8875_RED);
+    cmd_data.colorC = RA8875_RED;
   }
   // Load off, switch off
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
+    cmd_data.colorC = RA8875_GREY;
   }
-  return data->value;*/
-
-  cmd_struct_fan cmd_data;
-  //Create cmd struct using function inputs, allocate memory for it?
+  //Create cmd struct and populate it
   cmd_struct rFan;
   rFan.msg_type = dredrawFanSw;
-
+  rFan.cmd_fan = cmd_data;
   rFan.x = item->x;
   rFan.y = item->y;
   rFan.size = item->size;
 
-
-  //Pass this struct into buffer, choose priority or not
-  blocking_push(rFan, 0); //not priority for now
+  blocking_push(rFan, /* buffer pointer here */);
+  return data->value;
 }
 
 // For GCM Mode Indicator
@@ -717,25 +716,25 @@ double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double curre
  */
 double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue){
   // Auto-Upshifting Engaged
-  /*if(data->value == 1){
+  cmd_struct_gcm cmd_data;
+  if(data->value == 1){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+    cmd_data.colorC = RA8875_GREEN;
   }
   // Normal Mode
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
+    cmd_data.colorC = RA8875_GREY;
   }
-  return data->value;
-  */
-  //Create cmd struct using function inputs
+  //Create cmd struct and populate it
   cmd_struct rGCM;
   rGCM.msg_type = dredrawGCMMode;
-    /* union args */
   rGCM.x = item->x;
   rGCM.y = item->y;
   rGCM.size = item->size;
 
-  //Pass this struct into buffer, choose priority or not
-  blocking_push(rGCM, 0); //not priority for now
+  blocking_push(rGCM, /* buffer ptr here */); 
+  return data->value;
 }
 
 // For Water Pump Override Indicator
@@ -743,24 +742,25 @@ double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double cur
  *
 */
 double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*volatile dataItem** dataArray = (volatile dataItem**) data;
+  volatile dataItem** dataArray = (volatile dataItem**) data;
+  cmd_struct_wtr cmd_data;
   // Override
   if(dataArray[0]->value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+    cmd_data.colorC = RA8875_GREEN;
   }
   // WTR On, Switch Not toggled
   else if(dataArray[1]->value){
     fillCircle(item->x, item->y, item->size, RA8875_RED);
+    cmd_data.colorC = RA8875_RED;
   }
   // Load off, switch off
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
+    cmd_data.colorC = RA8875_GREY;
   }
-  return data->value;
-  */
-
-  cmd_struct_wtr cmd_data;
-  //Create cmd struct using function inputs
+  
+  //Create cmd struct, populate it
   cmd_struct rWTR;
   rWTR.msg_type = dredrawWTRPumpSw;
   rWTR.cmd_wtr = cmd_data;
@@ -768,30 +768,32 @@ double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double c
   rWTR.y = item->y;
   rWTR.size = item->size;
 
-  //Pass this struct into buffer, choose priority or not
-  blocking_push(rWTR, 0); //not priority for now
+  blocking_push(rWTR, /* buffer ptr here */); 
+  return data->value;
 }
 
 // For Launch Control Override Indicator
 /* fill Circle: 1
  */
 double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*volatile dataItem** dataArray = (volatile dataItem**) data;
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   // Override
+  cmd_struct_fuel cmd_data;
   if(dataArray[0]->value){
     fillCircle(item->x, item->y, item->size, RA8875_GREEN);
+    cmd_data.colorC = RA8875_GREEN;
   }
   // FUEL On, Switch Not toggled
   else if(dataArray[1]->value){
     fillCircle(item->x, item->y, item->size, RA8875_RED);
+    cmd_data.colorC = RA8875_RED;
   }
   // Load off, switch off
   else{
     fillCircle(item->x, item->y, item->size, RA8875_GREY);
+    cmd_data.colorC = RA8875_GREY;
   }
-  return data->value;
-  */
-  cmd_struct_fuel cmd_data;
+
   //Create cmd struct using function inputs
   cmd_struct rFUEL;
   rFUEL.msg_type = dredrawFUELPumpSw;
@@ -802,6 +804,7 @@ double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double 
 
   //Pass this struct into buffer, choose priority or not
   blocking_push(rFUEL, 0); //not priority for now
+  return data->value;
 }
 
 // Uses the 4 Tire Temp sensors to draw a color gradient tire
@@ -809,19 +812,26 @@ double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double 
  * fill rect: 2
  */
 double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*volatile dataItem** dataArray = (volatile dataItem**) data;
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   uint16_t fillColor = tempColor(data->value);
   uint16_t x = item->x;
   uint16_t y = item->y;
   uint16_t width = item->size / 4;
   uint16_t height = item->size * 2;
-  fillCircleSquare(x,y,width*2,height,width,tempColor(dataArray[0]->value));
-  fillCircleSquare(x+(2*width),y,width*2,height,width,tempColor(dataArray[3]->value));
-  fillRect(x+width,y,width,height,tempColor(dataArray[1]->value));
-  fillRect(x+(2*width),y,width,height,tempColor(dataArray[2]->value));
-  return dataArray[0]->value;
-  */
   cmd_struct_tire cmd_data;
+  cmd_data.width = width;
+  cmd_data.height = height;
+  //look into fillCircleSquare,
+  fillCircleSquare(x,y,width*2,height,width,tempColor(dataArray[0]->value));
+  cmd_data.color0 = dataArray[0]->value;
+  fillCircleSquare(x+(2*width),y,width*2,height,width,tempColor(dataArray[3]->value));
+  cmd_data.color3 = dataArray[3]->value;
+  fillRect(x+width,y,width,height,tempColor(dataArray[1]->value));
+  cmd_data.color1 = dataArray[1]->value;
+  fillRect(x+(2*width),y,width,height,tempColor(dataArray[2]->value));
+  cmd_data.color2 = dataArray[2]->value;
+  
+  //Need dataArray[0 through 4]->value for color, maybe width and height
   //Create cmd struct using function inputs
   cmd_struct rTire;
   rTire.msg_type = dredrawTireTemp;
@@ -832,26 +842,31 @@ double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double cu
 
   //Pass this struct into buffer, choose priority or not
   blocking_push(rTire, 0); //not priority for now
+  return dataArray[0]->value;
 }
 
 // Draws a bar with a height proportional to the suspension position
 /* fillRect: 2
  */
 double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*if(data->value == currentValue){
+  if(data->value == currentValue){
     return data->value;
   }
   fillRect(item->x, item->y, item->size, item->size * 5, backgroundColor);
+  cmd_struct_sp cmd_data;
+  cmd_data.colorBG = backgroundColor;
+  cmd_data.height = height;     //initialize these two outside of conditional
+  cmd_data.colorC = RA8875_RED;
   if(data->value > MIN_SUS_POS){
     uint16_t height = ((item->size*5)/(MAX_SUS_POS-MIN_SUS_POS))*(data->value-MIN_SUS_POS);
     if(height > MAX_SUS_POS){
       height = MAX_SUS_POS;
     }
+    cmd_data.height = height;
     fillRect(item->x,item->y-(item->size*5)+height,item->size,height,RA8875_RED);
   }
-  return data->value;
-  */
-  cmd_struct_sp cmd_data;
+
+  //Need to hide the original thing (the first fillRect), then color red, maybe height
   //Create cmd struct using function inputs
   cmd_struct rSP;
   rSP.msg_type = dredrawSPBar;
@@ -862,26 +877,31 @@ double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double curre
 
   //Pass this struct into buffer, choose priority or not
   blocking_push(rSP, 0); //not priority for now
+  return data->value;
 }
 
 //Draw a bar with height proportional to the brake pressure
 /* fillRect: 2
  */
 double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*if(data->value == currentValue){
+  if(data->value == currentValue){
     return data->value;
   }
+  cmd_struct_brake cmd_data;
+  cmd_data.colorBG = backgroundColor;
   fillRect(item->x, item->y, item->size, item->size * 10, backgroundColor);
+  cmd_data.height = 0;
+  cmd_data.colorC = RA8875_RED;
   if(data->value > MIN_BRAKE_PRESS){
     uint16_t height = ((item->size*10)/(MAX_BRAKE_PRESS-MIN_BRAKE_PRESS))*(data->value-MIN_BRAKE_PRESS);
     if(height > MAX_BRAKE_PRESS){
       height = MAX_BRAKE_PRESS;
     }
+    cmd_data.height = height;
     fillRect(item->x,item->y-(item->size*10)+height,item->size,height,RA8875_RED);
   }
-  return data->value;
-  */
-  cmd_struct_brake cmd_data;
+  
+  //Need color red, data->value - MIN_BRAKE_PRESS determines height
   //Create cmd struct using function inputs
   cmd_struct rBrake;
   rBrake.msg_type = dredrawBrakeBar;
@@ -892,20 +912,23 @@ double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double cu
 
   //Pass this struct into buffer, choose priority or not
   blocking_push(rBrake, 0); //not priority for now
+  return data->value;
 }
 
 /* fill circle: 1
  * digit: 1
  */
 double redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue){
-  /*fillCircle(item->x, item->y, item->size, RA8875_RED);
+  fillCircle(item->x, item->y, item->size, RA8875_RED);
   if(data->value == currentValue){
     return data->value;
   }
-  sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
-  return data->value;
-  */
   cmd_struct_rotary cmd_data;
+  cmd_data.value = data->value;
+  cmd_data.colorC = RA8875_BLACK;
+  sevenSegmentDigit(item->x-(item->size/2.0),item->y-(item->size/2.0),item->size,RA8875_BLACK,data->value);
+  
+  //Need digit, black, data->value
   //Create cmd struct using function inputs
   cmd_struct rRotary;
   rRotary.msg_type = dredrawRotary;
@@ -916,6 +939,7 @@ double redrawRotary(screenItemInfo * item, volatile dataItem * data, double curr
 
   //Pass this struct into buffer, choose priority or not
   blocking_push(rRotary, 0); //not priority for now
+  return data->value;
 }
 
 uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
@@ -948,7 +972,7 @@ uint8_t _getShiftLightsRevRange(uint16_t rpm, uint8_t gear) {
 /* does not seem to draw to screen, uses blinks on leds
  */
 double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue) {
-  /*volatile dataItem** dataArray = (volatile dataItem**) data;
+  volatile dataItem** dataArray = (volatile dataItem**) data;
   uint16_t rpm = (uint16_t) dataArray[0]->value;
   uint8_t gear = (uint8_t) dataArray[1]->value;
   uint8_t num_leds = _getShiftLightsRevRange(rpm, gear);
@@ -966,8 +990,9 @@ double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, dou
     tlc5955_write_main_colors(colorArray);
   }
   return data->value;
-  */
+  
   cmd_struct_shift cmd_data;
+  //Nothing drawn, probably dont need to send anything?
   //Create cmd struct using function inputs
   cmd_struct rShift;
   rShift.msg_type = dredrawShiftLightsRPM;
@@ -983,7 +1008,7 @@ double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, dou
 /* again, tlc5955 is leds only
  */
 double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue) {
-  /*uint8_t kill = data->value ? 1 : 0;
+  uint8_t kill = data->value ? 1 : 0;
   if (kill && !tlc5955_get_cluster_warn(CLUSTER_RIGHT) ||
       !kill && tlc5955_get_cluster_warn(CLUSTER_RIGHT)) {
     if (!tlc5955_get_startup()) {
@@ -991,8 +1016,9 @@ double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double
     }
   }
   return data->value;
-  */
+  
   cmd_struct_kill cmd_data;
+  //Again, nothing drawn so probably dont need to send anythign??
   //Create cmd struct using function inputs
   cmd_struct rKILL;
   rKILL.msg_type = dredrawKILLCluster;
@@ -1012,26 +1038,27 @@ double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double
  */
 double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue)
 {
-    /*int i = 0;
-    volatile dataItem** dataArray = (volatile dataItem**) data;
+  int i = 0;
+  volatile dataItem** dataArray = (volatile dataItem**) data;
           
-    //constants for various markers representing different g values on the graph
-    uint16_t maxRadius, radii[4], maxG;
+  //constants for various markers representing different g values on the graph
+  uint16_t maxRadius, radii[4], maxG;
     
-    //take a "snapshot" of the gForce CAN message
-    double lateralSnap, longitSnap;
-    lateralSnap = dataArray[0]->value;
-    longitSnap = dataArray[1]->value;
+  //take a "snapshot" of the gForce CAN message
+  double lateralSnap, longitSnap;
+  lateralSnap = dataArray[0]->value;
+  longitSnap = dataArray[1]->value;
+  //initialize constants
+  maxRadius = item->size;
+  maxG = (-1 * LATERAL_G_OFFSET);
     
-    //initialize constants
-    maxRadius = item->size;
-    maxG = (-1 * LATERAL_G_OFFSET);
-    
-    //coordinates to draw the moving indicator
-    uint16_t dot_x = item->x + (((lateralSnap) / maxG) * item->size);
-    uint16_t dot_y = item->y + (((longitSnap ) / maxG) * item->size);
-    uint16_t oldx;
-    uint16_t oldy;
+  //coordinates to draw the moving indicator
+  uint16_t dot_x = item->x + (((lateralSnap) / maxG) * item->size);
+  uint16_t dot_y = item->y + (((longitSnap ) / maxG) * item->size);
+  uint16_t oldx;
+  uint16_t oldy;
+
+  cmd_struct_gforce cmd_data;
     
   //determine where to erase the previous dot by mapping currentValue to coordinates
   double lateral, longit;
@@ -1054,49 +1081,59 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
   oldx = item->x + (((lateral) / maxG) * item->size);
   oldy = item->y + (((longit) / maxG) * item->size);
   
-    //radius of the moving indicator
-    uint16_t dotRad = item->size / 15;
+  //radius of the moving indicator
+  uint16_t dotRad = item->size / 15;
 
-    //erase the old indicator
-    fillCircle(oldx, oldy, item->size/10, backgroundColor);
-    //draw the moving dot
-    fillCircle(dot_x, dot_y, dotRad, foregroundColor2);
+  //erase the old indicator
+  fillCircle(oldx, oldy, item->size/10, backgroundColor);
+  //draw the moving dot
+  fillCircle(dot_x, dot_y, dotRad, foregroundColor2);
     
-    //derive radii and draw axis lines
-    for(i = 2; i >= 0; i--)
-    {
-        radii[i] = ((i + 1) * maxRadius) / maxG ;
-        drawCircle(item->x, item->y, radii[i], foregroundColor);
-    }
-    drawCircle(item->x, item->y, maxRadius, errorColor);
-    
-    fillRect(item->x - item->size, item->y - item->size / 160, 2 * item->size, item->size / 80, foregroundColor);
-    fillRect(item->x - item->size / 160, item->y - item->size, item->size / 80, 2 * item->size, foregroundColor);
+  //derive radii and draw axis lines
+  for(i = 2; i >= 0; i--)
+  {
+      radii[i] = ((i + 1) * maxRadius) / maxG ;
+      drawCircle(item->x, item->y, radii[i], foregroundColor);
+  }
+  cmd_data.radii = radii;
+  cmd_data.maxG = maxG;
+  cmd_data.maxRadius = maxRadius;
+  cmd_data.colorBG = backgroundColor;
+  cmd_data.colorFG = foregroundColor;
+  cmd_data.colorFG2 = foregroundColor2;
+  drawCircle(item->x, item->y, maxRadius, errorColor);
+  
+  fillRect(item->x - item->size, item->y - item->size / 160, 2 * item->size, item->size / 80, foregroundColor);
+  fillRect(item->x - item->size / 160, item->y - item->size, item->size / 80, 2 * item->size, foregroundColor);
         
 
     
     
     //map the horizontal and lateral G snapshots to a double
-          lateralSnap = lateralSnap * 100;
-          lateralSnap = (int) lateralSnap;
-          if(lateralSnap < 0)
-          {
-               lateralSnap = lateralSnap * -1;
-               lateralSnap += 1000;
-          }
-          longitSnap = longitSnap * 100;
-          longitSnap = (int) longitSnap;
-          longitSnap = longitSnap * 10000;
-          if(longitSnap < 0)
-          {
-              longitSnap = longitSnap * -1;
-              longitSnap += 10000000;
-          }
-
-    //setting the "currentValue" to allow the function to erase a localized area in the future
-    return longitSnap + lateralSnap;
-    */
-  cmd_struct_gforce cmd_data;
+  lateralSnap = lateralSnap * 100;
+  lateralSnap = (int) lateralSnap;
+  if(lateralSnap < 0)
+  {
+    lateralSnap = lateralSnap * -1;
+    lateralSnap += 1000;
+  }
+  longitSnap = longitSnap * 100;
+  longitSnap = (int) longitSnap;
+  longitSnap = longitSnap * 10000;
+  if(longitSnap < 0)
+  {
+    longitSnap = longitSnap * -1;
+    longitSnap += 10000000;
+  }
+  cmd_data.latsnap = lateralSnap;
+  cmd_data.longsnap = longitSnap;
+  //setting the "currentValue" to allow the function to erase a localized area in the future
+    
+  /*Oh god oH FUCK
+    so this code will snapshot the g's from CAN, i guess pass those? Make diablo graph that shit
+    It should be easier to create a standalone g-force graph with solely new g-information
+    on Diablo side, using the Dialblo software suite. 
+  */
   //Create cmd struct using function inputs
   cmd_struct rGforce;
   rGforce.msg_type = dredrawGforceGraph;
@@ -1107,6 +1144,7 @@ double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double
 
   //Pass this struct into buffer, choose priority or not
   blocking_push(rGforce, 0); //not priority for now
+  return longitSnap + lateralSnap;
 }
 
 void clearScreen(void){
