@@ -13,6 +13,7 @@
 #include <xc.h>
 #include <sys/types.h>
 #include "RA8875_driver.h"
+#include "FSAE_BUFFER.h"
 
 // Define race screen constants
 #define NUM_SCREENS           12
@@ -360,7 +361,8 @@ typedef struct {
   uint32_t refreshInterval;
   uint32_t refreshTime;
   screenItemInfo info;
-  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double);
+  buffer * ring_buf;
+  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double, buffer * buf_ptr);
 } screenItem;
 
 /*
@@ -399,8 +401,8 @@ void initAllScreens(void); // Initializes all screenItems
 void initScreen(uint8_t num); // Draws all non-dataItem data to start a screen
 // Initializes an individual screenItem
 void initScreenItem(screenItem* item, uint16_t x, uint16_t y, uint16_t size,
-  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double),
-  volatile dataItem* data, uint32_t refresh);
+  double (*redrawItem)(screenItemInfo *, volatile dataItem *, double, buffer * buf_ptr),
+  volatile dataItem* data, uint32_t refresh, buffer * buf_ptr);
 // Toggles between a few different data items on one screen
 void changeAUXType(uint8_t num);
 void changeScreen(uint8_t num);
@@ -413,19 +415,19 @@ void nightMode(uint8_t on);
 uint8_t checkDataChange(volatile dataItem *data, double currentValue);
 
 // Redraw Functions!
-double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue);
-double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue);
+double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawGearPos(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawFanSw(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawFUELPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawWTRPumpSw(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawGCMMode(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawTireTemp(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawSPBar(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawBrakeBar(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawRotary(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawShiftLightsRPM(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawKILLCluster(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
+double redrawGforceGraph(screenItemInfo * item, volatile dataItem * data, double currentValue, buffer * buf_ptr);
 
 // Helper functions for colorful redraw functions
 uint16_t tempColor(uint8_t temp);

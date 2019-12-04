@@ -10,9 +10,9 @@
 #ifndef _FSAE_BUFFER_H    
 #define _FSAE_BUFFER_H
 
-#include <xc.h>
+// #include <xc.h>
 #include <sys/types.h>
-#include "RA8875_driver.h"
+// #include "RA8875_driver.h"
 
 #define RINGSIZE 128
 //This is max size for dataitem, which is from PDM dataitem.
@@ -20,7 +20,7 @@
 
 /* Defines types of commands for use in the above struct
  *  Please add commands here and assign them to number values
- *  Also, depending on number of commands, change to uint16_t
+ *  Also, depending on number of commands, change to int
  *
  */
 typedef enum msg_type_enum {
@@ -48,74 +48,67 @@ typedef enum msg_type_enum {
  */
 typedef struct __attribute__((packed)) cmd_struct_digit{
   //packed[];
-  uint16_t fillW;         //size of rectangle, height is 1.75xWidth
-  uint16_t colorFill;
-  uint16_t colorNumber;   //color values, TODO map these out sometime
-  uint16_t numActual;    //Value to be printed, if Diablo can do that. will make the following two vars reduntant
-  uint16_t numWhole;    //Whole digits before decimal point
-  uint16_t numDecimal;  //digits after decimal point
-  uint8_t drawNumber;   //decides if number should be redrawn (=1 is true)
+  int fillW;         //size of rectangle, height is 1.75xWidth
+  int colorFill;
+  int colorNumber;   //color values, TODO map these out sometime
+  int numActual;    //Value to be printed, if Diablo can do that. will make the following two vars reduntant
+  int numWhole;    //Whole digits before decimal point
+  int numDecimal;  //digits after decimal point
+  int drawNumber;   //decides if number should be redrawn (=1 is true)
 } cmd_struct_digit;
 
 /* For this instruciton, be sure to check the value of gear for Neutral or Error
 */
 typedef struct __attribute__((packed)) cmd_struct_gear{
-  uint16_t colorBG; //Diablo can draw the digit as not the background color
-  uint8_t gear;
+  int colorBG; //Diablo can draw the digit as not the background color
+  int gear;
 } cmd_struct_gear;
 
 typedef struct __attribute__((packed)) cmd_struct_fan{
-  uint16_t colorC;
+  int colorC;
 } cmd_struct_fan;
 
 typedef struct __attribute__((packed)) cmd_struct_fuel{
-  uint16_t colorC;
+  int colorC;
 } cmd_struct_fuel;
 
 typedef struct __attribute__((packed)) cmd_struct_wtr{
-  uint16_t colorC;
+  int colorC;
 } cmd_struct_wtr;
 
 typedef struct __attribute__((packed)) cmd_struct_gcm{
-
+  int colorC;
 } cmd_struct_gcm;
 
 typedef struct __attribute__((packed)) cmd_struct_tire{
-  uint16_t color0;
-  uint16_t color1;
-  uint16_t color2;
-  uint16_t color3;
-  uint16_t width;
-  uint16_t height;
+  int color0;
+  int color1;
+  int color2;
+  int color3;
+  int width;
+  int height;
 } cmd_struct_tire;
 
 typedef struct __attribute__((packed)) cmd_struct_sp{
-  uint16_t height;
-  uint16_t colorC;
-  uint16_t colorBG;
+  int height;
+  int colorC;
+  int colorBG;
 } cmd_struct_sp;
 
 typedef struct __attribute__((packed)) cmd_struct_brake{
-  uint16_t brake_press; //this is a height
-  uint16_t colorC;
-  uint16_t colorBG; //background colors may be redundant but just in case, including them anyway
+  int brake_press; //this is a height
+  int height;
+  int colorC;
+  int colorBG; //background colors may be redundant but just in case, including them anyway
 } cmd_struct_brake;
 
 typedef struct __attribute__((packed)) cmd_struct_rotary{
-  uint16_t val;
-  uint16_t colorC;
+  int val;
+  int colorC;
 } cmd_struct_rotary;
 
 typedef struct __attribute__((packed)) cmd_struct_shift{
-  uint16_t latsnap;
-  uint16_t longsnap;
-  uint16_t maxG;
-  uint16_t maxRadius;
-  uint16_t radii[4];
-  uint16_t colorBG;
-  uint16_t colorFG;
-  uint16_t colorFG2; //foreground, and foreground 2 color, followed by error color
-  uint16_t colorE;
+
 } cmd_struct_shift;
 
 typedef struct __attribute__((packed)) cmd_struct_kill{
@@ -123,7 +116,15 @@ typedef struct __attribute__((packed)) cmd_struct_kill{
 } cmd_struct_kill;
 
 typedef struct __attribute__((packed)) cmd_struct_gforce{
-
+  int latsnap;
+  int longsnap;
+  int maxG;
+  int maxRadius;
+  int radii[4];
+  int colorBG;
+  int colorFG;
+  int colorFG2; //foreground, and foreground 2 color, followed by error color
+  int colorE;
 } cmd_struct_gforce;
 
 /*
@@ -153,9 +154,9 @@ typedef struct __attribute__((packed)) cmd_struct {
     cmd_struct_kill   cmd_kill;
     cmd_struct_gforce cmd_gforce;
   };
-  uint16_t x;
-  uint16_t y;
-  uint16_t size;
+  int x;
+  int y;
+  int size;
 } cmd_struct;
 
 /*
@@ -165,9 +166,9 @@ typedef struct __attribute__((packed)) cmd_struct {
  */
 typedef struct __attribute__((packed)) buffer {
   cmd_struct * data;
-  uint8_t read_ptr;
-  uint8_t write_ptr;
-  uint8_t priority;
+  int read_ptr;
+  int write_ptr;
+  int priority;
 } buffer;
 
 #endif /* _FSAE_BUFFER_H */

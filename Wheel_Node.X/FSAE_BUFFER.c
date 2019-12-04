@@ -6,9 +6,14 @@
  * Author:      Nathan Cueto
  * Created:     2019-2020
  */
-#include "RA8875_driver.h"
-#include "Wheel.h"
+// #include "RA8875_driver.h"
+// #include "Wheel.h"
 #include "FSAE_BUFFER.h"
+#include <stdlib.h>
+
+#define RINGSIZE 128
+//This is max size for dataitem, which is from PDM dataitem.
+#define MAXDATASIZE 93
 
 //Lower level functions
 
@@ -16,11 +21,11 @@
  * initialize the buffer. allocate memory as necessary
  * For now, input is only priority. consider using custom buffer sizes
  */
-void init_buffer(buffer * initBuf, uint8_t pri) {
-	if(initBuf == NULL) {
-//		printf("NULL in init_buffer"); //print error msg
-		return;
-	}
+void init_buffer(buffer * initBuf, int pri) {
+// 	if(initBuf == NULL) {
+// //		printf("NULL in init_buffer"); //print error msg
+// 		return;
+// 	}
 	initBuf->data = malloc(RINGSIZE * sizeof(cmd_struct)); //verify the sizeof
 	initBuf->priority = pri;
 	initBuf->read_ptr = 0;
@@ -62,7 +67,7 @@ cmd_struct pop(buffer * buf_ptr)
  * check if the ring buffer is empty.
  * return bool
  */
-uint8_t empty(buffer * buf_ptr)
+int empty(buffer * buf_ptr)
 {
 	if(buf_ptr->read_ptr == buf_ptr->write_ptr)
         return 1;
@@ -74,7 +79,7 @@ uint8_t empty(buffer * buf_ptr)
  * check if the ring buffer is full.
  * return bool
  */
-uint8_t full(buffer * buf_ptr)
+int full(buffer * buf_ptr)
 {
 	//i think this is incorrect, say we push 1 thing into an empty buffer. then full will be true.
 	//should probably be switched. if write is right behind read.
@@ -84,11 +89,13 @@ uint8_t full(buffer * buf_ptr)
         return 0;
 }
 
-//Mid level functions
+//Mid level functions 
+//TODO implement priority handling
 
 /* blocking push
  * Will attempt to push a cmd_struct
  * Will not push if it is full. If full, then wait until empty. This is a blocking funciton.
+ * TODO maybe future implement checking if a function belongs in priority or not
  */
 void blocking_push(cmd_struct command, buffer * buf_ptr)
 {
