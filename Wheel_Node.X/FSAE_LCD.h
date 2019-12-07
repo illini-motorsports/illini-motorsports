@@ -12,7 +12,7 @@
 
 #include <xc.h>
 #include <sys/types.h>
-#include "RA8875_driver.h"
+// #include "RA8875_driver.h"
 #include "FSAE_BUFFER.h"
 
 // Define race screen constants
@@ -47,6 +47,17 @@
 #define REV_SUB_7           	1500
 #define REV_SUB_8           	1000
 #define REV_SUB_9           	200
+
+// Colors (RGB565)
+#define RA8875_BLACK            0x0000
+#define RA8875_BLUE             0x001F
+#define RA8875_RED              0xF800
+#define RA8875_GREEN            0x07E0
+#define RA8875_CYAN             0x07FF
+#define RA8875_MAGENTA          0xF81F
+#define RA8875_YELLOW           0xFFE0
+#define RA8875_WHITE            0xFFFF
+#define RA8875_GREY             0xBAF7
 
 // PDM Dataitem Constants
 #define PDM_DATAITEM_SIZE     93

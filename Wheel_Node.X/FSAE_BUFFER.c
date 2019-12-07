@@ -11,15 +11,17 @@
 #include "FSAE_BUFFER.h"
 #include <stdlib.h>
 
-#define RINGSIZE 128
+// #define RINGSIZE 128
 //This is max size for dataitem, which is from PDM dataitem.
+#define RINGSIZE 6 //DO NOT move this to the .h file
 #define MAXDATASIZE 93
-
+#define MAXWAIT 100  //in cycles,TODO: fine tune this later
 //Lower level functions
 
 /* init
  * initialize the buffer. allocate memory as necessary
- * For now, input is only priority. consider using custom buffer sizes
+ * Buffers can be priority, but its up to Diablo side to grab from priority buffer first
+ * so the priority value is kind of redundant for the time being...
  */
 void init_buffer(buffer * initBuf, int pri) {
 // 	if(initBuf == NULL) {
@@ -27,9 +29,9 @@ void init_buffer(buffer * initBuf, int pri) {
 // 		return;
 // 	}
 	initBuf->data = malloc(RINGSIZE * sizeof(cmd_struct)); //verify the sizeof
-	initBuf->priority = pri;
-	initBuf->read_ptr = 0;
-	initBuf->write_ptr = 0;
+  initBuf->priority = pri;
+  initBuf->read_ptr = 0;
+  initBuf->write_ptr = 0;
 }
 
 /* free
@@ -37,7 +39,8 @@ void init_buffer(buffer * initBuf, int pri) {
  * 
  */
 void free_buffer(buffer * killBuf) {
-	free(killBuf->data);
+	// free(killBuf->data);
+  // free(killBuf);
 }
   
 /* push
@@ -95,29 +98,42 @@ int full(buffer * buf_ptr)
 /* blocking push
  * Will attempt to push a cmd_struct
  * Will not push if it is full. If full, then wait until empty. This is a blocking funciton.
+ * Function should be blocking, so don't use fork
  * TODO maybe future implement checking if a function belongs in priority or not
+ * return: 0 if success, 1 on failure
  */
-void blocking_push(cmd_struct command, buffer * buf_ptr)
+int blocking_push(cmd_struct command, buffer * buf_ptr)
 {
-  while(1)  {
+  int cycles = 0;
+  while(cycles < MAXWAIT)  { 
   	if(!full(buf_ptr)) {
     	push(command, buf_ptr);
-    	return;
+    	return 0;
     }
+    cycles++;
   }
+  return 1;
 }
   
 /* blocking pop
  * Will attempt to pop a cmd_struct
  * Will not pop if it is empty. If empty, then wait until somthing put in. returns popped item, also blocking
- * TODO consider having a timeout or force exit
+ * Function should be blocking, so don't use fork
+ * IMPORTANT: when handling popped structs on either PIC or Diablo, check msg_type first!!!
+ * TODO consider having an actual timeout
  */
 cmd_struct blocking_pop(buffer * buf_ptr)
 {
-  while(1)  {
+  int cycles = 0;
+  while(cycles < MAXWAIT)  {
   	if(!empty(buf_ptr)) {
     	return pop(buf_ptr);
 	 }
+   cycles++;
   }
+  //return empty struct in this case
+  cmd_struct cmd_data; //type fuel, doesnt really matter though
+  cmd_data.msg_type = dstuckEmpty;
+  return cmd_data;
 }
 

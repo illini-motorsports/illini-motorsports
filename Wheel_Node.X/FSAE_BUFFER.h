@@ -14,9 +14,9 @@
 #include <sys/types.h>
 // #include "RA8875_driver.h"
 
-#define RINGSIZE 128
 //This is max size for dataitem, which is from PDM dataitem.
 #define MAXDATASIZE 93
+
 
 /* Defines types of commands for use in the above struct
  *  Please add commands here and assign them to number values
@@ -36,7 +36,8 @@ typedef enum msg_type_enum {
   dredrawRotary          ,
   dredrawShiftLightsRPM  ,
   dredrawKILLCluster     ,
-  dredrawGforceGraph     
+  dredrawGforceGraph     , 
+  dstuckEmpty             //Diablo side will handle stuck
 } msg_type_enum;
 
 /*  Defines the specific command structs for use in the cmd_struct union.
