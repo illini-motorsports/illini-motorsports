@@ -23,7 +23,7 @@
  * Buffers can be priority, but its up to Diablo side to grab from priority buffer first
  * so the priority value is kind of redundant for the time being...
  */
-void init_buffer(buffer * initBuf, int pri) {
+void init_buffer(buffer * initBuf, uint16_t pri) {
 // 	if(initBuf == NULL) {
 // //		printf("NULL in init_buffer"); //print error msg
 // 		return;
@@ -70,7 +70,7 @@ cmd_struct pop(buffer * buf_ptr)
  * check if the ring buffer is empty.
  * return bool
  */
-int empty(buffer * buf_ptr)
+uint16_t empty(buffer * buf_ptr)
 {
 	if(buf_ptr->read_ptr == buf_ptr->write_ptr)
         return 1;
@@ -82,7 +82,7 @@ int empty(buffer * buf_ptr)
  * check if the ring buffer is full.
  * return bool
  */
-int full(buffer * buf_ptr)
+uint16_t full(buffer * buf_ptr)
 {
 	//i think this is incorrect, say we push 1 thing into an empty buffer. then full will be true.
 	//should probably be switched. if write is right behind read.
@@ -102,9 +102,9 @@ int full(buffer * buf_ptr)
  * TODO maybe future implement checking if a function belongs in priority or not
  * return: 0 if success, 1 on failure
  */
-int blocking_push(cmd_struct command, buffer * buf_ptr)
+uint16_t blocking_push(cmd_struct command, buffer * buf_ptr)
 {
-  int cycles = 0;
+  uint16_t cycles = 0;
   while(cycles < MAXWAIT)  { 
   	if(!full(buf_ptr)) {
     	push(command, buf_ptr);
@@ -124,7 +124,7 @@ int blocking_push(cmd_struct command, buffer * buf_ptr)
  */
 cmd_struct blocking_pop(buffer * buf_ptr)
 {
-  int cycles = 0;
+  uint16_t cycles = 0;
   while(cycles < MAXWAIT)  {
   	if(!empty(buf_ptr)) {
     	return pop(buf_ptr);

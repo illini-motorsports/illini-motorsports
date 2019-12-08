@@ -49,83 +49,83 @@ typedef enum msg_type_enum {
  */
 typedef struct __attribute__((packed)) cmd_struct_digit{
   //packed[];
-  int fillW;         //size of rectangle, height is 1.75xWidth
-  int colorFill;
-  int colorNumber;   //color values, TODO map these out sometime
-  int numActual;    //Value to be printed, if Diablo can do that. will make the following two vars reduntant
-  int numWhole;    //Whole digits before decimal point
-  int numDecimal;  //digits after decimal point
-  int drawNumber;   //decides if number should be redrawn (=1 is true)
+  uint16_t fillW;         //size of rectangle, height is 1.75xWidth
+  uint16_t colorFill;
+  uint16_t colorNumber;   //color values, TODO map these out sometime
+  uint16_t numActual;    //Value to be printed, if Diablo can do that. will make the following two vars reduntant
+  uint16_t numWhole;    //Whole digits before decimal point
+  uint16_t numDecimal;  //digits after decimal point
+  uint16_t drawNumber;   //decides if number should be redrawn (=1 is true)
 } cmd_struct_digit;
 
 /* For this instruciton, be sure to check the value of gear for Neutral or Error
 */
 typedef struct __attribute__((packed)) cmd_struct_gear{
-  int colorBG; //Diablo can draw the digit as not the background color
-  int gear;
+  uint16_t colorBG; //Diablo can draw the digit as not the background color
+  uint16_t gear;
 } cmd_struct_gear;
 
 typedef struct __attribute__((packed)) cmd_struct_fan{
-  int colorC;
+  uint16_t colorC;
 } cmd_struct_fan;
 
 typedef struct __attribute__((packed)) cmd_struct_fuel{
-  int colorC;
+  uint16_t colorC;
 } cmd_struct_fuel;
 
 typedef struct __attribute__((packed)) cmd_struct_wtr{
-  int colorC;
+  uint16_t colorC;
 } cmd_struct_wtr;
 
 typedef struct __attribute__((packed)) cmd_struct_gcm{
-  int colorC;
+  uint16_t colorC;
 } cmd_struct_gcm;
 
 typedef struct __attribute__((packed)) cmd_struct_tire{
-  int color0;
-  int color1;
-  int color2;
-  int color3;
-  int width;
-  int height;
+  uint16_t color0;
+  uint16_t color1;
+  uint16_t color2;
+  uint16_t color3;
+  uint16_t width;
+  uint16_t height;
 } cmd_struct_tire;
 
 typedef struct __attribute__((packed)) cmd_struct_sp{
-  int height;
-  int colorC;
-  int colorBG;
+  uint16_t height;
+  uint16_t colorC;
+  uint16_t colorBG;
 } cmd_struct_sp;
 
 typedef struct __attribute__((packed)) cmd_struct_brake{
-  int brake_press; //this is a height
-  int height;
-  int colorC;
-  int colorBG; //background colors may be redundant but just in case, including them anyway
+  uint16_t brake_press; //this is a height
+  uint16_t height;
+  uint16_t colorC;
+  uint16_t colorBG; //background colors may be redundant but just in case, including them anyway
 } cmd_struct_brake;
 
 typedef struct __attribute__((packed)) cmd_struct_rotary{
-  int val;
-  int colorC;
+  uint16_t val;
+  uint16_t colorC;
 } cmd_struct_rotary;
 
 typedef struct __attribute__((packed)) cmd_struct_shift{
-
+  uint16_t numleds;
 } cmd_struct_shift;
 
 typedef struct __attribute__((packed)) cmd_struct_kill{
-
+  uint16_t kill;
 } cmd_struct_kill;
 
 typedef struct __attribute__((packed)) cmd_struct_gforce{
-  int latsnap;
-  int longsnap;
-  int maxG;
-  int maxRadius;
-  int radii[4];
-  int colorBG;
-  int colorFG;
-  int colorFG2; //foreground, and foreground 2 color, followed by error color
-  int colorE;
+  uint16_t latsnap;
+  uint16_t longsnap;
+  uint16_t maxG;
+  uint16_t maxRadius;
+  uint16_t radii[4];
+  uint16_t colorBG;
+  uint16_t colorFG;
+  uint16_t colorFG2; //foreground, and foreground 2 color, followed by error color
+  uint16_t colorE;
 } cmd_struct_gforce;
 
 /*
@@ -155,9 +155,9 @@ typedef struct __attribute__((packed)) cmd_struct {
     cmd_struct_kill   cmd_kill;
     cmd_struct_gforce cmd_gforce;
   };
-  int x;
-  int y;
-  int size;
+  uint16_t x;
+  uint16_t y;
+  uint16_t size;
 } cmd_struct;
 
 /*
@@ -167,9 +167,9 @@ typedef struct __attribute__((packed)) cmd_struct {
  */
 typedef struct __attribute__((packed)) buffer {
   cmd_struct * data;
-  int read_ptr;
-  int write_ptr;
-  int priority;
+  uint16_t read_ptr;
+  uint16_t write_ptr;
+  uint16_t priority;
 } buffer;
 
 #endif /* _FSAE_BUFFER_H */
