@@ -10,10 +10,10 @@
 // #include "Wheel.h"
 #include "FSAE_BUFFER.h"
 #include <stdlib.h>
-
+#include "Wheel.h"
 // #define RINGSIZE 128
 //This is max size for dataitem, which is from PDM dataitem.
-#define RINGSIZE 6 //DO NOT move this to the .h file
+#define RINGSIZE 7 //DO NOT move this to the .h file
 #define MAXDATASIZE 93
 #define MAXWAIT 100  //in cycles,TODO: fine tune this later
 //Lower level functions
@@ -32,6 +32,7 @@ void init_buffer(buffer * initBuf, uint16_t pri) {
   initBuf->priority = pri;
   initBuf->read_ptr = 0;
   initBuf->write_ptr = 0;
+            
 }
 
 /* free
@@ -63,6 +64,14 @@ cmd_struct pop(buffer * buf_ptr)
   cmd_struct ret_command;
   ret_command = buf_ptr->data[buf_ptr->read_ptr];
   buf_ptr->read_ptr = (buf_ptr->read_ptr+1) % RINGSIZE; //TODO was previously MAXDATASIZE
+  if(ret_command.msg_type == dredrawFUELPumpSw)
+  {
+            //     CAN_data data = {0};
+            // data.halfword0 = 69;
+            // data.halfword1 = 69;
+            // data.halfword2 = 69;
+            // CAN_send_message(0x400 + 0, 6, data);
+  }
   return ret_command;
 }
   
@@ -86,8 +95,11 @@ uint16_t full(buffer * buf_ptr)
 {
 	//i think this is incorrect, say we push 1 thing into an empty buffer. then full will be true.
 	//should probably be switched. if write is right behind read.
-	if(buf_ptr->write_ptr == (buf_ptr->read_ptr - 1)) // might be off by 1, needs to account for rollover
-        return 1;
+	if(buf_ptr->write_ptr == (buf_ptr->read_ptr - 1)){ // might be off by 1, needs to account for rollover
+        
+
+            return 1;
+    }
     else
         return 0;
 }
@@ -108,9 +120,15 @@ uint16_t blocking_push(cmd_struct command, buffer * buf_ptr)
   while(cycles < MAXWAIT)  { 
   	if(!full(buf_ptr)) {
     	push(command, buf_ptr);
+          // CAN_data data = {0};
+          //   data.halfword0 = 69;
+          //   data.halfword1 = 69;
+          //   data.halfword2 = 69;
+//            CAN_send_message(0x400 + 0, 6, data);
     	return 0;
     }
     cycles++;
+    
   }
   return 1;
 }

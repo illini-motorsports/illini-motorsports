@@ -112,10 +112,11 @@ void main(void) {
         throt_counter=0;
         //get number of leds that should be on
         num_leds = _getShiftLightsRevRange(throt, curr_gear);   
-        if(throt >= prev_throt) //decide whether to enable or disable leds
-            on_led(num_leds);
-        else
-            off_led(num_leds);
+//        if(throt >= prev_throt) //decide whether to enable or disable leds
+//            on_led(num_leds);
+//        else
+//            off_led(num_leds);
+        
 
         prev_throt = throt;   //store current throt value for comparison
     }
@@ -131,7 +132,7 @@ void main(void) {
       CANswADLMillis = millis;
     }
     if(millis - CANdiagMillis >= CAN_DIAG_FREQ){
-      CANdiag();
+//      CANdiag();
       CANdiagMillis = millis;
     }
 
@@ -843,6 +844,7 @@ void CANswitchADL(void){
   rotaries.byte3 = (uint8_t)wheelDataItems[TROTARY_1_IDX].value;
   CAN_send_message(ADL_ID, 4, rotaries);
 }
+
 
 void CANdiag(void){
   CAN_data data = {0};

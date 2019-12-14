@@ -10,6 +10,7 @@
 #include "Wheel.h"
 #include "FSAE_LCD.h"
 #include "FSAE_BUFFER.h"
+#include "FSAE_BUFFER.c"
 
 uint16_t shiftRPM[7] = {12444,11959,12155,12100,11150,13000,13000}; //theres only gears 1-5
 
@@ -267,6 +268,33 @@ void initAllScreens(void){
   initScreenItem(&brakeItems[6], 190, 40, 20, redrawBrakeBar, &brakePressFront);
   initScreenItem(&brakeItems[7], 250, 40, 20, redrawBrakeBar, &brakePressRear);
   */
+
+  /* //Quick buffer pop verification test
+  cmd_struct_fuel cmd_data;
+   cmd_data.colorC = 1;
+   cmd_struct rFUEL;
+   rFUEL.msg_type = dredrawFUELPumpSw;
+   rFUEL.cmd_fuel = cmd_data;
+   rFUEL.x = 10;
+   rFUEL.y = 20;
+   rFUEL.size = 30;
+
+   int i;
+   i = blocking_push(rFUEL, nonprty_buffer);
+//   blocking_pop(nonprty_buffer);
+
+   cmd_struct poppedStruct;
+   poppedStruct = blocking_pop(nonprty_buffer);
+   if(poppedStruct.msg_type == dredrawFUELPumpSw)
+   {
+       CAN_data data = {0};
+            data.halfword0 = 69;
+            data.halfword1 = 69;
+            data.halfword2 = 69;
+            CAN_send_message(0x400 + 0, 6, data);
+   }*/
+     
+
 }
 
 /* Modifying redraw item input to include ring buffer piointer
