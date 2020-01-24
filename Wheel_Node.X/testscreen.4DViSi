@@ -1,0 +1,151 @@
+﻿Version     0.0
+Platform    Gen4-uLCD-43D-L
+PlatRes     272x480
+Depends
+end
+Options
+    Visualizer
+    Speed                        9600
+    Checksum                     No
+    ResponseSize                 2
+    Multidrop                    No
+    Destination                  0
+    DestBank                     0
+    MainForm                     0
+    SndBuf                       0
+    ButtonDisable                No
+    SignedDigits                 No
+end
+Form
+    Name                         Form1
+    Alias                        Form1
+    Bgtype                       Color
+    Color                        BLACK
+    Image                        (None)
+    Source.Height                0
+    Source.Left                  0
+    Source.Top                   0
+    Source.Width                 0
+    OnActivate                   ''
+    OnCreate                     ''
+    OnRepeat                     ''
+    OnTouchMoving                ''
+    OnTouchPressed               ''
+    OnTouchReleased              ''
+end
+AngularMeter
+    Name                         Angularmeter1
+    Alias                        Angularmeter1
+    Angle                        0
+    AngleOffset                  225
+    Caption                      RPM
+    CaptionXOffset               15
+    CaptionYOffset               15
+    CenterDotColor               clWhite
+    CenterDotWidth               5
+    Color                        BLACK
+    ColorZone1                   clCream
+    ColorZone2                   clCream
+    ColorZone3                   clRed
+    Decimals                     0
+    Font.Color                   clWhite
+    Font.Effects                 []
+    Font.Name                    Tahoma
+    Font.Size                    9
+    Font.Style                   []
+    Height                       195
+    Labels                       10
+    LabelsFont.Color             clWhite
+    LabelsFont.Effects           []
+    LabelsFont.Name              Tahoma
+    LabelsFont.Size              8
+    LabelsFont.Style             []
+    LabelsOffset                 30
+    Left                         136
+    Maxvalue                     13000
+    Minvalue                     0
+    NeedleBasewidth              8
+    NeedleColor                  clRed
+    NeedleLength                 -1
+    Percent1                     60
+    Percent2                     25
+    Radius                       -1
+    Spacing                      45
+    Ticks                        60
+    TicksColor                   BLACK
+    TicksEnlarge                 10
+    TicksMax                     14
+    TicksMin                     5
+    Top                          40
+    Width                        240
+    OnChanged                    ''
+end
+Meter
+    Name                         Meter1
+    Alias                        Meter1
+    Angle                        40
+    Backimage                    (None)
+    Bevel.BorderColor            clBtnFace
+    Bevel.BorderWidth            0
+    Bevel.InnerColor             BLACK
+    Bevel.InnerHighlight         clBtnHighlight
+    Bevel.InnerOutline           None
+    Bevel.InnerShadow            clBtnShadow
+    Bevel.InnerSpace             1
+    Bevel.InnerStyle             Lowered
+    Bevel.Innerwidth             2
+    Bevel.OuterColor             clBtnFace
+    Bevel.OuterHighlight         clBtnHighlight
+    Bevel.OuterOutline           Outer
+    Bevel.OuterShadow            clBtnShadow
+    Bevel.OuterSpace             0
+    Bevel.OuterStyle             Raised
+    Bevel.Outerwidth             1
+    Bevel.Visible                Yes
+    Caption                      Meter1
+    Color                        BLACK
+    Font.Color                   SILVER
+    Font.Effects                 []
+    Font.Name                    Arial
+    Font.Size                    8
+    Font.Style                   []
+    Height                       137
+    LabelOffsetX                 15
+    LabelOffsetY                 10
+    Labels                       10
+    Left                         24
+    Maxvalue                     100
+    Minvalue                     0
+    NeedleColor                  SILVER
+    NeedleWidth                  1
+    Scale.Color1                 GREEN
+    Scale.Color2                 YELLOW
+    Scale.Color3                 RED
+    Scale.Enlarge                5
+    Scale.Heightmax              8
+    Scale.Heightmin              5
+    Scale.Percent1               60
+    Scale.Percent2               25
+    Scale.Ticks                  61
+    Scale.Visible                Yes
+    Spacing                      20
+    Top                          120
+    Width                        101
+    OnChanged                    ''
+    OnTouchMoving                ''
+    OnTouchPressed               ''
+    OnTouchReleased              ''
+end
+CustomDigits
+    Name                         Customdigits1
+    Alias                        RPMs
+    Bitmap                       (None)
+    Digits                       5
+    LeadingZero                  Yes
+    Left                         284
+    Top                          160
+    OnChanged                    ''
+    OnTouchMoving                ''
+    OnTouchPressed               ''
+    OnTouchReleased              ''
+end
