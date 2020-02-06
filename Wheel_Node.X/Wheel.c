@@ -20,13 +20,12 @@ int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 
 uint32_t prev_throt;
-int16_t blink;
 
 void main(void) {
   throt=0; //despite its name, throt can hold throttle position OR rpm.
   prev_throt=0; 
-  blink = 0;
   ledState = 0;
+  blink_flag = 0;
 //    throt_counter=0;
   init_general();// Set general runtime configuration bits
   init_gpio_pins();// Set all I/O pins to low outputs
@@ -152,11 +151,13 @@ void main(void) {
   }
 }
 
-/* on_led
+/* on_led 
  * Shift lights can be turned on, off, and blink, decided by this state machine.
  * This function turns on leds, when RPM or throt increases. At some threshold, 
  * the blinking function will be called (ie. at optimal shift rpm)
  * Keep track of the state of the leds to minimize sending data to the tlc5955.
+ * ******NOTE: For 2019-2020, the tlc5955 will be removed. This function and the off_led functions will 
+ * remain to be used with the blinkScreen functions, and for possible further development.
  */
 void on_led(uint8_t num_leds)
 {
@@ -164,114 +165,96 @@ void on_led(uint8_t num_leds)
     switch(num_leds){
         case 0:
             if(ledState == 0) return;   //avoid continuous identical writes. 
-            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
             ledState = 0;    
         break;
         case 1:
             if(ledState == 1) return;   //avoid continuous identical writes. 
-            tlc5955_set_leds(GRN, 0b000000000001000, OVR);
             ledState = 1;
         break;
         case 2:
             if(ledState == 2) return;
-            tlc5955_set_leds(GRN, 0b000000000011000, OVR);
             ledState = 2;    
         break;
         case 3:
             if(ledState == 3) return;
-            tlc5955_set_leds(GRN, 0b000000000111000, OVR);
             ledState = 3;    
         break;
         case 4:
             if(ledState == 4) return;
-            tlc5955_set_leds(GRN, 0b000000001111000, OVR);
             ledState = 4;    
         break;
         case 5:
             if(ledState == 5) return;
-            tlc5955_set_leds(GRN, 0b000000011111000, OVR);
             ledState = 5;    
         break;
         case 6:
             if(ledState == 6) return;
-            tlc5955_set_leds(GRN, 0b000000111111000, OVR);
             ledState = 6;    
         break;
         case 7:
             if(ledState == 7) return;
-            tlc5955_set_leds(GRN, 0b000001111111000, OVR);
             ledState = 7;    
         break;
         case 8:
             if(ledState == 8) return;
-            tlc5955_set_leds(GRN, 0b000011111111000, OVR);
             ledState = 8;    
         break;
         case 9:
             if(ledState == 9) return;
-            tlc5955_set_leds(RED, 0b000111111111000, OVR);
+            // set flash flag to (number of flashes-1)
+            blink_flag = 9;
             ledState = 9;    
         break;
         case 10:
             if(ledState == 10) return;
-            tlc5955_set_leds(RED, 0b000111111111000, OVR);    //consider using the leftmost (rightmost in the mask) 3 leds to signify a 10th state
             ledState = 10;    
         break;
         default:
             if(ledState == 0) return;
-            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
             ledState = 0;    
         break;
     }
 //    Debugging led code, use for when shift lights are on throttle position. Does not depend on num_leds
    /* if(throt <= 5 || throt == NULL) {
         if(ledState == 1) return;   //avoid continuous identical writes. 
-        tlc5955_set_leds(GRN, 0b000000000001000, OVR);
         ledState = 1;
     }
     else if(throt > 5 && throt <= 10) {
         if(ledState == 2) return;
-        tlc5955_set_leds(GRN, 0b000000000011000, OVR);
         ledState = 2;
     }
     else if(throt > 10 && throt <= 20){
         if(ledState == 3) return;
-        tlc5955_set_leds(GRN, 0b000000000111000, OVR);
         ledState = 3;
     }
     else if(throt > 20 && throt <= 30){
         if(ledState == 4) return;
-        tlc5955_set_leds(GRN, 0b000000001111000, OVR);
         ledState = 4;
     }
     else if(throt > 30 && throt <= 40){
         if(ledState == 5) return;
-        tlc5955_set_leds(GRN, 0b000000011111000, OVR);
         ledState = 5;
     }
     else if(throt > 40 && throt <= 50){
         if(ledState == 6) return;
-        tlc5955_set_leds(GRN, 0b000000111111000, OVR);
         ledState = 6;
     }
     else if(throt > 50 && throt <=60){
         if(ledState == 7) return;
-        tlc5955_set_leds(GRN, 0b000001111111000, OVR);
         ledState = 7;
     }
     else if(throt > 60 && throt <=70){
         if(ledState == 8) return;
-        tlc5955_set_leds(GRN, 0b000011111111000, OVR);
         ledState = 8;
     }
     else if(throt > 70 && throt <= 80){
         if(ledState == 9) return;
-        tlc5955_set_leds(RED, 0b000111111111000, OVR);  
+        // set flash flag to (number of flashes-1)
+        blink_flag = 9;        
         ledState = 9;
     }
     else if(throt >80) {
         if(ledState == 10) return;
-        tlc5955_set_leds(RED, 0b000111111111000, OVR);  
         ledState = 10;
     }*/
 }
@@ -283,66 +266,53 @@ void off_led(uint8_t num_leds)
 {
     switch(num_leds){
         case 0:
-            if(ledState == 0) return;   //avoid continuous identical writes. 
-            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
+            if(ledState == 0) return;   //avoid continuous identical writes.       
             ledState = 0;    
         break;
         case 1:
-            if(ledState == 1) return;   //avoid continuous identical writes. 
-            tlc5955_set_leds(OFF, 0b000111111110000, OVR);
+            if(ledState == 1) return;   //avoid continuous identical writes.       
             ledState = 1;
         break;
         case 2:
-            if(ledState == 2) return;
-            tlc5955_set_leds(OFF, 0b000111111100000, OVR);
+            if(ledState == 2) return;      
             ledState = 2;    
         break;
         case 3:
-            if(ledState == 3) return;
-            tlc5955_set_leds(OFF, 0b000111111000000, OVR);
+            if(ledState == 3) return;      
             ledState = 3;    
         break;
         case 4:
-            if(ledState == 4) return;
-            tlc5955_set_leds(OFF, 0b000111110000000, OVR);
+            if(ledState == 4) return;      
             ledState = 4;    
         break;
         case 5:
-            if(ledState == 5) return;
-            tlc5955_set_leds(OFF, 0b000111100000000, OVR);
+            if(ledState == 5) return;      
             ledState = 5;    
         break;
         case 6:
-            if(ledState == 6) return;
-            tlc5955_set_leds(OFF, 0b000111000000000, OVR);
+            if(ledState == 6) return;      
             ledState = 6;    
         break;
         case 7:
-            if(ledState == 7) return;
-            tlc5955_set_leds(OFF, 0b000110000000000, OVR);
+            if(ledState == 7) return;      
             ledState = 7;    
         break;
         case 8:
-            if(ledState == 8)
-                tlc5955_set_leds(GRN,0b000011111111000, OVR);
-            else {
-                tlc5955_set_leds(OFF, 0b000100000000000, OVR);
-                ledState = 8;    
-            }
+            if(ledState == 8) return;         
+                ledState = 8;                
         break;
         case 9:
             if(ledState == 9) return;
-            tlc5955_set_leds(GRN, 0b000111111111000, OVR);  //write a green since 9 is max leds. Should prevent red led falloff
+            //do nothing
             ledState = 9;    
         break;
         case 10:
             if(ledState == 10) return;
-            tlc5955_set_leds(GRN, 0b000111111111000, OVR);    
+            //do nothing
             ledState = 10;    
         break;
         default:
             if(ledState == 0) return;
-            tlc5955_set_leds(OFF, 0b000111111111000, OVR);
             ledState = 0;    
             break;
     }
@@ -350,72 +320,44 @@ void off_led(uint8_t num_leds)
     //when on throttle position, state 0 is not used.
     /*if(throt <= 5) {
         if(ledState == 1) return;
-        tlc5955_set_leds(OFF, 0b000111111110000, OVR);
         ledState = 1;
     }
     else if(throt > 5 && throt <= 10) {
         if(ledState == 2) return;
-        tlc5955_set_leds(OFF, 0b000111111100000, OVR);
         ledState = 2;
     }
     else if(throt > 10 && throt <= 20){
         if(ledState == 3) return;
-        tlc5955_set_leds(OFF, 0b000111111000000, OVR);
         ledState = 3;
     }
     else if(throt > 20 && throt <= 30){
         if(ledState == 4) return;
-        tlc5955_set_leds(OFF, 0b000111110000000, OVR);
         ledState = 4;
     }
     else if(throt > 30 && throt <= 40){
         if(ledState == 5) return;
-        tlc5955_set_leds(OFF, 0b000111100000000, OVR);
         ledState = 5;
     }
     else if(throt > 40 && throt <= 50){
         if(ledState == 6) return;
-        tlc5955_set_leds(OFF, 0b000111000000000, OVR);
         ledState = 6;
     }
     else if(throt > 50 && throt <=60){
         if(ledState == 7) return;
-        tlc5955_set_leds(OFF, 0b000110000000000, OVR);
         ledState = 7;
     }
     else if(throt > 60 && throt <=70){
         if(ledState == 8) return;
-        tlc5955_set_leds(OFF, 0b000100000000000, OVR);
         ledState = 8;
     }
     else if(throt > 70 && throt <= 80){
         if(ledState == 9) return;
-        tlc5955_set_leds(GRN, 0b000111111111000, OVR);
         ledState = 9;
     }
     else {
         if(ledState == 10) return;
-        tlc5955_set_leds(GRN, 0b000111111111000, OVR);
         ledState = 10;
     }*/
-}
-/* blink_led
- * Will blink the shift light legs. Needed to signal optimal shift rpm
- * Blink rate determined in overall led refresh rate in main loop above
- * Check values in getShiftLightsRevRange of FSAE_LCD file if optimal shift range 
- * changes by gear.
- * DISABLED - im pretty sure blinking leds is whats causing crashes
- */
-void blink_led(void)
-{
-//    if(blink==1) {
-//        tlc5955_set_leds(OFF, 0b000111111111000, OVR);  //on blink, then disable leds.
-//        blink = 0;
-//    }
-//    else {
-//        tlc5955_set_leds(RED,0b000111111111000, OVR);
-//        blink = 1;
-//    }
 }
 
 /**
@@ -433,6 +375,13 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(
     updateSwVals();
     CANswitchStates();
     tlc5955_check_timers();
+  }
+  if (!(millis%200)) { //5 Hz
+    if(blink_flag>0)
+    {
+    	blinkScreen(blink_flag);
+    	blink_flag--;
+    }
   }
 
   IFS0CLR = _IFS0_T2IF_MASK;// Clear TMR2 Interrupt Flag
