@@ -411,6 +411,7 @@ void resetScreenItems(void); // Resets all the values
 uint8_t initNightMode(uint8_t on); // Night mode stuff
 void nightMode(uint8_t on);
 uint8_t checkDataChange(volatile dataItem *data, double currentValue);
+void blinkScreen(uint16_t flash); //called instead of blinking leds
 
 // Redraw Functions!
 double redrawDigit(screenItemInfo * item, volatile dataItem * data, double currentValue);
