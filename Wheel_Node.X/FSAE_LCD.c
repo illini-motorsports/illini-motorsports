@@ -966,16 +966,3 @@ uint16_t tempColor(uint8_t temp){
 uint8_t checkDataChange(volatile dataItem *data, double currentValue) {
   return 1;//(int) (pow(10,data->decDigits)*(data->value-currentValue));
 }
-
-void blinkScreen(uint16_t flash){
-  if(backgroundColor==RA8875_WHITE && flash > 1) //flash 1 is last, and will always default the color
-  {
-    backgroundColor = RA8875_RED;
-    foregroundColor = RA8875_WHITE; //Text color
-  }
-  else
-  {
-    backgroundColor = RA8875_WHITE;
-    foregroundColor = RA8875_BLACK;
-  }
-}

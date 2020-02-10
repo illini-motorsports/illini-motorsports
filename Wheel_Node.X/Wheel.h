@@ -85,7 +85,6 @@ volatile uint32_t millis;
 uint8_t warnCount;
 volatile uint32_t throt;
 volatile uint16_t curr_gear;
-volatile uint16_t blink_flag; //number value is the number of color changes
 
 void main(void);
 void on_led(uint8_t num_leds);
