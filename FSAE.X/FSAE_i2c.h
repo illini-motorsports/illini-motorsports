@@ -9,11 +9,10 @@
 #ifndef FSAE_I2C_H
 #define FSAE_I2C_H
 
-#include <sys/types.h>
 #include "FSAE_config.h"
 #include <math.h>
+#include <sys/types.h>
 
 void init_i2c();
 
 #endif /* FSAE_I2C_H */
-

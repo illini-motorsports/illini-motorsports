@@ -12,7 +12,8 @@ uint8_t pending_register[NUM_BYTES] = {0};
 uint16_t bit_ctr = 0;
 
 uint64_t current_colors[16] = {0}; // Red:16, Green:16, Blue:16
-uint8_t led_mapping[16] = {4, 15, 6, 8, 3, 1, 7, 9, 0, 2, 14, 13, 5, 10, 11, 12};
+uint8_t led_mapping[16] = {4, 15, 6,  8,  3, 1,  7,  9,
+                           0, 2,  14, 13, 5, 10, 11, 12};
 
 uint8_t left_cluster_warn = 0;
 uint64_t left_cluster_color = 0x0;
@@ -45,15 +46,14 @@ void tlc5955_startup(void) {
 /**
  * Gets the current state of the startup variable
  */
-uint8_t tlc5955_get_startup(void) {
-  return startup;
-}
+uint8_t tlc5955_get_startup(void) { return startup; }
 
 /**
  * Toggles the main LED row blink state
  */
 void tlc5955_set_main_blink(uint8_t on, uint64_t color, uint8_t ovr) {
-  if (startup && !ovr) return;
+  if (startup && !ovr)
+    return;
   if (on && !main_blink) {
     main_blink = on;
     main_blink_color = color;
@@ -70,44 +70,45 @@ void tlc5955_set_main_blink(uint8_t on, uint64_t color, uint8_t ovr) {
  * Precondition: Must be called after startup sequence is over
  */
 void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color,
-    uint8_t ovr) {
-  if (startup && !ovr) return;
-  switch(which) {
-    case CLUSTER_LEFT:
-      if (on && !left_cluster_warn) {
-        current_colors[0] = left_cluster_idx != 0 ? color : 0x0;
-        current_colors[1] = left_cluster_idx != 1 ? color : 0x0;
-        current_colors[2] = left_cluster_idx != 2 ? color : 0x0;
-        left_cluster_warn_tmr = millis;
-        _tlc5955_write_gs();
-      } else if (!on && left_cluster_warn) {
-        current_colors[0] = 0x0;
-        current_colors[1] = 0x0;
-        current_colors[2] = 0x0;
-        _tlc5955_write_gs();
-      }
+                              uint8_t ovr) {
+  if (startup && !ovr)
+    return;
+  switch (which) {
+  case CLUSTER_LEFT:
+    if (on && !left_cluster_warn) {
+      current_colors[0] = left_cluster_idx != 0 ? color : 0x0;
+      current_colors[1] = left_cluster_idx != 1 ? color : 0x0;
+      current_colors[2] = left_cluster_idx != 2 ? color : 0x0;
+      left_cluster_warn_tmr = millis;
+      _tlc5955_write_gs();
+    } else if (!on && left_cluster_warn) {
+      current_colors[0] = 0x0;
+      current_colors[1] = 0x0;
+      current_colors[2] = 0x0;
+      _tlc5955_write_gs();
+    }
 
-      left_cluster_warn = on;
-      left_cluster_color = color;
-      break;
+    left_cluster_warn = on;
+    left_cluster_color = color;
+    break;
 
-    case CLUSTER_RIGHT:
-      if (on && !right_cluster_warn) {
-        current_colors[12] = right_cluster_idx != 0 ? color : 0x0;
-        current_colors[13] = right_cluster_idx != 1 ? color : 0x0;
-        current_colors[14] = right_cluster_idx != 2 ? color : 0x0;
-        right_cluster_warn_tmr = millis;
-        _tlc5955_write_gs();
-      } else if (!on && right_cluster_warn) {
-        current_colors[12] = 0x0;
-        current_colors[13] = 0x0;
-        current_colors[14] = 0x0;
-        _tlc5955_write_gs();
-      }
+  case CLUSTER_RIGHT:
+    if (on && !right_cluster_warn) {
+      current_colors[12] = right_cluster_idx != 0 ? color : 0x0;
+      current_colors[13] = right_cluster_idx != 1 ? color : 0x0;
+      current_colors[14] = right_cluster_idx != 2 ? color : 0x0;
+      right_cluster_warn_tmr = millis;
+      _tlc5955_write_gs();
+    } else if (!on && right_cluster_warn) {
+      current_colors[12] = 0x0;
+      current_colors[13] = 0x0;
+      current_colors[14] = 0x0;
+      _tlc5955_write_gs();
+    }
 
-      right_cluster_warn = on;
-      right_cluster_color = color;
-      break;
+    right_cluster_warn = on;
+    right_cluster_color = color;
+    break;
   }
 }
 
@@ -115,11 +116,11 @@ void tlc5955_set_cluster_warn(uint8_t which, uint8_t on, uint64_t color,
  * Gets current state of the cluster warning
  */
 uint8_t tlc5955_get_cluster_warn(uint8_t which) {
-  switch(which) {
-    case CLUSTER_LEFT:
-      return left_cluster_warn;
-    case CLUSTER_RIGHT:
-      return right_cluster_warn;
+  switch (which) {
+  case CLUSTER_LEFT:
+    return left_cluster_warn;
+  case CLUSTER_RIGHT:
+    return right_cluster_warn;
   }
 }
 
@@ -127,7 +128,9 @@ uint8_t tlc5955_get_cluster_warn(uint8_t which) {
  * Writes a color to a set of lights specified by onMap
  */
 void tlc5955_write_color(uint64_t color, uint16_t onMap, uint8_t ovr) {
-  if (startup && !ovr) { return; }
+  if (startup && !ovr) {
+    return;
+  }
   uint8_t i;
   for (i = 0; i < 16; i++) {
     uint16_t on = onMap & (1 << led_mapping[i]);
@@ -140,7 +143,9 @@ void tlc5955_write_color(uint64_t color, uint16_t onMap, uint8_t ovr) {
  * Sets a specific set of LEDs to the specified color
  */
 void tlc5955_set_leds(uint64_t color, uint16_t setMap, uint8_t ovr) {
-  if (startup && !ovr) { return; }
+  if (startup && !ovr) {
+    return;
+  }
   uint8_t i;
   for (i = 0; i < 16; i++) {
     uint16_t set = setMap & (1 << led_mapping[i]);
@@ -155,7 +160,8 @@ void tlc5955_set_leds(uint64_t color, uint16_t setMap, uint8_t ovr) {
  * Writes a color to the main row of LEDs
  */
 void tlc5955_write_main_color(uint64_t color, uint8_t ovr) {
-  if (startup && !ovr) return;
+  if (startup && !ovr)
+    return;
   uint8_t i;
   for (i = 0; i < NUM_LED_MAIN; i++) {
     current_colors[i + 3] = color;
@@ -166,8 +172,9 @@ void tlc5955_write_main_color(uint64_t color, uint8_t ovr) {
 /**
  * Writes the colors specified to the main row of LEDs
  */
-void tlc5955_write_main_colors(uint64_t* colors) {
-  if (startup) return;
+void tlc5955_write_main_colors(uint64_t *colors) {
+  if (startup)
+    return;
   uint8_t i;
   for (i = 0; i < NUM_LED_MAIN; i++) {
     current_colors[i + 3] = colors[i];
@@ -190,9 +197,12 @@ void tlc5955_check_timers() {
     main_blink_flag = !main_blink_flag;
   }
 
-  if (left_cluster_warn && (millis - left_cluster_warn_tmr > CLUSTER_WARN_INTV)) {
+  if (left_cluster_warn &&
+      (millis - left_cluster_warn_tmr > CLUSTER_WARN_INTV)) {
     left_cluster_idx++;
-    if (left_cluster_idx >= 3) { left_cluster_idx = 0; }
+    if (left_cluster_idx >= 3) {
+      left_cluster_idx = 0;
+    }
 
     current_colors[0] = left_cluster_idx != 0 ? left_cluster_color : 0x0;
     current_colors[1] = left_cluster_idx != 1 ? left_cluster_color : 0x0;
@@ -202,9 +212,12 @@ void tlc5955_check_timers() {
     _tlc5955_write_gs();
   }
 
-  if (right_cluster_warn && (millis - right_cluster_warn_tmr > CLUSTER_WARN_INTV)) {
+  if (right_cluster_warn &&
+      (millis - right_cluster_warn_tmr > CLUSTER_WARN_INTV)) {
     right_cluster_idx++;
-    if (right_cluster_idx >= 3) { right_cluster_idx = 0; }
+    if (right_cluster_idx >= 3) {
+      right_cluster_idx = 0;
+    }
 
     current_colors[12] = right_cluster_idx != 0 ? right_cluster_color : 0x0;
     current_colors[13] = right_cluster_idx != 1 ? right_cluster_color : 0x0;
@@ -247,75 +260,75 @@ void _tlc5955_startup_frame(void) {
     return;
   }
 
-  switch(startup_frame) {
-    case 0:
-      tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, WHT, OVR);
-      tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, WHT, OVR);
-      break;
-    case 1:
-      tlc5955_set_leds(RED, 0b000100000001000, OVR);
-      break;
-    case 2:
-      tlc5955_set_leds(RED, 0b000010000010000, OVR);
-      break;
-    case 3:
-      tlc5955_set_leds(RED, 0b000001000100000, OVR);
-      break;
-    case 4:
-      tlc5955_set_leds(RED, 0b000000101000000, OVR);
-      break;
-    case 5:
-      tlc5955_set_leds(RED, 0b000000010000000, OVR);
-      break;
+  switch (startup_frame) {
+  case 0:
+    tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, WHT, OVR);
+    tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, WHT, OVR);
+    break;
+  case 1:
+    tlc5955_set_leds(RED, 0b000100000001000, OVR);
+    break;
+  case 2:
+    tlc5955_set_leds(RED, 0b000010000010000, OVR);
+    break;
+  case 3:
+    tlc5955_set_leds(RED, 0b000001000100000, OVR);
+    break;
+  case 4:
+    tlc5955_set_leds(RED, 0b000000101000000, OVR);
+    break;
+  case 5:
+    tlc5955_set_leds(RED, 0b000000010000000, OVR);
+    break;
 
-    case 6:
-      tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, BLU, OVR);
-      tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, BLU, OVR);
-      break;
+  case 6:
+    tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, BLU, OVR);
+    tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, BLU, OVR);
+    break;
 
-    case 7:
-      tlc5955_set_leds(WHT, 0b000100000001000, OVR);
-      break;
-    case 8:
-      tlc5955_set_leds(WHT, 0b000010000010000, OVR);
-      break;
-    case 9:
-      tlc5955_set_leds(WHT, 0b000001000100000, OVR);
-      break;
-    case 10:
-      tlc5955_set_leds(WHT, 0b000000101000000, OVR);
-      break;
-    case 11:
-      tlc5955_set_leds(WHT, 0b000000010000000, OVR);
-      break;
+  case 7:
+    tlc5955_set_leds(WHT, 0b000100000001000, OVR);
+    break;
+  case 8:
+    tlc5955_set_leds(WHT, 0b000010000010000, OVR);
+    break;
+  case 9:
+    tlc5955_set_leds(WHT, 0b000001000100000, OVR);
+    break;
+  case 10:
+    tlc5955_set_leds(WHT, 0b000000101000000, OVR);
+    break;
+  case 11:
+    tlc5955_set_leds(WHT, 0b000000010000000, OVR);
+    break;
 
-    case 12:
-      tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, RED, OVR);
-      tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, RED, OVR);
-      break;
+  case 12:
+    tlc5955_set_cluster_warn(CLUSTER_LEFT, 1, RED, OVR);
+    tlc5955_set_cluster_warn(CLUSTER_RIGHT, 1, RED, OVR);
+    break;
 
-    case 13:
-      tlc5955_set_leds(BLU, 0b000100000001000, OVR);
-      break;
-    case 14:
-      tlc5955_set_leds(BLU, 0b000010000010000, OVR);
-      break;
-    case 15:
-      tlc5955_set_leds(BLU, 0b000001000100000, OVR);
-      break;
-    case 16:
-      tlc5955_set_leds(BLU, 0b000000101000000, OVR);
-      break;
-    case 17:
-      tlc5955_set_leds(BLU, 0b000000010000000, OVR);
-      break;
+  case 13:
+    tlc5955_set_leds(BLU, 0b000100000001000, OVR);
+    break;
+  case 14:
+    tlc5955_set_leds(BLU, 0b000010000010000, OVR);
+    break;
+  case 15:
+    tlc5955_set_leds(BLU, 0b000001000100000, OVR);
+    break;
+  case 16:
+    tlc5955_set_leds(BLU, 0b000000101000000, OVR);
+    break;
+  case 17:
+    tlc5955_set_leds(BLU, 0b000000010000000, OVR);
+    break;
 
-    case 18:
-      tlc5955_set_main_blink(1, BLU, OVR);
-      break;
+  case 18:
+    tlc5955_set_main_blink(1, BLU, OVR);
+    break;
 
-    default:
-      break;
+  default:
+    break;
   }
 
   startup_frame++;
@@ -364,7 +377,7 @@ void _tlc5955_write_control(void) {
   _tlc5955_reg_append(5, 0x00);
 
   _tlc5955_reg_append(8, 0x96); // More indication for control register write
-  _tlc5955_reg_append(1, 0b1); // MSB indicates control register write
+  _tlc5955_reg_append(1, 0b1);  // MSB indicates control register write
 
   _tlc5955_send_register();
 }
@@ -385,8 +398,8 @@ void _tlc5955_write_gs(void) {
     _tlc5955_reg_append(8, (color >> 40) & 0xFF); // Red HW
     _tlc5955_reg_append(8, (color >> 16) & 0xFF); // Green LW
     _tlc5955_reg_append(8, (color >> 24) & 0xFF); // Green HW
-    _tlc5955_reg_append(8, (color >> 0) & 0xFF); // Blue LW
-    _tlc5955_reg_append(8, (color >> 8) & 0xFF); // Blue HW
+    _tlc5955_reg_append(8, (color >> 0) & 0xFF);  // Blue LW
+    _tlc5955_reg_append(8, (color >> 8) & 0xFF);  // Blue HW
   }
   _tlc5955_reg_append(1, 0b0); // MSB indicates GS write
 
@@ -402,7 +415,7 @@ void _tlc5955_write_gs(void) {
 void _tlc5955_reg_append(uint8_t num_bits, uint8_t data) {
   uint8_t i;
   for (i = 0; i < num_bits; i++) {
-    uint8_t bit = data & (1 << (i)); 
+    uint8_t bit = data & (1 << (i));
     uint8_t idx = (bit_ctr + i) >> 3; // faster divide by 8
     uint8_t pos = (bit_ctr + i) % 8;
 
@@ -436,13 +449,15 @@ void _tlc5955_send_register(void) {
 
   for (i = NUM_BYTES - 1; i >= 0; i--) {
     SPI2BUF = pending_register[i];
-    while(!SPI2STATbits.SPIRBF);
+    while (!SPI2STATbits.SPIRBF)
+      ;
     resp = SPI2BUF;
   }
 
   // Send latch pulse
   LAT_TLC5955_LAT = 1;
-  for (i = 0; i < 6; i++);
+  for (i = 0; i < 6; i++)
+    ;
   LAT_TLC5955_LAT = 0;
 }
 
@@ -486,16 +501,22 @@ void _tlc5955_init_spi(void) {
 
   SPI2STATbits.SPIROV = 0;
 
-  SPI2CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
-  SPI2CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-  SPI2CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI2CONbits.MODE16 = 0;  // 32/16-Bit Communication Select bits (8-bit)
+  SPI2CONbits.MCLKSEL =
+      0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
+  SPI2CONbits.SIDL =
+      0; // Stop in Idle Mode bit (Continue operation in Idle mode)
+  SPI2CONbits.MODE32 = 0; // 32/16-Bit Communication Select bits (8-bit)
+  SPI2CONbits.MODE16 = 0; // 32/16-Bit Communication Select bits (8-bit)
   SPI2CONbits.DISSDI = 0;
   SPI2CONbits.DISSDO = 0;
-  SPI2CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
-  SPI2CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
-  SPI2CONbits.SMP = 0;     // SPI Data Input Sample Phase (Input data sampled at middle of output time)
-  SPI2CONbits.CKP = 0;     // Clock Polarity Select (Idle state for clock is a low level)
+  SPI2CONbits.MSTEN = 1; // Master Mode Enable bit (Master mode)
+  SPI2CONbits.CKE =
+      1; // SPI Clock Edge Select (Serial output data changes on transition from
+         // active clock state to idle clock state)
+  SPI2CONbits.SMP = 0; // SPI Data Input Sample Phase (Input data sampled at
+                       // middle of output time)
+  SPI2CONbits.CKP =
+      0; // Clock Polarity Select (Idle state for clock is a low level)
 
   // Enable SPI2 module
   SPI2CONbits.ON = 1;

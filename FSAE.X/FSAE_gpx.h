@@ -9,21 +9,21 @@
 #ifndef FSAE_gpx_H
 #define FSAE_gpx_H
 
-#include <xc.h>
-#include <sys/types.h>
 #include "FSAE_config.h"
+#include <sys/types.h>
+#include <xc.h>
 
 // Pin definitions for CS_GPX
-#define CS_GPX_TRIS  TRISEbits.TRISE7
-#define CS_GPX_LAT   LATEbits.LATE7
+#define CS_GPX_TRIS TRISEbits.TRISE7
+#define CS_GPX_LAT LATEbits.LATE7
 
 // Pin definitions for GPX_INT
-#define GPX_INT_TRIS   TRISEbits.TRISE6
-#define GPX_INT_PORT   PORTEbits.RE6
-#define GPX_INT_ANSEL  ANSELEbits.ANSE6
+#define GPX_INT_TRIS TRISEbits.TRISE6
+#define GPX_INT_PORT PORTEbits.RE6
+#define GPX_INT_ANSEL ANSELEbits.ANSE6
 
 // Opcodes
-#define GPX_OPCODE_READ  0b01001111
+#define GPX_OPCODE_READ 0b01001111
 #define GPX_OPCODE_WRITE 0b01001110
 
 // Register addresses

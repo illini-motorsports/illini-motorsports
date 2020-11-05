@@ -8,7 +8,7 @@
  */
 #pragma once
 
-#include <sys/types.h>
 #include "../FSAE.X/FSAE_config.h"
+#include <sys/types.h>
 
 void main(void);

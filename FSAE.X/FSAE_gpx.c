@@ -67,15 +67,18 @@ uint8_t _gpx_send_mesg(uint8_t opcode, uint8_t addr, uint8_t data) {
   CS_GPX_LAT = 0;
 
   SPI2BUF = opcode;
-  while (!SPI2STATbits.SPIRBF);
+  while (!SPI2STATbits.SPIRBF)
+    ;
   resp = SPI2BUF;
 
   SPI2BUF = addr;
-  while (!SPI2STATbits.SPIRBF);
+  while (!SPI2STATbits.SPIRBF)
+    ;
   resp = SPI2BUF;
 
   SPI2BUF = data;
-  while (!SPI2STATbits.SPIRBF);
+  while (!SPI2STATbits.SPIRBF)
+    ;
   resp = SPI2BUF;
 
   CS_GPX_LAT = 1;
@@ -102,7 +105,7 @@ void _gpx_init_spi(void) {
 
   // Initialize SCK2 and !CS_GPX pins
   TRISGbits.TRISG6 = OUTPUT; // SCK2
-  CS_GPX_TRIS = OUTPUT; // !CS_GPX
+  CS_GPX_TRIS = OUTPUT;      // !CS_GPX
   CS_GPX_LAT = 1;
 
   // Disable interrupts
@@ -130,16 +133,21 @@ void _gpx_init_spi(void) {
 
   SPI2STATbits.SPIROV = 0;
 
-  SPI2CONbits.MCLKSEL = 0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
-  SPI2CONbits.SIDL = 0;    // Stop in Idle Mode bit (Continue operation in Idle mode)
-  SPI2CONbits.MODE32 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI2CONbits.MODE16 = 0;  // 32/16-Bit Communication Select bits (8-bit)
-  SPI2CONbits.MSTEN = 1;   // Master Mode Enable bit (Master mode)
+  SPI2CONbits.MCLKSEL =
+      0; // Master Clock Enable bit (PBCLK2 is used by the Baud Rate Generator)
+  SPI2CONbits.SIDL =
+      0; // Stop in Idle Mode bit (Continue operation in Idle mode)
+  SPI2CONbits.MODE32 = 0; // 32/16-Bit Communication Select bits (8-bit)
+  SPI2CONbits.MODE16 = 0; // 32/16-Bit Communication Select bits (8-bit)
+  SPI2CONbits.MSTEN = 1;  // Master Mode Enable bit (Master mode)
   SPI2CONbits.DISSDI = 0;
   SPI2CONbits.DISSDO = 0;
-  SPI2CONbits.CKE = 1;     // SPI Clock Edge Select (Serial output data changes on transition from active clock state to idle clock state)
+  SPI2CONbits.CKE =
+      1; // SPI Clock Edge Select (Serial output data changes on transition from
+         // active clock state to idle clock state)
   SPI2CONbits.SMP = 1;
-  SPI2CONbits.CKP = 0;     // Clock Polarity Select (Idle state for clock is a low level)
+  SPI2CONbits.CKP =
+      0; // Clock Polarity Select (Idle state for clock is a low level)
 
   // Enable SPI2 module
   SPI2CONbits.ON = 1;
@@ -160,8 +168,9 @@ void _gpx_init_int(void) {
   GPX_INT_ANSEL = DIG_INPUT;
 
   // CONCONE
-  CNCONEbits.ON = 1;         // Change Notice (CN) Control ON (CN is enabled)
-  //CNCONEbits.SIDL = 0;       // Stop in Idle Control (CPU Idle does not affect CN operation)
+  CNCONEbits.ON = 1; // Change Notice (CN) Control ON (CN is enabled)
+  // CNCONEbits.SIDL = 0;       // Stop in Idle Control (CPU Idle does not
+  // affect CN operation)
   CNCONEbits.EDGEDETECT = 1; // Change Notification Style (Edge Style)
 
   // Enable interrupts for the RE6 pin
@@ -171,10 +180,12 @@ void _gpx_init_int(void) {
   uint32_t dummy = PORTE;
 
   // Configure change notification interrupt
-  IFS3CLR = _IFS3_CNEIF_MASK; // CNE Interrupt Flag Status (No interrupt request has occurred)
-  IPC30bits.CNEIP = 3;        // CNE Interrupt Priority (Interrupt priority is 3)
-  IPC30bits.CNEIS = 3;        // CNE Interrupt Subpriority (Interrupt subpriority is 3)
-  IEC3SET = _IEC3_CNAIE_MASK; // CNE Interrupt Enable Control (Interrupt is enabled)
+  IFS3CLR = _IFS3_CNEIF_MASK; // CNE Interrupt Flag Status (No interrupt request
+                              // has occurred)
+  IPC30bits.CNEIP = 3; // CNE Interrupt Priority (Interrupt priority is 3)
+  IPC30bits.CNEIS = 3; // CNE Interrupt Subpriority (Interrupt subpriority is 3)
+  IEC3SET =
+      _IEC3_CNAIE_MASK; // CNE Interrupt Enable Control (Interrupt is enabled)
 
   STI();
 }

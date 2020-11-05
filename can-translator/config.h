@@ -8,13 +8,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <map>
+#include <QCoreApplication>
 #include <QFile>
 #include <QString>
-#include <QVector>
 #include <QStringList>
 #include <QTextStream>
-#include <QCoreApplication>
+#include <QVector>
+#include <map>
 #include <stdint.h>
 
 using std::map;
@@ -45,16 +45,15 @@ struct Signal {
     max = 0;
   }
 
-  bool valid() {
-    return !(title.isEmpty() && units.isEmpty());
-  }
+  bool valid() { return !(title.isEmpty() && units.isEmpty()); }
 
   QString toString() {
     return title + "<" + units + ">" + " isS: " + (isSigned ? "T" : "F") +
-        " isBE: " + (isBigEndian ? "T" : "F") + " S: " + QString::number(scalar) +
-        " O: " + QString::number(offset) + " sb: " + QString::number(startBit) +
-        " bl: " + QString::number(bitLen) + " min: " + QString::number(min) +
-        " max: " + QString::number(max);
+           " isBE: " + (isBigEndian ? "T" : "F") +
+           " S: " + QString::number(scalar) + " O: " + QString::number(offset) +
+           " sb: " + QString::number(startBit) +
+           " bl: " + QString::number(bitLen) + " min: " + QString::number(min) +
+           " max: " + QString::number(max);
   }
 };
 
@@ -69,13 +68,11 @@ struct Message {
     dlc = 0;
   }
 
-  bool valid() {
-    return !(id == 0 && dlc == 0 && sigs.size() == 0);
-  }
+  bool valid() { return !(id == 0 && dlc == 0 && sigs.size() == 0); }
 
   QString toString() {
     return "0x" + QString::number(id, 16) + " - DLC: " + QString::number(dlc) +
-        " Signals: " + QString::number(sigs.size());
+           " Signals: " + QString::number(sigs.size());
   }
 };
 
@@ -86,25 +83,23 @@ struct Message {
 class AppConfig : public QObject {
   Q_OBJECT
 
-  public:
+public:
+  map<uint16_t, Message> getMessages();
 
-    map<uint16_t, Message> getMessages();
+signals:
 
-  signals:
+  /**
+   * Error handler that will be connected to an error function in the display
+   * class. Calling this method will display a error message box.
+   *
+   * @params error The error message to display.
+   */
+  void error(QString error);
 
-    /**
-     * Error handler that will be connected to an error function in the display
-     * class. Calling this method will display a error message box.
-     *
-     * @params error The error message to display.
-     */
-    void error(QString error);
-
-  private:
-
-    QVector< QVector<QString> > readFile();
-    Message getMessage(QVector<QString> messageBlock);
-    Signal getSignal(QString signalDef);
+private:
+  QVector<QVector<QString>> readFile();
+  Message getMessage(QVector<QString> messageBlock);
+  Signal getSignal(QString signalDef);
 };
 
 #endif // CONFIG_H

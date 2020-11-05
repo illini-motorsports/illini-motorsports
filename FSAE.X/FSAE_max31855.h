@@ -9,9 +9,9 @@
 #ifndef FSAE_MAX31855_H
 #define FSAE_MAX31855_H
 
-#include <sys/types.h>
 #include "FSAE_config.h"
 #include "FSAE_spi.h"
+#include <sys/types.h>
 
 typedef struct {
   double thermocoupleTemp;
@@ -19,7 +19,7 @@ typedef struct {
   uint8_t fault;
 } max31855_data;
 
-SPIConn* init_max31855(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
+SPIConn *init_max31855(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
 
 double read_max31855_temp(SPIConn *conn);
 max31855_data read_max31855_data(SPIConn *conn);

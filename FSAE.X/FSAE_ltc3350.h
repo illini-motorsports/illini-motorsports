@@ -9,33 +9,33 @@
 #ifndef FSAE_LTC3350_H
 #define FSAE_LTC3350_H
 
-#include <xc.h>
-#include <sys/types.h>
 #include "FSAE_config.h"
+#include <sys/types.h>
+#include <xc.h>
 
 #define LTC3350_DEV_ADDR 0b0001001
-#define PIC_DEV_ADDR     0b0011100
-#define SETUP_TIME       3
-#define HOLD_TIME        4
+#define PIC_DEV_ADDR 0b0011100
+#define SETUP_TIME 3
+#define HOLD_TIME 4
 
 // Pin definitions
-#define CHG_PFO_TRIS  TRISCbits.TRISC4
+#define CHG_PFO_TRIS TRISCbits.TRISC4
 #define CHG_PFO_ANSEL ANSELCbits.ANSC4
-#define CHG_PFO_PORT  PORTCbits.RC4
-#define CHG_ALM_TRIS  TRISCbits.TRISC2
+#define CHG_PFO_PORT PORTCbits.RC4
+#define CHG_ALM_TRIS TRISCbits.TRISC2
 #define CHG_ALM_ANSEL ANSELCbits.ANSC2
-#define CHG_ALM_PORT  PORTCbits.RC2
-#define CHG_CPGD_TRIS  TRISGbits.TRISG9
+#define CHG_ALM_PORT PORTCbits.RC2
+#define CHG_CPGD_TRIS TRISGbits.TRISG9
 #define CHG_CPGD_ANSEL ANSELGbits.ANSG9
-#define CHG_CPGD_PORT  PORTCGits.RG9
+#define CHG_CPGD_PORT PORTCGits.RG9
 #define DATA_LINE_TRIS TRISGbits.TRISG7
-#define CLK_LINE_TRIS  TRISGbits.TRISG8
+#define CLK_LINE_TRIS TRISGbits.TRISG8
 #define DATA_LINE_ANSEL ANSELGbits.ANSG7
-#define CLK_LINE_ANSEL  ANSELGbits.ANSG8
+#define CLK_LINE_ANSEL ANSELGbits.ANSG8
 #define DATA_LINE_LAT LATGbits.LATG7
-#define CLK_LINE_LAT  LATGbits.LATG8
+#define CLK_LINE_LAT LATGbits.LATG8
 #define DATA_LINE_PORT PORTGbits.RG7
-#define CLK_LINE_PORT  PORTGbits.RG8
+#define CLK_LINE_PORT PORTGbits.RG8
 
 volatile uint32_t micros;
 int ack;
