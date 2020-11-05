@@ -18,7 +18,7 @@ volatile uint8_t acknowledge_button = 0;
 volatile uint8_t auxiliary_button = 0;
 volatile uint8_t night_day_switch, auto_upshift_switch = 0;
 
-//TODO: Add more checks/handling for stale CAN data
+// TODO: Add more checks/handling for stale CAN data
 
 // Count number of seconds and milliseconds since start of code execution
 volatile uint32_t seconds = 0;
@@ -41,11 +41,11 @@ uint8_t switch_prev = 0;      // Previous sampled value of switches
 volatile uint8_t prev_switch_up = 0; // Previous switch state of SHIFT_UP #CHECK
 volatile uint8_t prev_switch_dn = 0; // Previous switch state of SHIFT_DN
 
-volatile double eng_rpm = 0;       // Engine RPM (from ECU) #CHECK
-volatile double bat_volt = 0;      // Battery voltage (from ECU)
-volatile double throttle_pos = 0;  // Throttle position (from ECU) #CHECK
+volatile double eng_rpm = 0;           // Engine RPM (from ECU) #CHECK
+volatile double bat_volt = 0;          // Battery voltage (from ECU)
+volatile double throttle_pos = 0;      // Throttle position (from ECU) #CHECK
 volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from ECU)
-volatile uint8_t kill_sw = 0;      // Holds state of KILL_SW (from PDM)
+volatile uint8_t kill_sw = 0;          // Holds state of KILL_SW (from PDM)
 volatile double wheel_fl_speed = 0;
 volatile double wheel_fr_speed = 0;
 volatile double wheel_rl_speed = 0;
@@ -53,12 +53,17 @@ volatile double wheel_rr_speed = 0;
 volatile double lat_accel = 0;
 volatile uint16_t conv_lat_accel = 0;
 
-int16_t pcb_temp = 0; // PCB temperature reading in units of [C/0.005]
+// Ignition cut status
+static uint8_t ignition_cut = 0;
+
+int16_t pcb_temp = 0;  // PCB temperature reading in units of [C/0.005]
 int16_t junc_temp = 0; // Junction temperature reading in units of [C/0.005]
 
 uint16_t shift_force_spoof = 0; // Holds desired value of gear shift force
 
-volatile uint8_t gear_fail_nt_shift = SHIFT_ENUM_NT; // Stores direction of neutral shift while in gear failure mode
+volatile uint8_t gear_fail_nt_shift =
+    SHIFT_ENUM_NT; // Stores direction of neutral shift while in gear failure
+                   // mode
 
 // Timing interval variables
 volatile uint32_t CAN_recv_tmr = 0;
@@ -68,23 +73,54 @@ uint32_t switch_debounce_tmr = 0;
 volatile uint32_t lockout_tmr = 0; // Holds millis value of last lockout set
 uint32_t act_tmr = 0;              // Records the time the actuator was fired
 uint32_t pwr_cut_tmr = 0;          // Records when the power cut was initiated
-uint32_t pwr_cut_retry_tmr = 0;    // Records when the ADL power cut message was last sent
+uint32_t pwr_cut_retry_tmr =
+    0; // Records when the ADL power cut message was last sent
+
+/** delete me*/
+#define byte_swap(num) ((num>>8) | (num<<8))
+void send_IZZE_programming_message() {
+    CAN_data data = {0};
+    data.halfword0 = byte_swap(0x7530);
+    data.halfword1 = byte_swap(0x4E7);
+    data.byte4 = 2;
+    data.byte5 = 1;
+    data.byte6 = 1;
+    data.byte7 = 1;
+    CAN_send_message(0x203, 8, data);
+    return;
+    
+    uint16_t gain_coeff = 10;
+    uint8_t gain_exp = 1;
+    uint16_t offset_coeff = 10;
+    uint8_t offset_exp = 1;
+    
+    data.halfword0 = byte_swap(0x4E20);
+    data.halfword1 = byte_swap(gain_coeff);
+    data.byte4 = gain_exp;
+    data.byte5 = offset_coeff >> 8;
+    data.byte6 = offset_coeff & 0b11111111;
+    data.byte7 = offset_exp;
+    CAN_send_message(0x203, 8, data);
+    
+    
+}
+/** delete up to here*/
 
 /**
  * Main function
  */
 void main(void) {
-  init_general(); // Set general runtime configuration bits
+  init_general();   // Set general runtime configuration bits
   init_gpio_pins(); // Set all I/O pins to low outputs
-  //init_peripheral_modules(); // Disable unused peripheral modules
-  init_oscillator(0); // Initialize oscillator configuration bits
-  init_timer2(); // Initialize timer2 (millis)
-  init_adc(NULL); // Initialize ADC module
+  // init_peripheral_modules(); // Disable unused peripheral modules
+  init_oscillator(0);                // Initialize oscillator configuration bits
+  init_timer2();                     // Initialize timer2 (millis)
+  init_adc(NULL);                    // Initialize ADC module
   init_termination(NOT_TERMINATING); // Initialize programmable CAN termination
-  init_can(); // Initialize CAN
+  init_can();                        // Initialize CAN
 
-  //TODO: USB
-  //TODO: NVM
+  // TODO: USB
+  // TODO: NVM
 
   // Initialize pins
   SHIFT_UP_TRIS = INPUT;
@@ -121,24 +157,25 @@ void main(void) {
     sample_sensors(NOT_SHIFTING);
 
     // Do upshift sequence if queued
-    if(queue_up > 0) {
+    if (queue_up > 0) {
       do_shift(SHIFT_ENUM_UP);
     }
 
     // Do downshift sequence if queued
-    if(queue_dn > 0) {
+    if (queue_dn > 0) {
       do_shift(SHIFT_ENUM_DN);
     }
 
     // Do neutral shift sequence if queued
-    if(queue_nt > 0) {
+    if (queue_nt > 0) {
       do_shift(SHIFT_ENUM_NT);
     }
 
     // Send power cut message again if MoTeC hasn't received it
-    if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT)) {
-        send_power_cut(CUT_RESEND);
-    }
+    // if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr
+    // >= CUT_RETRY_WAIT)) {
+    //    send_power_cut(CUT_RESEND);
+    //}
 
     // CAN message sending functions
     send_diag_can();
@@ -151,7 +188,8 @@ void main(void) {
 /**
  * CAN1 Interrupt Handler
  */
-void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) {
+void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS)))
+can_inthnd(void) {
   if (C1INTbits.RBIF) {
     CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
   }
@@ -168,7 +206,8 @@ void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS))) can_inthnd(void) 
  *
  * Fires once every millisecond.
  */
-void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(void) {
+void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS)))
+timer2_inthnd(void) {
   ++millis;
   if (millis % 1000 == 0)
     ++seconds;
@@ -176,8 +215,7 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(
   if (ADCCON2bits.EOSRDY)
     ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
 
-  if (SHIFT_UP_SW != prev_switch_up ||
-      SHIFT_DN_SW != prev_switch_dn) {
+  if (SHIFT_UP_SW != prev_switch_up || SHIFT_DN_SW != prev_switch_dn) {
     send_state_can(OVERRIDE);
   }
 
@@ -185,21 +223,24 @@ void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS))) timer2_inthnd(
   check_gcm_mode();
 
   // Check for an auto upshift if in the correct mode
-  if(mode == AUTO_UPSHIFT_MODE) {
+  if (mode == AUTO_UPSHIFT_MODE) {
     process_auto_upshift();
   }
 
   // Check for a new shift_up switch press
-  if(SHIFT_UP_SW && !prev_switch_up) {
+  if (SHIFT_UP_SW && !prev_switch_up) {
     process_upshift_press();
   }
   prev_switch_up = SHIFT_UP_SW;
 
   // Check for a new shift_dn switch press
-  if(SHIFT_DN_SW && !prev_switch_dn) {
+  if (SHIFT_DN_SW && !prev_switch_dn) {
     process_downshift_press();
   }
   prev_switch_dn = SHIFT_DN_SW;
+
+  send_ignition_cut();
+  
 
   IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
@@ -214,7 +255,8 @@ void _nmi_handler(void) {
   unlock_config();
   RSWRSTSET = 1;
   uint16_t dummy = RSWRST;
-  while (1);
+  while (1)
+    ;
   asm volatile("eret;"); // Should never be called
 }
 
@@ -231,25 +273,27 @@ void sample_temp(void) {
 
     /**
      * PCB Temp [C] = (Sample [V] - 0.75 [V]) / 10 [mV/C]
-     * PCB Temp [C] = ((3.3 * (pcb_temp_samp / 4095)) [V] - 0.75 [V]) / 0.01 [V/C]
-     * PCB Temp [C] = (3.3 * (pcb_temp_samp / 40.95)) - 75) [C]
-     * PCB Temp [C] = (pcb_temp_samp * 0.080586080586) - 75 [C]
-     * PCB Temp [C / 0.005] = 200 * ((pcb_temp_samp * 0.080586080586) - 75) [C / 0.005]
-     * PCB Temp [C / 0.005] = (temp_samp * 16.1172161172) - 15000 [C / 0.005]
+     * PCB Temp [C] = ((3.3 * (pcb_temp_samp / 4095)) [V] - 0.75 [V]) / 0.01
+     * [V/C] PCB Temp [C] = (3.3 * (pcb_temp_samp / 40.95)) - 75) [C] PCB Temp
+     * [C] = (pcb_temp_samp * 0.080586080586) - 75 [C] PCB Temp [C / 0.005] =
+     * 200 * ((pcb_temp_samp * 0.080586080586) - 75) [C / 0.005] PCB Temp [C /
+     * 0.005] = (temp_samp * 16.1172161172) - 15000 [C / 0.005]
      */
     uint32_t pcb_temp_samp = read_adc_chn(ADC_PTEMP_CHN);
-    pcb_temp = (((double) pcb_temp_samp) * 16.1172161172) - 15000.0;
+    pcb_temp = (((double)pcb_temp_samp) * 16.1172161172) - 15000.0;
 
     /**
      * Junc Temp [C] = 200 [C/V] * (1 [V] - Sample [V])
      * Junc Temp [C] = 200 [C/V] * (1 - (3.3 * (junc_temp_samp / 4095))) [V]
      * Junc Temp [C] = 200 [C/V] * (1 - (junc_temp_samp / 1240.9090909)) [V]
      * Junc Temp [C] = 200 - (junc_temp_samp * 0.161172161172) [C]
-     * Junc Temp [C / 0.005] = 40000 - (junc_temp_samp * 32.234432234432) [C / 0.005]
+     * Junc Temp [C / 0.005] = 40000 - (junc_temp_samp * 32.234432234432) [C /
+     * 0.005]
      */
 
     uint32_t junc_temp_samp = read_adc_chn(ADC_JTEMP_CHN);
-    junc_temp = (int16_t) (40000.0 - (((double) junc_temp_samp) * 32.234432234432));
+    junc_temp =
+        (int16_t)(40000.0 - (((double)junc_temp_samp) * 32.234432234432));
 
     temp_samp_tmr = millis;
   }
@@ -266,22 +310,22 @@ void sample_temp(void) {
 void sample_sensors(uint8_t is_shifting) {
   if (millis - sensor_samp_tmr >= SENSOR_SAMP_INTV) {
     uint32_t gear_samp = read_adc_chn(ADC_GEAR_CHN);
-    double gear_voltage =  ((((double) gear_samp) / 4095.0) * 5.0);
-    uint16_t gear_voltage_can = (uint16_t) (gear_voltage * 10000.0);
+    double gear_voltage = ((((double)gear_samp) / 4095.0) * 5.0);
+    uint16_t gear_voltage_can = (uint16_t)(gear_voltage * 10000.0);
 
-    if (abs(gear_voltage - 0.747) <= GEAR_VOLT_RIPPLE) {
+    if (abs(gear_voltage - GEAR_VOLT_1) <= GEAR_VOLT_RIPPLE) {
       gear = 1;
-    } else if (abs(gear_voltage - 1.096) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - GEAR_VOLT_NEUT) <= GEAR_VOLT_RIPPLE) {
       gear = GEAR_NEUT;
-    } else if (abs(gear_voltage - 1.448) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - GEAR_VOLT_2) <= GEAR_VOLT_RIPPLE) {
       gear = 2;
-    } else if (abs(gear_voltage - 2.124) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - GEAR_VOLT_3) <= GEAR_VOLT_RIPPLE) {
       gear = 3;
-    } else if (abs(gear_voltage - 2.862) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - GEAR_VOLT_4) <= GEAR_VOLT_RIPPLE) {
       gear = 4;
-    } else if (abs(gear_voltage - 3.574) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - GEAR_VOLT_5) <= GEAR_VOLT_RIPPLE) {
       gear = 5;
-    } else if (abs(gear_voltage - 4.282) <= GEAR_VOLT_RIPPLE) {
+    } else if (abs(gear_voltage - GEAR_VOLT_6) <= GEAR_VOLT_RIPPLE) {
       gear = 6;
     } else {
       gear = GEAR_FAIL;
@@ -294,9 +338,9 @@ void sample_sensors(uint8_t is_shifting) {
 
     // Sample shift force sensor
     uint32_t force_samp = read_adc_chn(ADC_FORCE_CHN);
-    double force_voltage =  ((((double) force_samp) / 4095.0) * 5.0);
-    shift_force = (force_voltage-2.5)*96.347;
-    int16_t shift_force_can = (int16_t) (shift_force / FORCE_SCL);
+    double force_voltage = ((((double)force_samp) / 4095.0) * 5.0);
+    shift_force = (force_voltage - 2.5) * 96.347;
+    int16_t shift_force_can = (int16_t)(shift_force / FORCE_SCL);
 
     CAN_data data = {0};
     data.byte0 = gear;
@@ -317,69 +361,76 @@ void sample_sensors(uint8_t is_shifting) {
  * @param msg The received CAN message
  */
 void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
-  uint16_t * lsbArray = (uint16_t *) msg.data;
+  uint16_t *lsbArray = (uint16_t *)msg.data;
 
   uint8_t switch_bitmap;
   uint8_t button_bitmap;
 
   switch (msg.id) {
-    case MOTEC_ID + 0x0:
-      eng_rpm = ((double) ((msg.data[ENG_RPM_BYTE] << 8) |
-          msg.data[ENG_RPM_BYTE + 1])) * ENG_RPM_SCL;
-      throttle_pos = ((double) ((msg.data[THROTTLE_POS_BYTE] << 8) |
-          msg.data[THROTTLE_POS_BYTE + 1])) * THROTTLE_POS_SCL;
-      bat_volt = ((double) ((msg.data[VOLT_ECU_BYTE] << 8) |
-          msg.data[VOLT_ECU_BYTE + 1])) * VOLT_ECU_SCL;
-      CAN_recv_tmr = millis;
-      break;
+  case MOTEC_ID + 0x0:
+    eng_rpm =
+        ((double)((msg.data[ENG_RPM_BYTE] << 8) | msg.data[ENG_RPM_BYTE + 1])) *
+        ENG_RPM_SCL;
+    throttle_pos = ((double)((msg.data[THROTTLE_POS_BYTE] << 8) |
+                             msg.data[THROTTLE_POS_BYTE + 1])) *
+                   THROTTLE_POS_SCL;
+    bat_volt = ((double)((msg.data[VOLT_ECU_BYTE] << 8) |
+                         msg.data[VOLT_ECU_BYTE + 1])) *
+               VOLT_ECU_SCL;
+    CAN_recv_tmr = millis;
+    break;
 
-//    case ABS_WS_ID:
-//      wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE/2] * WHEELSPEED_FL_SCL;
-//      wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE/2] * WHEELSPEED_FR_SCL;
-//      wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE/2] * WHEELSPEED_RL_SCL;
-//      wheel_rr_speed = lsbArray[WHEELSPEED_RR_BYTE/2] * WHEELSPEED_RR_SCL;
-//
-//      CAN_recv_tmr = millis;
-//      break;
-      
-      case MOTEC_ID + 0x3:
-      wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE/2] * WHEELSPEED_FL_SCL;
-      wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE/2] * WHEELSPEED_FR_SCL;
-      wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE/2] * WHEELSPEED_RL_SCL;
-      wheel_rr_speed = lsbArray[WHEELSPEED_RR_BYTE/2] * WHEELSPEED_RR_SCL;
+    //    case ABS_WS_ID:
+    //      wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE/2] * WHEELSPEED_FL_SCL;
+    //      wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE/2] * WHEELSPEED_FR_SCL;
+    //      wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE/2] * WHEELSPEED_RL_SCL;
+    //      wheel_rr_speed = lsbArray[WHEELSPEED_RR_BYTE/2] * WHEELSPEED_RR_SCL;
+    //
+    //      CAN_recv_tmr = millis;
+    //      break;
 
-      CAN_recv_tmr = millis;
-      break;
+  case MOTEC_ID + 0x3:
+    wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE / 2] * WHEELSPEED_FL_SCL;
+    wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE / 2] * WHEELSPEED_FR_SCL;
+    wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE / 2] * WHEELSPEED_RL_SCL;
+    wheel_rr_speed = lsbArray[WHEELSPEED_RR_BYTE / 2] * WHEELSPEED_RR_SCL;
 
-    case MOTEC_ID + 0x7:
-      shift_force_ecu = (uint16_t) ((msg.data[SHIFT_FORCE_BYTE] << 8) |
-          msg.data[SHIFT_FORCE_BYTE + 1]);
-      CAN_recv_tmr = millis;
-      break;
+    CAN_recv_tmr = millis;
+    break;
 
-    case PDM_ID + 0x1:
-      switch_bitmap = msg.data[PDM_SWITCH_BYTE];
-      kill_sw = switch_bitmap & KILL_PDM_SW_MASK;
-      CAN_recv_tmr = millis;
-      break;
+  case MOTEC_ID + 0x7:
+    shift_force_ecu = (uint16_t)((msg.data[SHIFT_FORCE_BYTE] << 8) |
+                                 msg.data[SHIFT_FORCE_BYTE + 1]);
+    CAN_recv_tmr = millis;
+    break;
 
-    case WHEEL_ID + 0x1:
-      button_bitmap = msg.data[0];
-      radio_button = button_bitmap & 0x01;
-      acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
-      auxiliary_button = ((uint8_t) (button_bitmap & 0x04) >> 2);
-      auto_upshift_switch = ((uint8_t)(button_bitmap &0x10) >> 4); 
-      night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
-      CAN_recv_tmr = millis;
-      break;
-      
-      case IMU_FIRST_ID: // IMU to ADL for Motec Traction control
-        lat_accel = ((double) ((msg.data[LATERAL_G_BYTE+1] << 8) | msg.data[LATERAL_G_BYTE])) * LATERAL_G_SCL + LATERAL_G_OFFSET;
-        conv_lat_accel = (int) abs(lat_accel*1000); // scalar multiple for high motec accuracy
-        uint16_t byte1 = (conv_lat_accel & 0xFF00) >> 8;
-        uint16_t byte2 = (conv_lat_accel & 0xFF) << 8;
-        conv_lat_accel = byte1 | byte2;
-        send_lat_accel();
+  case PDM_ID + 0x1:
+    switch_bitmap = msg.data[PDM_SWITCH_BYTE];
+    kill_sw = switch_bitmap & KILL_PDM_SW_MASK;
+    CAN_recv_tmr = millis;
+    break;
+
+  case WHEEL_ID + 0x1:
+    button_bitmap = msg.data[0];
+    radio_button = button_bitmap & 0x01;
+    acknowledge_button = (uint8_t)((button_bitmap & 0x02) >> 1);
+    auxiliary_button = ((uint8_t)(button_bitmap & 0x04) >> 2);
+    auto_upshift_switch = ((uint8_t)(button_bitmap & 0x10) >> 4);
+    night_day_switch = ((uint8_t)(button_bitmap & 0x80) >> 7);
+    CAN_recv_tmr = millis;
+    break;
+
+  case IMU_FIRST_ID: // IMU to ADL for Motec Traction control
+    lat_accel = ((double)((msg.data[LATERAL_G_BYTE + 1] << 8) |
+                          msg.data[LATERAL_G_BYTE])) *
+                    LATERAL_G_SCL +
+                LATERAL_G_OFFSET;
+    conv_lat_accel =
+        (int)abs(lat_accel * 1000); // scalar multiple for high motec accuracy
+    uint16_t byte1 = (conv_lat_accel & 0xFF00) >> 8;
+    uint16_t byte2 = (conv_lat_accel & 0xFF) << 8;
+    conv_lat_accel = byte1 | byte2;
+    send_lat_accel();
   }
 }
 
@@ -391,7 +442,7 @@ void process_CAN_msg(CAN_message msg) { // Add brake pressure #CHECK
 void send_diag_can(void) {
   if (millis - diag_send_tmr >= DIAG_MSG_SEND) {
     CAN_data data = {0};
-    data.halfword0 = (uint16_t) seconds;
+    data.halfword0 = (uint16_t)seconds;
     data.halfword1 = pcb_temp;
     data.halfword2 = junc_temp;
 
@@ -410,10 +461,7 @@ void send_diag_can(void) {
 void send_state_can(uint8_t override) {
   if ((millis - state_send_tmr >= STATE_MSG_SEND) || override) {
     CAN_data data = {0};
-    data.byte0 = 0x0 |
-      (SHIFT_NT_SW << 2) |
-      (SHIFT_DN_SW << 1) |
-      SHIFT_UP_SW;
+    data.byte0 = 0x0 | (SHIFT_NT_SW << 2) | (SHIFT_DN_SW << 1) | SHIFT_UP_SW;
     data.byte1 = queue_up;
     data.byte2 = queue_dn;
     data.byte3 = queue_nt;
@@ -426,33 +474,35 @@ void send_state_can(uint8_t override) {
 //=========================== LOGIC FUNCTIONS ==================================
 
 /**
-* void check_gcm_mode(void)
-* 
-* Check various CAN data to determine the correct GCM mode
-*/
+ * void check_gcm_mode(void)
+ *
+ * Check various CAN data to determine the correct GCM mode
+ */
 void check_gcm_mode(void) {
-  if (auto_upshift_switch) { // if priming button and dead-man switch are pressed
+  if (auto_upshift_switch) { // if priming button and dead-man switch are
+                             // pressed
 
     mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
 
-  } else if (night_day_switch == 0) { // if auto-upshifting is engaged and dead-man switch is not pressed
+  } else if (night_day_switch == 0) { // if auto-upshifting is engaged and
+                                      // dead-man switch is not pressed
 
     mode = NORMAL_MODE; // disengage auto-upshifting
-    queue_up = 0; // remove queued upshift
+    queue_up = 0;       // remove queued upshift
 
   } else if (mode == AUTO_UPSHIFT_MODE) {
 
-      /*
-    if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position did not cross minimum while in auto-upshifting mode
-      if (throttle_pos > 75) { // check if throttle position crossed minimum
-        throttle_pos_passed_min_auto = 1; // throttle position crossed minimum while in auto-upshifting mode
-      }
-    } else if (throttle_pos <= 75) { // check to see if throttle position has dropped below minimum while in auto-upshifting mode
-      mode = NORMAL_MODE; // disengage auto-upshifting
-      queue_up = 0; // remove queued upshift
+    /*
+  if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position
+  did not cross minimum while in auto-upshifting mode if (throttle_pos > 75) {
+  // check if throttle position crossed minimum throttle_pos_passed_min_auto =
+  1; // throttle position crossed minimum while in auto-upshifting mode
     }
-       */
-
+  } else if (throttle_pos <= 75) { // check to see if throttle position has
+  dropped below minimum while in auto-upshifting mode mode = NORMAL_MODE; //
+  disengage auto-upshifting queue_up = 0; // remove queued upshift
+  }
+     */
   }
 }
 
@@ -463,10 +513,10 @@ void check_gcm_mode(void) {
  *
  * Check to see whether an automatic upshift should take place,
  * and increment the queue if neccesary
-*/
+ */
 void process_auto_upshift(void) {
-  if (eng_rpm >= get_threshold_rpm(gear) && !is_in_launch() &&
-        queue_up == 0 && gear <= MAX_AUTO_GEAR) {
+  if (eng_rpm >= get_threshold_rpm(gear) && !is_in_launch() && queue_up == 0 &&
+      gear <= MAX_AUTO_GEAR) {
     queue_up = 1;
   }
 }
@@ -474,7 +524,8 @@ void process_auto_upshift(void) {
 /**
  * void process_upshift_press(void)
  *
- * After registering an upshift press, determine if we should increment the queue
+ * After registering an upshift press, determine if we should increment the
+ * queue
  */
 void process_upshift_press(void) {
   if (mode == AUTO_UPSHIFT_MODE) {
@@ -507,7 +558,7 @@ void process_upshift_press(void) {
     }
     lockout_tmr = millis;
     send_state_can(OVERRIDE); // Send new queue values on CAN
-  } else { // Pressed while not holding the neutral button
+  } else {                    // Pressed while not holding the neutral button
     if (gear == GEAR_NEUT) {
       queue_up = 1;
       queue_dn = queue_nt = 0;
@@ -533,7 +584,8 @@ void process_upshift_press(void) {
 /**
  * void process_downshift_press(void)
  *
- * After registering an downshift press, determine if we should increment the queue
+ * After registering an downshift press, determine if we should increment the
+ * queue
  */
 void process_downshift_press(void) {
   if (mode == AUTO_UPSHIFT_MODE) {
@@ -566,7 +618,7 @@ void process_downshift_press(void) {
     }
     lockout_tmr = millis;
     send_state_can(OVERRIDE); // Send new queue values on CAN
-  } else { // Pressed while not holding the neutral button
+  } else {                    // Pressed while not holding the neutral button
     if (queue_up > 0 || queue_nt > 0) {
       queue_dn = queue_up = queue_nt = 0;
       send_state_can(OVERRIDE); // Send new queue values on CAN
@@ -590,6 +642,7 @@ void process_downshift_press(void) {
  * @return 0 if restricted, 1 if allowable
  */
 uint8_t check_shift_conditions(uint8_t shift_enum) {
+    
   // Prevent shifting past 1st gear
   if (gear == 1 && shift_enum == SHIFT_ENUM_DN) {
     send_errno_CAN_msg(GCM_ID, ERR_GCM_SHIFTPAST);
@@ -601,6 +654,8 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
     send_errno_CAN_msg(GCM_ID, ERR_GCM_SHIFTPAST);
     return 0;
   }
+  
+  return 1;
 
   // Prevent shifting into neutral from anything other than 1st or 2nd
   if (shift_enum == SHIFT_ENUM_NT &&
@@ -625,8 +680,8 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
     }
 
     // Check for over/under rev
-    if (shift_enum != SHIFT_ENUM_NT && ENG_ON &&
-        gear != GEAR_NEUT && gear != GEAR_FAIL) {
+    if (0 && shift_enum != SHIFT_ENUM_NT && ENG_ON && gear != GEAR_NEUT &&
+        gear != GEAR_FAIL) {
       double output_speed = eng_rpm / gear_ratio[gear];
 
       if (shift_enum == SHIFT_ENUM_UP && gear != 6) {
@@ -649,7 +704,8 @@ uint8_t check_shift_conditions(uint8_t shift_enum) {
     return 0;
   }
 
-  // Only perform these checks if we aren't at competition and have good CAN data
+  // Only perform these checks if we aren't at competition and have good CAN
+  // data
   if (!COMP && !stale_CAN) {
     // Prevent shifting up past neutral on low voltage
     if (gear == 1 && shift_enum == SHIFT_ENUM_UP) {
@@ -714,14 +770,14 @@ void do_shift(uint8_t shift_enum) {
 
     if (!check_shift_conditions(shift_enum)) {
       switch (shift_enum) {
-        case SHIFT_ENUM_UP:
-          queue_up = 0;
-          retry_up = 0;
-          break;
-        case SHIFT_ENUM_DN:
-          queue_dn = 0;
-          retry_dn = 0;
-          break;
+      case SHIFT_ENUM_UP:
+        queue_up = 0;
+        retry_up = 0;
+        break;
+      case SHIFT_ENUM_DN:
+        queue_dn = 0;
+        retry_dn = 0;
+        break;
       }
       send_state_can(OVERRIDE); // Send new queue values on CAN
       return;
@@ -739,7 +795,9 @@ void do_shift(uint8_t shift_enum) {
     while (millis - act_tmr < PWR_CUT_WAIT) {
       main_loop_misc();
     }
-    send_power_cut(CUT_START);
+    if (SHIFT_UP)
+      send_power_cut(CUT_START);
+    send_ignition_cut();
 
     while (1) {
       sample_sensors(SHIFTING);
@@ -755,13 +813,14 @@ void do_shift(uint8_t shift_enum) {
         }
 
         send_power_cut(CUT_END);
+        send_ignition_cut();
 
         relax_wait();
 
         // Decrement queued shifts value
         if (SHIFT_UP) {
           queue_up--;
-        } else if (SHIFT_DN){
+        } else if (SHIFT_DN) {
           queue_dn--;
         }
         send_state_can(OVERRIDE); // Send new queue values on CAN
@@ -774,12 +833,13 @@ void do_shift(uint8_t shift_enum) {
         if (SHIFT_UP) {
           ACT_UP_LAT = ACT_OFF;
           retry_up++;
-        } else if (SHIFT_DN){
+        } else if (SHIFT_DN) {
           ACT_DN_LAT = ACT_OFF;
           retry_dn++;
         }
 
         send_power_cut(CUT_END);
+        send_ignition_cut();
 
         relax_wait();
 
@@ -895,14 +955,14 @@ void do_shift_gear_fail(uint8_t shift_enum) {
 
     if (!check_shift_conditions(shift_enum)) {
       switch (shift_enum) {
-        case SHIFT_ENUM_UP:
-          queue_up = 0;
-          retry_up = 0;
-          break;
-        case SHIFT_ENUM_DN:
-          queue_dn = 0;
-          retry_dn = 0;
-          break;
+      case SHIFT_ENUM_UP:
+        queue_up = 0;
+        retry_up = 0;
+        break;
+      case SHIFT_ENUM_DN:
+        queue_dn = 0;
+        retry_dn = 0;
+        break;
       }
       send_state_can(OVERRIDE); // Send new queue values on CAN
       return;
@@ -920,7 +980,9 @@ void do_shift_gear_fail(uint8_t shift_enum) {
     while (millis - act_tmr < PWR_CUT_WAIT) {
       main_loop_misc();
     }
-    send_power_cut(CUT_START);
+    if (SHIFT_UP)
+      send_power_cut(CUT_START);
+    send_ignition_cut();
 
     while (1) {
       if ((SHIFT_UP && millis - act_tmr >= UP_SHIFT_DUR) ||
@@ -929,19 +991,20 @@ void do_shift_gear_fail(uint8_t shift_enum) {
         if (SHIFT_UP) {
           ACT_UP_LAT = ACT_OFF;
           retry_up = 0;
-        } else if (SHIFT_DN){
+        } else if (SHIFT_DN) {
           ACT_DN_LAT = ACT_OFF;
           retry_dn = 0;
         }
 
-        send_power_cut(CUT_END);
+        // send_power_cut(CUT_END);
+        send_ignition_cut();
 
         relax_wait();
 
         // Decrement queued shifts value
         if (SHIFT_UP) {
           queue_up--;
-        } else if (SHIFT_DN){
+        } else if (SHIFT_DN) {
           queue_dn--;
         }
         send_state_can(OVERRIDE); // Send new queue values on CAN
@@ -1019,12 +1082,21 @@ void main_loop_misc(void) {
   sample_sensors(SHIFTING);
 
   // Send power cut message again if MoTeC hasn't received it
-  if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT)) {
-    send_power_cut(CUT_RESEND);
+  if ((shift_force_spoof != shift_force_ecu) &&
+      (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT)) {
+    // send_power_cut(CUT_RESEND);
   }
 
   send_diag_can();
   send_state_can(NO_OVERRIDE);
+  // send_power_cut(CUT_START);
+}
+
+void send_ignition_cut() {
+  CAN_data data = {0};
+  data.doubleword = ignition_cut ? 0b10 : 0b00;
+  CAN_send_message(GCM_BOSCH_ID, 8, data);
+  // pwr_cut_retry_tmr = millis;
 }
 
 /**
@@ -1035,10 +1107,8 @@ void main_loop_misc(void) {
  * input separately.
  */
 void debounce_switches(void) {
-  uint8_t switch_raw = 0x0 |
-    SHIFT_UP_RAW << 2 |
-    SHIFT_DN_RAW << 1 |
-    SHIFT_NT_RAW << 0;
+  uint8_t switch_raw =
+      0x0 | SHIFT_UP_RAW << 2 | SHIFT_DN_RAW << 1 | SHIFT_NT_RAW << 0;
 
   if (switch_raw != switch_prev) {
     switch_debounce_tmr = millis;
@@ -1058,45 +1128,52 @@ void debounce_switches(void) {
  * @param is_start Used to start a cut, end it, or resend the message
  */
 void send_power_cut(uint8_t is_start) {
-  if (is_start == CUT_START) {
+  if (is_start == CUT_START || is_start == CUT_RESEND) {
     shift_force_spoof = PWR_CUT_SPOOF;
   } else if (is_start == CUT_END) {
     shift_force_spoof = 0;
   }
 
-  CAN_data data = {0};
-  data.halfword0 = ADL_IDX_10_12;
-  data.halfword1 = shift_force_spoof;
-  CAN_send_message(ADL_ID, 4, data);
-  pwr_cut_retry_tmr = millis;
+  ignition_cut = is_start;
+  send_ignition_cut();
+  return;
+  /*CAN_data data = {0};
+  if(0 && is_start)
+    data.doubleword = (1 << 6);
+  else
+      data.doubleword = 0;
+  //data.halfword0 = ADL_IDX_10_12;
+  //data.halfword1 = shift_force_spoof;
+  CAN_send_message(GCM_BOSCH_ID, 8, data);
+  pwr_cut_retry_tmr = millis;*/
 }
 
 /**
-* uint16_t get_threshold_rpm(uint8_t gear)
-* 
-* Returns the optimal shift RPM for a given gear
-*/
+ * uint16_t get_threshold_rpm(uint8_t gear)
+ *
+ * Returns the optimal shift RPM for a given gear
+ */
 uint16_t get_threshold_rpm(uint8_t gear) {
-  if (gear == GEAR_NEUT || gear == GEAR_FAIL)
-  {
+  if (gear == GEAR_NEUT || gear == GEAR_FAIL) {
     return 20000; // If invalid gear, return threshold above redline
   }
   return shift_rpm[gear - 1];
 }
 
 /**
-* uint8_t is_in_launch(void)
-* 
-* returns 1 if the car is currently in a launch, 0 otherwise
-*/
+ * uint8_t is_in_launch(void)
+ *
+ * returns 1 if the car is currently in a launch, 0 otherwise
+ */
 uint8_t is_in_launch(void) {
- // double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
- // double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0; 
- 
-  return wheel_fl_speed < LAUNCH_FRONT_WS || wheel_fl_speed < (LAUNCH_WS_DIFF * wheel_rr_speed);
+  // double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
+  // double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
+
+  return wheel_fl_speed < LAUNCH_FRONT_WS ||
+         wheel_fl_speed < (LAUNCH_WS_DIFF * wheel_rr_speed);
 }
 
-void send_lat_accel(void){
+void send_lat_accel(void) {
   CAN_data data = {0};
   data.halfword0 = ADL_IDX_7_9;
   data.halfword1 = conv_lat_accel;
