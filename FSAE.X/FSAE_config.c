@@ -15,41 +15,62 @@
 
 // DEVCFG0
 #pragma config EJTAGBEN = 0b1  // EJTAG Boot Enable (Normal EJTAG functionality)
-#pragma config POSCBOOST = 0b0 // Primary Oscillator Boost Kick Start Enable (Normal start of the oscillator)
-#pragma config POSCGAIN = 0b00 // Primary Oscillator Gain Control (1x gain setting)
-#pragma config SOSCBOOST = 0b0 // Secondary Oscillator Boost Kick Start Enable (Normal start of the oscillator)
-#pragma config SOSCGAIN = 0b00 // Secondary Oscillator Gain Control (1x gain setting)
-#pragma config SMCLR = 0b1     // Soft Master Clear Enable (MCLR pin generates a normal system Reset)
-#pragma config DBGPER = 0b111  // Debug Mode CPU Access Permission (Allow CPU access to Permission Group 0,1,2 permission regions)
-#pragma config FSLEEP = 0b1    // Flash Sleep Mode (Flash is powered down when the device is in Sleep mode)
-#pragma config FECCCON = 0b11  // Dynamic Flash ECC Configuration (ECC and Dynamic ECC are disabled (ECCCON bits are writable))
-#pragma config BOOTISA = 0b1   // Boot ISA Selection (Boot code and Exception code is MIPS32)
-#pragma config TRCEN = 0b0     // Trace Enable (Trace features in the CPU are disabled)
-#pragma config ICESEL = 0b11   // ICE/ICD Comm Channel Select (Communicate on PGEC1/PGED1)
-#pragma config JTAGEN = 0b0    // JTAG Enable (JTAG is disabled)
-#pragma config DEBUG = 0b00    // Background Debugger Enable (Debugger is enabled)
+#pragma config POSCBOOST = 0b0 // Primary Oscillator Boost Kick Start Enable
+                               // (Normal start of the oscillator)
+#pragma config POSCGAIN =                                                      \
+    0b00 // Primary Oscillator Gain Control (1x gain setting)
+#pragma config SOSCBOOST = 0b0 // Secondary Oscillator Boost Kick Start Enable
+                               // (Normal start of the oscillator)
+#pragma config SOSCGAIN =                                                      \
+    0b00 // Secondary Oscillator Gain Control (1x gain setting)
+#pragma config SMCLR =                                                         \
+    0b1 // Soft Master Clear Enable (MCLR pin generates a normal system Reset)
+#pragma config DBGPER =                                                        \
+    0b111 // Debug Mode CPU Access Permission (Allow CPU access to Permission
+          // Group 0,1,2 permission regions)
+#pragma config FSLEEP = 0b1 // Flash Sleep Mode (Flash is powered down when the
+                            // device is in Sleep mode)
+#pragma config FECCCON =                                                       \
+    0b11 // Dynamic Flash ECC Configuration (ECC and Dynamic ECC are disabled
+         // (ECCCON bits are writable))
+#pragma config BOOTISA =                                                       \
+    0b1 // Boot ISA Selection (Boot code and Exception code is MIPS32)
+#pragma config TRCEN =                                                         \
+    0b0 // Trace Enable (Trace features in the CPU are disabled)
+#pragma config ICESEL =                                                        \
+    0b11 // ICE/ICD Comm Channel Select (Communicate on PGEC1/PGED1)
+#pragma config JTAGEN = 0b0 // JTAG Enable (JTAG is disabled)
+#pragma config DEBUG = 0b00 // Background Debugger Enable (Debugger is enabled)
 
 // DEVCFG1
-#pragma config FDMTEN = 0b0     // Deadman Timer Enable (Deadman Timer is disbled)
+#pragma config FDMTEN = 0b0 // Deadman Timer Enable (Deadman Timer is disbled)
 #pragma config DMTCNT = 0b10111 // Deadman Timer Count Select Bits (2^31)
-#pragma config FWDTWINSZ = 0b11 // Watchdog Timer Window Size (Window size is 25%)
-#pragma config FWDTEN = 0b0     // Watchdog Timer Enable (WDT Disabled)
-#pragma config WINDIS = 0b1     // Watchdog Timer Window Mode (Watchdog Timer is in non-Window mode)
-#pragma config WDTSPGM = 0b1    // Watchdog Timer Stop During Flash Programming (WDT stops during Flash programming)
-#pragma config WDTPS = 0b10100  // Watchdog Timer Postscaler (1:1048576)
-#pragma config FCKSM = 0b11     // Clock Switching and Monitor Selection (Clock Switch Enabled, FSCM Enabled)
-#pragma config OSCIOFNC = 0b1   // CLKO Output Signal Active on the OSCO Pin (Disabled)
+#pragma config FWDTWINSZ =                                                     \
+    0b11                    // Watchdog Timer Window Size (Window size is 25%)
+#pragma config FWDTEN = 0b0 // Watchdog Timer Enable (WDT Disabled)
+#pragma config WINDIS =                                                        \
+    0b1 // Watchdog Timer Window Mode (Watchdog Timer is in non-Window mode)
+#pragma config WDTSPGM = 0b1   // Watchdog Timer Stop During Flash Programming
+                               // (WDT stops during Flash programming)
+#pragma config WDTPS = 0b10100 // Watchdog Timer Postscaler (1:1048576)
+#pragma config FCKSM = 0b11    // Clock Switching and Monitor Selection (Clock
+                               // Switch Enabled, FSCM Enabled)
+#pragma config OSCIOFNC =                                                      \
+    0b1 // CLKO Output Signal Active on the OSCO Pin (Disabled)
 
 #if INTERNAL_CLK
-#pragma config POSCMOD = 0b11   // Primary Oscillator Configuration (POSC disabled)
+#pragma config POSCMOD =                                                       \
+    0b11 // Primary Oscillator Configuration (POSC disabled)
 #else
-#pragma config POSCMOD = 0b00   // Primary Oscillator Configuration (EC mode selected)
+#pragma config POSCMOD =                                                       \
+    0b00 // Primary Oscillator Configuration (EC mode selected)
 #endif
 
-#pragma config IESO = 0b0       // Internal/External Switch Over (Disabled)
-#pragma config FSOSCEN = 0b0    // Secondary Oscillator Enable (Disable SOSC)
-#pragma config DMTINTV = 0b111  // DMT Count Window Interval (Window/Interval value is 127/128 counter value)
-#pragma config FNOSC = 0b001    // Oscillator Selection Bits (SPLL)
+#pragma config IESO = 0b0      // Internal/External Switch Over (Disabled)
+#pragma config FSOSCEN = 0b0   // Secondary Oscillator Enable (Disable SOSC)
+#pragma config DMTINTV = 0b111 // DMT Count Window Interval (Window/Interval
+                               // value is 127/128 counter value)
+#pragma config FNOSC = 0b001   // Oscillator Selection Bits (SPLL)
 
 /**
  * Internal Clock:
@@ -62,25 +83,35 @@
  */
 
 // DEVCFG2
-#pragma config UPLLFSEL = 0b1      // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
-#pragma config FPLLODIV = 0b001    // Default System PLL Output Divisor (PLL output divided by 2)
+#pragma config UPLLFSEL =                                                      \
+    0b1 // USB PLL Input Frequency Selection (USB PLL input is 24 MHz)
+#pragma config FPLLODIV =                                                      \
+    0b001 // Default System PLL Output Divisor (PLL output divided by 2)
 #pragma config FPLLMULT = 0b110001 // System PLL Multiplier (PLL Multiply by 50)
 
 #if INTERNAL_CLK
-#pragma config FPLLICLK = 0b1      // System PLL Input Clock Selection (FRC is input to the System PLL)
-#pragma config FPLLRNG = 0b001     // System PLL Divided Input Clock Frequency Range (5-10Mhz)
-#pragma config FPLLIDIV = 0b000    // System PLL Input Divider (Divide by 1)
+#pragma config FPLLICLK =                                                      \
+    0b1 // System PLL Input Clock Selection (FRC is input to the System PLL)
+#pragma config FPLLRNG =                                                       \
+    0b001 // System PLL Divided Input Clock Frequency Range (5-10Mhz)
+#pragma config FPLLIDIV = 0b000 // System PLL Input Divider (Divide by 1)
 #else
-#pragma config FPLLICLK = 0b0      // System PLL Input Clock Selection (POSC is input to the System PLL)
-#pragma config FPLLRNG = 0b010     // System PLL Divided Input Clock Frequency Range (8-16Mhz)
-#pragma config FPLLIDIV = 0b010    // System PLL Input Divider (Divide by 3)
+#pragma config FPLLICLK =                                                      \
+    0b0 // System PLL Input Clock Selection (POSC is input to the System PLL)
+#pragma config FPLLRNG =                                                       \
+    0b010 // System PLL Divided Input Clock Frequency Range (8-16Mhz)
+#pragma config FPLLIDIV = 0b010 // System PLL Input Divider (Divide by 3)
 #endif
 
 // DEVCFG3
-#pragma config FUSBIDIO = 0b0  // USB USBID Selection (Controlled by the port function)
-#pragma config IOL1WAY = 0b0   // Peripheral Pin Select Configuration (Allow multiple reconfigurations)
-#pragma config PMDL1WAY = 0b0  // Peripheral Module Disable Configuration (Allow multiple reconfiguration)
-#pragma config PGL1WAY = 0b0   // Permission Group Lock One Way Configuration (Allow multiple reconfiguration)
+#pragma config FUSBIDIO =                                                      \
+    0b0 // USB USBID Selection (Controlled by the port function)
+#pragma config IOL1WAY = 0b0   // Peripheral Pin Select Configuration (Allow
+                               // multiple reconfigurations)
+#pragma config PMDL1WAY = 0b0  // Peripheral Module Disable Configuration (Allow
+                               // multiple reconfiguration)
+#pragma config PGL1WAY = 0b0   // Permission Group Lock One Way Configuration
+                               // (Allow multiple reconfiguration)
 #pragma config FETHIO = 0b1    // Ethernet I/O Pin Select (Default Ethernet I/O)
 #pragma config FMIIEN = 0b1    // Ethernet RMII/MII Enable (MII Enabled)
 #pragma config USERID = 0xBEEF // 16-bit User Defined Value (0xBEEF)
@@ -106,38 +137,66 @@ void init_general(void) {
   unlock_config();
 
   // PRECON
-  PRECONbits.PFMSECEN = 0;  // Flash SEC Interrupt Enable (Do not generate an interrupt when the PFMSEC bit is set)
-  PRECONbits.PREFEN = 0b11; // Predictive Prefetch Enable (Enable predictive prefetch for any address)
-  PRECONbits.PFMWS = 0b010; // PFM Access Time Defined in Terms of SYSCLK Wait States (Two wait states)
+  PRECONbits.PFMSECEN = 0;  // Flash SEC Interrupt Enable (Do not generate an
+                            // interrupt when the PFMSEC bit is set)
+  PRECONbits.PREFEN = 0b11; // Predictive Prefetch Enable (Enable predictive
+                            // prefetch for any address)
+  PRECONbits.PFMWS = 0b010; // PFM Access Time Defined in Terms of SYSCLK Wait
+                            // States (Two wait states)
 
   // CFGCON
-  CFGCONbits.DMAPRI = 0;    // DMA Read and DMA Write Arbitration Priority to SRAM (DMA uses Least Recently Serviced Arbitration)
-  CFGCONbits.CPUPRI = 0;    // CPU Arbitration Priority to SRAM When Servicing an Interrupt (CPU uses Least Recently Serviced Arbitration)
-  CFGCONbits.ICACLK = 1;    // Input Capture Alternate Clock Selection (All Input Capture modules use an alternative timer as their timebase clock)
-  CFGCONbits.OCACLK = 0;    // Output Compare Alternate Clock Selection (All Output Compare modules use Timer2/3 as their timebase clock)
-  CFGCONbits.IOLOCK = 1;    // Peripheral Pin Select Lock (Peripheral Pin Select is locked. Writes to PPS registers are not allowed)
-  CFGCONbits.PMDLOCK = 1;   // Peripheral Module Disable (Peripheral module is locked. Writes to PMD registers are not allowed)
-  CFGCONbits.PGLOCK = 1;    // Permission Group Lock (Permission Group registers are locked. Writes to PG registers are not allowed)
-  CFGCONbits.USBSSEN = 1;   // USB Suspend Sleep Enable (USB PHY clock is shut down when Sleep mode is active)
-  CFGCONbits.IOANCPN = 0;   // I/O Analog Charge Pump Enable (Charge pump disabled)
-  CFGCONbits.ECCCON = 0b11; // Flash ECC Configuration (ECC and dynamic ECC are disabled (ECCCON<1:0> bits are writable))
+  CFGCONbits.DMAPRI = 0; // DMA Read and DMA Write Arbitration Priority to SRAM
+                         // (DMA uses Least Recently Serviced Arbitration)
+  CFGCONbits.CPUPRI =
+      0; // CPU Arbitration Priority to SRAM When Servicing an Interrupt (CPU
+         // uses Least Recently Serviced Arbitration)
+  CFGCONbits.ICACLK =
+      1; // Input Capture Alternate Clock Selection (All Input Capture modules
+         // use an alternative timer as their timebase clock)
+  CFGCONbits.OCACLK =
+      0; // Output Compare Alternate Clock Selection (All Output Compare modules
+         // use Timer2/3 as their timebase clock)
+  CFGCONbits.IOLOCK = 1; // Peripheral Pin Select Lock (Peripheral Pin Select is
+                         // locked. Writes to PPS registers are not allowed)
+  CFGCONbits.PMDLOCK = 1; // Peripheral Module Disable (Peripheral module is
+                          // locked. Writes to PMD registers are not allowed)
+  CFGCONbits.PGLOCK = 1;  // Permission Group Lock (Permission Group registers
+                          // are locked. Writes to PG registers are not allowed)
+  CFGCONbits.USBSSEN = 1; // USB Suspend Sleep Enable (USB PHY clock is shut
+                          // down when Sleep mode is active)
+  CFGCONbits.IOANCPN =
+      0; // I/O Analog Charge Pump Enable (Charge pump disabled)
+  CFGCONbits.ECCCON = 0b11; // Flash ECC Configuration (ECC and dynamic ECC are
+                            // disabled (ECCCON<1:0> bits are writable))
   CFGCONbits.JTAGEN = 0;    // JTAG Port Enable (Disable the JTAG port)
-  CFGCONbits.TROEN = 0;     // Trace Output Enable (Disable trace outputs and stop trace clock)
-  CFGCONbits.TDOEN = 1;     // TDO Enable for 2-Wire JTAG (2-wire JTAG protocol uses TDO)
+  CFGCONbits.TROEN =
+      0; // Trace Output Enable (Disable trace outputs and stop trace clock)
+  CFGCONbits.TDOEN =
+      1; // TDO Enable for 2-Wire JTAG (2-wire JTAG protocol uses TDO)
 
   // CFGPG
-  CFGPGbits.CRYPTPG = 0; // Crypto Engine Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.FCPG = 0;    // Flash Control Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.SQI1PG = 0;  // SQI Module Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.ETHPG = 0;   // Ethernet Module Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.CAN2PG = 0;  // CAN2 Module Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.CAN1PG = 0;  // CAN1 Module Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.USBPG = 0;   // USB Module Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.DMAPG = 0;   // DMA Module Permission Group (Initiator is assigned to Permission Group 0)
-  CFGPGbits.CPUPG = 0;   // CPU Permission Group (Initiator is assigned to Permission Group 0)
+  CFGPGbits.CRYPTPG = 0; // Crypto Engine Permission Group (Initiator is
+                         // assigned to Permission Group 0)
+  CFGPGbits.FCPG = 0;   // Flash Control Permission Group (Initiator is assigned
+                        // to Permission Group 0)
+  CFGPGbits.SQI1PG = 0; // SQI Module Permission Group (Initiator is assigned to
+                        // Permission Group 0)
+  CFGPGbits.ETHPG = 0;  // Ethernet Module Permission Group (Initiator is
+                        // assigned to Permission Group 0)
+  CFGPGbits.CAN2PG = 0; // CAN2 Module Permission Group (Initiator is assigned
+                        // to Permission Group 0)
+  CFGPGbits.CAN1PG = 0; // CAN1 Module Permission Group (Initiator is assigned
+                        // to Permission Group 0)
+  CFGPGbits.USBPG = 0;  // USB Module Permission Group (Initiator is assigned to
+                        // Permission Group 0)
+  CFGPGbits.DMAPG = 0;  // DMA Module Permission Group (Initiator is assigned to
+                        // Permission Group 0)
+  CFGPGbits.CPUPG =
+      0; // CPU Permission Group (Initiator is assigned to Permission Group 0)
 
   // INTCON
-  INTCONbits.MVEC = 1; // Multi Vector Configuration Bit (Configured for multi-vectored mode)
+  INTCONbits.MVEC =
+      1; // Multi Vector Configuration Bit (Configured for multi-vectored mode)
 
   // PRISS
   PRISSbits.PRI7SS = 7; // IPL 7 Shadow Set (Shadow Set 7)
@@ -147,7 +206,8 @@ void init_general(void) {
   PRISSbits.PRI3SS = 3; // IPL 3 Shadow Set (Shadow Set 3)
   PRISSbits.PRI2SS = 2; // IPL 2 Shadow Set (Shadow Set 2)
   PRISSbits.PRI1SS = 1; // IPL 1 Shadow Set (Shadow Set 1)
-  PRISSbits.SS0 = 0;    // Single Vector Shadow Set (Not presented with a shadow set)
+  PRISSbits.SS0 =
+      0; // Single Vector Shadow Set (Not presented with a shadow set)
 
   lock_config();
 }
@@ -162,8 +222,8 @@ void init_peripheral_modules(void) {
    */
 
   // ADC
-  //TODO: ADC ON bit
-  //PMD1bits.ADCMD = 1;
+  // TODO: ADC ON bit
+  // PMD1bits.ADCMD = 1;
 
   // Comparator Voltage Reference
   CVRCONbits.ON = 0;
@@ -250,12 +310,12 @@ void init_peripheral_modules(void) {
   PMD3bits.OC9MD = 1;
 
   // Timer1
-  //T1CONbits.ON = 0;
-  //PMD4bits.T1MD = 1;
+  // T1CONbits.ON = 0;
+  // PMD4bits.T1MD = 1;
 
   // Timer2
-  //T2CONbits.ON = 0;
-  //PMD4bits.T2MD = 1;
+  // T2CONbits.ON = 0;
+  // PMD4bits.T2MD = 1;
 
   // Timer3
   T3CONbits.ON = 0;
@@ -310,8 +370,8 @@ void init_peripheral_modules(void) {
   PMD5bits.U6MD = 1;
 
   // SPI1
-  //SPI1CONbits.ON = 0;
-  //PMD5bits.SPI1MD = 1;
+  // SPI1CONbits.ON = 0;
+  // PMD5bits.SPI1MD = 1;
 
   // SPI2
   SPI2CONbits.ON = 0;
@@ -334,7 +394,7 @@ void init_peripheral_modules(void) {
   SPI6CONbits.ON = 0;
   PMD5bits.SPI6MD = 1;
 #endif
-  
+
   // I2C1
   I2C1CONbits.ON = 0;
   PMD5bits.I2C1MD = 1;
@@ -352,12 +412,12 @@ void init_peripheral_modules(void) {
   PMD5bits.I2C5MD = 1;
 
   // USB
-  //TODO: USB ON bit
-  //PMD5bits.USBMD = 1;
+  // TODO: USB ON bit
+  // PMD5bits.USBMD = 1;
 
   // CAN 1
-  //C1CONbits.ON = 0;
-  //PMD5bits.CAN1MD = 1;
+  // C1CONbits.ON = 0;
+  // PMD5bits.CAN1MD = 1;
 
   // CAN 2
   C2CONbits.ON = 0;
@@ -373,20 +433,20 @@ void init_peripheral_modules(void) {
    */
 
   // Reference Clock Output 1
-  //REFO1CONbits.ON = 0;
-  //PMD6bits.REFO1MD = 1;
+  // REFO1CONbits.ON = 0;
+  // PMD6bits.REFO1MD = 1;
 
   // Reference Clock Output 2
-  //REFO2CONbits.ON = 0;
-  //PMD6bits.REFO2MD = 1;
+  // REFO2CONbits.ON = 0;
+  // PMD6bits.REFO2MD = 1;
 
   // Reference Clock Output 3
-  //REFO3CONbits.ON = 0;
-  //PMD6bits.REFO3MD = 1;
+  // REFO3CONbits.ON = 0;
+  // PMD6bits.REFO3MD = 1;
 
   // Reference Clock Output 4
-  //REFO4CONbits.ON = 0;
-  //PMD6bits.REFO4MD = 1;
+  // REFO4CONbits.ON = 0;
+  // PMD6bits.REFO4MD = 1;
 
   // PMP
   PMCONbits.ON = 0;
@@ -613,49 +673,75 @@ void init_oscillator(uint8_t whl_refoclk4) {
   unlock_config();
 
   // OSCCON
-  OSCCONbits.FRCDIV = 0b000; // Internal Fast RC (FRC) Oscillator Clock Divider (FRC divided by 1)
+  OSCCONbits.FRCDIV = 0b000; // Internal Fast RC (FRC) Oscillator Clock Divider
+                             // (FRC divided by 1)
   OSCCONbits.DRMEN = 0;      // Dream Mode Enable (Dream mode is disabled)
-  OSCCONbits.SLP2SPD = 0;    // Sleep 2-speed Startup Control (Use the selected clock directly)
-  OSCCONbits.CLKLOCK = 0;    // Clock Selection Lock Enable (Clock and PLL selections are not locked and may be modified)
-  OSCCONbits.SLPEN = 0;      // Sleep Mode Enable (Device will enter Idle mode when a WAIT instruction is executed)
-  OSCCONbits.SOSCEN = 0;     // Secondary Oscillator (SOSC) Enable (Disable Secondary Oscillator)
+  OSCCONbits.SLP2SPD =
+      0; // Sleep 2-speed Startup Control (Use the selected clock directly)
+  OSCCONbits.CLKLOCK = 0; // Clock Selection Lock Enable (Clock and PLL
+                          // selections are not locked and may be modified)
+  OSCCONbits.SLPEN = 0; // Sleep Mode Enable (Device will enter Idle mode when a
+                        // WAIT instruction is executed)
+  OSCCONbits.SOSCEN =
+      0; // Secondary Oscillator (SOSC) Enable (Disable Secondary Oscillator)
 
   // OSCTUN
-  OSCTUNbits.TUN = 0b00000; // FRC Oscillator Tuning (Center frequency. Oscillator runs at calibrated frequency (8 MHz))
+  OSCTUNbits.TUN = 0b00000; // FRC Oscillator Tuning (Center frequency.
+                            // Oscillator runs at calibrated frequency (8 MHz))
 
   // PB1DIV
-  while(!PB1DIVbits.PBDIVRDY);
-  PB1DIVbits.PBDIV = 0b0000001; // Peripheral Bus 1 Clock Divisor Control (PBCLK1 is SYSCLK divided by 2)
+  while (!PB1DIVbits.PBDIVRDY)
+    ;
+  PB1DIVbits.PBDIV = 0b0000001; // Peripheral Bus 1 Clock Divisor Control
+                                // (PBCLK1 is SYSCLK divided by 2)
 
   // PB2DIV
-  PB2DIVbits.ON = 1;            // Peripheral Bus 2 Output Clock Enable (Output clock is enabled)
-  while(!PB2DIVbits.PBDIVRDY);
-  PB2DIVbits.PBDIV = 0b0000001; // Peripheral Bus 2 Clock Divisor Control (PBCLK2 is SYSCLK divided by 2)
+  PB2DIVbits.ON =
+      1; // Peripheral Bus 2 Output Clock Enable (Output clock is enabled)
+  while (!PB2DIVbits.PBDIVRDY)
+    ;
+  PB2DIVbits.PBDIV = 0b0000001; // Peripheral Bus 2 Clock Divisor Control
+                                // (PBCLK2 is SYSCLK divided by 2)
 
   // PB3DIV
-  PB3DIVbits.ON = 1;            // Peripheral Bus 3 Output Clock Enable (Output clock is enabled)
-  while(!PB3DIVbits.PBDIVRDY);
-  PB3DIVbits.PBDIV = 0b0000011; // Peripheral Bus 3 Clock Divisor Control (PBCLK3 is SYSCLK divided by 4)
+  PB3DIVbits.ON =
+      1; // Peripheral Bus 3 Output Clock Enable (Output clock is enabled)
+  while (!PB3DIVbits.PBDIVRDY)
+    ;
+  PB3DIVbits.PBDIV = 0b0000011; // Peripheral Bus 3 Clock Divisor Control
+                                // (PBCLK3 is SYSCLK divided by 4)
 
   // PB4DIV
-  PB4DIVbits.ON = 1;            // Peripheral Bus 4 Output Clock Enable (Output clock is enabled)
-  while(!PB4DIVbits.PBDIVRDY);
-  PB4DIVbits.PBDIV = 0b0000001; // Peripheral Bus 4 Clock Divisor Control (PBCLK4 is SYSCLK divided by 2)
+  PB4DIVbits.ON =
+      1; // Peripheral Bus 4 Output Clock Enable (Output clock is enabled)
+  while (!PB4DIVbits.PBDIVRDY)
+    ;
+  PB4DIVbits.PBDIV = 0b0000001; // Peripheral Bus 4 Clock Divisor Control
+                                // (PBCLK4 is SYSCLK divided by 2)
 
   // PB5DIV
-  PB5DIVbits.ON = 1;            // Peripheral Bus 5 Output Clock Enable (Output clock is enabled)
-  while(!PB5DIVbits.PBDIVRDY);
-  PB5DIVbits.PBDIV = 0b0000001; // Peripheral Bus 5 Clock Divisor Control (PBCLK5 is SYSCLK divided by 2)
+  PB5DIVbits.ON =
+      1; // Peripheral Bus 5 Output Clock Enable (Output clock is enabled)
+  while (!PB5DIVbits.PBDIVRDY)
+    ;
+  PB5DIVbits.PBDIV = 0b0000001; // Peripheral Bus 5 Clock Divisor Control
+                                // (PBCLK5 is SYSCLK divided by 2)
 
   // PB7DIV
-  PB7DIVbits.ON = 1;            // Peripheral Bus 7 Output Clock Enable (Output clock is enabled)
-  while(!PB7DIVbits.PBDIVRDY);
-  PB7DIVbits.PBDIV = 0b0000000; // Peripheral Bus 7 Clock Divisor Control (PBCLK7 is SYSCLK divided by 1)
+  PB7DIVbits.ON =
+      1; // Peripheral Bus 7 Output Clock Enable (Output clock is enabled)
+  while (!PB7DIVbits.PBDIVRDY)
+    ;
+  PB7DIVbits.PBDIV = 0b0000000; // Peripheral Bus 7 Clock Divisor Control
+                                // (PBCLK7 is SYSCLK divided by 1)
 
   // PB8DIV
-  PB8DIVbits.ON = 1;            // Peripheral Bus 8 Output Clock Enable (Output clock is enabled)
-  while(!PB8DIVbits.PBDIVRDY);
-  PB8DIVbits.PBDIV = 0b0000001; // Peripheral Bus 8 Clock Divisor Control (PBCLK8 is SYSCLK divided by 2)
+  PB8DIVbits.ON =
+      1; // Peripheral Bus 8 Output Clock Enable (Output clock is enabled)
+  while (!PB8DIVbits.PBDIVRDY)
+    ;
+  PB8DIVbits.PBDIV = 0b0000001; // Peripheral Bus 8 Clock Divisor Control
+                                // (PBCLK8 is SYSCLK divided by 2)
 
 #if REFCLKO
   /**
@@ -672,39 +758,53 @@ void init_oscillator(uint8_t whl_refoclk4) {
   CFGCONbits.IOLOCK = 1;
 
   // REFO1CON
-  REFO1CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
-  REFO1CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
+  REFO1CONbits.ACTIVE = 0; // Reference Clock Request Status (Reference clock
+                           // request is not active)
+  REFO1CONbits.ON = 0; // Output Enable (Reference Oscillator Module disabled)
 
-  REFO1CONbits.ROSEL = 0b0001;            // Reference Clock Source Select (PBCLK1)
-  REFO1CONbits.SIDL = 1;                  // Peripheral Stop in Idle Mode (Discontinue module operation when device enters Idle mode)
-  REFO1CONbits.OE = 1;                    // Reference Clock Output Enable (Reference clock is driven out on REFCLKO1 pin)
+  REFO1CONbits.ROSEL = 0b0001; // Reference Clock Source Select (PBCLK1)
+  REFO1CONbits.SIDL = 1; // Peripheral Stop in Idle Mode (Discontinue module
+                         // operation when device enters Idle mode)
+  REFO1CONbits.OE = 1;   // Reference Clock Output Enable (Reference clock is
+                         // driven out on REFCLKO1 pin)
 
-  REFO1CONbits.DIVSWEN = 1;               // Divider Switch Enable (Divider switch is in progress)
-  REFO1CONbits.RODIV = 0b000000000000010; // Reference Clock Divider (Divide by 2)
-  REFO1CONbits.DIVSWEN = 0;               // Divider Switch Enable (Divider switch is complete)
+  REFO1CONbits.DIVSWEN =
+      1; // Divider Switch Enable (Divider switch is in progress)
+  REFO1CONbits.RODIV =
+      0b000000000000010; // Reference Clock Divider (Divide by 2)
+  REFO1CONbits.DIVSWEN =
+      0; // Divider Switch Enable (Divider switch is complete)
 
   // REFO1TRIM
-  REFO1TRIMbits.ROTRIM = 0b100000000;     // Reference Oscillator Trim (256/512 divisor added to RODIV value)
+  REFO1TRIMbits.ROTRIM = 0b100000000; // Reference Oscillator Trim (256/512
+                                      // divisor added to RODIV value)
 
   // Enable REFCLKO1
-  REFO1CONbits.ACTIVE = 1;                // Reference Clock Request Status (Reference clock request is active)
-  REFO1CONbits.ON = 1;                    // Output Enable (Reference Oscillator Module enabled)
+  REFO1CONbits.ACTIVE =
+      1; // Reference Clock Request Status (Reference clock request is active)
+  REFO1CONbits.ON = 1; // Output Enable (Reference Oscillator Module enabled)
 #else
   // REF01CON
-  REFO1CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
-  REFO1CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-  REFO1CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO2 pin)
+  REFO1CONbits.ACTIVE = 0; // Reference Clock Request Status (Reference clock
+                           // request is not active)
+  REFO1CONbits.ON = 0; // Output Enable (Reference Oscillator Module disabled)
+  REFO1CONbits.OE = 0; // Reference Clock Output Enable (Reference clock is not
+                       // driven out on REFCLKO2 pin)
 #endif
 
   // REF02CON
-  REFO2CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
-  REFO2CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-  REFO2CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO2 pin)
+  REFO2CONbits.ACTIVE = 0; // Reference Clock Request Status (Reference clock
+                           // request is not active)
+  REFO2CONbits.ON = 0; // Output Enable (Reference Oscillator Module disabled)
+  REFO2CONbits.OE = 0; // Reference Clock Output Enable (Reference clock is not
+                       // driven out on REFCLKO2 pin)
 
   // REF03CON
-  REFO3CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
-  REFO3CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-  REFO3CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO3 pin)
+  REFO3CONbits.ACTIVE = 0; // Reference Clock Request Status (Reference clock
+                           // request is not active)
+  REFO3CONbits.ON = 0; // Output Enable (Reference Oscillator Module disabled)
+  REFO3CONbits.OE = 0; // Reference Clock Output Enable (Reference clock is not
+                       // driven out on REFCLKO3 pin)
 
   if (whl_refoclk4) {
     /**
@@ -719,28 +819,38 @@ void init_oscillator(uint8_t whl_refoclk4) {
     CFGCONbits.IOLOCK = 1;
 
     // REFO4CON
-    REFO4CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
-    REFO4CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
+    REFO4CONbits.ACTIVE = 0; // Reference Clock Request Status (Reference clock
+                             // request is not active)
+    REFO4CONbits.ON = 0; // Output Enable (Reference Oscillator Module disabled)
 
-    REFO4CONbits.ROSEL = 0b0001;            // Reference Clock Source Select (PBCLK1)
-    REFO4CONbits.SIDL = 1;                  // Peripheral Stop in Idle Mode (Discontinue module operation when device enters Idle mode)
-    REFO4CONbits.OE = 1;                    // Reference Clock Output Enable (Reference clock is driven out on REFCLKO1 pin)
+    REFO4CONbits.ROSEL = 0b0001; // Reference Clock Source Select (PBCLK1)
+    REFO4CONbits.SIDL = 1; // Peripheral Stop in Idle Mode (Discontinue module
+                           // operation when device enters Idle mode)
+    REFO4CONbits.OE = 1;   // Reference Clock Output Enable (Reference clock is
+                           // driven out on REFCLKO1 pin)
 
-    REFO4CONbits.DIVSWEN = 1;               // Divider Switch Enable (Divider switch is in progress)
-    REFO4CONbits.RODIV = 0b000000000000101; // Reference Clock Divider (Divide by 5)
-    REFO4CONbits.DIVSWEN = 0;               // Divider Switch Enable (Divider switch is complete)
+    REFO4CONbits.DIVSWEN =
+        1; // Divider Switch Enable (Divider switch is in progress)
+    REFO4CONbits.RODIV =
+        0b000000000000101; // Reference Clock Divider (Divide by 5)
+    REFO4CONbits.DIVSWEN =
+        0; // Divider Switch Enable (Divider switch is complete)
 
     // REFO4TRIM
-    REFO4TRIMbits.ROTRIM = 0b000000000;     // Reference Oscillator Trim (0/512 divisor added to RODIV value)
+    REFO4TRIMbits.ROTRIM = 0b000000000; // Reference Oscillator Trim (0/512
+                                        // divisor added to RODIV value)
 
     // Enable REFCLKO4
-    REFO4CONbits.ACTIVE = 1;                // Reference Clock Request Status (Reference clock request is active)
-    REFO4CONbits.ON = 1;                    // Output Enable (Reference Oscillator Module enabled)
+    REFO4CONbits.ACTIVE =
+        1; // Reference Clock Request Status (Reference clock request is active)
+    REFO4CONbits.ON = 1; // Output Enable (Reference Oscillator Module enabled)
   } else {
     // REF04CON
-    REFO4CONbits.ACTIVE = 0;                // Reference Clock Request Status (Reference clock request is not active)
-    REFO4CONbits.ON = 0;                    // Output Enable (Reference Oscillator Module disabled)
-    REFO4CONbits.OE = 0;                    // Reference Clock Output Enable (Reference clock is not driven out on REFCLKO4 pin)
+    REFO4CONbits.ACTIVE = 0; // Reference Clock Request Status (Reference clock
+                             // request is not active)
+    REFO4CONbits.ON = 0; // Output Enable (Reference Oscillator Module disabled)
+    REFO4CONbits.OE = 0; // Reference Clock Output Enable (Reference clock is
+                         // not driven out on REFCLKO4 pin)
   }
 
   lock_config();
@@ -756,10 +866,13 @@ void init_timer2(void) {
   T2CONbits.ON = 0; // Timer On (Timer is disabled)
 
   // T2CON
-  T2CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
-  T2CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
-  T2CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
-  T2CONbits.TCKPS = 0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
+  T2CONbits.TCS = 0; // Timer Clock Source Select (Internal peripheral clock)
+  T2CONbits.SIDL =
+      0; // Stop in Idle Mode (Continue operation even in Idle mode)
+  T2CONbits.TGATE = 0; // Timer Gated Time Accumulation Enable (Gated time
+                       // accumulation is disabled)
+  T2CONbits.TCKPS =
+      0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
 
   // TMR2
   TMR2 = 0; // TMR2 Count Register (0)
@@ -774,7 +887,8 @@ void init_timer2(void) {
   PR2 = 0x30D4; // PR2 Period Register (12500)
 
   // Set up TMR2 Interrupt
-  IFS0bits.T2IF = 0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
+  IFS0bits.T2IF =
+      0; // TMR2 Interrupt Flag Status (No interrupt request has occured)
   IPC2bits.T2IP = 5; // TMR2 Interrupt Priority (Interrupt priority is 5)
   IPC2bits.T2IS = 3; // TMR2 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T2IE = 1; // TMR2 Interrupt Enable Control (Interrupt is enabled)
@@ -792,19 +906,23 @@ void init_timer4(uint16_t period1) {
   T4CONbits.ON = 0; // Timer On (Timer is disabled)
 
   // T4CON
-  T4CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
-  T4CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
-  T4CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
-  T4CONbits.TCKPS = 0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
+  T4CONbits.TCS = 0; // Timer Clock Source Select (Internal peripheral clock)
+  T4CONbits.SIDL =
+      0; // Stop in Idle Mode (Continue operation even in Idle mode)
+  T4CONbits.TGATE = 0; // Timer Gated Time Accumulation Enable (Gated time
+                       // accumulation is disabled)
+  T4CONbits.TCKPS =
+      0b010; // Timer Input Clock Prescale Select (1:4 prescale value)
 
   // TMR4
   TMR4 = 0; // TMR4 Count Register (0)
 
   // PR4
-  PR4 = period1; //how often interrupts happen
+  PR4 = period1; // how often interrupts happen
 
   // Set up TMR4 Interrupt
-  IFS0bits.T4IF = 0; // TMR4 Interrupt Flag Status (No interrupt request has occured)
+  IFS0bits.T4IF =
+      0; // TMR4 Interrupt Flag Status (No interrupt request has occured)
   IPC4bits.T4IP = 7; // TMR4 Interrupt Priority (Interrupt priority is 7)
   IPC4bits.T4IS = 3; // TMR4 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T4IE = 1; // TMR4 Interrupt Enable Control (Interrupt is enabled)
@@ -822,19 +940,23 @@ void init_timer6(uint16_t period2) {
   T6CONbits.ON = 0; // Timer On (Timer is disabled)
 
   // T4CON
-  T6CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
-  T6CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
-  T6CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
-  T6CONbits.TCKPS = 0b001; // Timer Input Clock Prescale Select (1:4 prescale value)
+  T6CONbits.TCS = 0; // Timer Clock Source Select (Internal peripheral clock)
+  T6CONbits.SIDL =
+      0; // Stop in Idle Mode (Continue operation even in Idle mode)
+  T6CONbits.TGATE = 0; // Timer Gated Time Accumulation Enable (Gated time
+                       // accumulation is disabled)
+  T6CONbits.TCKPS =
+      0b001; // Timer Input Clock Prescale Select (1:4 prescale value)
 
   // TMR6
   TMR6 = 0; // TMR6 Count Register (0)
 
   // PR6
-  PR6 = period2; //how often interrupts happen
+  PR6 = period2; // how often interrupts happen
 
   // Set up TMR6 Interrupt
-  IFS0bits.T6IF = 0; // TMR6 Interrupt Flag Status (No interrupt request has occured)
+  IFS0bits.T6IF =
+      0; // TMR6 Interrupt Flag Status (No interrupt request has occured)
   IPC7bits.T6IP = 7; // TMR6 Interrupt Priority (Interrupt priority is 7)
   IPC7bits.T6IS = 3; // TMR6 Interrupt Subpriority (Interrupt subpriority is 3)
   IEC0bits.T6IE = 1; // TMR6 Interrupt Enable Control (Interrupt is enabled)
@@ -852,27 +974,32 @@ void init_timers_45() {
   unlock_config();
 
   // Configure TMR4/5
-  T4CON = 0x0;             // Disable TMR4
-  T5CON = 0x0;             // Disable TMR5
+  T4CON = 0x0; // Disable TMR4
+  T5CON = 0x0; // Disable TMR5
 
-  T4CONbits.TCS = 0;       // Timer Clock Source Select (Internal peripheral clock)
-  T4CONbits.T32 = 1;       // 32 bit mode (T4 + T5)
-  T4CONbits.SIDL = 0;      // Stop in Idle Mode (Continue operation even in Idle mode)
-  T4CONbits.TGATE = 0;     // Timer Gated Time Accumulation Enable (Gated time accumulation is disabled)
-  T4CONbits.TCKPS = 0b000; // Timer Input Clock Prescale Select (1:1 prescale value)
+  T4CONbits.TCS = 0; // Timer Clock Source Select (Internal peripheral clock)
+  T4CONbits.T32 = 1; // 32 bit mode (T4 + T5)
+  T4CONbits.SIDL =
+      0; // Stop in Idle Mode (Continue operation even in Idle mode)
+  T4CONbits.TGATE = 0; // Timer Gated Time Accumulation Enable (Gated time
+                       // accumulation is disabled)
+  T4CONbits.TCKPS =
+      0b000; // Timer Input Clock Prescale Select (1:1 prescale value)
 
-  TMR4 = 0;                // TMR4/5 Count Register
-  PR4 = 0xFFFFFFFF;        // PR4/5 Period Register
+  TMR4 = 0;         // TMR4/5 Count Register
+  PR4 = 0xFFFFFFFF; // PR4/5 Period Register
 
-  IFS0bits.T4IF = 0;       // TMR4 Interrupt Flag Status (No interrupt request has occured)
-  IPC4bits.T4IP = 0;       // TMR4 Interrupt Priority (Interrupt priority is 0)
-  IPC4bits.T4IS = 0;       // TMR4 Interrupt Subpriority (Interrupt subpriority is 0)
-  IEC0bits.T4IE = 0;       // TMR4 Interrupt Enable Control (Interrupt is disabled)
+  IFS0bits.T4IF =
+      0; // TMR4 Interrupt Flag Status (No interrupt request has occured)
+  IPC4bits.T4IP = 0; // TMR4 Interrupt Priority (Interrupt priority is 0)
+  IPC4bits.T4IS = 0; // TMR4 Interrupt Subpriority (Interrupt subpriority is 0)
+  IEC0bits.T4IE = 0; // TMR4 Interrupt Enable Control (Interrupt is disabled)
 
-  IFS0bits.T5IF = 0;       // TMR5 Interrupt Flag Status (No interrupt request has occured)
-  IEC0bits.T5IE = 0;       // TMR5 Interrupt Enable Control (Interrupt is disabled)
+  IFS0bits.T5IF =
+      0; // TMR5 Interrupt Flag Status (No interrupt request has occured)
+  IEC0bits.T5IE = 0; // TMR5 Interrupt Enable Control (Interrupt is disabled)
 
-  T4CONbits.ON = 1;        // Timer On (Timer is enabled)
+  T4CONbits.ON = 1; // Timer On (Timer is enabled)
 
   lock_config();
 }

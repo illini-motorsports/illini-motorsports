@@ -15,9 +15,7 @@ uint8_t connIdx = 0;
 
 _NvmSuperblock superblocks[NUM_CONN];
 
-uint8_t idx(SPIConn* conn) {
-  return ((conn - connections) / sizeof(SPIConn));
-}
+uint8_t idx(SPIConn *conn) { return ((conn - connections) / sizeof(SPIConn)); }
 
 uint16_t num_pages(uint32_t size) {
   // Use ceil() so that blocks always start at a page boundary
@@ -30,28 +28,30 @@ uint16_t num_pages(uint32_t size) {
 /**
  * Initializes the 25LC1024 NVM module for the standard FSAE template.
  */
-SPIConn* init_nvm_std() {
+SPIConn *init_nvm_std() {
   return init_nvm(_NVM_STD_BUS, _NVM_STD_CS_LATBITS, _NVM_STD_CS_LATNUM);
 }
 
 /**
  * Initializes the 25LC1024 NVM module with user-defined settings.
  */
-SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
-  if (connIdx == NUM_CONN) { return NULL; }
+SPIConn *init_nvm(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
+  if (connIdx == NUM_CONN) {
+    return NULL;
+  }
 
   // Initialize SPI communications to the NVM chip
-  if(!connIdx) {
+  if (!connIdx) {
     init_spi(bus, 10.0, 8, SPI_MODE0);
   }
 
-  SPIConn* currConn = &connections[connIdx];
+  SPIConn *currConn = &connections[connIdx];
   currConn->send_fp = get_send_spi(bus);
   currConn->cs_lat = cs_lat;
   currConn->cs_num = cs_num;
 
   // Write protection info to status register
-  _NvmStatusReg status = { .reg = 0x0 };
+  _NvmStatusReg status = {.reg = 0x0};
   status.WPEN = 0;
   status.BP1 = 0;
   status.BP0 = 0;
@@ -63,8 +63,9 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
 
   if (superblock_vcode == _NVM_SB_VER) {
     // Superblock exists and is correct version, cache in memory
-    nvm_read_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[connIdx]));
-    //TODO: _nvm_fsck()
+    nvm_read_data(currConn, 0x0, sizeof(_NvmSuperblock),
+                  &(superblocks[connIdx]));
+    // TODO: _nvm_fsck()
   } else {
     // Superblock either doesn't exist, or is an old version. Create a new
     // empty superblock with the correct version
@@ -74,7 +75,8 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
     for (i = 0; i < num_pages(sizeof(_NvmSuperblock)); i++) {
       superblocks[connIdx].pages[i] = 1;
     }
-    nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock), &(superblocks[connIdx]));
+    nvm_write_data(currConn, 0x0, sizeof(_NvmSuperblock),
+                   &(superblocks[connIdx]));
   }
 
   connIdx++;
@@ -98,16 +100,16 @@ SPIConn* init_nvm(uint8_t bus, uint32_t* cs_lat, uint8_t cs_num) {
  * newly allocated block and NVM_SUCCESS will be returned. Otherwise, the
  * appropriate error will be returned.
  */
-uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
-                  uint32_t size, uint8_t* fd) {
+uint8_t nvm_alloc(SPIConn *conn, uint8_t *block_id, uint32_t vcode,
+                  uint32_t size, uint8_t *fd) {
   uint16_t i;
-  _NvmSuperblock* sb = &(superblocks[idx(conn)]);
+  _NvmSuperblock *sb = &(superblocks[idx(conn)]);
 
   // Search for matching node
   for (i = 0; i < 256; i++) {
-    _NvmNode* node = &(sb->nodes[i]);
-    if (strncmp(block_id, node->block_id, 16) == 0 &&
-        vcode == node->vcode && size == node->size) {
+    _NvmNode *node = &(sb->nodes[i]);
+    if (strncmp(block_id, node->block_id, 16) == 0 && vcode == node->vcode &&
+        size == node->size) {
       *fd = i;
       return NVM_SUCCESS;
     }
@@ -115,12 +117,14 @@ uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
 
   // Search for available node
   for (i = 0; i < 256; i++) {
-    _NvmNode* node = &(sb->nodes[i]);
+    _NvmNode *node = &(sb->nodes[i]);
     if (node->addr == 0x0) {
       uint32_t addr = _nvm_alloc_addr(sb, size);
-      if (addr == 0x0) { return NVM_ERR_FULL; }
+      if (addr == 0x0) {
+        return NVM_ERR_FULL;
+      }
 
-      strncpy(((uint8_t*) &(node->block_id)), block_id, 16);
+      strncpy(((uint8_t *)&(node->block_id)), block_id, 16);
       node->vcode = vcode;
       node->size = size;
       node->addr = addr;
@@ -147,8 +151,8 @@ uint8_t nvm_alloc(SPIConn* conn, uint8_t* block_id, uint32_t vcode,
  *
  * Returns 0 on success.
  */
-uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  _NvmNode* node = &(superblocks[idx(conn)].nodes[fd]);
+uint8_t nvm_read(SPIConn *conn, uint8_t fd, uint8_t *buf) {
+  _NvmNode *node = &(superblocks[idx(conn)].nodes[fd]);
   return nvm_read_data(conn, node->addr, node->size, buf);
 }
 
@@ -160,8 +164,8 @@ uint8_t nvm_read(SPIConn* conn, uint8_t fd, uint8_t* buf) {
  *
  * Returns 0 on success.
  */
-uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
-  _NvmNode* node = &(superblocks[idx(conn)].nodes[fd]);
+uint8_t nvm_write(SPIConn *conn, uint8_t fd, uint8_t *buf) {
+  _NvmNode *node = &(superblocks[idx(conn)].nodes[fd]);
   return nvm_write_data(conn, node->addr, node->size, buf);
 }
 
@@ -170,11 +174,16 @@ uint8_t nvm_write(SPIConn* conn, uint8_t fd, uint8_t* buf) {
  *
  * Returns 0 on success.
  */
-uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
-  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
-  if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_SEGV; }
+uint8_t nvm_read_data(SPIConn *conn, uint32_t addr, uint32_t size, void *buf) {
+  if (addr > _NVM_MAX_ADDR) {
+    return NVM_ERR_SEGV;
+  }
+  if ((addr + size) > (_NVM_MAX_ADDR + 1)) {
+    return NVM_ERR_SEGV;
+  }
 
-  while(_nvm_wip(conn));
+  while (_nvm_wip(conn))
+    ;
 
   spi_select(conn);
   conn->send_fp(_NVM_IN_READ);
@@ -184,7 +193,7 @@ uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
 
   uint32_t i;
   for (i = 0; i < size; i++) {
-    ((uint8_t*) buf)[i] = conn->send_fp(0x00);
+    ((uint8_t *)buf)[i] = conn->send_fp(0x00);
   }
   spi_deselect(conn);
 
@@ -198,16 +207,21 @@ uint8_t nvm_read_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
  * bytes. Writes must not cross page boundaries. Thus, this generic write
  * function calls the page write function as many times as needed.
  */
-uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
-  if (addr > _NVM_MAX_ADDR) { return NVM_ERR_SEGV; }
-  if ((addr + size) > (_NVM_MAX_ADDR + 1)) { return NVM_ERR_SEGV; }
+uint8_t nvm_write_data(SPIConn *conn, uint32_t addr, uint32_t size, void *buf) {
+  if (addr > _NVM_MAX_ADDR) {
+    return NVM_ERR_SEGV;
+  }
+  if ((addr + size) > (_NVM_MAX_ADDR + 1)) {
+    return NVM_ERR_SEGV;
+  }
 
   uint32_t done = 0;
   while (done < size) {
-    while (_nvm_wip(conn)); // Wait for previous write cycle to finish
+    while (_nvm_wip(conn))
+      ; // Wait for previous write cycle to finish
 
     uint32_t itr = addr + done;
-    uint8_t* bitr = &(((uint8_t*) buf)[done]);
+    uint8_t *bitr = &(((uint8_t *)buf)[done]);
     uint32_t left = size - done;
 
     done += _nvm_write_page(conn, itr, left, bitr);
@@ -221,8 +235,7 @@ uint8_t nvm_write_data(SPIConn* conn, uint32_t addr, uint32_t size, void* buf) {
  *
  * Returns 0 on success.
  */
-uint8_t nvm_clear_data(SPIConn* conn, uint32_t addr, uint32_t size)
-{
+uint8_t nvm_clear_data(SPIConn *conn, uint32_t addr, uint32_t size) {
   uint8_t clear[size];
   memset(&clear, 0x0, size);
   return nvm_write_data(conn, addr, size, &clear);
@@ -242,7 +255,8 @@ uint8_t nvm_clear_data(SPIConn* conn, uint32_t addr, uint32_t size)
  *
  * Returns number of bytes written to the page.
  */
-uint16_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* buf) {
+uint16_t _nvm_write_page(SPIConn *conn, uint32_t addr, uint32_t size,
+                         uint8_t *buf) {
   uint16_t num = min(256 - (addr & 0xFF), size);
 
   _nvm_write_enable(conn);
@@ -265,14 +279,12 @@ uint16_t _nvm_write_page(SPIConn* conn, uint32_t addr, uint32_t size, uint8_t* b
 /**
  * Sets the write enable latch
  */
-void _nvm_write_enable(SPIConn* conn) {
-  send_spi(_NVM_IN_WREN, conn);
-}
+void _nvm_write_enable(SPIConn *conn) { send_spi(_NVM_IN_WREN, conn); }
 
 /**
  * Returns whether or not there is currently a write in progress.
  */
-uint8_t _nvm_wip(SPIConn* conn) {
+uint8_t _nvm_wip(SPIConn *conn) {
   _NvmStatusReg status = _nvm_read_status_reg(conn);
   return status.WIP;
 }
@@ -280,15 +292,15 @@ uint8_t _nvm_wip(SPIConn* conn) {
 /**
  * Returns the contents of the status register.
  */
-_NvmStatusReg _nvm_read_status_reg(SPIConn* conn) {
-  _NvmStatusReg status = { .reg = _nvm_send_two(conn, _NVM_IN_RDSR, 0x00) };
+_NvmStatusReg _nvm_read_status_reg(SPIConn *conn) {
+  _NvmStatusReg status = {.reg = _nvm_send_two(conn, _NVM_IN_RDSR, 0x00)};
   return status;
 }
 
 /**
  * Writes the contents of the status register
  */
-void _nvm_write_status_reg(SPIConn* conn, _NvmStatusReg status) {
+void _nvm_write_status_reg(SPIConn *conn, _NvmStatusReg status) {
   _nvm_write_enable(conn);
   _nvm_send_two(conn, _NVM_IN_WRSR, status.reg);
 }
@@ -298,11 +310,11 @@ void _nvm_write_status_reg(SPIConn* conn, _NvmStatusReg status) {
  * chip. The response is the 8 bits clocked in during the transmission
  * of the second byte.
  */
-uint8_t _nvm_send_two(SPIConn* conn, uint8_t one, uint8_t two) {
+uint8_t _nvm_send_two(SPIConn *conn, uint8_t one, uint8_t two) {
   uint8_t resp = 0;
   spi_select(conn);
   conn->send_fp(one);
-  resp = (uint8_t) conn->send_fp(two);
+  resp = (uint8_t)conn->send_fp(two);
   spi_deselect(conn);
   return resp;
 }
@@ -318,7 +330,7 @@ uint8_t _nvm_send_two(SPIConn* conn, uint8_t one, uint8_t two) {
  *
  * Returns starting address of the allocated block.
  */
-uint32_t _nvm_alloc_addr(_NvmSuperblock* sb, uint32_t size) {
+uint32_t _nvm_alloc_addr(_NvmSuperblock *sb, uint32_t size) {
   uint16_t pages = num_pages(size);
   uint16_t sb_pages = num_pages(sizeof(_NvmSuperblock));
 
@@ -332,14 +344,18 @@ uint32_t _nvm_alloc_addr(_NvmSuperblock* sb, uint32_t size) {
         break;
       }
     }
-    if (s != 0) { break; }
+    if (s != 0) {
+      break;
+    }
     i = j + 1;
   }
 
-  if (s == 0) { return 0x0; } // Couldn't find available memory
+  if (s == 0) {
+    return 0x0;
+  } // Couldn't find available memory
 
   for (i = 0; i < pages; i++) {
     sb->pages[s + i] = 1; // Mark as allocated
   }
-  return ((uint32_t) s) * 256;
+  return ((uint32_t)s) * 256;
 }

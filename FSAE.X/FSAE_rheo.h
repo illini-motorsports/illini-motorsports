@@ -9,11 +9,11 @@
 #ifndef FSAE_RHEO_H
 #define FSAE_RHEO_H
 
-#include <sys/types.h>
 #include "FSAE_config.h"
 #include "FSAE_spi.h"
+#include <sys/types.h>
 
-SPIConn* init_rheo(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
+SPIConn *init_rheo(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num);
 
 void set_rheo(uint8_t val, SPIConn *conn);
 void send_all_rheo(uint16_t msg);

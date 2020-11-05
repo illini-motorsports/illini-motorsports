@@ -9,16 +9,16 @@
 #ifndef FSAE_SPI_H
 #define FSAE_SPI_H
 
-#include <sys/types.h>
 #include "FSAE_config.h"
 #include <math.h>
+#include <sys/types.h>
 
 #define SPI_MODE0 0
 #define SPI_MODE1 1
 #define SPI_MODE2 2
 #define SPI_MODE3 3
 
-typedef uint32_t (*send_spi_fp) (uint32_t);
+typedef uint32_t (*send_spi_fp)(uint32_t);
 
 /*
  *Struct used for all SPI communcation in the FSAE Library.
@@ -28,8 +28,8 @@ typedef uint32_t (*send_spi_fp) (uint32_t);
  */
 typedef struct {
   send_spi_fp send_fp; // send_spi function pointer
-  uint32_t *cs_lat; // pointer to CS lat bits
-  uint8_t cs_num; // number of bit in lat register
+  uint32_t *cs_lat;    // pointer to CS lat bits
+  uint8_t cs_num;      // number of bit in lat register
 } SPIConn;
 
 void init_spi(uint8_t bus, double mhz, uint8_t size, uint8_t mode);
@@ -48,12 +48,12 @@ uint64_t send_spi_triple(uint64_t value, SPIConn *conn);
 void send_spi_CAN(uint64_t value[], uint64_t rec[], SPIConn *conn);
 
 // Set !CS Low
-inline void spi_select(SPIConn* conn) {
+inline void spi_select(SPIConn *conn) {
   *(conn->cs_lat) &= ~(1 << (conn->cs_num));
 };
 
 // Set !CS High
-inline void spi_deselect(SPIConn* conn) {
+inline void spi_deselect(SPIConn *conn) {
   *(conn->cs_lat) |= 1 << conn->cs_num;
 }
 

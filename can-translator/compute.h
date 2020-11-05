@@ -8,9 +8,9 @@
 #ifndef COMPUTE_H
 #define COMPUTE_H
 
-#include <QThread>
-#include <QObject>
 #include "data.h"
+#include <QObject>
+#include <QThread>
 
 /**
  * Class which handles multithreading of the conversion process so that we
@@ -19,47 +19,45 @@
 class ComputeThread : public QThread {
   Q_OBJECT
 
-  public:
+public:
+  /**
+   * Boolean which represents whether this thread is going to be used to
+   * convert a Vector log file or a custom log file.
+   */
+  bool isVectorFile;
 
-    /**
-     * Boolean which represents whether this thread is going to be used to
-     * convert a Vector log file or a custom log file.
-     */
-    bool isVectorFile;
+  /**
+   * A list of names of files to convert.
+   */
+  QStringList filenames;
 
-    /**
-     * A list of names of files to convert.
-     */
-    QStringList filenames;
+  /**
+   * Pointer to the instance of the data class used for the computation.
+   */
+  AppData *data;
 
-    /**
-     * Pointer to the instance of the data class used for the computation.
-     */
-    AppData* data;
+signals:
 
-  signals:
+  /**
+   * Signal to be executed upon finishing the computation.
+   *
+   * @param success Whether the conversion was successful.
+   */
+  void finish(bool success);
 
-    /**
-     * Signal to be executed upon finishing the computation.
-     *
-     * @param success Whether the conversion was successful.
-     */
-    void finish(bool success);
+  /**
+   * Signal to be emitted whenever we need to add another file progress
+   * bar to the progress bar layout.
+   *
+   * @param filename - The name of the file to add the progress bar for.
+   */
+  void addFileProgress(QString filename);
 
-    /**
-     * Signal to be emitted whenever we need to add another file progress
-     * bar to the progress bar layout.
-     *
-     * @param filename - The name of the file to add the progress bar for.
-     */
-    void addFileProgress(QString filename);
-
-  private:
-
-    /**
-     * Starts the thread's main computation.
-     */
-    void run();
+private:
+  /**
+   * Starts the thread's main computation.
+   */
+  void run();
 };
 
 /**
@@ -69,33 +67,31 @@ class ComputeThread : public QThread {
 class CoalesceComputeThread : public QThread {
   Q_OBJECT
 
-  public:
+public:
+  /**
+   * A list of logfiles to coalesce.
+   */
+  QStringList filenames;
 
-    /**
-     * A list of logfiles to coalesce.
-     */
-    QStringList filenames;
+  /**
+   * Pointer to the instance of the data class used for the computation.
+   */
+  AppData *data;
 
-    /**
-     * Pointer to the instance of the data class used for the computation.
-     */
-    AppData* data;
+signals:
 
-  signals:
+  /**
+   * Signal to be executed upon finishing the computation.
+   *
+   * @param success Whether the conversion was successful.
+   */
+  void finish(bool success);
 
-    /**
-     * Signal to be executed upon finishing the computation.
-     *
-     * @param success Whether the conversion was successful.
-     */
-    void finish(bool success);
-
-  private:
-
-    /**
-     * Starts the thread's main computation.
-     */
-    void run();
+private:
+  /**
+   * Starts the thread's main computation.
+   */
+  void run();
 };
 
 #endif /* COMPUTE_H */

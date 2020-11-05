@@ -14,11 +14,11 @@ uint8_t ad7490ConnIdx = 0;
 /**
  * Initializes the AD7490 ADC module.
  */
-SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
+SPIConn *init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
 
-    init_spi(bus, 1.0, 16, 2);
+  init_spi(bus, 1.0, 16, 2);
 
-  SPIConn * currConn = &ad7490connections[ad7490ConnIdx];
+  SPIConn *currConn = &ad7490connections[ad7490ConnIdx];
   currConn->send_fp = get_send_spi(bus);
   currConn->cs_lat = cs_lat;
   currConn->cs_num = cs_num;
@@ -45,7 +45,7 @@ SPIConn* init_ad7490(uint8_t bus, uint32_t *cs_lat, uint8_t cs_num) {
  * Iterates through all channels, instructs the ADC to sample the current
  * value, and returns all the sample values.
  */
-void ad7490_read_channels(uint16_t* channel_values, SPIConn *conn) {
+void ad7490_read_channels(uint16_t *channel_values, SPIConn *conn) {
   AD7490ControlReg control = {.reg = 0x0};
   control.WRITE = 0b1;
   control.ADDR = 0b0;
@@ -60,7 +60,7 @@ void ad7490_read_channels(uint16_t* channel_values, SPIConn *conn) {
   uint8_t i;
   for (i = 0; i < AD7490_NUM_CHN; i++) {
     control.ADDR = i + 1; // Set up ADDR for next read in sequence
-    uint16_t resp = (uint16_t) send_spi(control.reg, conn);
+    uint16_t resp = (uint16_t)send_spi(control.reg, conn);
     channel_values[i] = resp & 0x0FFF; // Only bottom 12 bits are value
   }
 }
