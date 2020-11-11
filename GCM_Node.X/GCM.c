@@ -10,7 +10,9 @@
 // Brake pressure: 7 bars (stop auto-shifting) #CHECK
 // buttons for priming and dead man switch #CHECK
 
+// Current GCM mode
 volatile gcm_mode mode = NORMAL_MODE;
+volatile uint8_t auto_upshift_disable_override = 0;
 volatile uint8_t attempting_auto_upshift = 0;
 volatile uint8_t throttle_pos_passed_min_auto = 0;
 volatile uint8_t radio_button = 0;
@@ -80,35 +82,6 @@ uint32_t pwr_cut_tmr = 0; // Records when the power cut was initiated
 uint32_t pwr_cut_retry_tmr =
         0; // Records when the ADL power cut message was last sent
 
-/** delete me*/
-#define byte_swap(num) ((num >> 8) | (num << 8))
-
-void send_IZZE_programming_message()
-{
-    CAN_data data = {0};
-    data.halfword0 = byte_swap(0x7530);
-    data.halfword1 = byte_swap(0x4E7);
-    data.byte4 = 2;
-    data.byte5 = 1;
-    data.byte6 = 1;
-    data.byte7 = 1;
-    CAN_send_message(0x203, 8, data);
-    return;
-
-    uint16_t gain_coeff = 10;
-    uint8_t gain_exp = 1;
-    uint16_t offset_coeff = 10;
-    uint8_t offset_exp = 1;
-
-    data.halfword0 = byte_swap(0x4E20);
-    data.halfword1 = byte_swap(gain_coeff);
-    data.byte4 = gain_exp;
-    data.byte5 = offset_coeff >> 8;
-    data.byte6 = offset_coeff & 0b11111111;
-    data.byte7 = offset_exp;
-    CAN_send_message(0x203, 8, data);
-}
-/** delete up to here*/
 
 /**
  * Main function
@@ -124,9 +97,7 @@ void main(void)
     init_termination(NOT_TERMINATING); // Initialize programmable CAN termination
     init_can(); // Initialize CAN
 
-    // TODO: USB
-    // TODO: NVM
-
+   
     // Initialize pins
     SHIFT_UP_TRIS = INPUT;
     SHIFT_UP_ANSEL = DIG_INPUT;
@@ -154,7 +125,7 @@ void main(void)
     while (1) {
         STI(); // Enable interrupts (in case anything disabled without re-enabling)
 
-        // Misc helper functions
+        // Debounce switches
         debounce_switches();
 
         // Analog sampling functions
@@ -176,13 +147,8 @@ void main(void)
             do_shift(SHIFT_ENUM_NT);
         }
 
-        // Send power cut message again if MoTeC hasn't received it
-        // if ((shift_force_spoof != shift_force_ecu) && (millis - pwr_cut_retry_tmr
-        // >= CUT_RETRY_WAIT)) {
-        //    send_power_cut(CUT_RESEND);
-        //}
-
-        // CAN message sending functions
+        
+        // Send status over CAN
         send_diag_can();
         send_state_can(NO_OVERRIDE);
         send_gear_status_can(NO_OVERRIDE);
@@ -197,33 +163,41 @@ void main(void)
  */
 void __attribute__((vector(_CAN1_VECTOR), interrupt(IPL4SRS)))
 can_inthnd(void)
-{
+{   
+    // Process all available CAN messages
     if (C1INTbits.RBIF) {
-        CAN_recv_messages(process_CAN_msg); // Process all available CAN messages
+        CAN_recv_messages(process_CAN_msg); 
     }
-
+    
+    // CAN overflow error
     if (C1INTbits.RBOVIF) {
         CAN_rx_ovf++;
     }
-
-    IFS4CLR = _IFS4_CAN1IF_MASK; // Clear CAN1 Interrupt Flag
+    
+    // Clear CAN1 Interrupt Flag
+    IFS4CLR = _IFS4_CAN1IF_MASK;
 }
 
 /**
  * TMR2 Interrupt Handler
  *
  * Fires once every millisecond.
+ * 
+ * Checks for and handles shifting-related inputs.
  */
 void __attribute__((vector(_TIMER_2_VECTOR), interrupt(IPL5SRS)))
 timer2_inthnd(void)
 {
+    // Update counters
     ++millis;
     if (millis % 1000 == 0)
         ++seconds;
-
+    
+    // Trigger an ADC conversion, if necessary
     if (ADCCON2bits.EOSRDY)
-        ADCCON3bits.GSWTRG = 1; // Trigger an ADC conversion
-
+        ADCCON3bits.GSWTRG = 1; 
+    
+    // Update can status if someone is shifting
     if (SHIFT_UP_SW != prev_switch_up || SHIFT_DN_SW != prev_switch_dn) {
         send_state_can(OVERRIDE);
     }
@@ -238,6 +212,7 @@ timer2_inthnd(void)
 
     // Check for a new shift_up switch press
     if (SHIFT_UP_SW && !prev_switch_up) {
+        
         process_upshift_press();
     }
     prev_switch_up = SHIFT_UP_SW;
@@ -247,8 +222,6 @@ timer2_inthnd(void)
         process_downshift_press();
     }
     prev_switch_dn = SHIFT_DN_SW;
-
-    send_ignition_cut();
 
     IFS0CLR = _IFS0_T2IF_MASK; // Clear TMR2 Interrupt Flag
 }
@@ -493,17 +466,43 @@ void send_state_can(uint8_t override)
  * Check various CAN data to determine the correct GCM mode
  */
 void check_gcm_mode(void)
-{
-    if (auto_upshift_switch) { // if priming button and dead-man switch are
-        // pressed
-
-        mode = AUTO_UPSHIFT_MODE; // engage auto-upshifting
+{   
+    // enter auto-upshift mode
+    if (auto_upshift_switch && mode != AUTO_UPSHIFT_MODE && !auto_upshift_disable_override) { 
+        mode = AUTO_UPSHIFT_MODE; 
+        queue_up = 0;
+        queue_dn = 0;
+    }
+    if (!auto_upshift_switch) {
+        auto_upshift_disable_override = 0;
+        if (mode == AUTO_UPSHIFT_MODE) {
+            mode = NORMAL_MODE;
+            queue_up = 0;
+            queue_dn = 0;
+        }
+    }
+       
+    /*
+        // engage auto-upshifting
     } else if (night_day_switch == 0) { // if auto-upshifting is engaged and
         // dead-man switch is not pressed
 
         mode = NORMAL_MODE; // disengage auto-upshifting
         queue_up = 0; // remove queued upshift
-    } else if (mode == AUTO_UPSHIFT_MODE) {
+    } */
+    
+    
+    if (mode == AUTO_UPSHIFT_MODE) {
+        
+        if(kill_sw) {
+            mode = NORMAL_MODE;
+            queue_up = 0;
+            queue_dn = 0;
+        }
+        
+      
+        
+
 
         /*
       if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position
@@ -546,6 +545,7 @@ void process_upshift_press(void)
     if (mode == AUTO_UPSHIFT_MODE) {
         mode = NORMAL_MODE;
         queue_up = 0;
+        auto_upshift_disable_override = 1;
     }
 
     if (queue_nt == 1) {
@@ -607,6 +607,7 @@ void process_downshift_press(void)
     if (mode == AUTO_UPSHIFT_MODE) {
         mode = NORMAL_MODE;
         queue_up = 0;
+        auto_upshift_disable_override = 1;
     }
 
     if (queue_nt == 1) {
@@ -1107,22 +1108,16 @@ void relax_wait(void)
 void main_loop_misc(void)
 {
     debounce_switches();
-
+    
+    // Sample sensors
     sample_temp();
     sample_sensors(SHIFTING);
-
-    // Send power cut message again if MoTeC hasn't received it
-    /*if ((shift_force_spoof != shift_force_ecu) &&
-        (millis - pwr_cut_retry_tmr >= CUT_RETRY_WAIT))
-    {
-      // send_power_cut(CUT_RESEND);
-    }*/
-
+    
+    // Send CAN messages
     send_diag_can();
     send_state_can(NO_OVERRIDE);
     send_gear_status_can(NO_OVERRIDE);
     send_ignition_cut_status_can(NO_OVERRIDE);
-    // send_power_cut(CUT_START);
 }
 
 void send_ignition_cut_status_can(uint8_t override)
@@ -1146,13 +1141,6 @@ void send_gear_status_can(uint8_t override)
     }
 }
 
-void send_ignition_cut()
-{
-    CAN_data data = {0};
-    data.doubleword = ignition_cut ? 0b10 : 0b00;
-    CAN_send_message(GCM_BOSCH_GEARCUT_ID, 8, data);
-    // pwr_cut_retry_tmr = millis;
-}
 
 /**
  * void debounce_switches(void)
@@ -1173,36 +1161,6 @@ void debounce_switches(void)
     }
 
     switch_prev = switch_raw;
-}
-
-/**
- * void send_power_cut(uint8_t is_start)
- *
- * Sends the ECU a message to perform a power cut, allowing us to upshift
- * without lifting or clutching.
- *
- * @param is_start Used to start a cut, end it, or resend the message
- */
-void send_power_cut(uint8_t is_start)
-{
-    if (is_start == CUT_START || is_start == CUT_RESEND) {
-        shift_force_spoof = PWR_CUT_SPOOF;
-    } else if (is_start == CUT_END) {
-        shift_force_spoof = 0;
-    }
-
-    ignition_cut = is_start;
-    send_ignition_cut();
-    return;
-    /*CAN_data data = {0};
-    if(0 && is_start)
-      data.doubleword = (1 << 6);
-    else
-        data.doubleword = 0;
-    //data.halfword0 = ADL_IDX_10_12;
-    //data.halfword1 = shift_force_spoof;
-    CAN_send_message(GCM_BOSCH_ID, 8, data);
-    pwr_cut_retry_tmr = millis;*/
 }
 
 /**
