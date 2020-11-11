@@ -105,6 +105,11 @@ void send_ignition_cut();
 #define LAUNCH_WS_DIFF 1.2
 #define LAUNCH_FRONT_WS 15
 
+// Auto-upshifting thresholds
+#define MAX_AUTO_UPSHIFT_ENGINE_RPM 4000
+#define MAX_AUTO_UPSHIFT_BRAKE_PRESSURE 3
+#define MAX_LAUNCH_SPEED 55
+
 // Gear ratio of standard Yamaha R6 YZF 08 transmission
 const double gear_ratio[7] = {1.0, 2.583, 2.000, 1.667, 1.444, 1.286, 1.150};
 

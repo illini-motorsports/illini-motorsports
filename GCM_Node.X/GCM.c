@@ -468,7 +468,7 @@ void send_state_can(uint8_t override)
 void check_gcm_mode(void)
 {   
     // enter auto-upshift mode
-    if (auto_upshift_switch && mode != AUTO_UPSHIFT_MODE && !auto_upshift_disable_override) { 
+    if (auto_upshift_switch && mode != AUTO_UPSHIFT_MODE && !auto_upshift_disable_override && eng_rpm < MAX_AUTO_UPSHIFT_ENGINE_RPM) { 
         mode = AUTO_UPSHIFT_MODE; 
         queue_up = 0;
         queue_dn = 0;
@@ -494,7 +494,7 @@ void check_gcm_mode(void)
     
     if (mode == AUTO_UPSHIFT_MODE) {
         
-        if(kill_sw) {
+        if(kill_sw ) {
             mode = NORMAL_MODE;
             queue_up = 0;
             queue_dn = 0;
@@ -529,7 +529,7 @@ void check_gcm_mode(void)
 void process_auto_upshift(void)
 {
     if (eng_rpm >= get_threshold_rpm(gear) && !is_in_launch() && queue_up == 0 &&
-            gear <= MAX_AUTO_GEAR) {
+            gear < MAX_AUTO_GEAR) {
         queue_up = 1;
     }
 }
@@ -1170,10 +1170,11 @@ void debounce_switches(void)
  */
 uint16_t get_threshold_rpm(uint8_t gear)
 {
-    if (gear == GEAR_NEUT || gear == GEAR_FAIL) {
+
+    if (gear == GEAR_FAIL) {
         return 20000; // If invalid gear, return threshold above redline
     }
-    return shift_rpm[gear - 1];
+    return shift_rpm[gear == GEAR_NEUT ? gear : gear - 1];
 }
 
 /**
@@ -1183,6 +1184,8 @@ uint16_t get_threshold_rpm(uint8_t gear)
  */
 uint8_t is_in_launch(void)
 {
+    
+    return (gear == 1 || gear == GEAR_NEUT) && 0;
     // double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
     // double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
 
