@@ -20,7 +20,8 @@
 #define LOGGER_ID 0x300
 #define WHEEL_ID 0x400
 #define ADL_ID 0x500
-#define GCM_BOSCH_ID 0x610
+#define GCM_BOSCH_GEARCUT_ID 0x610
+#define GCM_BOSCH_GEARINFO_ID 0x100
 #define PDM_ID 0x600
 #define PDM_CONFIG_ID 0x620
 

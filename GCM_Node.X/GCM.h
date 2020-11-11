@@ -47,19 +47,20 @@
 #define DEBOUNCE_WAIT 10
 #define TEMP_SAMP_INTV 333
 #define SENSOR_SAMP_INTV 5
-
+#define IGNITION_CUT_CAN_SEND 100
 #define DIAG_MSG_SEND 500
 #define STATE_MSG_SEND 250
+#define GEAR_STATUS_CAN_SEND 100
 #define CUT_MSG_SEND 1
 void send_ignition_cut();
 
 #define LOCKOUT_DUR 50
 #define MAX_SHIFT_DUR 450
-#define RELAX_WAIT 10    // TODO: Tune this value
-#define PWR_CUT_WAIT 10  // TODO: Tune this value
+#define RELAX_WAIT 10 // TODO: Tune this value
+#define PWR_CUT_WAIT 10 // TODO: Tune this value
 #define UP_SHIFT_DUR 150 // TODO: Tune this value
 #define DN_SHIFT_DUR 125 // TODO: Tune this value
-#define NT_SHIFT_DUR 50  // TODO: Tune this value
+#define NT_SHIFT_DUR 50 // TODO: Tune this value
 #define ABS_WS_ID 0x24A
 
 #define CAN_STATE_WAIT 1000
@@ -83,6 +84,13 @@ void send_ignition_cut();
 #define SHIFT_ENUM_UP 0
 #define SHIFT_ENUM_DN 1
 #define SHIFT_ENUM_NT 2
+
+// Ignition cut flags
+#define IGNITION_CUT_UPSHIFT 1
+#define IGNITION_CUT_DOWNSHIFT 2
+#define IGNITION_CUT_ALL 4
+#define IGNITION_CUT_ENABLE 1
+#define IGNITION_CUT_DISABLE 0
 
 // Miscellaneous definitions
 #define PWR_CUT_SPOOF 0xE803 // Value for "spoofed" gear shift force sensor
@@ -143,7 +151,11 @@ const uint16_t shift_rpm[6] = {13040, 12649, 11961, 11767, 11736, 20000};
 #define ADC_FORCE_CHN 25
 
 // Enum for current GCM mode
-typedef enum _gcm_mode { NORMAL_MODE, AUTO_UPSHIFT_MODE } gcm_mode;
+typedef enum _gcm_mode
+{
+    NORMAL_MODE,
+    AUTO_UPSHIFT_MODE
+} gcm_mode;
 
 /**
  * Function definitions
@@ -160,6 +172,9 @@ void process_CAN_msg(CAN_message msg);
 void send_diag_can(void);
 void send_lat_accel(void);
 void send_state_can(uint8_t override);
+void send_ignition_cut_status_can(uint8_t override);
+void send_gear_status_can(uint8_t override);
+
 
 // Logic functions
 void process_auto_upshift(void);
@@ -169,6 +184,8 @@ uint8_t check_shift_conditions(uint8_t shift_enum);
 void check_gcm_mode(void);
 void do_shift(uint8_t shift_enum);
 void do_shift_gear_fail(uint8_t shift_enum);
+
+void set_ignition_cut(uint8_t type, uint8_t status);
 
 // Utility functions
 void relax_wait(void);
