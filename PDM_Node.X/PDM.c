@@ -77,7 +77,7 @@ void main(void) {
   CS_AD7490_LAT = 1;
   CS_AD7490_TRIS = OUTPUT;
   ad7490_connection = init_ad7490(5, CS_AD7490_LATBITS, CS_AD7490_LATNUM);
-  gpio_connection = init_mcp23s17(2, CS_GPIO_LATBITS, CS_GPIO_LATNUM);
+  // gpio_connection = init_mcp23s17(2, CS_GPIO_LATBITS, CS_GPIO_LATNUM);
 
   // TODO: USB
   // TODO: NVM
