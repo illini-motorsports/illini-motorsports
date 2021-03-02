@@ -452,7 +452,7 @@ void process_CAN_msg(CAN_message msg) {
   CAN_recv_tmr = millis; // Record time of latest received CAN message
 
   switch (msg.id) {
-  case MOTEC_ID + 0:
+  case MS6_ID + 0:
     eng_rpm =
         ((double)((msg.data[ENG_RPM_BYTE] << 8) | msg.data[ENG_RPM_BYTE + 1])) *
         ENG_RPM_SCL;
@@ -462,7 +462,7 @@ void process_CAN_msg(CAN_message msg) {
 
     motec0_recv_tmr = millis;
     break;
-  case MOTEC_ID + 1:
+  case MS6_ID + 1:
     eng_temp = ((double)((msg.data[ENG_TEMP_BYTE] << 8) |
                          msg.data[ENG_TEMP_BYTE + 1])) *
                ENG_TEMP_SCL;
@@ -472,14 +472,14 @@ void process_CAN_msg(CAN_message msg) {
 
     motec1_recv_tmr = millis;
     break;
-  case MOTEC_ID + 2:
+  case MS6_ID + 2:
     oil_pres = ((double)((msg.data[OIL_PRES_BYTE] << 8) |
                          msg.data[OIL_PRES_BYTE + 1])) *
                OIL_PRES_SCL;
 
     motec2_recv_tmr = millis;
     break;
-  case MOTEC_ID + 6:
+  case MS6_ID + 6:
     brk_press = (((msg.data[6] << 8) | msg.data[7]));
     break;
 

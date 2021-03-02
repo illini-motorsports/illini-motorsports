@@ -493,7 +493,7 @@ void process_CAN_msg(CAN_message msg) {
   switch (msg.id) {
 
   /*Motec*/
-  case MOTEC_ID + 0:
+  case MS6_ID + 0:
     updateDataItem(&motecDataItems[ENG_RPM_IDX],
                    parseMsgMotec(&msg, ENG_RPM_BYTE, ENG_RPM_SCL));
     throt = motecDataItems[ENG_RPM_IDX].value; // grab RPM
@@ -506,7 +506,7 @@ void process_CAN_msg(CAN_message msg) {
     updateDataItem(&motecDataItems[VOLT_ECU_IDX],
                    parseMsgMotec(&msg, VOLT_ECU_BYTE, VOLT_ECU_SCL));
     break;
-  case MOTEC_ID + 1:
+  case MS6_ID + 1:
     updateDataItem(&motecDataItems[ENG_TEMP_IDX],
                    parseMsgMotec(&msg, ENG_TEMP_BYTE, ENG_TEMP_SCL));
     updateDataItem(&motecDataItems[OIL_TEMP_IDX],
@@ -516,7 +516,7 @@ void process_CAN_msg(CAN_message msg) {
     updateDataItem(&motecDataItems[FUEL_TEMP_IDX],
                    parseMsgMotec(&msg, FUEL_TEMP_BYTE, FUEL_TEMP_SCL));
     break;
-  case MOTEC_ID + 2:
+  case MS6_ID + 2:
     updateDataItem(&motecDataItems[AMBIENT_PRES_IDX],
                    parseMsgMotec(&msg, AMBIENT_PRES_BYTE, AMBIENT_PRES_SCL));
     updateDataItem(&motecDataItems[OIL_PRES_IDX],
@@ -526,7 +526,7 @@ void process_CAN_msg(CAN_message msg) {
     updateDataItem(&motecDataItems[FUEL_PRES_IDX],
                    parseMsgMotec(&msg, FUEL_PRES_BYTE, FUEL_PRES_SCL));
     break;
-  case MOTEC_ID + 3:
+  case MS6_ID + 3:
     updateDataItem(&motecDataItems[WHEELSPEED_FL_IDX],
                    parseMsgMotec(&msg, WHEELSPEED_FL_BYTE, WHEELSPEED_FL_SCL));
     updateDataItem(&motecDataItems[WHEELSPEED_FR_IDX],
@@ -542,7 +542,7 @@ void process_CAN_msg(CAN_message msg) {
                        4.0;
     updateDataItem(&motecDataItems[WHEELSPEED_AVG_IDX], whlSpdAvg);
     break;
-  case MOTEC_ID + 4:
+  case MS6_ID + 4:
     updateDataItem(&motecDataItems[DRIVE_SPEED_IDX],
                    parseMsgMotec(&msg, DRIVE_SPEED_BYTE, DRIVE_SPEED_SCL));
     updateDataItem(&motecDataItems[GROUND_SPEED_IDX],
@@ -552,9 +552,9 @@ void process_CAN_msg(CAN_message msg) {
     updateDataItem(&motecDataItems[GPS_ALT_IDX],
                    parseMsgMotec(&msg, GPS_ALT_BYTE, GPS_ALT_SCL));
     break;
-  case MOTEC_ID + 5:
+  case MS6_ID + 5:
     break;
-  case MOTEC_ID + 6:
+  case MS6_ID + 6:
     updateDataItem(&motecDataItems[GPS_TIME_IDX],
                    (double)((msg.data[GPS_TIME_BYTE] << 24) |
                             (msg.data[GPS_TIME_BYTE + 1] << 16) |
@@ -566,7 +566,7 @@ void process_CAN_msg(CAN_message msg) {
     updateDataItem(&motecDataItems[FUEL_USED_IDX],
                    parseMsgMotec(&msg, FUEL_USED_BYTE, FUEL_USED_SCL));
     break;
-  case MOTEC_ID + 7:
+  case MS6_ID + 7:
     updateDataItem(&motecDataItems[FUEL_INJ_DUTY_IDX],
                    parseMsgMotec(&msg, FUEL_INJ_DUTY_BYTE, FUEL_INJ_DUTY_SCL));
     updateDataItem(&motecDataItems[FUEL_TRIM_IDX],

@@ -186,7 +186,7 @@ void process_auto_upshift(void);
 void process_upshift_press(void);
 void process_downshift_press(void);
 uint8_t check_shift_conditions(uint8_t shift_enum);
-void check_gcm_mode(void);
+void update_gcm_mode(void);
 void do_shift(uint8_t shift_enum);
 void do_shift_gear_fail(uint8_t shift_enum);
 

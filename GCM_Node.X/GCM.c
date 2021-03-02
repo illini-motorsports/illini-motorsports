@@ -203,7 +203,7 @@ timer2_inthnd(void)
     }
 
     // Check to see if GCM mode should change
-    check_gcm_mode();
+    update_gcm_mode();
 
     // Check for an auto upshift if in the correct mode
     if (mode == AUTO_UPSHIFT_MODE) {
@@ -352,7 +352,7 @@ void process_CAN_msg(CAN_message msg)
     uint8_t button_bitmap;
 
     switch (msg.id) {
-    case MOTEC_ID + 0x0:
+    case MS6_ID + 0x0:
         eng_rpm =
                 ((double) ((msg.data[ENG_RPM_BYTE] << 8) | msg.data[ENG_RPM_BYTE + 1])) *
                 ENG_RPM_SCL;
@@ -374,7 +374,7 @@ void process_CAN_msg(CAN_message msg)
         //      CAN_recv_tmr = millis;
         //      break;
 
-    case MOTEC_ID + 0x3:
+    case MS6_ID + 0x3:
         wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE / 2] * WHEELSPEED_FL_SCL;
         wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE / 2] * WHEELSPEED_FR_SCL;
         wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE / 2] * WHEELSPEED_RL_SCL;
@@ -383,7 +383,7 @@ void process_CAN_msg(CAN_message msg)
         CAN_recv_tmr = millis;
         break;
 
-    case MOTEC_ID + 0x7:
+    case MS6_ID + 0x7:
         shift_force_ecu = (uint16_t) ((msg.data[SHIFT_FORCE_BYTE] << 8) |
                 msg.data[SHIFT_FORCE_BYTE + 1]);
         CAN_recv_tmr = millis;
@@ -465,7 +465,7 @@ void send_state_can(uint8_t override)
  *
  * Check various CAN data to determine the correct GCM mode
  */
-void check_gcm_mode(void)
+void update_gcm_mode(void)
 {   
     // enter auto-upshift mode
     if (auto_upshift_switch && mode != AUTO_UPSHIFT_MODE && !auto_upshift_disable_override && eng_rpm < MAX_AUTO_UPSHIFT_ENGINE_RPM) { 

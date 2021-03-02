@@ -14,6 +14,18 @@
             <make-dep-projects>
                 <make-dep-project>../FSAE.X</make-dep-project>
             </make-dep-projects>
+            <sourceRootList>
+                <sourceRootElem>../FSAE.X</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>default</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
         </data>
     </configuration>
 </project>
