@@ -48,12 +48,12 @@ uint64_t send_spi_triple(uint64_t value, SPIConn *conn);
 void send_spi_CAN(uint64_t value[], uint64_t rec[], SPIConn *conn);
 
 // Set !CS Low
-inline void spi_select(SPIConn *conn) {
+void spi_select(SPIConn *conn) {
   *(conn->cs_lat) &= ~(1 << (conn->cs_num));
 };
 
 // Set !CS High
-inline void spi_deselect(SPIConn *conn) {
+void spi_deselect(SPIConn *conn) {
   *(conn->cs_lat) |= 1 << conn->cs_num;
 }
 

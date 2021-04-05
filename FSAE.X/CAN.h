@@ -14,7 +14,7 @@
 #define ERROR_ID 0x00F
 #define ECU_ID 0x020
 #define SPM_ID 0x050
-#define MS6_ID 0x100
+#define MS6_ID 0x10
 #define GCM_ID 0x200
 #define SGH_ID 0x203
 #define LOGGER_ID 0x300
@@ -299,10 +299,10 @@
 #define MANIFOLD_PRES_SCL 0.001
 #define FUEL_PRES_SCL 0.001
 
-#define WHEELSPEED_FL_SCL 0.1
-#define WHEELSPEED_FR_SCL 0.1
-#define WHEELSPEED_RL_SCL 0.1
-#define WHEELSPEED_RR_SCL 0.1
+#define WHEELSPEED_FL_SCL 1
+#define WHEELSPEED_FR_SCL 1
+#define WHEELSPEED_RL_SCL 1
+#define WHEELSPEED_RR_SCL 1
 
 #define DRIVE_SPEED_SCL 0.1
 #define GROUND_SPEED_SCL 0.1

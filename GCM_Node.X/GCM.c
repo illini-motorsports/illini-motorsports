@@ -7,11 +7,13 @@
  * Created:     2015-2016
  */
 #include "GCM.h"
-// Brake pressure: 7 bars (stop auto-shifting) #CHECK
-// buttons for priming and dead man switch #CHECK
+
 
 // Current GCM mode
 volatile gcm_mode mode = NORMAL_MODE;
+
+// Auto-upshift switch enabled
+
 volatile uint8_t auto_upshift_disable_override = 0;
 volatile uint8_t attempting_auto_upshift = 0;
 volatile uint8_t throttle_pos_passed_min_auto = 0;
@@ -20,13 +22,11 @@ volatile uint8_t acknowledge_button = 0;
 volatile uint8_t auxiliary_button = 0;
 volatile uint8_t night_day_switch, auto_upshift_switch = 0;
 
-// TODO: Add more checks/handling for stale CAN data
-
-// Count number of seconds and milliseconds since start of code execution
+// Internal (milli)second timers)
 volatile uint32_t seconds = 0;
 volatile uint32_t millis = 0;
 
-volatile uint8_t gear = GEAR_FAIL; // Current gear #CHECK
+volatile uint8_t gear = GEAR_FAIL; // Current gear
 double shift_force = 0.0; // Shift force sensor reading
 
 volatile uint8_t queue_up = 0; // Number of queued upshifts #CHECK
@@ -48,10 +48,10 @@ volatile double bat_volt = 0; // Battery voltage (from ECU)
 volatile double throttle_pos = 0; // Throttle position (from ECU) #CHECK
 volatile uint16_t shift_force_ecu = 0; // Spoofed shift force (from ECU)
 volatile uint8_t kill_sw = 0; // Holds state of KILL_SW (from PDM)
-volatile double wheel_fl_speed = 0;
-volatile double wheel_fr_speed = 0;
-volatile double wheel_rl_speed = 0;
-volatile double wheel_rr_speed = 0;
+volatile uint8_t wheel_fl_speed = 0;
+volatile uint8_t wheel_fr_speed = 0;
+volatile uint8_t wheel_rl_speed = 0;
+volatile uint8_t wheel_rr_speed = 0;
 volatile double lat_accel = 0;
 volatile uint16_t conv_lat_accel = 0;
 
@@ -201,6 +201,7 @@ timer2_inthnd(void)
     if (SHIFT_UP_SW != prev_switch_up || SHIFT_DN_SW != prev_switch_dn) {
         send_state_can(OVERRIDE);
     }
+    
 
     // Check to see if GCM mode should change
     update_gcm_mode();
@@ -329,6 +330,7 @@ void sample_sensors(uint8_t is_shifting)
         CAN_data data = {0};
         data.byte0 = gear;
         data.byte1 = mode;
+        // data.byte1 = auto_upshift_switch;
         data.halfword1 = gear_voltage_can;
         data.halfword2 = shift_force_can;
         CAN_send_message(GCM_ID + 0x1, 6, data);
@@ -374,11 +376,12 @@ void process_CAN_msg(CAN_message msg)
         //      CAN_recv_tmr = millis;
         //      break;
 
-    case MS6_ID + 0x3:
-        wheel_fl_speed = lsbArray[WHEELSPEED_FL_BYTE / 2] * WHEELSPEED_FL_SCL;
-        wheel_fr_speed = lsbArray[WHEELSPEED_FR_BYTE / 2] * WHEELSPEED_FR_SCL;
-        wheel_rl_speed = lsbArray[WHEELSPEED_RL_BYTE / 2] * WHEELSPEED_RL_SCL;
-        wheel_rr_speed = lsbArray[WHEELSPEED_RR_BYTE / 2] * WHEELSPEED_RR_SCL;
+    case 0x6FF:
+        wheel_fl_speed = (msg.data[0]) * WHEELSPEED_FL_SCL;
+        wheel_fr_speed = (msg.data[1]) * WHEELSPEED_FR_SCL;
+        wheel_rl_speed = (msg.data[2]) * WHEELSPEED_RL_SCL;
+        wheel_rr_speed = (msg.data[3]) * WHEELSPEED_RR_SCL;
+        auto_upshift_switch = msg.data[4] ? 1 : 0;
 
         CAN_recv_tmr = millis;
         break;
@@ -400,7 +403,7 @@ void process_CAN_msg(CAN_message msg)
         radio_button = button_bitmap & 0x01;
         acknowledge_button = (uint8_t) ((button_bitmap & 0x02) >> 1);
         auxiliary_button = ((uint8_t) (button_bitmap & 0x04) >> 2);
-        auto_upshift_switch = ((uint8_t) (button_bitmap & 0x10) >> 4);
+        // auto_upshift_switch = ((uint8_t) (button_bitmap & 0x10) >> 4);
         night_day_switch = ((uint8_t) (button_bitmap & 0x80) >> 7);
         CAN_recv_tmr = millis;
         break;
@@ -431,8 +434,10 @@ void send_diag_can(void)
         data.halfword0 = (uint16_t) seconds;
         data.halfword1 = pcb_temp;
         data.halfword2 = junc_temp;
-
+        
+     
         CAN_send_message(GCM_ID + 0, 6, data);
+        
         diag_send_tmr = millis;
     }
 }
@@ -468,18 +473,15 @@ void send_state_can(uint8_t override)
 void update_gcm_mode(void)
 {   
     // enter auto-upshift mode
-    if (auto_upshift_switch && mode != AUTO_UPSHIFT_MODE && !auto_upshift_disable_override && eng_rpm < MAX_AUTO_UPSHIFT_ENGINE_RPM) { 
+    if (auto_upshift_switch && mode != AUTO_UPSHIFT_MODE) {// && wheel_fl_speed > 10 && wheel_fr_speed > 10) { 
         mode = AUTO_UPSHIFT_MODE; 
         queue_up = 0;
         queue_dn = 0;
     }
-    if (!auto_upshift_switch) {
-        auto_upshift_disable_override = 0;
-        if (mode == AUTO_UPSHIFT_MODE) {
+    if (!auto_upshift_switch && mode == AUTO_UPSHIFT_MODE) {
             mode = NORMAL_MODE;
             queue_up = 0;
             queue_dn = 0;
-        }
     }
        
     /*
@@ -500,10 +502,7 @@ void update_gcm_mode(void)
             queue_dn = 0;
         }
         
-      
-        
-
-
+ 
         /*
       if (throttle_pos_passed_min_auto == 0) { // check to see if throttle position
       did not cross minimum while in auto-upshifting mode if (throttle_pos > 75) {
@@ -528,6 +527,7 @@ void update_gcm_mode(void)
  */
 void process_auto_upshift(void)
 {
+
     if (eng_rpm >= get_threshold_rpm(gear) && !is_in_launch() && queue_up == 0 &&
             gear < MAX_AUTO_GEAR) {
         queue_up = 1;
@@ -660,7 +660,7 @@ void process_downshift_press(void)
  */
 uint8_t check_shift_conditions(uint8_t shift_enum)
 {
-
+    return 1;
     // Prevent shifting past 1st gear
     if (gear == 1 && shift_enum == SHIFT_ENUM_DN) {
         send_errno_CAN_msg(GCM_ID, ERR_GCM_SHIFTPAST);
@@ -811,9 +811,10 @@ void do_shift(uint8_t shift_enum)
         act_tmr = millis;
 
         // Wait a bit and signal the ECU to cut power
-        while (millis - act_tmr < PWR_CUT_WAIT) {
-            main_loop_misc();
-        }
+        //while (millis - act_tmr < PWR_CUT_WAIT) {
+        //    main_loop_misc();
+        //}
+        
         if (SHIFT_UP) {
             set_ignition_cut(IGNITION_CUT_UPSHIFT, IGNITION_CUT_ENABLE);
         } else if (SHIFT_DN) {
@@ -1133,12 +1134,13 @@ void send_ignition_cut_status_can(uint8_t override)
 
 void send_gear_status_can(uint8_t override)
 {
-    if (override || millis - gear_status_tmr >= GEAR_STATUS_CAN_SEND) {
+    if (millis % 2 == 0) {
         CAN_data data = {0};
-        data.doubleword = gear;
+        int gear_can = (gear + 1.5)/0.5;
+        data.byte0 = gear_can;
         CAN_send_message(GCM_BOSCH_GEARINFO_ID, 8, data);
-        gear_status_tmr = millis;
-    }
+        // gear_status_tmr = millis;
+   }
 }
 
 
@@ -1184,13 +1186,10 @@ uint16_t get_threshold_rpm(uint8_t gear)
  */
 uint8_t is_in_launch(void)
 {
-    
-    return (gear == 1 || gear == GEAR_NEUT) && 0;
-    // double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
+    double front_ws = (wheel_fl_speed + wheel_fr_speed)/2.0;
     // double rear_ws = (wheel_rl_speed + wheel_rr_speed)/ 2.0;
 
-    return wheel_fl_speed < LAUNCH_FRONT_WS ||
-            wheel_fl_speed < (LAUNCH_WS_DIFF * wheel_rr_speed);
+    return front_ws < 40;
 }
 
 void send_lat_accel(void)
