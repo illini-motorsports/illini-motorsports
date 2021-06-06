@@ -48,7 +48,7 @@
 #define TEMP_SAMP_INTV 333
 #define SENSOR_SAMP_INTV 5
 #define IGNITION_CUT_CAN_SEND 1
-#define DIAG_MSG_SEND 10
+#define DIAG_MSG_SEND 100
 #define STATE_MSG_SEND 10
 #define GEAR_STATUS_CAN_SEND 1
 #define ECU_MSG_SEND 1
@@ -117,6 +117,8 @@ const double gear_ratio[7] = {1.0, 2.583, 2.000, 1.667, 1.444, 1.286, 1.150};
 // Optiomal Shift RPM's for Yamaha R6 transmission
 // 1-->2, 2-->3, 3-->4, 4-->5, 5-->6, 6-->Break
 const uint16_t shift_rpm[6] = {12026, 11492, 11399, 11191, 11220, 20000};
+
+const float shift_speed_min[6] = {60, 80, 100, 120, 160};
 
 // Pin definitions
 // neut = a5
@@ -200,6 +202,7 @@ void main_loop_misc(void);
 void debounce_switches(void);
 void send_power_cut(uint8_t is_start);
 uint16_t get_threshold_rpm(uint8_t gear);
+float get_threshold_speed(uint8_t gear);
 uint8_t is_in_launch(void);
 
 #endif /* GCM_H */

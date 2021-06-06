@@ -381,7 +381,7 @@ void process_CAN_msg(CAN_message msg)
         wheel_fr_speed = (msg.data[1]) * WHEELSPEED_FR_SCL;
         wheel_rl_speed = (msg.data[2]) * WHEELSPEED_RL_SCL;
         wheel_rr_speed = (msg.data[3]) * WHEELSPEED_RR_SCL;
-        auto_upshift_switch = msg.data[4] ? 1 : 0;
+        auto_upshift_switch = msg.data[4];
 
         CAN_recv_tmr = millis;
         break;
@@ -408,7 +408,7 @@ void process_CAN_msg(CAN_message msg)
         CAN_recv_tmr = millis;
         break;
 
-    case IMU_FIRST_ID: // IMU to ADL for Motec Traction control
+    /*case IMU_FIRST_ID: // IMU to ADL for Motec Traction control
         lat_accel = ((double) ((msg.data[LATERAL_G_BYTE + 1] << 8) |
                 msg.data[LATERAL_G_BYTE])) *
                 LATERAL_G_SCL +
@@ -418,7 +418,7 @@ void process_CAN_msg(CAN_message msg)
         uint16_t byte1 = (conv_lat_accel & 0xFF00) >> 8;
         uint16_t byte2 = (conv_lat_accel & 0xFF) << 8;
         conv_lat_accel = byte1 | byte2;
-        send_lat_accel();
+        send_lat_accel();*/
     }
 }
 
@@ -434,8 +434,7 @@ void send_diag_can(void)
         data.halfword0 = (uint16_t) seconds;
         data.halfword1 = pcb_temp;
         data.halfword2 = junc_temp;
-        
-     
+       
         CAN_send_message(GCM_ID + 0, 6, data);
         
         diag_send_tmr = millis;
@@ -459,6 +458,7 @@ void send_state_can(uint8_t override)
         data.byte3 = queue_nt;
 
         CAN_send_message(GCM_ID + 2, 4, data);
+        
         state_send_tmr = millis;
     }
 }
@@ -473,12 +473,12 @@ void send_state_can(uint8_t override)
 void update_gcm_mode(void)
 {   
     // enter auto-upshift mode
-    if (auto_upshift_switch && mode != AUTO_UPSHIFT_MODE) {// && wheel_fl_speed > 10 && wheel_fr_speed > 10) { 
+    if (auto_upshift_switch >= 2 && mode != AUTO_UPSHIFT_MODE) {// && wheel_fl_speed > 10 && wheel_fr_speed > 10) { 
         mode = AUTO_UPSHIFT_MODE; 
         queue_up = 0;
         queue_dn = 0;
     }
-    if (!auto_upshift_switch && mode == AUTO_UPSHIFT_MODE) {
+    if (auto_upshift_switch < 2 && mode == AUTO_UPSHIFT_MODE) {
             mode = NORMAL_MODE;
             queue_up = 0;
             queue_dn = 0;
@@ -525,12 +525,18 @@ void update_gcm_mode(void)
  * Check to see whether an automatic upshift should take place,
  * and increment the queue if neccesary
  */
+volatile uint32_t auto_upshift_rpm_tmr = 0;
 void process_auto_upshift(void)
 {
-
-    if (eng_rpm >= get_threshold_rpm(gear) && !is_in_launch() && queue_up == 0 &&
-            gear < MAX_AUTO_GEAR) {
+    // float speed = (wheel_fl_speed + wheel_fr_speed) / 2.0;
+    float speed = wheel_fr_speed;
+    if (eng_rpm >= get_threshold_rpm(gear) &&  // RPM threshold
+        speed >= get_threshold_speed(gear) && // Speed threshold
+        queue_up == 0 && // Not already shifting
+        gear < MAX_AUTO_GEAR // Not trying to get past 6th
+        ) { 
         queue_up = 1;
+        // auto_upshift_rpm_tmr = millis;
     }
 }
 
@@ -1177,6 +1183,13 @@ uint16_t get_threshold_rpm(uint8_t gear)
         return 20000; // If invalid gear, return threshold above redline
     }
     return shift_rpm[gear == GEAR_NEUT ? gear : gear - 1];
+}
+
+float get_threshold_speed(uint8_t gear) {
+    if (gear == GEAR_FAIL) {
+        return 30.0;
+    }
+    return shift_speed_min[gear == GEAR_NEUT ? gear : gear -1];
 }
 
 /**
