@@ -556,7 +556,8 @@ void process_upshift_press(void)
     
     // If CAN is not stale (message received in past 10 seconds),
     // and RPM is less than 8000, don't do anything.
-    if (millis - CAN_recv_tmr < 10 * 1000 && eng_rpm < 8000) {
+    // But also don't do this under 1000 rpm since we're probably not driving
+    if (millis - CAN_recv_tmr < 10 * 1000 && eng_rpm < 8000 && eng_rpm > 1000) {
         return;
     }
 
