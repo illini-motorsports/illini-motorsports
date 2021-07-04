@@ -548,10 +548,16 @@ void process_auto_upshift(void)
  */
 void process_upshift_press(void)
 {
-    if (mode == AUTO_UPSHIFT_MODE) {
+    /*if (mode == AUTO_UPSHIFT_MODE) {
         mode = NORMAL_MODE;
         queue_up = 0;
         auto_upshift_disable_override = 1;
+    }*/
+    
+    // If CAN is not stale (message received in past 10 seconds),
+    // and RPM is less than 8000, don't do anything.
+    if (millis - CAN_recv_tmr < 10 * 1000 && eng_rpm < 8000) {
+        return;
     }
 
     if (queue_nt == 1) {
@@ -610,11 +616,11 @@ void process_upshift_press(void)
  */
 void process_downshift_press(void)
 {
-    if (mode == AUTO_UPSHIFT_MODE) {
+    /*if (mode == AUTO_UPSHIFT_MODE) {
         mode = NORMAL_MODE;
         queue_up = 0;
         auto_upshift_disable_override = 1;
-    }
+    }*/
 
     if (queue_nt == 1) {
         return;
