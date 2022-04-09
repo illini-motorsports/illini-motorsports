@@ -151,7 +151,7 @@ void main(void)
         // Send status over CAN
         send_diag_can();
         send_state_can(NO_OVERRIDE);
-        send_gear_status_can(NO_OVERRIDE);
+        // send_gear_status_can(NO_OVERRIDE);
         send_ignition_cut_status_can(NO_OVERRIDE);
     }
 }
@@ -852,7 +852,7 @@ void do_shift(uint8_t shift_enum)
 
                 set_ignition_cut(IGNITION_CUT_ALL, IGNITION_CUT_DISABLE);
                 send_ignition_cut_status_can(OVERRIDE);
-                send_gear_status_can(OVERRIDE);
+               // send_gear_status_can(OVERRIDE);
                 //send_power_cut(CUT_END);
                 //send_ignition_cut();
 
@@ -1130,7 +1130,7 @@ void main_loop_misc(void)
     // Send CAN messages
     send_diag_can();
     send_state_can(NO_OVERRIDE);
-    send_gear_status_can(NO_OVERRIDE);
+    // send_gear_status_can(NO_OVERRIDE);
     send_ignition_cut_status_can(NO_OVERRIDE);
 }
 

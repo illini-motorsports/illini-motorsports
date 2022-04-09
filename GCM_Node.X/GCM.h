@@ -24,16 +24,18 @@
 // Thresholds
 #define RPM_ON_THRESHOLD 600.0 // rpm
 #define MAX_RETRY 2
-#define GEAR_VOLT_RIPPLE 0.2 // V
+#define GEAR_VOLT_RIPPLE 0.3 // V
 
 // Gear Voltages
-#define GEAR_VOLT_1 0.747
-#define GEAR_VOLT_NEUT 1.07
-#define GEAR_VOLT_2 1.55
-#define GEAR_VOLT_3 1.86
-#define GEAR_VOLT_4 2.76
-#define GEAR_VOLT_5 3.56
-#define GEAR_VOLT_6 4.05
+// ECU ADC SEES DIFFERENT VOLTAGES FOR SOME REASON
+// TUNE THESE CUTOFFS INDEPENDENTLY FOR BOTH DEVICES!
+#define GEAR_VOLT_1 0.72
+#define GEAR_VOLT_NEUT 1.05
+#define GEAR_VOLT_2 1.45
+#define GEAR_VOLT_3 2.20
+#define GEAR_VOLT_4 2.97
+#define GEAR_VOLT_5 3.74
+#define GEAR_VOLT_6 4.54
 
 // Definitions for error conditions
 // TODO: Decide on these values
